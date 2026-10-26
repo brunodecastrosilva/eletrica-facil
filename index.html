@@ -379,6 +379,52 @@ mark{background:var(--volt-soft);color:inherit;border-radius:3px;padding:0 1px}
 .empty{border:1.5px dashed var(--line-2);border-radius:16px;padding:22px 16px;text-align:center;color:var(--muted);font-size:15px}
 .tag-ex{font-size:12px;font-weight:700;color:var(--volt-text);background:var(--volt-soft);border-radius:6px;padding:1px 6px}
 
+/* ambientes, adicionais e deslocamento */
+.switch-row.solo{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.card-hr.room{align-items:center}
+.room-h{display:flex;flex-direction:column;min-width:0}
+.room-h .hint{font-size:13.5px}
+.room-r{display:flex;align-items:center;gap:2px;flex:none}
+.icon-btn.sm{width:38px;height:38px;border-radius:10px}
+.sublab{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:-6px}
+.add-btn.room{border-style:solid;border-color:var(--volt);background:var(--volt-soft)}
+.conf{display:flex;flex-direction:column}
+.conf-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line)}
+.conf-row:first-child{border-top:0}
+.conf-row b{font-weight:600}
+.conf-row small{display:block;color:var(--muted);font-size:13px}
+.conf-row .num{font-weight:700;white-space:nowrap}
+.xchips{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 12px;border-top:1px solid var(--line)}
+.xchips .lab{width:100%}
+.vrow-free{padding:2px 0 12px}
+.vrow.vbtn{width:100%;border-left:0;border-right:0;border-bottom:0;background:none;padding:6px 0;text-align:left;color:inherit;border-radius:0}
+.vrow.vbtn > span:first-child{display:flex;flex-direction:column;line-height:1.25;font-size:15.5px}
+.vrow.vbtn small{color:var(--muted);font-size:13px}
+.vrow.vbtn .vb-r{display:flex;align-items:center;gap:4px}
+.vrow.vbtn .vb-r svg{width:18px;height:18px;color:var(--muted)}
+.vrow.vbtn b.cta{color:var(--volt-text)}
+.stack14{display:flex;flex-direction:column;gap:14px}
+.subcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.subcard .card-hr b{display:flex;align-items:center;gap:8px}
+.subcard .card-hr svg{color:var(--volt-text)}
+details.more{border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+details.more summary{list-style:none;cursor:pointer;padding:13px 14px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::after{content:"+";font-size:22px;color:var(--muted);line-height:1}
+details.more[open] summary::after{content:"–"}
+details.more .more-in{padding:0 14px 14px;display:flex;flex-direction:column;gap:12px}
+.breakdown{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:2px 14px}
+.breakdown div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:15px;align-items:baseline}
+.breakdown div:first-child{border-top:0}
+.breakdown small{display:block;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.breakdown b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.breakdown .bt{border-top:2px solid var(--ink)}
+.breakdown .bt b:last-child{font-family:var(--f-display);font-size:20px;font-weight:850}
+.breakdown .warn{color:var(--warn);font-weight:600}
+.p-table tr.p-sub td{font-size:11.5px;color:var(--paper-muted);border-bottom:0;padding:4px 0 2px;text-align:right}
+.p-table tr.p-sub td:last-child{color:var(--paper-ink);font-weight:700}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.grid3 label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:380px){
   .hero-stats b{font-size:19px}
   .hero-stats span{font-size:12px}
@@ -477,6 +523,10 @@ const I = {
   arrow: ic('<path d="M5 12h14M13 6l6 6-6 6"/>'),
   image: ic('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>'),
   percent: ic('<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>'),
+  pin: ic('<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'),
+  chev: ic('<path d="m9 6 6 6-6 6"/>'),
+  up: ic('<path d="M12 19V5M6 11l6-6 6 6"/>'),
+  car: ic('<path d="M5 16v-5l2-5h10l2 5v5"/><path d="M3 16h18v3H3zM7.5 19v1.5M16.5 19v1.5"/>'),
   phone: ic('<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/>'),
 };
 
@@ -489,6 +539,7 @@ const SEED = [
   ['svc', 'Tomadas e interruptores', 'Troca de tomada ou interruptor', 'un', 3000],
   ['svc', 'Tomadas e interruptores', 'Ponto novo de tomada (com fiação)', 'ponto', 9000],
   ['svc', 'Tomadas e interruptores', 'Tomada de uso específico 20 A', 'un', 7000],
+  ['svc', 'Tomadas e interruptores', 'Ponto de interruptor paralelo (three-way)', 'ponto', 12000],
   ['svc', 'Iluminação', 'Instalação de luminária ou plafon', 'un', 6000],
   ['svc', 'Iluminação', 'Instalação de lustre ou pendente', 'un', 12000],
   ['svc', 'Iluminação', 'Instalação de spot embutido', 'un', 3500],
@@ -525,7 +576,10 @@ const SEED = [
   ['mat', 'Tomadas e interruptores', 'Tomada 10 A com placa', 'un', 1800],
   ['mat', 'Tomadas e interruptores', 'Tomada 20 A com placa', 'un', 2200],
   ['mat', 'Tomadas e interruptores', 'Interruptor simples com placa', 'un', 1600],
-  ['mat', 'Tomadas e interruptores', 'Interruptor paralelo com placa', 'un', 2200],
+  ['mat', 'Tomadas e interruptores', 'Tomada dupla 10 A com placa', 'un', 2800],
+  ['mat', 'Tomadas e interruptores', 'Interruptor duplo com placa', 'un', 2400],
+  ['mat', 'Tomadas e interruptores', 'Interruptor paralelo (three-way) com placa', 'un', 2200],
+  ['mat', 'Tomadas e interruptores', 'Interruptor intermediário (four-way)', 'un', 4500],
   ['mat', 'Proteção', 'Disjuntor monopolar 10 a 32 A', 'un', 2200],
   ['mat', 'Proteção', 'Disjuntor bipolar', 'un', 7500],
   ['mat', 'Proteção', 'DR bipolar 40 A 30 mA', 'un', 16000],
@@ -539,6 +593,8 @@ const SEED = [
   ['mat', 'Diversos', 'Abraçadeiras (pacote)', 'un', 1000],
 ];
 const catOrder = kind => [...new Set(SEED.filter(s => s[0] === kind).map(s => s[1])), 'Outros'];
+// itens que entraram depois da primeira tabela (são acrescentados em quem já usa o app)
+const SEED_V2 = ['Ponto de interruptor paralelo (three-way)', 'Tomada dupla 10 A com placa', 'Interruptor duplo com placa', 'Interruptor paralelo (three-way) com placa', 'Interruptor intermediário (four-way)'];
 const seedPrices = () => SEED.map(([kind, cat, name, unit, price]) => ({ id: uid(), kind, cat, name, unit, price }));
 
 /* ================= dados (tudo guardado neste aparelho) ================= */
@@ -548,7 +604,9 @@ const LS = {
   set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); return true; } catch { return false; } },
 };
 const DEF = { name: '', company: '', phone: '', email: '', doc: '', city: '', pix: '', logo: '', logoRatio: 1,
-  validity: 15, warranty: 90, payMode: 'entrada', entryPct: 50, installments: 3, notes: '', seq: 0 };
+  validity: 15, warranty: 90, payMode: 'entrada', entryPct: 50, installments: 3, notes: '', seq: 0,
+  kmPerL: 0, fuelPrice: 0, wearPerKm: 0, hourRate: 0, minVisit: 0, roundTrip: true,
+  surUrgent: 50, surNight: 30, surWeekend: 50, seedV: 0 };
 const STATUS = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado', concluido: 'Concluído', recusado: 'Recusado' };
 
 let settings = { ...DEF, ...LS.get('settings', {}) };
@@ -564,7 +622,8 @@ function blankQuote() {
     travel: 0, discount: { mode: 'value', value: 0, pct: 0 },
     payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments },
     validity: settings.validity, deadline: '', warranty: settings.warranty, notes: settings.notes,
-    status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false };
+    status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false,
+    trip: null, extras: { urgent: 0, night: 0, weekend: 0 }, useRooms: false, rooms: [] };
 }
 function fixQuote(q) {
   const d = blankQuote();
@@ -574,7 +633,11 @@ function fixQuote(q) {
   if (typeof q.travel !== 'number') q.travel = q.travel && q.travel.enabled ? (q.travel.value || 0) : 0;
   const ds = q.discount || {};
   q.discount = { mode: ds.mode === 'pct' ? 'pct' : 'value', value: ds.enabled === false ? 0 : (ds.value || 0), pct: ds.enabled === false ? 0 : (ds.pct || 0) };
-  q.items = (q.items || []).map(i => ({ id: i.id || uid(), kind: i.kind === 'mat' ? 'mat' : 'svc', name: String(i.name || ''), unit: i.unit || 'un', qty: +i.qty || 1, price: Math.max(0, Math.round(+i.price || 0)) }));
+  q.items = (q.items || []).map(i => ({ id: i.id || uid(), kind: i.kind === 'mat' ? 'mat' : 'svc', name: String(i.name || ''), unit: i.unit || 'un', qty: +i.qty || 1, price: Math.max(0, Math.round(+i.price || 0)), room: i.room ? String(i.room) : '' }));
+  q.extras = { urgent: 0, night: 0, weekend: 0, ...(q.extras || {}) };
+  q.rooms = (Array.isArray(q.rooms) ? q.rooms : []).filter(r => r && r.id).map(r => ({ id: String(r.id), name: String(r.name || 'Ambiente') }));
+  q.useRooms = !!q.useRooms;
+  q.trip = q.trip && typeof q.trip === 'object' ? q.trip : null;
   if (!STATUS[q.status]) q.status = 'rascunho';
   ['isExample', 'active', 'savedAt', 'closedAt', 'total', 'statusAt'].forEach(k => delete q[k]);
   return q;
@@ -613,6 +676,11 @@ if (!prices || !quotes) {
 }
 quotes = quotes.map(fixQuote);
 settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
+if ((settings.seedV || 0) < 2) {
+  prices.forEach(p => { if (p.name === 'Interruptor paralelo com placa') p.name = 'Interruptor paralelo (three-way) com placa'; });
+  SEED.filter(x => SEED_V2.includes(x[2])).forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price }); });
+  settings.seedV = 2; savePrices(); saveSettings();
+}
 
 const getQ = id => quotes.find(q => q.id === id);
 const touch = q => { q.updatedAt = Date.now(); saveQuotes(); };
@@ -623,7 +691,9 @@ function compute(q) {
   const svc = q.items.filter(i => i.kind === 'svc'), mat = q.items.filter(i => i.kind === 'mat');
   const labor = sum(svc.map(lineTotal)), matTotal = sum(mat.map(lineTotal)), matIn = q.materialBy !== 'cliente';
   const travel = q.travel || 0;
-  const sub = labor + (matIn ? matTotal : 0) + travel;
+  const surPct = (q.extras.urgent || 0) + (q.extras.night || 0) + (q.extras.weekend || 0);
+  const extra = Math.round(labor * surPct / 100);
+  const sub = labor + extra + (matIn ? matTotal : 0) + travel;
   const discount = q.discount.mode === 'pct' ? Math.round(sub * Math.min(100, q.discount.pct || 0) / 100) : Math.min(q.discount.value || 0, sub);
   const total = sub - discount, p = q.payment;
   const entry = p.mode === 'entrada' ? Math.round(total * p.entryPct / 100) : 0;
@@ -631,7 +701,7 @@ function compute(q) {
   const n = Math.max(1, p.installments || 1), parts = [];
   if (p.mode === 'parcelado') { const base = Math.floor(total / n); for (let k = 0; k < n; k++) parts.push(base + (k < total - base * n ? 1 : 0)); }
   const pixValue = p.mode === 'avista' ? total : p.mode === 'entrada' ? entry : 0;
-  return { svc, mat, labor, matTotal, matIn, travel, sub, discount, total, entry, rest, parts, pixValue, validUntil: q.createdAt + (q.validity || 0) * DAY };
+  return { svc, mat, labor, surPct, extra, matTotal, matIn, travel, sub, discount, total, entry, rest, parts, pixValue, validUntil: q.createdAt + (q.validity || 0) * DAY };
 }
 function partsText(parts) {
   const n = parts.length; if (!n) return '';
@@ -646,6 +716,61 @@ function payText(q, c) {
   if (p.mode === 'entrada') return `Entrada de ${p.entryPct}% (${BRL(c.entry)}) na aprovação e ${BRL(c.rest)} na conclusão do serviço.`;
   if (p.mode === 'parcelado') return `Parcelado no cartão em ${partsText(c.parts)}.`;
   return 'A combinar.';
+}
+// adicionais sobre a mão de obra: [chave, rótulo curto, ajuste padrão, texto na proposta]
+const EXTRAS = [['urgent', 'Urgência', 'surUrgent', 'urgência'], ['night', 'Noturno', 'surNight', 'período noturno'], ['weekend', 'Fim de semana', 'surWeekend', 'fim de semana ou feriado']];
+function extrasText(q) {
+  const L = EXTRAS.filter(([k]) => q.extras[k] > 0).map(([k, , , l]) => `${l} (+${q.extras[k]}%)`);
+  if (!L.length) return '';
+  const s = L.length === 1 ? L[0] : L.slice(0, -1).join(', ') + ' e ' + L[L.length - 1];
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+// deslocamento: combustível + pedágio + tempo de viagem + desgaste, com mínimo por visita
+function tripCalc(t) {
+  const visits = Math.max(1, t.visits || 1), legs = (t.roundTrip ? 2 : 1) * visits;
+  const km = Math.round((t.km || 0) * legs * 10) / 10;
+  const fuel = t.kmPerL > 0 ? Math.round(km / t.kmPerL * (t.fuelPrice || 0)) : 0;
+  const toll = (t.toll || 0) * visits;
+  const wear = Math.round(km * (t.wearPerKm || 0));
+  const time = Math.round((t.minutes || 0) * legs / 60 * (t.hourRate || 0));
+  const min = (t.minVisit || 0) * visits, raw = fuel + toll + wear + time;
+  return { legs, km, fuel, toll, wear, time, min, usedMin: min > raw, total: Math.max(raw, min) };
+}
+const tripShort = (t, r = tripCalc(t)) => `${plural(Math.max(1, t.visits || 1), 'visita', 'visitas')}, ${fmtQty(r.km)} km`;
+const tripLong = (t, r = tripCalc(t)) => `${plural(Math.max(1, t.visits || 1), 'visita', 'visitas')} à obra, ${fmtQty(r.km)} km no total${t.roundTrip ? ' (ida e volta)' : ''}.`;
+const mapsLink = addr => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}`;
+// ambientes (cômodos)
+const ROOM_CHIPS = ['Sala', 'Cozinha', 'Quarto', 'Banheiro', 'Lavabo', 'Área de serviço', 'Varanda', 'Corredor', 'Escritório', 'Garagem', 'Área externa'];
+const roomOf = (q, i) => i.room && q.rooms.some(r => r.id === i.room) ? i.room : '';
+const roomName = (q, id) => id ? ((q.rooms.find(r => r.id === id) || {}).name || 'Ambiente') : 'Geral';
+function roomList(q) {
+  const G = q.rooms.map(r => ({ id: r.id, name: r.name, items: q.items.filter(i => i.room === r.id) }));
+  G.push({ id: '', name: 'Geral', items: q.items.filter(i => !roomOf(q, i)) });
+  return G;
+}
+function uniqueRoomName(q, base) {
+  const names = q.rooms.map(r => norm(r.name));
+  if (!names.includes(norm(base))) return base;
+  let n = 2; while (names.includes(norm(`${base} ${n}`))) n++;
+  return `${base} ${n}`;
+}
+function nextRoomName(q, name) {
+  const base = name.replace(/\s+\d+$/, ''), names = q.rooms.map(r => norm(r.name));
+  let n = 2; while (names.includes(norm(`${base} ${n}`))) n++;
+  return `${base} ${n}`;
+}
+// soma cada item entre os ambientes (mesmo tipo, nome e unidade)
+function consolidate(q, kind) {
+  const m = new Map();
+  q.items.filter(i => !kind || i.kind === kind).forEach(i => {
+    const key = i.kind + '|' + norm(i.name) + '|' + i.unit;
+    const e = m.get(key) || { kind: i.kind, name: i.name, unit: i.unit, qty: 0, total: 0, by: new Map() };
+    e.qty = Math.round((e.qty + i.qty) * 100) / 100; e.total += lineTotal(i);
+    const rn = q.useRooms ? roomName(q, roomOf(q, i)) : '';
+    if (rn) e.by.set(rn, Math.round(((e.by.get(rn) || 0) + i.qty) * 100) / 100);
+    m.set(key, e);
+  });
+  return [...m.values()];
 }
 function setStatus(q, st) {
   const now = Date.now();
@@ -862,22 +987,38 @@ function createExample() {
   const ex = quotes.find(q => q.example);
   if (ex) return go('/q/' + ex.id);
   const q = blankQuote();
-  const it = (kind, name, unit, qty, price) => ({ id: uid(), kind, name, unit, qty, price });
+  const sala = { id: uid(), name: 'Sala' }, coz = { id: uid(), name: 'Cozinha' };
+  const it = (room, kind, name, unit, qty, price) => ({ id: uid(), kind, name, unit, qty, price, room });
   Object.assign(q, { example: true, status: 'enviado', sentAt: Date.now() - 2 * DAY, createdAt: Date.now() - 2 * DAY,
     client: { name: 'Mariana Souza', phone: '11912345678', address: 'Rua das Acácias, 120 – Vila Mariana' },
-    title: 'Reforma elétrica da cozinha', deadline: '2 dias úteis', travel: 4000, discount: { mode: 'pct', value: 0, pct: 5 },
+    title: 'Reforma elétrica da sala e da cozinha', deadline: '2 dias úteis', discount: { mode: 'pct', value: 0, pct: 5 },
     payment: { mode: 'entrada', entryPct: 50, installments: 3 },
+    trip: { km: 12, roundTrip: true, visits: 2, minutes: 0, toll: 0, kmPerL: 10, fuelPrice: 619, wearPerKm: 40, hourRate: 0, minVisit: 0 },
     notes: 'Não inclui reparos de alvenaria, gesso ou pintura.\nA energia será desligada durante parte do serviço.',
+    useRooms: true, rooms: [sala, coz],
     items: [
-      it('svc', 'Ponto novo de tomada (com fiação)', 'ponto', 4, 9000),
-      it('svc', 'Instalação de luminária ou plafon', 'un', 2, 6000),
-      it('svc', 'Instalação de DR', 'un', 1, 9000),
-      it('svc', 'Passagem de fiação', 'm', 18.5, 800),
-      it('mat', 'Cabo flexível 2,5 mm²', 'm', 40, 350),
-      it('mat', 'Tomada 20 A com placa', 'un', 4, 2200),
-      it('mat', 'DR bipolar 40 A 30 mA', 'un', 1, 16000),
-      it('mat', 'Eletroduto corrugado 3/4"', 'm', 15, 250),
+      it(sala.id, 'svc', 'Ponto novo de tomada (com fiação)', 'ponto', 5, 9000),
+      it(sala.id, 'svc', 'Instalação de tomada ou interruptor', 'un', 3, 4500),
+      it(sala.id, 'svc', 'Ponto de interruptor paralelo (three-way)', 'ponto', 1, 12000),
+      it(sala.id, 'svc', 'Instalação de luminária ou plafon', 'un', 2, 6000),
+      it(sala.id, 'mat', 'Tomada 10 A com placa', 'un', 3, 1800),
+      it(sala.id, 'mat', 'Tomada dupla 10 A com placa', 'un', 2, 2800),
+      it(sala.id, 'mat', 'Interruptor simples com placa', 'un', 3, 1600),
+      it(sala.id, 'mat', 'Interruptor paralelo (three-way) com placa', 'un', 1, 2200),
+      it(sala.id, 'mat', 'Caixa 4x2', 'un', 9, 250),
+      it(coz.id, 'svc', 'Ponto novo de tomada (com fiação)', 'ponto', 3, 9000),
+      it(coz.id, 'svc', 'Tomada de uso específico 20 A', 'un', 2, 7000),
+      it(coz.id, 'svc', 'Instalação de luminária ou plafon', 'un', 1, 6000),
+      it(coz.id, 'mat', 'Tomada 20 A com placa', 'un', 5, 2200),
+      it(coz.id, 'mat', 'Caixa 4x2', 'un', 5, 250),
+      it(coz.id, 'mat', 'Plafon LED 18 W', 'un', 1, 4500),
+      it('', 'svc', 'Instalação de DR', 'un', 1, 9000),
+      it('', 'svc', 'Instalação ou troca de disjuntor', 'un', 2, 4000),
+      it('', 'mat', 'DR bipolar 40 A 30 mA', 'un', 1, 16000),
+      it('', 'mat', 'Disjuntor monopolar 10 a 32 A', 'un', 2, 2200),
+      it('', 'mat', 'Cabo flexível 2,5 mm²', 'm', 60, 350),
     ] });
+  q.travel = tripCalc(q.trip).total;
   quotes.unshift(q); saveQuotes();
   go('/q/' + q.id);
 }
@@ -1039,9 +1180,70 @@ function paySumHTML(q, c) {
   if (p.mode === 'parcelado') return `<div><span>No cartão</span><b>${partsText(c.parts)}</b></div>`;
   return `<div><span>Forma de pagamento a combinar com o cliente</span></div>`;
 }
+const matSwitchHTML = q => `<label class="switch-row" for="q-matcli"><span><b>O cliente compra o material</b><small>${q.materialBy === 'cliente' ? 'A lista vai na proposta, com valores estimados fora do total.' : 'Desligado: o material entra no total da proposta.'}</small></span><input type="checkbox" class="sw" id="q-matcli" ${q.materialBy === 'cliente' ? 'checked' : ''}></label>`;
+const roomToggleHTML = q => `<label class="switch-row solo" for="q-rooms"><span><b>Separar por ambiente</b><small>${q.useRooms ? 'Cada cômodo com a sua contagem de pontos e de material.' : 'Sala, cozinha, quartos… para contar e conferir cômodo por cômodo.'}</small></span><input type="checkbox" class="sw" id="q-rooms" ${q.useRooms ? 'checked' : ''}></label>`;
+function kindCardsHTML(q, c) {
+  return `<section class="card" aria-labelledby="h-svc">
+      <div class="card-hr"><h2 class="card-h" id="h-svc">Mão de obra</h2><span class="card-sum" data-t="labor">${BRL(c.labor)}</span></div>
+      ${c.svc.length ? `<div class="lines">${c.svc.map(i => lineHTML(q, i)).join('')}</div>` : '<p class="empty-line">Escolha os serviços na sua tabela de preços.</p>'}
+      <button class="add-btn" data-add="svc">${I.plus}Adicionar mão de obra</button>
+    </section>
+    <section class="card" aria-labelledby="h-mat">
+      <div class="card-hr"><h2 class="card-h" id="h-mat">Material</h2><span class="card-sum" data-t="mat">${BRL(c.matTotal)}</span></div>
+      ${matSwitchHTML(q)}
+      ${c.mat.length ? `<div class="lines">${c.mat.map(i => lineHTML(q, i)).join('')}</div>` : ''}
+      <button class="add-btn" data-add="mat">${I.plus}Adicionar material</button>
+    </section>`;
+}
+function roomsHTML(q, c) {
+  const card = g => {
+    const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
+    const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
+    return `<section class="card" data-room-card="${g.id}">
+      <div class="card-hr room"><div class="room-h"><h2 class="card-h">${esc(g.name)}</h2><span class="hint">${g.id ? plural(g.items.length, 'item', 'itens') : 'Quadro, entrada de energia e itens da casa toda'}</span></div>
+        <div class="room-r"><span class="card-sum">${BRL(st)}</span>${g.id ? `<button class="icon-btn sm" data-room-menu="${g.id}" aria-label="Opções de ${esc(g.name)}">${I.more}</button>` : ''}</div></div>
+      ${svc.length ? `<div class="sublab">Mão de obra</div><div class="lines">${svc.map(i => lineHTML(q, i)).join('')}</div>` : ''}
+      ${mat.length ? `<div class="sublab">Material</div><div class="lines">${mat.map(i => lineHTML(q, i)).join('')}</div>` : ''}
+      ${g.items.length ? '' : `<p class="empty-line">${g.id ? 'Toque em adicionar e conte cada tomada, interruptor e luminária.' : 'Nada por aqui ainda.'}</p>`}
+      <button class="add-btn" data-add-room="${g.id}">${I.plus}Adicionar em ${esc(g.name)}</button>
+    </section>`;
+  };
+  const groups = roomList(q), general = groups.pop();
+  return groups.map(card).join('') + `<button class="add-btn room" data-new-room>${I.plus}Novo ambiente</button>` + card(general) + conferenceHTML(q);
+}
+const byText = e => [...e.by.entries()].map(([r, n]) => `${r}: ${fmtQty(n)}`).join(' · ');
+function conferenceHTML(q) {
+  if (!q.items.length || !q.rooms.length) return '';
+  const block = (kind, title) => {
+    const L = consolidate(q, kind); if (!L.length) return '';
+    return `<div class="sublab">${title}</div><div class="conf">${L.map(e => `<div class="conf-row"><span><b>${esc(e.name)}</b><small>${esc(byText(e))}</small></span><span class="num">${fmtQty(e.qty)} ${unitTxt(e.qty, e.unit)}</span></div>`).join('')}</div>`;
+  };
+  return `<section class="card" aria-labelledby="h-conf">
+    <div class="card-hr room"><div class="room-h"><h2 class="card-h" id="h-conf">Conferência</h2><span class="hint">Total de cada item, somando os ambientes</span></div><button class="btn sm ghost" data-conf-pdf>${I.share}PDF</button></div>
+    ${block('mat', 'Material')}${block('svc', 'Mão de obra')}
+  </section>`;
+}
+function valuesHTML(q, c) {
+  const d = q.discount, rt = q.trip ? tripCalc(q.trip) : null;
+  return `<section class="card" aria-labelledby="h-val">
+    <h2 class="card-h" id="h-val">Valores</h2>
+    <div class="vrows">
+      <div class="vrow"><span>Mão de obra</span><b data-t="labor">${BRL(c.labor)}</b></div>
+      <div class="xchips" role="group" aria-label="Adicionais sobre a mão de obra"><span class="lab">Adicional sobre a mão de obra</span>${EXTRAS.map(([k, l, sk]) => { const on = q.extras[k] > 0; return `<button class="chip" data-x="${k}" aria-pressed="${on}">${l} +${on ? q.extras[k] : settings[sk]}%</button>`; }).join('')}</div>
+      ${c.extra ? `<div class="vrow"><span>Adicionais (+${c.surPct}%)</span><b>${BRL(c.extra)}</b></div>` : ''}
+      <div class="vrow"><span>Material</span><b class="${c.matIn ? '' : 'dim'}">${c.matIn ? BRL(c.matTotal) : 'por conta do cliente'}</b></div>
+      ${q.useRooms ? `<div class="vrow-free">${matSwitchHTML(q)}</div>` : ''}
+      <button class="vrow vbtn" data-trip><span>Deslocamento<small>${rt ? esc(tripShort(q.trip, rt)) : q.travel ? 'valor fixo' : 'pela distância e o combustível'}</small></span><span class="vb-r">${q.travel ? `<b>${BRL(q.travel)}</b>` : '<b class="cta">Calcular</b>'}${I.chev}</span></button>
+      <div class="vrow"><label for="q-disc">Desconto</label><div class="disc"><div class="seg" role="group" aria-label="Tipo de desconto"><button data-dm="value" aria-pressed="${d.mode === 'value'}">R$</button><button data-dm="pct" aria-pressed="${d.mode === 'pct'}">%</button></div>${d.mode === 'value'
+        ? `<input id="q-disc" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${d.value ? BRL(d.value) : ''}">`
+        : `<input id="q-disc" type="text" inputmode="decimal" placeholder="0" value="${d.pct ? fmtQty(d.pct) : ''}" aria-label="Desconto em porcentagem">`}</div></div>
+      <div class="vrow total"><span>Total</span><b data-t="total">${BRL(c.total)}</b></div>
+    </div>
+  </section>`;
+}
 VIEWS.quote = {
   html(r) {
-    const q = getQ(r.id), c = compute(q), d = q.discount;
+    const q = getQ(r.id), c = compute(q);
     return `<header class="appbar"><div class="appbar-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
       <div class="ab-title"><span class="ab-eyebrow">${q.example ? 'Exemplo' : 'Orçamento ' + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-main" id="ab-name">${esc(q.client.name || 'Novo orçamento')}</span></div>
@@ -1060,31 +1262,9 @@ VIEWS.quote = {
         <div class="field"><label for="q-title">Serviço</label><input id="q-title" type="text" autocomplete="off" placeholder="Ex.: Troca do quadro e instalação de chuveiro" value="${esc(q.title)}"></div>
       </section>
 
-      <section class="card" aria-labelledby="h-svc">
-        <div class="card-hr"><h2 class="card-h" id="h-svc">Mão de obra</h2><span class="card-sum" data-t="labor">${BRL(c.labor)}</span></div>
-        ${c.svc.length ? `<div class="lines">${c.svc.map(i => lineHTML(q, i)).join('')}</div>` : '<p class="empty-line">Escolha os serviços na sua tabela de preços.</p>'}
-        <button class="add-btn" data-add="svc">${I.plus}Adicionar mão de obra</button>
-      </section>
-
-      <section class="card" aria-labelledby="h-mat">
-        <div class="card-hr"><h2 class="card-h" id="h-mat">Material</h2><span class="card-sum" data-t="mat">${BRL(c.matTotal)}</span></div>
-        <label class="switch-row" for="q-matcli"><span><b>O cliente compra o material</b><small>${q.materialBy === 'cliente' ? 'A lista vai na proposta, com valores estimados fora do total.' : 'Desligado: o material entra no total da proposta.'}</small></span><input type="checkbox" class="sw" id="q-matcli" ${q.materialBy === 'cliente' ? 'checked' : ''}></label>
-        ${c.mat.length ? `<div class="lines">${c.mat.map(i => lineHTML(q, i)).join('')}</div>` : ''}
-        <button class="add-btn" data-add="mat">${I.plus}Adicionar material</button>
-      </section>
-
-      <section class="card" aria-labelledby="h-val">
-        <h2 class="card-h" id="h-val">Valores</h2>
-        <div class="vrows">
-          <div class="vrow"><span>Mão de obra</span><b data-t="labor">${BRL(c.labor)}</b></div>
-          <div class="vrow"><span>Material</span><b data-t="mat2" class="${c.matIn ? '' : 'dim'}">${c.matIn ? BRL(c.matTotal) : 'por conta do cliente'}</b></div>
-          <div class="vrow"><label for="q-travel">Deslocamento / visita</label><input id="q-travel" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${q.travel ? BRL(q.travel) : ''}"></div>
-          <div class="vrow"><label for="q-disc">Desconto</label><div class="disc"><div class="seg" role="group" aria-label="Tipo de desconto"><button data-dm="value" aria-pressed="${d.mode === 'value'}">R$</button><button data-dm="pct" aria-pressed="${d.mode === 'pct'}">%</button></div>${d.mode === 'value'
-            ? `<input id="q-disc" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${d.value ? BRL(d.value) : ''}">`
-            : `<input id="q-disc" type="text" inputmode="decimal" placeholder="0" value="${d.pct ? fmtQty(d.pct) : ''}" aria-label="Desconto em porcentagem">`}</div></div>
-          <div class="vrow total"><span>Total</span><b data-t="total">${BRL(c.total)}</b></div>
-        </div>
-      </section>
+      ${roomToggleHTML(q)}
+      ${q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)}
+      ${valuesHTML(q, c)}
 
       <section class="card" aria-labelledby="h-cond">
         <h2 class="card-h" id="h-cond">Condições</h2>
@@ -1135,15 +1315,25 @@ VIEWS.quote = {
     $('#q-title', v).addEventListener('input', e => { q.title = e.target.value; touch(q); });
     $('#q-title', v).addEventListener('change', e => { q.title = e.target.value.trim(); touch(q); });
 
-    // itens
+    // itens e ambientes
+    $('#q-rooms', v).addEventListener('change', e => { q.useRooms = e.target.checked; touch(q); rerender(); if (q.useRooms && !q.rooms.length) roomAddSheet(q); });
     $$('[data-add]', v).forEach(b => b.onclick = () => pickerSheet(q, b.dataset.add));
+    $$('[data-add-room]', v).forEach(b => b.onclick = () => pickerSheet(q, 'svc', b.dataset.addRoom));
+    $$('[data-room-menu]', v).forEach(b => b.onclick = () => roomMenu(q, b.dataset.roomMenu));
+    $('[data-new-room]', v)?.addEventListener('click', () => roomAddSheet(q));
+    $('[data-conf-pdf]', v)?.addEventListener('click', e => shareConference(q, e.currentTarget));
     $$('[data-dq]', v).forEach(b => b.onclick = () => { const i = q.items.find(x => x.id === b.dataset.id); if (!i) return; i.qty = Math.max(1, Math.round((i.qty + +b.dataset.dq) * 100) / 100); touch(q); rerender(); });
     $$('[data-rm]', v).forEach(b => b.onclick = () => removeLine(q, b.dataset.rm));
     $$('[data-edit]', v).forEach(b => b.onclick = () => lineSheet(q, q.items.find(x => x.id === b.dataset.edit)));
     $('#q-matcli', v).addEventListener('change', e => { q.materialBy = e.target.checked ? 'cliente' : 'eu'; touch(q); rerender(); });
 
     // valores
-    $('#q-travel', v).addEventListener('input', e => { q.travel = parseMoney(e.target.value) || 0; touch(q); paint(); });
+    $$('[data-x]', v).forEach(b => b.onclick = () => {
+      const k = b.dataset.x, sk = EXTRAS.find(x => x[0] === k)[2];
+      q.extras[k] = q.extras[k] ? 0 : (settings[sk] || 0);
+      touch(q); rerender();
+    });
+    $('[data-trip]', v).onclick = () => tripSheet(q);
     $$('[data-dm]', v).forEach(b => b.onclick = () => { if (q.discount.mode === b.dataset.dm) return; q.discount.mode = b.dataset.dm; touch(q); rerender(); });
     $('#q-disc', v).addEventListener('input', e => {
       if (q.discount.mode === 'value') q.discount.value = parseMoney(e.target.value) || 0;
@@ -1202,10 +1392,10 @@ function statusSheet(q) {
 }
 
 /* ================= escolher itens da tabela ================= */
-function addFromPrice(q, p) {
-  const ex = q.items.find(i => i.kind === p.kind && norm(i.name) === norm(p.name) && i.unit === p.unit && i.price === p.price);
+function addFromPrice(q, p, room = '') {
+  const ex = q.items.find(i => i.kind === p.kind && norm(i.name) === norm(p.name) && i.unit === p.unit && i.price === p.price && (!q.useRooms || roomOf(q, i) === room));
   if (ex) ex.qty = Math.round((ex.qty + 1) * 100) / 100;
-  else q.items.push({ id: uid(), kind: p.kind, name: p.name, unit: p.unit, qty: 1, price: p.price });
+  else q.items.push({ id: uid(), kind: p.kind, name: p.name, unit: p.unit, qty: 1, price: p.price, room: q.useRooms ? room : '' });
   touch(q); vibrate();
 }
 function groupByCat(list) {
@@ -1214,40 +1404,45 @@ function groupByCat(list) {
   return cats.map(cat => [cat, list.filter(p => (p.cat || 'Outros') === cat).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true }))]);
 }
 const hl = (s, qf) => { if (!qf) return esc(s); const i = fold(s).indexOf(qf); return i < 0 ? esc(s) : esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i, i + qf.length)) + '</mark>' + esc(s.slice(i + qf.length)); };
-function pickerSheet(q, kind) {
-  let k = kind, query = '', added = 0;
+let lastRoomKind = null;
+function pickerSheet(q, kind, room) {
+  const inRoom = q.useRooms;
+  room = inRoom ? (room || '') : '';
+  let k = inRoom && lastRoomKind ? lastRoomKind : kind, query = '', added = 0;
   const footHTML = () => `<button class="btn primary block" data-done>${added ? `${I.check}Pronto · ${plural(added, 'item adicionado', 'itens adicionados')}` : 'Fechar'}</button>`;
   const listHTML = () => {
     const qf = fold(query);
     const list = prices.filter(p => p.kind === k && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
-    const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name)).map(i => i.qty));
+    const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name) && (!inRoom || roomOf(q, i) === room)).map(i => i.qty));
     const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}</span><span class="pk-price">${BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
     return (rows || `<div class="empty">Nada com “${esc(query)}” na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}.</div>`)
       + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}${query ? `Adicionar “${esc(query)}”` : `${k === 'svc' ? 'Serviço' : 'Material'} fora da tabela`}</button>`;
   };
-  openSheet({ title: 'Adicionar ao orçamento', tall: true,
+  openSheet({ title: inRoom ? `Adicionar em ${roomName(q, room)}` : 'Adicionar ao orçamento', tall: true,
     body: `<div class="pk-list" id="pk-list">${listHTML()}</div>`, foot: footHTML(),
     onClose: () => rerender(),
     onMount: s => {
       const body = $('.sh-body', s);
       body.insertAdjacentHTML('beforebegin', `<div class="pk-tools">
         <div class="seg" role="group" aria-label="Tipo"><button data-k="svc" aria-pressed="${k === 'svc'}">Mão de obra</button><button data-k="mat" aria-pressed="${k === 'mat'}">Material</button></div>
-        <label class="search">${I.search}<input type="search" id="pk-q" placeholder="Buscar na sua tabela de preços" aria-label="Buscar"></label></div>`);
+        <label class="search">${I.search}<input type="search" id="pk-q" placeholder="Buscar na sua tabela de preços" aria-label="Buscar"></label>
+        ${inRoom ? '<p class="hint">Cada toque soma uma unidade. Toque 3 vezes para 3 tomadas.</p>' : ''}</div>`);
       const paintList = () => { const st = body.scrollTop; $('#pk-list', s).innerHTML = listHTML(); body.scrollTop = st; };
       const qi = $('#pk-q', s);
       if (!isTouch) qi.focus();
       qi.addEventListener('input', () => { query = qi.value.trim(); paintList(); body.scrollTop = 0; });
-      $$('[data-k]', s).forEach(b => b.onclick = () => { k = b.dataset.k; $$('[data-k]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); paintList(); body.scrollTop = 0; });
+      $$('[data-k]', s).forEach(b => b.onclick = () => { k = b.dataset.k; if (inRoom) lastRoomKind = k; $$('[data-k]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); paintList(); body.scrollTop = 0; });
       body.addEventListener('click', e => {
         const row = e.target.closest('[data-pid]');
-        if (row) { const p = prices.find(x => x.id === row.dataset.pid); if (!p) return; addFromPrice(q, p); added++; paintList(); $('.sh-foot', s).innerHTML = footHTML(); bindDone(); return; }
-        if (e.target.closest('[data-custom]')) customItemSheet(q, k, query);
+        if (row) { const p = prices.find(x => x.id === row.dataset.pid); if (!p) return; addFromPrice(q, p, room); added++; paintList(); $('.sh-foot', s).innerHTML = footHTML(); bindDone(); return; }
+        if (e.target.closest('[data-custom]')) customItemSheet(q, k, query, room);
       });
       const bindDone = () => { $('[data-done]', s).onclick = () => closeSheet(); };
       bindDone();
     } });
 }
-function itemFields(i, withKind) {
+function itemFields(i, withKind, q) {
+  const rooms = q && q.useRooms ? [...q.rooms, { id: '', name: 'Geral' }] : null;
   return `<div class="field"><label for="it-name">Descrição</label><input id="it-name" type="text" value="${esc(i.name)}" placeholder="Ex.: Instalação de chuveiro elétrico"></div>
     ${withKind ? `<div class="seg" role="group" aria-label="Tipo"><button data-ik="svc" aria-pressed="${i.kind === 'svc'}">Mão de obra</button><button data-ik="mat" aria-pressed="${i.kind === 'mat'}">Material</button></div>` : ''}
     <div class="grid2">
@@ -1255,10 +1450,15 @@ function itemFields(i, withKind) {
       <div class="field"><label for="it-unit">Unidade</label><select id="it-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === i.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
     </div>
     <div class="field"><label for="it-price">Valor unitário</label><input id="it-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${i.price ? BRL(i.price) : ''}"></div>
+    ${rooms ? `<div class="field"><label for="it-room">Ambiente</label><select id="it-room">${rooms.map(r => `<option value="${esc(r.id)}" ${(q && i.id ? roomOf(q, i) : (i.room || '')) === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></div>` : ''}
     <div class="vrow total" style="margin-top:0"><span>Total do item</span><b id="it-total">${BRL(lineTotal(i))}</b></div>`;
 }
 function bindItemFields(s, i) {
-  const read = () => ({ name: $('#it-name', s).value.trim().replace(/\s+/g, ' '), qty: parseQty($('#it-qty', s).value), unit: $('#it-unit', s).value, price: parseMoney($('#it-price', s).value) });
+  const read = () => {
+    const r = { name: $('#it-name', s).value.trim().replace(/\s+/g, ' '), qty: parseQty($('#it-qty', s).value), unit: $('#it-unit', s).value, price: parseMoney($('#it-price', s).value) };
+    const rs = $('#it-room', s); if (rs) r.room = rs.value;
+    return r;
+  };
   const paint = () => { const r = read(); $('#it-total', s).textContent = BRL(Math.round((r.qty || 0) * (r.price || 0))); };
   $$('[data-iq]', s).forEach(b => b.onclick = () => { const v = parseQty($('#it-qty', s).value) || 1; $('#it-qty', s).value = fmtQty(Math.max(1, Math.round((v + +b.dataset.iq) * 100) / 100)); paint(); });
   ['#it-qty', '#it-price'].forEach(sel => $(sel, s).addEventListener('input', paint));
@@ -1267,7 +1467,7 @@ function bindItemFields(s, i) {
 }
 function lineSheet(q, i) {
   if (!i) return;
-  openSheet({ title: 'Alterar item', body: itemFields(i, false),
+  openSheet({ title: 'Alterar item', body: itemFields(i, false, q),
     foot: `<button class="btn danger-text" data-del>${I.trash}Remover</button><button class="btn primary" data-save>Salvar</button>`,
     onMount: s => {
       const read = bindItemFields(s, i);
@@ -1281,9 +1481,9 @@ function lineSheet(q, i) {
       };
     } });
 }
-function customItemSheet(q, kind, name) {
-  const i = { name: name || '', kind, unit: 'un', qty: 1, price: 0 };
-  openSheet({ title: 'Item fora da tabela', body: itemFields(i, true) + `<label class="switch-row" for="it-save"><span><b>Guardar na tabela de preços</b><small>Fica disponível nos próximos orçamentos.</small></span><input type="checkbox" class="sw" id="it-save" checked></label>`,
+function customItemSheet(q, kind, name, room = '') {
+  const i = { name: name || '', kind, unit: 'un', qty: 1, price: 0, room };
+  openSheet({ title: 'Item fora da tabela', body: itemFields(i, true, q) + `<label class="switch-row" for="it-save"><span><b>Guardar na tabela de preços</b><small>Fica disponível nos próximos orçamentos.</small></span><input type="checkbox" class="sw" id="it-save" checked></label>`,
     foot: `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>`,
     onClose: () => rerender(),
     onMount: s => {
@@ -1295,10 +1495,139 @@ function customItemSheet(q, kind, name) {
         if (!r.name) return toast('Escreva a descrição do item.');
         if (!r.qty) return toast('Quantidade inválida.');
         if (r.price === null) return toast('Informe o valor unitário.');
-        q.items.push({ id: uid(), kind: i.kind, ...r }); touch(q);
+        q.items.push({ id: uid(), kind: i.kind, room: q.useRooms ? room : '', ...r }); touch(q);
         if ($('#it-save', s).checked && !prices.some(p => p.kind === i.kind && norm(p.name) === norm(r.name))) { prices.push({ id: uid(), kind: i.kind, cat: 'Outros', name: r.name, unit: r.unit, price: r.price }); savePrices(); }
         closeSheet(); toast(`${r.name} adicionado.`);
       };
+    } });
+}
+
+/* ================= ambientes ================= */
+function roomAddSheet(q) {
+  openSheet({ title: 'Novo ambiente', body: `
+      <p class="hint">Escolha um cômodo. Em seguida você já adiciona os pontos e o material dele.</p>
+      <div class="chips">${ROOM_CHIPS.map(n => `<button class="chip" data-rn="${esc(n)}">${esc(uniqueRoomName(q, n))}</button>`).join('')}</div>
+      <div class="field"><label for="rm-name">Outro nome</label><input id="rm-name" type="text" autocapitalize="sentences" autocomplete="off" placeholder="Ex.: Suíte, Churrasqueira, Lavanderia"></div>`,
+    foot: `<button class="btn primary" data-create>${I.plus}Criar ambiente</button>`,
+    onClose: () => rerender(),
+    onMount: s => {
+      const create = name => {
+        name = String(name || '').trim().replace(/\s+/g, ' ');
+        if (!name) return toast('Escolha ou escreva o nome do ambiente.');
+        const r = { id: uid(), name: uniqueRoomName(q, name) };
+        q.rooms.push(r); q.useRooms = true; touch(q); closeSheet(true); rerender();
+        $(`[data-room-card="${r.id}"]`)?.scrollIntoView({ block: 'start' });
+        window.scrollBy(0, -70);
+        pickerSheet(q, 'svc', r.id);
+      };
+      $$('[data-rn]', s).forEach(b => b.onclick = () => create(b.dataset.rn));
+      $('[data-create]', s).onclick = () => create($('#rm-name', s).value);
+    } });
+}
+function roomMenu(q, id) {
+  const r = q.rooms.find(x => x.id === id); if (!r) return;
+  const n = q.items.filter(i => i.room === r.id).length;
+  openSheet({ title: r.name, body: `
+      <div class="field"><label for="rm-ren">Nome do ambiente</label><input id="rm-ren" type="text" value="${esc(r.name)}"></div>
+      <div class="opts">
+        <button class="opt" data-o="dup">${I.dup}<span>Duplicar ambiente<small>Cria outro igual, com os mesmos itens. Bom para quartos iguais.</small></span></button>
+        ${q.rooms.indexOf(r) > 0 ? `<button class="opt" data-o="up">${I.up}<span>Mover para cima</span></button>` : ''}
+        <button class="opt danger" data-o="del">${I.trash}<span>Excluir ambiente<small>${n ? plural(n, 'item sai', 'itens saem') + ' do orçamento' : 'Está vazio'}</small></span></button>
+      </div>`,
+    foot: `<button class="btn primary" data-save>Salvar nome</button>`,
+    onMount: s => {
+      $('[data-save]', s).onclick = () => { const nn = $('#rm-ren', s).value.trim().replace(/\s+/g, ' '); if (!nn) return toast('Escreva o nome do ambiente.'); r.name = nn; touch(q); closeSheet(true); rerender(); };
+      $$('[data-o]', s).forEach(b => b.onclick = () => {
+        const o = b.dataset.o;
+        if (o === 'dup') {
+          const nr = { id: uid(), name: nextRoomName(q, r.name) };
+          q.rooms.splice(q.rooms.indexOf(r) + 1, 0, nr);
+          q.items.push(...q.items.filter(i => i.room === r.id).map(i => ({ ...i, id: uid(), room: nr.id })));
+          touch(q); closeSheet(true); rerender(); toast(`${nr.name} criado com os mesmos itens.`);
+        }
+        if (o === 'up') { const k = q.rooms.indexOf(r); q.rooms.splice(k, 1); q.rooms.splice(k - 1, 0, r); touch(q); closeSheet(true); rerender(); }
+        if (o === 'del') {
+          const idx = q.rooms.indexOf(r), gone = q.items.filter(i => i.room === r.id);
+          q.rooms.splice(idx, 1); q.items = q.items.filter(i => i.room !== r.id); touch(q); closeSheet(true); rerender();
+          toast(`${r.name} excluído.`, { label: 'Desfazer', run: () => { q.rooms.splice(idx, 0, r); q.items.push(...gone); touch(q); rerender(); } });
+        }
+      });
+    } });
+}
+
+/* ================= deslocamento ================= */
+function tripSheet(q) {
+  const s0 = settings;
+  const t = Object.assign({ km: 0, roundTrip: s0.roundTrip !== false, visits: 1, minutes: 0, toll: 0 },
+    { kmPerL: s0.kmPerL, fuelPrice: s0.fuelPrice, wearPerKm: s0.wearPerKm, hourRate: s0.hourRate, minVisit: s0.minVisit }, q.trip || {});
+  let mode = q.travel && !q.trip ? 'fixed' : 'calc';
+  const money = (id, v, ph = 'R$ 0,00') => `<input id="${id}" type="text" inputmode="numeric" data-money placeholder="${ph}" value="${v ? BRL(v) : ''}">`;
+  openSheet({ title: 'Deslocamento', body: `
+      <div class="seg" role="group" aria-label="Como cobrar"><button data-mode="calc" aria-pressed="${mode === 'calc'}">Calcular pela distância</button><button data-mode="fixed" aria-pressed="${mode === 'fixed'}">Valor fixo</button></div>
+      <div id="tp-calc" class="stack14"${mode === 'fixed' ? ' hidden' : ''}>
+        <div class="field"><label for="tp-km">Distância até a obra (km, só ida)</label><input id="tp-km" type="text" inputmode="decimal" placeholder="Ex.: 18" value="${t.km ? fmtQty(t.km) : ''}">
+          ${q.client.address ? `<a class="linkish" href="${mapsLink(q.client.address)}" target="_blank" rel="noopener">${I.pin}Ver a rota e a distância no mapa</a>` : '<p class="hint">Com o endereço da obra preenchido, dá para abrir a rota no mapa.</p>'}</div>
+        <label class="switch-row" for="tp-rt"><span><b>Ida e volta</b><small>Conta o caminho de volta também.</small></span><input type="checkbox" class="sw" id="tp-rt" ${t.roundTrip ? 'checked' : ''}></label>
+        <div class="field"><span class="lab">Visitas à obra</span>
+          <div class="stepper"><button data-tv="-1" aria-label="Menos visitas">${I.minus}</button><input id="tp-vis" type="text" readonly value="${t.visits}" aria-label="Visitas"><button data-tv="1" aria-label="Mais visitas">${I.plus}</button></div>
+          <p class="hint">Uma ida por dia de serviço. Some a visita para orçar, se for cobrar por ela.</p></div>
+        <div class="subcard"><div class="card-hr"><b>${I.car}Seu veículo</b><span class="hint">fica salvo</span></div>
+          <div class="grid2">
+            <div class="field"><label for="tp-kml">Consumo (km por litro)</label><input id="tp-kml" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${t.kmPerL ? fmtQty(t.kmPerL) : ''}"></div>
+            <div class="field"><label for="tp-fuel">Combustível (litro)</label>${money('tp-fuel', t.fuelPrice, 'Ex.: R$ 6,19')}</div>
+          </div></div>
+        <details class="more"${t.toll || t.minutes || t.wearPerKm ? ' open' : ''}><summary>Outros custos (opcional)</summary><div class="more-in">
+          <div class="field"><label for="tp-toll">Pedágio e estacionamento por visita</label>${money('tp-toll', t.toll)}</div>
+          <div class="grid2">
+            <div class="field"><label for="tp-min">Tempo de viagem (min, só ida)</label><input id="tp-min" type="text" inputmode="numeric" placeholder="Ex.: 30" value="${t.minutes || ''}"></div>
+            <div class="field"><label for="tp-hour">Valor da sua hora</label>${money('tp-hour', t.hourRate)}</div>
+          </div>
+          <div class="field"><label for="tp-wear">Desgaste do veículo (por km)</label>${money('tp-wear', t.wearPerKm)}<p class="hint">Pneus, óleo, manutenção e depreciação. Sem isso, o cálculo cobre só o combustível.</p></div>
+        </div></details>
+        <div class="breakdown" id="tp-out" aria-live="polite"></div>
+      </div>
+      <div id="tp-fixed"${mode === 'calc' ? ' hidden' : ''}><div class="field"><label for="tp-val">Valor do deslocamento</label>${money('tp-val', q.trip ? 0 : q.travel)}</div></div>`,
+    foot: `<button class="btn ghost" data-clear>Não cobrar</button><button class="btn primary" data-use>Usar <span id="tp-total"></span></button>`,
+    onMount: s => {
+      const out = () => {
+        const r = tripCalc(t), visits = Math.max(1, t.visits || 1), rows = [];
+        if (!t.km) rows.push('<div><span class="warn">Informe a distância até a obra.</span></div>');
+        else {
+          rows.push(`<div><span>Percurso<small>${fmtQty(t.km)} km × ${plural(r.legs, 'trajeto', 'trajetos')}</small></span><b>${fmtQty(r.km)} km</b></div>`);
+          rows.push(t.kmPerL && t.fuelPrice ? `<div><span>Combustível<small>${fmtQty(r.km)} km ÷ ${fmtQty(t.kmPerL)} km/l × ${BRL(t.fuelPrice)}</small></span><b>${BRL(r.fuel)}</b></div>` : '<div><span class="warn">Informe o consumo e o preço do combustível.</span></div>');
+          if (r.toll) rows.push(`<div><span>Pedágio e estacionamento<small>${plural(visits, 'visita', 'visitas')} × ${BRL(t.toll)}</small></span><b>${BRL(r.toll)}</b></div>`);
+          if (r.time) rows.push(`<div><span>Tempo de viagem<small>${fmtQty(Math.round(t.minutes * r.legs / 60 * 100) / 100)} h × ${BRL(t.hourRate)}</small></span><b>${BRL(r.time)}</b></div>`);
+          else if (t.minutes && !t.hourRate) rows.push('<div><span class="warn">Informe o valor da sua hora para cobrar o tempo de viagem.</span></div>');
+          if (r.wear) rows.push(`<div><span>Desgaste do veículo<small>${fmtQty(r.km)} km × ${BRL(t.wearPerKm)}</small></span><b>${BRL(r.wear)}</b></div>`);
+          if (r.usedMin) rows.push(`<div><span>Mínimo aplicado<small>${BRL(t.minVisit)} por visita, definido em Ajustes</small></span><b>${BRL(r.min)}</b></div>`);
+        }
+        rows.push(`<div class="bt"><span><b>Total</b></span><b>${BRL(r.total)}</b></div>`);
+        $('#tp-out', s).innerHTML = rows.join('');
+        $('#tp-total', s).textContent = BRL(mode === 'calc' ? r.total : (parseMoney($('#tp-val', s).value) || 0));
+      };
+      const keep = (k, v) => { settings[k] = v; saveSettings(); };
+      $$('[data-mode]', s).forEach(b => b.onclick = () => { mode = b.dataset.mode; $$('[data-mode]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#tp-calc', s).hidden = mode !== 'calc'; $('#tp-fixed', s).hidden = mode !== 'fixed'; out(); });
+      $('#tp-km', s).addEventListener('input', e => { t.km = parseQty(e.target.value) || 0; out(); });
+      $('#tp-rt', s).addEventListener('change', e => { t.roundTrip = e.target.checked; keep('roundTrip', t.roundTrip); out(); });
+      $$('[data-tv]', s).forEach(b => b.onclick = () => { t.visits = Math.max(1, Math.min(60, (t.visits || 1) + +b.dataset.tv)); $('#tp-vis', s).value = t.visits; out(); });
+      $('#tp-kml', s).addEventListener('input', e => { t.kmPerL = parseQty(e.target.value) || 0; keep('kmPerL', t.kmPerL); out(); });
+      $('#tp-fuel', s).addEventListener('input', e => { t.fuelPrice = parseMoney(e.target.value) || 0; keep('fuelPrice', t.fuelPrice); out(); });
+      $('#tp-toll', s).addEventListener('input', e => { t.toll = parseMoney(e.target.value) || 0; out(); });
+      $('#tp-min', s).addEventListener('input', e => { t.minutes = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; out(); });
+      $('#tp-hour', s).addEventListener('input', e => { t.hourRate = parseMoney(e.target.value) || 0; keep('hourRate', t.hourRate); out(); });
+      $('#tp-wear', s).addEventListener('input', e => { t.wearPerKm = parseMoney(e.target.value) || 0; keep('wearPerKm', t.wearPerKm); out(); });
+      $('#tp-val', s).addEventListener('input', out);
+      $('[data-clear]', s).onclick = () => { q.trip = null; q.travel = 0; touch(q); closeSheet(true); rerender(); toast('Sem deslocamento neste orçamento.'); };
+      $('[data-use]', s).onclick = () => {
+        if (mode === 'calc') {
+          if (!t.km) return toast('Informe a distância até a obra.');
+          if (!t.kmPerL || !t.fuelPrice) return toast('Informe o consumo do veículo e o preço do combustível.');
+          q.trip = { km: t.km, roundTrip: !!t.roundTrip, visits: Math.max(1, t.visits || 1), minutes: t.minutes || 0, toll: t.toll || 0, kmPerL: t.kmPerL, fuelPrice: t.fuelPrice, wearPerKm: t.wearPerKm || 0, hourRate: t.hourRate || 0, minVisit: t.minVisit || 0 };
+          q.travel = tripCalc(q.trip).total;
+        } else { q.trip = null; q.travel = parseMoney($('#tp-val', s).value) || 0; }
+        touch(q); closeSheet(true); rerender(); toast(`Deslocamento: ${BRL(q.travel)}.`);
+      };
+      out();
     } });
 }
 
@@ -1308,6 +1637,20 @@ function paperHTML(q, c) {
   const biz = s.company || s.name;
   const sub = [s.company && s.name ? s.name : '', s.phone ? fmtPhone(s.phone) : '', s.email, s.doc, s.city].filter(Boolean);
   const row = (i, dim) => `<tr${dim ? ' class="dim"' : ''}><td>${esc(i.name)}<small>${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)}</small></td><td>${BRL(lineTotal(i))}</td></tr>`;
+  let body;
+  if (q.useRooms) {
+    body = roomList(q).filter(g => g.items.length).map(g => {
+      const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
+      const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
+      return `<tr class="p-sec"><td colspan="2">${esc(g.name)}</td></tr>${svc.map(i => row(i)).join('')}${mat.map(i => row(i, !c.matIn)).join('')}<tr class="p-sub"><td>Subtotal ${esc(g.name)}</td><td>${BRL(st)}</td></tr>`;
+    }).join('');
+    if (!body) body = '<tr class="dim"><td colspan="2">Nenhum item lançado</td></tr>';
+    else if (c.mat.length && !c.matIn) body += '<tr class="p-note"><td colspan="2">Material por conta do cliente: valores estimados, fora do total.</td></tr>';
+  } else {
+    body = `<tr class="p-sec"><td colspan="2">Mão de obra</td></tr>
+      ${c.svc.length ? c.svc.map(i => row(i)).join('') : '<tr class="dim"><td colspan="2">Nenhum serviço lançado</td></tr>'}
+      ${c.mat.length ? `<tr class="p-sec"><td colspan="2">Material</td></tr>${c.matIn ? '' : '<tr class="p-note"><td colspan="2">Por conta do cliente: valores estimados, fora do total.</td></tr>'}${c.mat.map(i => row(i, !c.matIn)).join('')}` : ''}`;
+  }
   return `<article class="paper" aria-label="Prévia da proposta">
     <header class="p-head">
       <div class="p-brand">${s.logo ? `<img class="p-img" src="${s.logo}" alt="">` : `<span class="p-logo">${I.bolt}</span>`}<div><b>${esc(biz || 'Seu nome ou empresa')}</b>${sub.map(x => `<span>${esc(x)}</span>`).join('')}</div></div>
@@ -1320,14 +1663,11 @@ function paperHTML(q, c) {
     </div>
     <table class="p-table">
       <thead><tr><th>Descrição</th><th>Total</th></tr></thead>
-      <tbody>
-        <tr class="p-sec"><td colspan="2">Mão de obra</td></tr>
-        ${c.svc.length ? c.svc.map(i => row(i)).join('') : '<tr class="dim"><td colspan="2">Nenhum serviço lançado</td></tr>'}
-        ${c.mat.length ? `<tr class="p-sec"><td colspan="2">Material</td></tr>${c.matIn ? '' : '<tr class="p-note"><td colspan="2">Por conta do cliente: valores estimados, fora do total.</td></tr>'}${c.mat.map(i => row(i, !c.matIn)).join('')}` : ''}
-      </tbody>
+      <tbody>${body}</tbody>
     </table>
     <div class="p-tot">
       <div><span>Mão de obra</span><b>${BRL(c.labor)}</b></div>
+      ${c.extra ? `<div><span>Adicionais (+${c.surPct}%)</span><b>${BRL(c.extra)}</b></div>` : ''}
       ${c.mat.length ? `<div><span>Material${c.matIn ? '' : ' (cliente)'}</span><b>${c.matIn ? BRL(c.matTotal) : '—'}</b></div>` : ''}
       ${c.travel ? `<div><span>Deslocamento</span><b>${BRL(c.travel)}</b></div>` : ''}
       ${c.discount ? `<div><span>Desconto${q.discount.mode === 'pct' ? ` (${fmtQty(q.discount.pct)}%)` : ''}</span><b>−${BRL(c.discount)}</b></div>` : ''}
@@ -1337,6 +1677,8 @@ function paperHTML(q, c) {
       <dt>Pagamento</dt><dd>${esc(payText(q, c))}</dd>
       ${q.deadline ? `<dt>Prazo</dt><dd>${esc(q.deadline)}</dd>` : ''}
       ${q.warranty ? `<dt>Garantia</dt><dd>${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado</dd>` : ''}
+      ${c.extra ? `<dt>Adicionais</dt><dd>${esc(extrasText(q))}, sobre a mão de obra</dd>` : ''}
+      ${q.trip && c.travel ? `<dt>Deslocamento</dt><dd>${esc(tripLong(q.trip))}</dd>` : ''}
     </dl>
     ${px ? `<div class="p-pix"><canvas data-qr width="200" height="200" aria-label="QR code do Pix"></canvas><div><b>Pague a ${px.label} com Pix: ${BRL(px.value)}</b><span>Chave: ${esc(px.key)}</span><span>Abra o app do banco e leia o QR code.</span></div></div>` : ''}
     ${q.notes.trim() ? `<div><span class="p-lab">Observações</span><div class="p-notes">${esc(q.notes.trim())}</div></div>` : ''}
@@ -1395,17 +1737,26 @@ function shareMore(q) {
   const c = compute(q), px = pixOf(q, c);
   openSheet({ title: 'Mais opções', body: `<div class="opts">
       <button class="opt" data-o="copy">${I.copy}<span>Copiar texto da proposta<small>Para colar em outro aplicativo</small></span></button>
-      ${c.mat.length ? `<a class="opt" data-o="mat" href="${waLink(q.client.phone, materialMessage(q, c))}" target="_blank" rel="noopener">${I.list}<span>Lista de material pelo WhatsApp<small>Só os itens e quantidades, para o cliente comprar</small></span></a>` : ''}
+      ${q.useRooms && q.items.length ? `<button class="opt" data-o="conf">${I.list}<span>Conferência por ambiente (PDF)<small>Quantidades de cada cômodo, sem preços, para conferir na obra</small></span></button>` : ''}
+      ${c.mat.length ? `<a class="opt" data-o="mat" href="${waLink(q.client.phone, materialMessage(q, c))}" target="_blank" rel="noopener">${I.wa}<span>Lista de material pelo WhatsApp<small>Total de cada item, para o cliente comprar</small></span></a>` : ''}
       ${px ? `<button class="opt" data-o="pix">${I.pix}<span>QR code do Pix<small>${BRL(px.value)} · ${px.label}</small></span></button>` : ''}
       <button class="opt" data-o="status">${I.flag}<span>Alterar situação<small>Agora: ${STATUS[q.status]}</small></span></button>
     </div>`,
     onMount: s => $$('[data-o]', s).forEach(b => b.addEventListener('click', () => {
       const o = b.dataset.o;
       if (o === 'copy') { closeSheet(true); copyText(quoteMessage(q, c), 'Texto copiado.'); markSent(q); }
+      if (o === 'conf') { closeSheet(true); shareConference(q); }
       if (o === 'mat') closeSheet(true);
       if (o === 'pix') pixSheet(px);
       if (o === 'status') statusSheet(q);
     })) });
+}
+async function shareConference(q, btn) {
+  const html = btn && btn.innerHTML;
+  if (btn) { btn.disabled = true; btn.textContent = 'Gerando…'; }
+  try { await saveFile(fileName('Conferencia', q), await buildConferencePDF(q)); }
+  catch (e) { console.warn(e); toast('Não foi possível gerar o PDF. Na primeira vez, o app precisa de internet.'); }
+  if (btn) { btn.disabled = false; btn.innerHTML = html; }
 }
 
 /* ================= mensagens ================= */
@@ -1417,12 +1768,23 @@ function waLink(phone, text) {
 const signature = () => [settings.name, settings.company && settings.company !== settings.name ? settings.company : '', settings.phone ? fmtPhone(settings.phone) : ''].filter(Boolean);
 function quoteMessage(q, c) {
   const L = [], fn = firstName(q.client.name);
+  const line = (i, tag) => `• ${i.name}${tag && i.kind === 'mat' ? ' (material)' : ''}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)} = ${BRL(lineTotal(i))}`;
   L.push(`Olá${fn ? ', ' + fn : ''}! Segue o orçamento ${numLabel(q)}${q.title ? ' – ' + q.title : ''}.`);
-  const block = (title, items, note) => { if (!items.length) return; L.push('', `*${title}*${note || ''}`); items.forEach(i => L.push(`• ${i.name}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)} = ${BRL(lineTotal(i))}`)); };
-  block('Mão de obra', c.svc);
-  block('Material', c.mat, c.matIn ? '' : ' _(por sua conta, valores estimados)_');
-  L.push('');
-  if (c.travel) L.push(`Deslocamento: ${BRL(c.travel)}`);
+  if (q.useRooms) {
+    roomList(q).filter(g => g.items.length).forEach(g => {
+      L.push('', `*${g.name}*`);
+      [...g.items.filter(i => i.kind === 'svc'), ...g.items.filter(i => i.kind === 'mat')].forEach(i => L.push(line(i, true)));
+    });
+    if (c.mat.length && !c.matIn) L.push('', '_Material por sua conta: valores estimados, fora do total._');
+  } else {
+    const block = (title, items, note) => { if (!items.length) return; L.push('', `*${title}*${note || ''}`); items.forEach(i => L.push(line(i))); };
+    block('Mão de obra', c.svc);
+    block('Material', c.mat, c.matIn ? '' : ' _(por sua conta, valores estimados)_');
+  }
+  L.push('', `Mão de obra: ${BRL(c.labor)}`);
+  if (c.extra) L.push(`Adicionais – ${extrasText(q).replace(/^./, ch => ch.toLowerCase())}: ${BRL(c.extra)}`);
+  if (c.mat.length && c.matIn) L.push(`Material: ${BRL(c.matTotal)}`);
+  if (c.travel) L.push(`Deslocamento${q.trip ? ` (${tripShort(q.trip)})` : ''}: ${BRL(c.travel)}`);
   if (c.discount) L.push(`Desconto: −${BRL(c.discount)}`);
   L.push(`*Total: ${BRL(c.total)}*`, '', `*Pagamento:* ${payText(q, c)}`);
   if (q.deadline) L.push(`*Prazo:* ${q.deadline}`);
@@ -1438,9 +1800,9 @@ function followMessage(q, c) {
   return `Olá${fn ? ', ' + fn : ''}, tudo bem? Passando para saber se você conseguiu ver o orçamento ${numLabel(q)}${q.title ? ` (${q.title})` : ''}, no valor de ${BRL(c.total)}. Se quiser ajustar alguma coisa, é só me falar.${settings.name ? `\n${firstName(settings.name)}` : ''}`;
 }
 function materialMessage(q, c) {
-  const fn = firstName(q.client.name);
+  const fn = firstName(q.client.name), L = consolidate(q, 'mat');
   return [`Olá${fn ? ', ' + fn : ''}! Esta é a lista de material para o serviço${q.title ? ` (${q.title})` : ''}:`, '',
-    ...c.mat.map(i => `• ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} – ${i.name}`), '',
+    ...L.map(e => `• ${fmtQty(e.qty)} ${unitTxt(e.qty, e.unit)} – ${e.name}`), '',
     `Valor estimado: ${BRL(c.matTotal)} (pode variar conforme a loja).`, ...(signature().length ? ['', ...signature()] : [])].join('\n');
 }
 
@@ -1630,13 +1992,29 @@ async function buildQuotePDF(q) {
     doc.setDrawColor(...PC.line); doc.setLineWidth(0.2); doc.line(M, y, M + CW, y);
   };
   thead();
-  section('Mão de obra');
-  if (c.svc.length) c.svc.forEach(i => row(i)); else { txt('Nenhum serviço lançado', M + 6, y + 4.5, { size: 9.5, color: PC.muted }); y += 7; }
-  if (c.mat.length) { section('Material', c.matIn ? '' : 'Por conta do cliente: valores estimados, fora do total.'); c.mat.forEach(i => row(i, !c.matIn)); }
+  if (q.useRooms) {
+    const G = roomList(q).filter(g => g.items.length);
+    if (!G.length) { txt('Nenhum item lançado', M + 6, y + 4.5, { size: 9.5, color: PC.muted }); y += 7; }
+    G.forEach(g => {
+      const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
+      section(g.name);
+      svc.forEach(i => row(i)); mat.forEach(i => row(i, !c.matIn));
+      const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
+      if (need(6.5)) thead();
+      txt(`Subtotal ${g.name}`, unitR, y + 4.4, { size: 8.6, color: PC.muted, align: 'right' });
+      txt(BRL(st), totR, y + 4.4, { size: 9.2, bold: true, align: 'right' }); y += 6.5;
+    });
+    if (c.mat.length && !c.matIn) { need(7); txt('Material por conta do cliente: valores estimados, fora do total.', M + 2.5, y + 4, { size: 8.5, italic: true, color: PC.muted }); y += 6; }
+  } else {
+    section('Mão de obra');
+    if (c.svc.length) c.svc.forEach(i => row(i)); else { txt('Nenhum serviço lançado', M + 6, y + 4.5, { size: 9.5, color: PC.muted }); y += 7; }
+    if (c.mat.length) { section('Material', c.matIn ? '' : 'Por conta do cliente: valores estimados, fora do total.'); c.mat.forEach(i => row(i, !c.matIn)); }
+  }
 
   // totais
   y += 5;
   const rows = [['Mão de obra', BRL(c.labor)]];
+  if (c.extra) rows.push([`Adicionais (+${c.surPct}%)`, BRL(c.extra)]);
   if (c.mat.length) rows.push([c.matIn ? 'Material' : 'Material (cliente)', c.matIn ? BRL(c.matTotal) : '-']);
   if (c.travel) rows.push(['Deslocamento', BRL(c.travel)]);
   if (c.discount) rows.push(['Desconto' + (q.discount.mode === 'pct' ? ` (${fmtQty(q.discount.pct)}%)` : ''), '- ' + BRL(c.discount)]);
@@ -1664,7 +2042,7 @@ async function buildQuotePDF(q) {
   y = Math.max(y + 11.5, px && qr ? top + Math.max(totH, 32) : 0) + 7.5;
 
   // condições
-  const conds = [['Pagamento', payText(q, c)], q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', `${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado`]].filter(Boolean);
+  const conds = [['Pagamento', payText(q, c)], q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', `${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
   need(14); label('Condições', M, y); y += 5.6;
   conds.forEach(([l, v]) => {
     const L = wrap(v, CW - 42, 9.5);
@@ -1694,6 +2072,57 @@ async function buildQuotePDF(q) {
   txt('Responsável pelo serviço', sx, y + 9.6, { size: 8, color: PC.muted });
 
   pdfFooter(K, `Orçamento ${numLabel(q)}${q.client.name ? ' · ' + q.client.name : ''}`);
+  return doc.output('blob');
+}
+
+// conferência de quantitativos: o que vai em cada cômodo, sem preços, com caixinha para marcar na obra
+async function buildConferencePDF(q) {
+  const JsPDF = await loadJsPDF();
+  const K = pdfKit(JsPDF), { doc, H, M, CW, txt, wrap, lh, label } = K;
+  let y = pdfHeader(K, 'CONFERÊNCIA', numLabel(q), [fmtDate(Date.now())]);
+  const bottom = H - 19;
+  const need = h => { if (y + h > bottom) { doc.addPage(); y = M + 2; return true; } return false; };
+  label('Obra', M, y); y += 5.4;
+  txt(q.client.name || 'Cliente', M, y, { size: 11.5, bold: true }); y += lh(11.5);
+  const sub = [q.title, q.client.address].filter(Boolean).join(' · ');
+  if (sub) wrap(sub, CW, 9.3).forEach(t => { txt(t, M, y, { size: 9.3, color: PC.muted }); y += lh(9.3); });
+  y += 5;
+  const qtyR = M + CW - 12, kindX = M + CW - 62, okX = M + CW - 6.1;
+  const box = yy => { doc.setDrawColor(...PC.muted); doc.setLineWidth(0.3); doc.rect(okX, yy, 3.6, 3.6, 'S'); };
+  const head = cols => { doc.setFillColor(...PC.soft); doc.rect(M, y, CW, 7, 'F'); cols.forEach(([t, x, a]) => txt(t.toUpperCase(), x, y + 4.7, { size: 7.2, bold: true, color: PC.muted, align: a })); y += 7; };
+  const cols1 = [['Item', M + 2.5, 'left'], ['Tipo', kindX, 'left'], ['Qtd.', qtyR, 'right'], ['OK', M + CW - 2.5, 'right']];
+  const sep = () => { doc.setDrawColor(...PC.line); doc.setLineWidth(0.2); doc.line(M, y, M + CW, y); };
+  head(cols1);
+  roomList(q).filter(g => g.items.length).forEach(g => {
+    if (need(16)) head(cols1);
+    y += 2; doc.setFillColor(...PC.volt); doc.rect(M + 2.5, y + 1.3, 1.5, 4, 'F');
+    txt(g.name.toUpperCase(), M + 6, y + 4.7, { size: 8.5, bold: true }); y += 6.8;
+    [...g.items.filter(i => i.kind === 'mat'), ...g.items.filter(i => i.kind === 'svc')].forEach(i => {
+      const L = wrap(i.name, kindX - M - 8, 9.5), h = L.length * lh(9.5) + 2.7;
+      if (need(h)) head(cols1);
+      L.forEach((t, k) => txt(t, M + 2.5, y + 4.4 + k * lh(9.5), { size: 9.5 }));
+      txt(i.kind === 'mat' ? 'Material' : 'Mão de obra', kindX, y + 4.4, { size: 8.5, color: PC.muted });
+      txt(`${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)}`, qtyR, y + 4.4, { size: 9.5, bold: true, align: 'right' });
+      box(y + 1.4); y += h; sep();
+    });
+  });
+  const tot = consolidate(q, 'mat');
+  if (tot.length) {
+    y += 9; if (need(26)) y += 0;
+    label('Total de material, somando os ambientes', M, y); y += 3.5;
+    const cols2 = [['Item', M + 2.5, 'left'], ['Qtd. total', qtyR, 'right'], ['OK', M + CW - 2.5, 'right']];
+    head(cols2);
+    tot.forEach(e => {
+      const w = qtyR - M - 30, L = wrap(e.name, w, 9.5), B = e.by.size > 1 ? wrap(byText(e), w, 8) : [];
+      const h = L.length * lh(9.5) + B.length * lh(8) + 2.7;
+      if (need(h)) head(cols2);
+      L.forEach((t, k) => txt(t, M + 2.5, y + 4.4 + k * lh(9.5), { size: 9.5, bold: true }));
+      B.forEach((t, k) => txt(t, M + 2.5, y + 4.2 + L.length * lh(9.5) + k * lh(8), { size: 8, color: PC.muted }));
+      txt(`${fmtQty(e.qty)} ${unitTxt(e.qty, e.unit)}`, qtyR, y + 4.4, { size: 9.5, bold: true, align: 'right' });
+      box(y + 1.4); y += h; sep();
+    });
+  }
+  pdfFooter(K, `Conferência ${numLabel(q)}${q.client.name ? ' · ' + q.client.name : ''}`);
   return doc.output('blob');
 }
 
@@ -1903,6 +2332,8 @@ function readLogo(file) {
 VIEWS.settings = {
   html() {
     const s = settings;
+    const money = (k, label, ph) => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" data-money type="text" inputmode="numeric" value="${s[k] ? BRL(s[k]) : ''}" placeholder="${esc(ph)}"></div>`;
+    const pct = (k, label) => `<div class="field"><label for="st-${k}">${label} (%)</label><input id="st-${k}" data-set="${k}" data-int type="text" inputmode="numeric" value="${s[k]}"></div>`;
     const f = (k, label, ph, type = 'text', extra = '') => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" type="${type}" value="${esc(k === 'phone' ? fmtPhone(s[k]) : s[k])}" placeholder="${esc(ph)}" ${extra}></div>`;
     return `<header class="appbar"><div class="appbar-in"><div class="ab-title"><span class="ab-main big">Ajustes</span></div></div></header>
     <main class="page">
@@ -1927,6 +2358,23 @@ VIEWS.settings = {
         ${f('pix', 'Chave Pix', 'CPF, celular, e-mail ou chave aleatória', 'text', 'autocapitalize="off" spellcheck="false"')}
       </section>
       <section class="card">
+        <div><h2 class="card-h">Veículo e deslocamento</h2><p class="hint">Base da calculadora de deslocamento. O preço do combustível também pode ser atualizado direto no orçamento.</p></div>
+        <div class="grid2">
+          <div class="field"><label for="st-kmPerL">Consumo médio (km/l)</label><input id="st-kmPerL" data-set="kmPerL" data-dec type="text" inputmode="decimal" value="${s.kmPerL ? fmtQty(s.kmPerL) : ''}" placeholder="Ex.: 10"></div>
+          ${money('fuelPrice', 'Combustível (litro)', 'Ex.: R$ 6,19')}
+          ${money('wearPerKm', 'Desgaste por km', 'Opcional')}
+          ${money('hourRate', 'Valor da sua hora', 'Opcional')}
+        </div>
+        ${money('minVisit', 'Mínimo por visita', 'Opcional')}
+        <p class="hint">O desgaste cobre pneus, óleo e manutenção. A hora entra quando você informa o tempo de viagem. O mínimo protege as obras muito perto.</p>
+      </section>
+      <section class="card">
+        <div><h2 class="card-h">Adicionais sobre a mão de obra</h2><p class="hint">Percentual usado quando você marca o adicional no orçamento. Se marcar mais de um, eles se somam.</p></div>
+        <div class="grid3">
+          ${pct('surUrgent', 'Urgência')}${pct('surNight', 'Noturno')}${pct('surWeekend', 'Fim de sem.')}
+        </div>
+      </section>
+      <section class="card">
         <div><h2 class="card-h">Padrão de cada orçamento novo</h2><p class="hint">Dá para mudar em cada orçamento.</p></div>
         <div class="grid2">
           ${f('validity', 'Validade (dias)', '15', 'text', 'inputmode="numeric" data-int')}
@@ -1945,7 +2393,7 @@ VIEWS.settings = {
         <div><h2 class="card-h">Instalar na tela de início</h2><p class="hint">Abre como um aplicativo, em tela cheia, e funciona sem internet.</p></div>
         ${installEvt ? `<button class="btn primary" data-install>${I.phone}Instalar o Elétrica Fácil</button>` : `<p style="margin:0;font-size:15px"><b>iPhone:</b> no Safari, toque em Compartilhar e depois em <b>Adicionar à Tela de Início</b>.<br><b>Android:</b> no Chrome, abra o menu ⋮ e toque em <b>Instalar app</b>.</p>`}
       </section>`}
-      <p class="foot-note">Elétrica Fácil · versão 2</p>
+      <p class="foot-note">Elétrica Fácil · versão 2.1</p>
     </main>`;
   },
   bind(v) {
@@ -1955,6 +2403,8 @@ VIEWS.settings = {
         const k = i.dataset.set;
         let val = i.value;
         if (i.hasAttribute('data-int')) val = parseInt(val.replace(/\D/g, ''), 10) || 0;
+        else if (i.hasAttribute('data-money')) val = parseMoney(val) || 0;
+        else if (i.hasAttribute('data-dec')) val = parseQty(val) || 0;
         else if (i.tagName === 'INPUT') val = val.trim();
         settings[k] = val; clearTimeout(t); t = setTimeout(saveSettings, 250);
       };

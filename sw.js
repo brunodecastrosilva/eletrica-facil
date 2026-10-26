@@ -1,6 +1,6 @@
 // Deixa o app abrir sem internet. Arquivos do app: busca a versão nova primeiro e usa a guardada se estiver offline.
 // Bibliotecas (QR code, PDF, fontes) têm versão fixa: usa a guardada.
-const CACHE = 'eletrica-facil-v3';
+const CACHE = 'eletrica-facil-v4';
 const APP = ['./', './index.html', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png'];
 const LIBS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
