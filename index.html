@@ -323,12 +323,16 @@ mark{background:var(--volt-soft);color:inherit;border-radius:3px;padding:0 1px}
 /* proposta na tela (espelho do PDF) */
 .paper{background:var(--paper);color:var(--paper-ink);border-radius:6px;box-shadow:var(--shadow);padding:22px 18px;font-size:13px;line-height:1.45;display:flex;flex-direction:column;gap:16px;font-family:var(--f-body)}
 .p-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.p-brand{display:flex;gap:10px;min-width:0;align-items:flex-start}
-.p-logo{width:40px;height:40px;border-radius:9px;background:var(--paper-volt);color:#17150F;display:grid;place-items:center;flex:none}
-.p-logo svg{width:24px;height:24px}
-.p-img{max-width:72px;max-height:42px;object-fit:contain;flex:none}
-.p-brand b{font-family:var(--f-display);font-size:15px;font-weight:800;display:block;line-height:1.2}
-.p-brand span{display:block;color:var(--paper-muted);font-size:11.5px;line-height:1.35}
+.p-brand{display:flex;gap:12px;min-width:0;align-items:flex-start}
+.p-brand.short{align-items:center}
+/* a logo ocupa do topo do nome até a base da última linha (o tamanho é ajustado em fitMark) */
+.p-mark{flex:none;width:44px;height:44px;display:grid;place-items:center}
+.p-mark svg{width:100%;height:100%;display:block}
+.p-mark img{max-width:100%;max-height:100%;object-fit:contain}
+.p-who{min-width:0;text-box:trim-both cap alphabetic}
+.p-who b{font-family:var(--f-display);font-size:15px;font-weight:800;display:block;line-height:1.2}
+.p-who span{display:block;color:var(--paper-muted);font-size:11.5px;line-height:1.35}
+@supports not (text-box:trim-both cap alphabetic){.p-who b{margin-top:-3.5px}.p-who span:last-child,.p-who b:last-child{margin-bottom:-3px}}
 .p-num{text-align:right;flex:none;line-height:1.25}
 .p-num span{display:block;font-size:10px;letter-spacing:.12em;font-weight:700;color:var(--paper-muted)}
 .p-num b{display:block;font-family:var(--f-display);font-size:17px;font-weight:850;font-stretch:108%}
@@ -908,6 +912,21 @@ function attachSuggest(input, getItems, onPick) {
   });
   box.addEventListener('pointerdown', e => e.preventDefault());
   box.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) pick(+b.dataset.i); });
+}
+// logo padrão: o mesmo desenho do ícone do app
+const APP_MARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5.28" fill="#FFC400"/><path transform="translate(3.6 3.6) scale(.7)" d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z" fill="#17150F"/></svg>';
+function fitMark(root) {
+  const who = $('.p-who', root), mark = $('.p-mark', root); if (!who || !mark) return;
+  const apply = () => {
+    // limite de tamanho: com muitas linhas a logo fica centralizada, sem empurrar o texto
+    const h = who.getBoundingClientRect().height, size = Math.min(72, Math.max(36, Math.round(h)));
+    const img = $('img', mark), r = img ? (settings.logoRatio || 1) : 1;
+    mark.style.height = size + 'px'; mark.style.width = Math.round(Math.min(size * r, size * 2.6)) + 'px';
+    mark.parentNode.classList.toggle('short', h < 36 || h > 72);
+  };
+  apply();
+  try { new ResizeObserver(apply).observe(who); } catch {}
+  document.fonts && document.fonts.ready.then(apply).catch(() => {});
 }
 const vibrate = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
 
@@ -1653,13 +1672,13 @@ function paperHTML(q, c) {
   }
   return `<article class="paper" aria-label="Prévia da proposta">
     <header class="p-head">
-      <div class="p-brand">${s.logo ? `<img class="p-img" src="${s.logo}" alt="">` : `<span class="p-logo">${I.bolt}</span>`}<div><b>${esc(biz || 'Seu nome ou empresa')}</b>${sub.map(x => `<span>${esc(x)}</span>`).join('')}</div></div>
+      <div class="p-brand"><div class="p-mark">${s.logo ? `<img src="${s.logo}" alt="">` : APP_MARK}</div><div class="p-who"><b>${esc(biz || 'Seu nome ou empresa')}</b>${sub.map(x => `<span>${esc(x)}</span>`).join('')}</div></div>
       <div class="p-num"><span>ORÇAMENTO</span><b>${esc(numLabel(q))}</b><small>${fmtDate(q.createdAt)}</small></div>
     </header>
     <div class="p-rule"></div>
     <div class="p-parties">
       <div><span class="p-lab">Cliente</span><b>${esc(q.client.name || '—')}</b>${q.client.phone ? `<span>${esc(fmtPhone(q.client.phone))}</span>` : ''}${q.client.address ? `<span>${esc(q.client.address)}</span>` : ''}</div>
-      <div><span class="p-lab">Serviço</span><b>${esc(q.title || 'Serviços elétricos')}</b>${q.validity ? `<span>Válida até ${fmtDate(c.validUntil)}</span>` : ''}</div>
+      <div><span class="p-lab">Serviço</span><b>${esc(q.title || 'Serviços elétricos')}</b></div>
     </div>
     <table class="p-table">
       <thead><tr><th>Descrição</th><th>Total</th></tr></thead>
@@ -1677,12 +1696,13 @@ function paperHTML(q, c) {
       <dt>Pagamento</dt><dd>${esc(payText(q, c))}</dd>
       ${q.deadline ? `<dt>Prazo</dt><dd>${esc(q.deadline)}</dd>` : ''}
       ${q.warranty ? `<dt>Garantia</dt><dd>${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado</dd>` : ''}
+      ${q.validity ? `<dt>Validade</dt><dd>Proposta válida até ${fmtDate(c.validUntil)}</dd>` : ''}
       ${c.extra ? `<dt>Adicionais</dt><dd>${esc(extrasText(q))}, sobre a mão de obra</dd>` : ''}
       ${q.trip && c.travel ? `<dt>Deslocamento</dt><dd>${esc(tripLong(q.trip))}</dd>` : ''}
     </dl>
     ${px ? `<div class="p-pix"><canvas data-qr width="200" height="200" aria-label="QR code do Pix"></canvas><div><b>Pague a ${px.label} com Pix: ${BRL(px.value)}</b><span>Chave: ${esc(px.key)}</span><span>Abra o app do banco e leia o QR code.</span></div></div>` : ''}
     ${q.notes.trim() ? `<div><span class="p-lab">Observações</span><div class="p-notes">${esc(q.notes.trim())}</div></div>` : ''}
-    <div class="p-sign"><div><b>${esc(q.client.name || 'Cliente')}</b><span>Cliente · data: ___/___/_____</span></div><div><b>${esc(s.name || s.company || 'Responsável')}</b><span>Responsável pelo serviço</span></div></div>
+    <div class="p-sign"><div><b>${esc(q.client.name || 'Cliente')}</b><span>Cliente</span></div><div><b>${esc(s.name || s.company || 'Responsável')}</b><span>Responsável pelo serviço</span></div></div>
   </article>`;
 }
 function markSent(q) {
@@ -1715,6 +1735,7 @@ VIEWS.preview = {
   bind(v, r) {
     const q = getQ(r.id);
     loadJsPDF().catch(() => {});
+    fitMark(v);
     $('[data-back]', v).onclick = () => back('/q/' + q.id);
     $('[data-edit]', v).onclick = () => back('/q/' + q.id);
     $('[data-me]', v)?.addEventListener('click', () => go('/ajustes'));
@@ -1907,27 +1928,35 @@ function pdfBolt(doc, x, y, size) {
 }
 function pdfHeader(K, kind, num, extra) {
   const { doc, M, CW, txt, wrap } = K, s = settings;
-  const y = M;
-  let x = M;
+  const top = M;
+  // uma informação por linha, como na tela; a logo vai do topo do nome até a base da última linha
+  const subs = [s.company && s.name ? s.name : '', s.phone ? fmtPhone(s.phone) : '', s.email, s.doc, s.city].filter(Boolean);
+  const NS = 13.5, SS = 8.8, NL = 5.6, SL = 4.1, cap = NS * 0.3528 * 0.718;
+  const ratio = s.logo ? (s.logoRatio || 1) : 1;
+  const names = wrap(s.company || s.name || 'Seu nome ou empresa', CW - Math.min(44, 18 * ratio) - 55, NS, true).slice(0, 2);
+  const lastName = cap + (names.length - 1) * NL;
+  const textH = subs.length ? lastName + 5.4 + (subs.length - 1) * SL : lastName;
+  const h = Math.min(22, Math.max(textH, 12)), boxH = Math.max(h, textH);
+  const textTop = top + (boxH - textH) / 2, logoTop = top + (boxH - h) / 2;
+  let w = h;
   if (s.logo) {
-    const h = 17, w = Math.min(44, h * (s.logoRatio || 1));
-    try { doc.addImage(s.logo, 'PNG', M, y, w, h); x = M + w + 5; } catch { x = M; }
+    w = Math.min(44, h * ratio); const hh = w / ratio;
+    try { doc.addImage(s.logo, 'PNG', M, logoTop + (h - hh) / 2, w, hh); } catch { w = 0; }
   } else {
-    doc.setFillColor(...PC.volt); doc.roundedRect(M, y, 15, 15, 2.8, 2.8, 'F');
-    doc.setFillColor(...PC.ink); pdfBolt(doc, M + 2.4, y + 2.4, 10.2);
-    x = M + 20;
+    doc.setFillColor(...PC.volt); doc.roundedRect(M, logoTop, h, h, h * 0.22, h * 0.22, 'F');
+    doc.setFillColor(...PC.ink); pdfBolt(doc, M + h * 0.15, logoTop + h * 0.15, h * 0.7);
   }
-  const lines = [s.company && s.name ? s.name : '', [s.phone ? fmtPhone(s.phone) : '', s.email].filter(Boolean).join('   '), [s.doc, s.city].filter(Boolean).join('   ')].filter(Boolean);
-  const maxW = CW - (x - M) - 50;
-  let ly = y + 5.4;
-  wrap(s.company || s.name || 'Seu nome ou empresa', maxW, 13.5, true).slice(0, 2).forEach(t => { txt(t, x, ly, { size: 13.5, bold: true }); ly += 5.6; });
-  lines.forEach(t => { txt(t, x, ly, { size: 8.8, color: PC.muted }); ly += 4.1; });
+  const x = M + (w ? w + 5 : 0);
+  let ly = textTop + cap;
+  names.forEach(t => { txt(t, x, ly, { size: NS, bold: true }); ly += NL; });
+  ly += 5.4 - NL;
+  subs.forEach(t => { txt(t, x, ly, { size: SS, color: PC.muted }); ly += SL; });
   const rx = M + CW;
-  txt(kind, rx, y + 4.2, { size: 8, bold: true, color: PC.muted, align: 'right' });
-  txt(num, rx, y + 11.4, { size: 16, bold: true, align: 'right' });
-  let ry = y + 16.6;
+  txt(kind, rx, top + 4.2, { size: 8, bold: true, color: PC.muted, align: 'right' });
+  txt(num, rx, top + 11.4, { size: 16, bold: true, align: 'right' });
+  let ry = top + 16.6;
   extra.forEach(t => { txt(t, rx, ry, { size: 8.8, color: PC.muted, align: 'right' }); ry += 4.1; });
-  const yy = Math.max(ly - 1.2, ry - 1.2, y + 17) + 3.5;
+  const yy = Math.max(top + boxH + 1, ry - 1.2) + 3.5;
   doc.setFillColor(...PC.volt); doc.rect(M, yy, CW, 1.4, 'F');
   return yy + 7.5;
 }
@@ -1962,7 +1991,6 @@ async function buildQuotePDF(q) {
   [q.client.phone ? fmtPhone(q.client.phone) : '', q.client.address].filter(Boolean).forEach(v => wrap(v, colW, 9.3).forEach(t => { txt(t, M, ly, { size: 9.3, color: PC.muted }); ly += lh(9.3); }));
   label('Serviço', rx, ry); ry += 5.4;
   wrap(q.title || 'Serviços elétricos', colW, 11.5, true).forEach(t => { txt(t, rx, ry, { size: 11.5, bold: true }); ry += lh(11.5); });
-  if (q.validity) { txt(`Proposta válida até ${fmtDate(c.validUntil)}`, rx, ry, { size: 9.3, color: PC.muted }); ry += lh(9.3); }
   y = Math.max(ly, ry) + 5;
 
   // tabela de itens
@@ -2042,7 +2070,7 @@ async function buildQuotePDF(q) {
   y = Math.max(y + 11.5, px && qr ? top + Math.max(totH, 32) : 0) + 7.5;
 
   // condições
-  const conds = [['Pagamento', payText(q, c)], q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', `${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
+  const conds = [['Pagamento', payText(q, c)], q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', `${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado`], q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
   need(14); label('Condições', M, y); y += 5.6;
   conds.forEach(([l, v]) => {
     const L = wrap(v, CW - 42, 9.5);
@@ -2067,7 +2095,7 @@ async function buildQuotePDF(q) {
   doc.setDrawColor(...PC.ink); doc.setLineWidth(0.3);
   doc.line(M, y, M + sw, y); doc.line(sx, y, M + CW, y);
   txt(q.client.name || 'Cliente', M, y + 5, { size: 9.2, bold: true });
-  txt('Cliente · aprovado em ____/____/______', M, y + 9.6, { size: 8, color: PC.muted });
+  txt('Cliente', M, y + 9.6, { size: 8, color: PC.muted });
   txt(settings.name || settings.company || 'Responsável', sx, y + 5, { size: 9.2, bold: true });
   txt('Responsável pelo serviço', sx, y + 9.6, { size: 8, color: PC.muted });
 
