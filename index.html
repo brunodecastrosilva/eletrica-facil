@@ -439,6 +439,15 @@ details.more .more-in{padding:0 14px 14px;display:flex;flex-direction:column;gap
 }
 .banner .field label{color:var(--muted)}
 .banner input[type=date]{background:var(--surface)}
+details.tech > summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+details.tech > summary::-webkit-details-marker{display:none}
+details.tech > summary .hint{font-size:13.5px}
+details.tech > summary::after{content:"+";font-size:24px;line-height:1;color:var(--muted)}
+details.tech[open] > summary::after{content:"–"}
+.tech-in{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.chip.sm-ico svg{width:16px;height:16px}
+.p-checks{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:3px 16px}
+.p-checks li::before{content:"✓";color:#1C7A46;font-weight:800;margin-right:7px}
 @media (max-width:380px){
   .hero-stats b{font-size:19px}
   .hero-stats span{font-size:12px}
@@ -637,7 +646,8 @@ function blankQuote() {
     payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments },
     validity: settings.validity, deadline: '', warranty: settings.warranty, notes: settings.notes,
     status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false,
-    trip: null, extras: { urgent: 0, night: 0, weekend: 0 }, useRooms: false, rooms: [] };
+    trip: null, extras: { urgent: 0, night: 0, weekend: 0 }, useRooms: false, rooms: [],
+    diag: '', work: '', tests: [], recs: '' };
 }
 function fixQuote(q) {
   const d = blankQuote();
@@ -652,6 +662,8 @@ function fixQuote(q) {
   q.rooms = (Array.isArray(q.rooms) ? q.rooms : []).filter(r => r && r.id).map(r => ({ id: String(r.id), name: String(r.name || 'Ambiente') }));
   q.useRooms = !!q.useRooms;
   q.trip = q.trip && typeof q.trip === 'object' ? q.trip : null;
+  ['diag', 'work', 'recs'].forEach(k => { q[k] = String(q[k] || ''); });
+  q.tests = Array.isArray(q.tests) ? q.tests.map(String) : [];
   if (!STATUS[q.status]) q.status = 'rascunho';
   ['isExample', 'active', 'savedAt', 'closedAt', 'total', 'statusAt'].forEach(k => delete q[k]);
   return q;
@@ -952,6 +964,9 @@ function fitMark(root) {
   try { new ResizeObserver(apply).observe(who); } catch {}
   document.fonts && document.fonts.ready.then(apply).catch(() => {});
 }
+const autoGrow = t => { if (!t.offsetParent) return; t.style.height = 'auto'; t.style.height = Math.max(88, t.scrollHeight + 2) + 'px'; };
+document.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') autoGrow(e.target); });
+document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('details')) $$('textarea', e.target).forEach(autoGrow); }, true);
 const vibrate = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
 
 /* ================= navegação ================= */
@@ -997,6 +1012,7 @@ function render(opts = {}) {
   });
   prepFields($('#app'));
   V.bind($('#app'), r);
+  $$('textarea', $('#app')).forEach(autoGrow);
   if (!opts.keep) window.scrollTo(0, navMode === 'pop' && top ? (scrollMem[r.key] || 0) : 0);
   curKey = r.key;
   onScroll();
@@ -1175,6 +1191,65 @@ const NOTE_CHIPS = [
   ['Conforme NBR 5410', 'Serviço executado conforme a norma NBR 5410.'],
   ['Energia desligada', 'A energia será desligada durante parte do serviço.'],
 ];
+// textos prontos do relatório técnico: [rótulo do botão, texto que entra no campo]
+const TECH = {
+  diag: [
+    ['Sobrecarga', 'Disjuntor desarmando por sobrecarga no circuito.'],
+    ['Curto-circuito', 'Curto-circuito na fiação, com danos aos condutores.'],
+    ['Fiação aquecida', 'Fiação aquecida ou derretida por bitola inadequada para a carga.'],
+    ['Mau contato', 'Mau contato em conexões, com sinais de aquecimento.'],
+    ['Sem aterramento', 'Tomadas e equipamentos sem aterramento.'],
+    ['Sem DR', 'Instalação sem dispositivo DR (proteção contra choque elétrico).'],
+    ['Falta de fase', 'Falta de fase em parte da instalação.'],
+    ['Resistência queimada', 'Resistência do chuveiro queimada.'],
+    ['Quadro antigo', 'Quadro de distribuição antigo, sem identificação dos circuitos.'],
+  ],
+  work: [
+    ['Isolamento da falha', 'Localização e isolamento do ponto de falha.'],
+    ['Troca de cabos', 'Substituição dos cabos danificados por cabos de bitola adequada.'],
+    ['Troca de disjuntor', 'Troca do disjuntor por modelo compatível com o circuito.'],
+    ['Reaperto do quadro', 'Reaperto das conexões do quadro de distribuição.'],
+    ['Etiquetagem', 'Identificação dos circuitos no quadro de distribuição.'],
+    ['Instalação de DR', 'Instalação de DR para proteção contra choque elétrico.'],
+  ],
+  recs: [
+    ['Trocar o quadro', 'Recomenda-se a troca do quadro de distribuição.'],
+    ['Instalar DR', 'Recomenda-se a instalação de DR, conforme a NBR 5410.'],
+    ['Revisão geral', 'Recomenda-se uma revisão completa da instalação elétrica.'],
+    ['Evitar sobrecarga', 'Evitar ligar aparelhos de alta potência ao mesmo tempo no mesmo circuito.'],
+    ['Sem benjamins', 'Não usar benjamins e extensões como ligação permanente.'],
+    ['Cliente recusou', 'O cliente foi informado dos riscos e optou por não realizar os serviços recomendados neste momento.'],
+  ],
+};
+const TESTS = [
+  ['tensao', 'Tensão medida', 'Medição de tensão nas tomadas e no quadro'],
+  ['dr', 'Teste do DR', 'Teste do DR pelo botão de teste'],
+  ['terra', 'Aterramento', 'Verificação do aterramento'],
+  ['func', 'Funcionamento', 'Teste de funcionamento dos circuitos e equipamentos'],
+  ['aquec', 'Aquecimento', 'Verificação de aquecimento nas conexões'],
+  ['carga', 'Teste com carga', 'Teste do circuito com carga'],
+  ['isol', 'Isolamento', 'Medição de resistência de isolamento'],
+];
+const testsDone = q => TESTS.filter(t => q.tests.includes(t[0]));
+function techField(q, key, label, ph) {
+  return `<div class="field"><label for="q-${key}">${label}</label><textarea id="q-${key}" data-tech="${key}" placeholder="${esc(ph)}">${esc(q[key])}</textarea>
+    <div class="chips">${TECH[key].map(([l, t], k) => `<button class="chip sm-ico" data-tc="${key}" data-ti="${k}" ${q[key].includes(t) ? 'disabled' : ''}>${I.plus}${l}</button>`).join('')}</div></div>`;
+}
+function techCardHTML(q) {
+  const rep = isReport(q);
+  const fields = `${techField(q, 'diag', rep ? 'Diagnóstico' : 'Situação encontrada', 'O que você encontrou: causa do problema, estado da instalação…')}
+    ${rep ? techField(q, 'work', 'Serviços realizados', 'O que foi feito, com mais detalhe que a lista de itens.') + (q.items.some(i => i.kind === 'svc') ? '<button class="linkish" data-work-items>Preencher com os serviços lançados</button>' : '') : ''}
+    ${rep ? `<div class="field"><span class="lab">Testes e verificações feitos</span><div class="chips">${TESTS.map(([k, l]) => `<button class="chip" data-test="${k}" aria-pressed="${q.tests.includes(k)}">${l}</button>`).join('')}</div></div>` : ''}
+    ${techField(q, 'recs', 'Recomendações ao cliente', 'O que ainda precisa de atenção, riscos e cuidados de uso.')}`;
+  if (rep) return `<section class="card" aria-labelledby="h-tech">
+      <div><h2 class="card-h" id="h-tech">Relatório técnico</h2><p class="hint">O que foi encontrado, o que foi feito e como foi testado. Toque nas sugestões para preencher.</p></div>
+      ${fields}
+    </section>`;
+  return `<section class="card"><details class="tech"${q.diag || q.recs ? ' open' : ''}>
+      <summary><span class="room-h"><h2 class="card-h">Diagnóstico da visita</h2><span class="hint">Opcional. Aparece na proposta.</span></span></summary>
+      <div class="tech-in">${fields}</div>
+    </details></section>`;
+}
 function lineHTML(q, i) {
   const cli = i.kind === 'mat' && q.materialBy === 'cliente';
   return `<div class="line${cli ? ' cli' : ''}" data-line="${i.id}">
@@ -1309,6 +1384,7 @@ VIEWS.quote = {
         <div class="field"><label for="q-title">Serviço</label><input id="q-title" type="text" autocomplete="off" placeholder="Ex.: Troca do quadro e instalação de chuveiro" value="${esc(q.title)}"></div>
       </section>
 
+      ${techCardHTML(q)}
       ${isReport(q) ? '' : `<label class="switch-row solo" for="q-done"><span><b>Serviço já realizado</b><small>O documento vira Relatório de Serviços Executados, sem validade.</small></span><input type="checkbox" class="sw" id="q-done"></label>`}
       ${roomToggleHTML(q)}
       ${q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)}
@@ -1410,7 +1486,25 @@ VIEWS.quote = {
     nt.addEventListener('input', () => { q.notes = nt.value; touch(q); $$('[data-note]', v).forEach(c => c.disabled = q.notes.includes(NOTE_CHIPS[+c.dataset.note][1])); });
     $$('[data-note]', v).forEach(b => b.onclick = () => {
       const t = NOTE_CHIPS[+b.dataset.note][1];
-      q.notes = (q.notes.trim() ? q.notes.trim() + '\n' : '') + t; nt.value = q.notes; touch(q); b.disabled = true;
+      q.notes = (q.notes.trim() ? q.notes.trim() + '\n' : '') + t; nt.value = q.notes; autoGrow(nt); touch(q); b.disabled = true;
+    });
+
+    // relatório técnico: textos prontos entram no fim do campo
+    $$('[data-tech]', v).forEach(t => t.addEventListener('input', () => {
+      const k = t.dataset.tech; q[k] = t.value; touch(q);
+      $$(`[data-tc="${k}"]`, v).forEach(c => c.disabled = q[k].includes(TECH[k][+c.dataset.ti][1]));
+    }));
+    $$('[data-tc]', v).forEach(b => b.onclick = () => {
+      const k = b.dataset.tc, t = TECH[k][+b.dataset.ti][1], ta = $('#q-' + k, v);
+      q[k] = (q[k].trim() ? q[k].trim() + '\n' : '') + t; ta.value = q[k]; autoGrow(ta); touch(q); b.disabled = true;
+    });
+    $$('[data-test]', v).forEach(b => b.onclick = () => {
+      const k = b.dataset.test, on = !q.tests.includes(k);
+      q.tests = on ? [...q.tests, k] : q.tests.filter(x => x !== k); touch(q); b.setAttribute('aria-pressed', on);
+    });
+    $('[data-work-items]', v)?.addEventListener('click', () => {
+      const txt = q.items.filter(i => i.kind === 'svc').map(i => `${i.name}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)}.`).join('\n');
+      q.work = (q.work.trim() ? q.work.trim() + '\n' : '') + txt; $('#q-work', v).value = q.work; autoGrow($('#q-work', v)); touch(q);
     });
 
     // situação
@@ -1717,6 +1811,9 @@ function paperHTML(q, c, mode = docMode(q)) {
       <div><span class="p-lab">Cliente</span><b>${esc(q.client.name || '—')}</b>${q.client.phone ? `<span>${esc(fmtPhone(q.client.phone))}</span>` : ''}${q.client.address ? `<span>${esc(q.client.address)}</span>` : ''}</div>
       <div><span class="p-lab">${rep ? 'Serviço executado' : 'Serviço'}</span><b>${esc(q.title || 'Serviços elétricos')}</b></div>
     </div>
+    ${q.diag.trim() ? `<div><span class="p-lab">${rep ? 'Diagnóstico' : 'Situação encontrada'}</span><div class="p-notes">${esc(q.diag.trim())}</div></div>` : ''}
+    ${rep && q.work.trim() ? `<div><span class="p-lab">Serviços realizados</span><div class="p-notes">${esc(q.work.trim())}</div></div>` : ''}
+    ${rep && q.tests.length ? `<div><span class="p-lab">Testes e verificações</span><ul class="p-checks">${testsDone(q).map(t => `<li>${esc(t[2])}</li>`).join('')}</ul></div>` : ''}
     <table class="p-table">
       <thead><tr><th>Descrição</th><th>Total</th></tr></thead>
       <tbody>${body}</tbody>
@@ -1738,6 +1835,7 @@ function paperHTML(q, c, mode = docMode(q)) {
       ${c.extra ? `<dt>Adicionais</dt><dd>${esc(extrasText(q))}, sobre a mão de obra</dd>` : ''}
       ${q.trip && c.travel ? `<dt>Deslocamento</dt><dd>${esc(tripLong(q.trip))}</dd>` : ''}
     </dl>
+    ${q.recs.trim() ? `<div><span class="p-lab">Recomendações</span><div class="p-notes">${esc(q.recs.trim())}</div></div>` : ''}
     ${px ? `<div class="p-pix"><canvas data-qr width="200" height="200" aria-label="QR code do Pix"></canvas><div><b>Pague ${px.what} com Pix: ${BRL(px.value)}</b><span>Chave: ${esc(px.key)}</span><span>Abra o app do banco e leia o QR code.</span></div></div>` : ''}
     ${q.notes.trim() ? `<div><span class="p-lab">Observações</span><div class="p-notes">${esc(q.notes.trim())}</div></div>` : ''}
     <div class="p-sign"><div><b>${esc(q.client.name || 'Cliente')}</b><span>${rep ? 'Serviço recebido pelo cliente' : 'Cliente'}</span></div><div><b>${esc(s.name || s.company || 'Responsável')}</b><span>Responsável pelo serviço</span></div></div>
@@ -1832,6 +1930,9 @@ function quoteMessage(q, c, mode = docMode(q)) {
   const line = (i, tag) => `• ${i.name}${tag && i.kind === 'mat' ? ' (material)' : ''}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)} = ${BRL(lineTotal(i))}`;
   L.push(rep ? `Olá${fn ? ', ' + fn : ''}! Segue o relatório dos serviços executados${q.doneAt ? ' em ' + fmtDate(q.doneAt) : ''} (${numLabel(q)}${q.title ? ' – ' + q.title : ''}).`
     : `Olá${fn ? ', ' + fn : ''}! Segue o orçamento ${numLabel(q)}${q.title ? ' – ' + q.title : ''}.`);
+  if (q.diag.trim()) L.push('', `*${rep ? 'Diagnóstico' : 'Situação encontrada'}:*`, q.diag.trim());
+  if (rep && q.work.trim()) L.push('', '*Serviços realizados:*', q.work.trim());
+  if (rep && q.tests.length) L.push('', '*Testes e verificações:*', ...testsDone(q).map(t => `✓ ${t[2]}`));
   if (q.useRooms) {
     roomList(q).filter(g => g.items.length).forEach(g => {
       L.push('', `*${g.name}*`);
@@ -1852,6 +1953,7 @@ function quoteMessage(q, c, mode = docMode(q)) {
   if (!rep && q.deadline) L.push(`*Prazo:* ${q.deadline}`);
   if (q.warranty) L.push(`*Garantia:* ${rep && q.doneAt ? `${plural(q.warranty, 'dia', 'dias')}, até ${fmtDate(q.doneAt + q.warranty * DAY)}` : plural(q.warranty, 'dia', 'dias')}`);
   if (!rep && q.validity) L.push(`Proposta válida até ${fmtDate(c.validUntil)}.`);
+  if (q.recs.trim()) L.push('', '*Recomendações:*', q.recs.trim());
   if (q.notes.trim()) L.push('', q.notes.trim());
   const px = pixOf(q, c, mode); if (px) L.push('', `Pix para ${px.what} (${BRL(px.value)}): ${px.key}`);
   const sig = signature(); if (sig.length) L.push('', ...sig);
@@ -2039,6 +2141,27 @@ async function buildQuotePDF(q, mode = docMode(q)) {
   wrap(q.title || 'Serviços elétricos', colW, 11.5, true).forEach(t => { txt(t, rx, ry, { size: 11.5, bold: true }); ry += lh(11.5); });
   y = Math.max(ly, ry) + 5;
 
+  // diagnóstico, serviços realizados e testes
+  const textBlock = (title, text) => {
+    const L = wrap(text.trim(), CW, 9.5);
+    need(9 + Math.min(L.length, 3) * lh(9.5));
+    label(title, M, y); y += 5.4;
+    L.forEach(t => { need(lh(9.5)); txt(t, M, y, { size: 9.5 }); y += lh(9.5); });
+    y += 3.5;
+  };
+  if (q.diag.trim()) textBlock(rep ? 'Diagnóstico' : 'Situação encontrada', q.diag);
+  if (rep && q.work.trim()) textBlock('Serviços realizados', q.work);
+  if (rep && q.tests.length) {
+    const T = testsDone(q), colW2 = (CW - 8) / 2, rows = Math.ceil(T.length / 2);
+    need(9 + rows * 5); label('Testes e verificações', M, y); y += 5.4;
+    T.forEach((t, k) => {
+      const x = M + (k % 2) * (colW2 + 8), yy = y + Math.floor(k / 2) * 5;
+      doc.setDrawColor(28, 122, 70); doc.setLineWidth(0.55); doc.lines([[0.9, 1.1], [2, -2.5]], x, yy - 1.5, [1, 1], 'S');
+      txt(t[2], x + 4.6, yy, { size: 9.2 });
+    });
+    y += rows * 5 + 3;
+  }
+
   // tabela de itens
   const qtyR = M + CW - 60, unitR = M + CW - 29, totR = M + CW - 2.5, descW = qtyR - M - 24;
   const thead = () => {
@@ -2125,6 +2248,12 @@ async function buildQuotePDF(q, mode = docMode(q)) {
     L.forEach((t, k) => txt(t, M + 42, y + k * lh(9.5), { size: 9.5 }));
     y += L.length * lh(9.5) + 1.4;
   });
+
+  // recomendações, observações e assinaturas não se separam: se não couberem juntas, vão para a página seguinte
+  const linesH = t => wrap(t.trim(), CW, 9.5).length * lh(9.5);
+  const tailH = (q.recs.trim() ? 2 + 5.4 + linesH(q.recs) + 2 : 0) + (q.notes.trim() ? 2 + 5.6 + linesH(q.notes) + 2 : 0) + 27;
+  if (y + tailH > bottom && tailH < bottom - M - 2) { doc.addPage(); y = M + 2; }
+  if (q.recs.trim()) { y += 2; textBlock('Recomendações', q.recs); y -= 1.5; }
 
   // observações
   if (q.notes.trim()) {
