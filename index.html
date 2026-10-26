@@ -448,6 +448,10 @@ details.tech[open] > summary::after{content:"–"}
 .chip.sm-ico svg{width:16px;height:16px}
 .p-checks{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:3px 16px}
 .p-checks li::before{content:"✓";color:#1C7A46;font-weight:800;margin-right:7px}
+.p-terms p,.p-accept{margin:0;font-size:11.5px;color:var(--paper-muted);line-height:1.45}
+.p-accept{margin:6px 0 -6px}
+.sched{display:flex;flex-direction:column;gap:10px}
+input[type=date]:disabled{opacity:.45}
 @media (max-width:380px){
   .hero-stats b{font-size:19px}
   .hero-stats span{font-size:12px}
@@ -626,10 +630,13 @@ const LS = {
   get(k, d) { try { const v = localStorage.getItem(KEY + k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); return true; } catch { return false; } },
 };
+const ACCEPT_DEFAULT = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita (WhatsApp ou e-mail).';
+const WARRANTY_DEFAULT = 'A garantia cobre falhas no serviço executado. Não cobre: mau uso; alterações feitas por terceiros; sobrecarga causada por equipamentos ligados depois do serviço; surtos de tensão, descargas atmosféricas e falhas da rede da concessionária; e materiais fornecidos pelo cliente, que seguem a garantia do fabricante. Esta garantia não exclui os direitos previstos no Código de Defesa do Consumidor.';
 const DEF = { name: '', company: '', phone: '', email: '', doc: '', city: '', pix: '', logo: '', logoRatio: 1,
   validity: 15, warranty: 90, payMode: 'entrada', entryPct: 50, installments: 3, notes: '', seq: 0,
   kmPerL: 0, fuelPrice: 0, wearPerKm: 0, hourRate: 0, minVisit: 0, roundTrip: true,
-  surUrgent: 50, surNight: 30, surWeekend: 50, seedV: 0 };
+  surUrgent: 50, surNight: 30, surWeekend: 50, seedV: 0,
+  acceptText: ACCEPT_DEFAULT, warrantyTerms: WARRANTY_DEFAULT };
 const STATUS = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado', concluido: 'Concluído', recusado: 'Recusado' };
 
 let settings = { ...DEF, ...LS.get('settings', {}) };
@@ -641,7 +648,8 @@ const saveQuotes = () => { if (!LS.set('quotes', quotes)) toast('Não foi possí
 
 function blankQuote() {
   return { id: uid(), num: 0, createdAt: Date.now(), updatedAt: Date.now(),
-    client: { name: '', phone: '', address: '' }, title: '', items: [], materialBy: 'eu',
+    client: { name: '', phone: '', address: '', doc: '' }, title: '', items: [], materialBy: 'eu',
+    startAt: null, endAt: null, dateTbd: false, approvedVia: '',
     travel: 0, discount: { mode: 'value', value: 0, pct: 0 },
     payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments },
     validity: settings.validity, deadline: '', warranty: settings.warranty, notes: settings.notes,
@@ -807,6 +815,28 @@ const DOC = {
   report: { title: 'RELATÓRIO DE SERVIÇOS EXECUTADOS', name: 'Relatório', file: 'Relatorio' },
 };
 const dateInput = ts => { const d = new Date(ts || Date.now()); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+// documento do cliente: CPF (11 números) ou CNPJ (14)
+function fmtDoc(v) {
+  const d = phoneDigits(v);
+  if (d.length === 11) return `CPF ${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  if (d.length === 14) return `CNPJ ${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+  return String(v || '').trim();
+}
+function cnpjValid(d) {
+  if (!/^\d{14}$/.test(d) || /^(\d)\1{13}$/.test(d)) return false;
+  const dv = n => { const w = n === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]; const r = w.reduce((a, x, i) => a + x * +d[i], 0) % 11; return r < 2 ? 0 : 11 - r; };
+  return dv(12) === +d[12] && dv(13) === +d[13];
+}
+const parseDay = v => v ? new Date(v + 'T12:00').getTime() : null;
+// datas de início e término (o CDC pede no orçamento prévio)
+function schedText(q) {
+  if (q.dateTbd) return 'Datas de início e término a combinar na aprovação do orçamento.';
+  if (!q.startAt && !q.endAt) return '';
+  if (q.startAt && q.endAt && dateInput(q.startAt) !== dateInput(q.endAt)) return `Início em ${fmtDate(q.startAt)} e término em ${fmtDate(q.endAt)}.`;
+  return `Início e término em ${fmtDate(q.startAt || q.endAt)}.`;
+}
+const APPROVAL = { msg: 'por mensagem escrita (WhatsApp ou e-mail)', sign: 'com assinatura na proposta', verbal: 'pessoalmente' };
+const approvalText = q => q.approvedAt && q.approvedVia ? `Orçamento aprovado pelo cliente em ${fmtDate(q.approvedAt)}, ${APPROVAL[q.approvedVia] || ''}.` : '';
 function warrantyText(q, mode) {
   const base = `${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado`;
   return mode === 'report' && q.doneAt ? `${base}, até ${fmtDate(q.doneAt + q.warranty * DAY)}` : base;
@@ -827,7 +857,7 @@ function clientList() {
   [...quotes].filter(q => !q.example).sort((a, b) => a.updatedAt - b.updatedAt).forEach(q => {
     const k = norm(q.client.name); if (!k) return;
     const prev = m.get(k) || {};
-    m.set(k, { name: q.client.name, phone: q.client.phone || prev.phone || '', address: q.client.address || prev.address || '', last: q.updatedAt, n: (prev.n || 0) + 1 });
+    m.set(k, { name: q.client.name, phone: q.client.phone || prev.phone || '', address: q.client.address || prev.address || '', doc: q.client.doc || prev.doc || '', last: q.updatedAt, n: (prev.n || 0) + 1 });
   });
   return [...m.values()].sort((a, b) => b.last - a.last);
 }
@@ -1082,7 +1112,7 @@ function createExample() {
   go('/q/' + q.id);
 }
 function duplicateQuote(q) {
-  const d = fixQuote({ ...clone(q), id: uid(), createdAt: Date.now(), updatedAt: Date.now(), status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false });
+  const d = fixQuote({ ...clone(q), id: uid(), createdAt: Date.now(), updatedAt: Date.now(), status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false, approvedVia: '', startAt: null, endAt: null, dateTbd: false, prevStatus: '' });
   d.items = d.items.map(i => ({ ...i, id: uid() }));
   settings.seq = (settings.seq || 0) + 1; d.num = settings.seq; saveSettings();
   quotes.unshift(d); saveQuotes();
@@ -1379,8 +1409,9 @@ VIEWS.quote = {
         <div class="field"><label for="q-name">Nome</label><input id="q-name" type="text" autocapitalize="words" autocomplete="off" placeholder="Nome do cliente" value="${esc(q.client.name)}"></div>
         <div class="grid2 stack">
           <div class="field"><label for="q-phone">WhatsApp</label><input id="q-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="(11) 90000-0000" value="${esc(fmtPhone(q.client.phone))}"></div>
-          <div class="field"><label for="q-addr">Endereço da obra</label><input id="q-addr" type="text" autocomplete="off" placeholder="Rua, número, bairro" value="${esc(q.client.address)}"></div>
+          <div class="field"><label for="q-doc">CPF ou CNPJ (opcional)</label><input id="q-doc" type="text" inputmode="numeric" autocomplete="off" placeholder="Sai no orçamento e no recibo" value="${esc(fmtDoc(q.client.doc))}"></div>
         </div>
+        <div class="field"><label for="q-addr">Endereço da obra</label><input id="q-addr" type="text" autocomplete="off" placeholder="Rua, número, bairro" value="${esc(q.client.address)}"></div>
         <div class="field"><label for="q-title">Serviço</label><input id="q-title" type="text" autocomplete="off" placeholder="Ex.: Troca do quadro e instalação de chuveiro" value="${esc(q.title)}"></div>
       </section>
 
@@ -1397,7 +1428,15 @@ VIEWS.quote = {
         </div>
         ${payBlockHTML(q, c)}
         ${isReport(q) ? '' : `<div class="field"><label for="q-dead">Prazo de execução</label><input id="q-dead" type="text" placeholder="Ex.: 2 dias úteis" value="${esc(q.deadline)}">
-          <div class="chips">${DEADLINES.map(t => `<button class="chip" data-dl="${esc(t)}" aria-pressed="${q.deadline === t}">${t}</button>`).join('')}</div></div>`}
+          <div class="chips">${DEADLINES.map(t => `<button class="chip" data-dl="${esc(t)}" aria-pressed="${q.deadline === t}">${t}</button>`).join('')}</div></div>
+        <div class="field sched"><span class="lab">Datas do serviço</span>
+          <div class="grid2">
+            <div class="field"><label for="q-start">Início</label><input id="q-start" type="date" value="${q.startAt ? dateInput(q.startAt) : ''}" ${q.dateTbd ? 'disabled' : ''}></div>
+            <div class="field"><label for="q-end">Término</label><input id="q-end" type="date" value="${q.endAt ? dateInput(q.endAt) : ''}" ${q.dateTbd ? 'disabled' : ''}></div>
+          </div>
+          <label class="switch-row" for="q-tbd"><span><b>Combinar na aprovação</b><small>Quando ainda não dá para marcar as datas.</small></span><input type="checkbox" class="sw" id="q-tbd" ${q.dateTbd ? 'checked' : ''}></label>
+          ${!q.dateTbd && !q.startAt ? '<p class="hint">O Código de Defesa do Consumidor pede as datas de início e término no orçamento.</p>' : ''}
+        </div>`}
         <div class="grid2">
           <div class="field"><label for="q-war">Garantia (dias)</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
           ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade (dias)</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
@@ -1430,12 +1469,21 @@ VIEWS.quote = {
     nm.addEventListener('change', () => { q.client.name = nm.value.trim().replace(/\s+/g, ' '); touch(q); });
     attachSuggest(nm, () => clientList().map(k => ({ label: k.name, right: k.phone ? fmtPhone(k.phone) : k.address, k })), x => {
       q.client.name = x.k.name;
-      if (!q.client.phone) q.client.phone = x.k.phone; if (!q.client.address) q.client.address = x.k.address;
+      if (!q.client.phone) q.client.phone = x.k.phone; if (!q.client.address) q.client.address = x.k.address; if (!q.client.doc) q.client.doc = x.k.doc || '';
       touch(q); rerender();
     });
     $('#q-phone', v).addEventListener('input', e => { q.client.phone = e.target.value.trim(); touch(q); });
     $('#q-phone', v).addEventListener('change', e => { e.target.value = fmtPhone(e.target.value); });
     $('#q-addr', v).addEventListener('input', e => { q.client.address = e.target.value; touch(q); });
+    $('#q-doc', v).addEventListener('input', e => { q.client.doc = e.target.value.trim(); touch(q); });
+    $('#q-doc', v).addEventListener('change', e => {
+      const d = phoneDigits(e.target.value);
+      e.target.value = fmtDoc(e.target.value);
+      if (!d) return;
+      if (d.length === 11 && !cpfValid(d)) toast('Esse CPF parece ter um número errado. Confira.');
+      else if (d.length === 14 && !cnpjValid(d)) toast('Esse CNPJ parece ter um número errado. Confira.');
+      else if (d.length !== 11 && d.length !== 14) toast('O CPF tem 11 números e o CNPJ tem 14.');
+    });
     $('#q-title', v).addEventListener('input', e => { q.title = e.target.value; touch(q); });
     $('#q-title', v).addEventListener('change', e => { q.title = e.target.value.trim(); touch(q); });
 
@@ -1474,6 +1522,17 @@ VIEWS.quote = {
     $$('[data-dl]', v).forEach(b => b.onclick = () => { q.deadline = dl.value = b.dataset.dl; touch(q); $$('[data-dl]', v).forEach(c => c.setAttribute('aria-pressed', c === b)); });
     $('#q-war', v).addEventListener('input', e => { q.warranty = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
     $('#q-val', v)?.addEventListener('input', e => { q.validity = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
+    // datas do serviço
+    $('#q-start', v)?.addEventListener('change', e => {
+      q.startAt = parseDay(e.target.value);
+      if (q.startAt && (!q.endAt || q.endAt < q.startAt)) { q.endAt = q.startAt; $('#q-end', v).value = e.target.value; }
+      touch(q); if (q.startAt) rerender();
+    });
+    $('#q-end', v)?.addEventListener('change', e => {
+      q.endAt = parseDay(e.target.value); touch(q);
+      if (q.endAt && q.startAt && q.endAt < q.startAt) toast('O término está antes do início. Confira as datas.');
+    });
+    $('#q-tbd', v)?.addEventListener('change', e => { q.dateTbd = e.target.checked; touch(q); rerender(); });
     // serviço já realizado: vira relatório; desfazer volta para a situação anterior
     $('#q-done', v)?.addEventListener('change', e => { if (!e.target.checked) return; setStatus(q, 'concluido'); rerender(); window.scrollTo({ top: 0 }); toast('Agora é um Relatório de Serviços Executados.'); });
     $('#q-donedate', v)?.addEventListener('change', e => { if (!e.target.value) return; q.doneAt = new Date(e.target.value + 'T12:00').getTime(); touch(q); toast('Data de execução salva.'); });
@@ -1508,7 +1567,7 @@ VIEWS.quote = {
     });
 
     // situação
-    $$('[data-st]', v).forEach(b => b.onclick = () => { setStatus(q, b.dataset.st); rerender(); toast({ aprovado: 'Boa! Orçamento aprovado.', recusado: 'Marcado como recusado.', concluido: 'Serviço concluído.', rascunho: 'Reaberto como rascunho.' }[b.dataset.st] || 'Situação alterada.'); });
+    $$('[data-st]', v).forEach(b => b.onclick = () => { if (b.dataset.st === 'aprovado') return approveSheet(q); setStatus(q, b.dataset.st); rerender(); toast({ aprovado: 'Boa! Orçamento aprovado.', recusado: 'Marcado como recusado.', concluido: 'Serviço concluído.', rascunho: 'Reaberto como rascunho.' }[b.dataset.st] || 'Situação alterada.'); });
     $('[data-pix]', v)?.addEventListener('click', () => { const px = pixOf(q, compute(q)); if (px) pixSheet(px); });
     $('[data-receipt]', v)?.addEventListener('click', () => receiptSheet(q));
   },
@@ -1535,10 +1594,28 @@ function quoteMenu(q) {
       if (o === 'del') deleteQuote(q);
     }) });
 }
+function approveSheet(q) {
+  let via = q.approvedVia || 'msg';
+  const OPTS = [['msg', 'Por mensagem', 'WhatsApp ou e-mail. Vale como aprovação por escrito.'], ['sign', 'Assinou a proposta', 'No papel ou em PDF assinado.'], ['verbal', 'Pessoalmente', 'Sem registro escrito.']];
+  openSheet({ title: 'Orçamento aprovado', body: `
+      <p class="hint">Como o cliente aprovou? Fica registrado no orçamento e no relatório.</p>
+      <div class="opts">${OPTS.map(([k, l, h]) => `<button class="opt" data-via="${k}" aria-pressed="${via === k}"><span>${l}<small>${h}</small></span></button>`).join('')}</div>
+      <div class="banner b-tip" id="ap-warn"${via === 'verbal' ? '' : ' hidden'}><p><b>Peça uma confirmação por escrito.</b> Um “De acordo” do cliente no WhatsApp protege você se houver discordância depois.</p></div>
+      <div class="field"><label for="ap-date">Data da aprovação</label><input id="ap-date" type="date" value="${dateInput(Date.now())}" max="${dateInput(Date.now())}"></div>`,
+    foot: `<button class="btn ok" data-ok>${I.check}Registrar aprovação</button>`,
+    onMount: s => {
+      $$('[data-via]', s).forEach(b => b.onclick = () => { via = b.dataset.via; $$('[data-via]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#ap-warn', s).hidden = via !== 'verbal'; });
+      $('[data-ok]', s).onclick = () => {
+        setStatus(q, 'aprovado');
+        q.approvedVia = via; q.approvedAt = Math.min(parseDay($('#ap-date', s).value) || Date.now(), Date.now()); touch(q);
+        closeSheet(true); rerender(); toast('Boa! Aprovação registrada.');
+      };
+    } });
+}
 function statusSheet(q) {
   const help = { rascunho: 'Ainda montando', enviado: 'Proposta com o cliente', aprovado: 'Cliente aceitou; serviço a executar', concluido: 'Serviço feito e entregue', recusado: 'Cliente não aceitou' };
   openSheet({ title: 'Situação do orçamento', body: `<div class="opts">${Object.keys(STATUS).map(k => `<button class="opt" data-s="${k}" aria-pressed="${q.status === k}">${pill(k)}<span><small>${help[k]}</small></span></button>`).join('')}</div>`,
-    onMount: s => $$('[data-s]', s).forEach(b => b.onclick = () => { setStatus(q, b.dataset.s); closeSheet(true); rerender(); toast('Situação: ' + STATUS[q.status] + '.'); }) });
+    onMount: s => $$('[data-s]', s).forEach(b => b.onclick = () => { if (b.dataset.s === 'aprovado' && q.status !== 'aprovado') return approveSheet(q); setStatus(q, b.dataset.s); closeSheet(true); rerender(); toast('Situação: ' + STATUS[q.status] + '.'); }) });
 }
 
 /* ================= escolher itens da tabela ================= */
@@ -1808,7 +1885,7 @@ function paperHTML(q, c, mode = docMode(q)) {
     </header>
     <div class="p-rule"></div>
     <div class="p-parties">
-      <div><span class="p-lab">Cliente</span><b>${esc(q.client.name || '—')}</b>${q.client.phone ? `<span>${esc(fmtPhone(q.client.phone))}</span>` : ''}${q.client.address ? `<span>${esc(q.client.address)}</span>` : ''}</div>
+      <div><span class="p-lab">Cliente</span><b>${esc(q.client.name || '—')}</b>${q.client.doc ? `<span>${esc(fmtDoc(q.client.doc))}</span>` : ''}${q.client.phone ? `<span>${esc(fmtPhone(q.client.phone))}</span>` : ''}${q.client.address ? `<span>${esc(q.client.address)}</span>` : ''}</div>
       <div><span class="p-lab">${rep ? 'Serviço executado' : 'Serviço'}</span><b>${esc(q.title || 'Serviços elétricos')}</b></div>
     </div>
     ${q.diag.trim() ? `<div><span class="p-lab">${rep ? 'Diagnóstico' : 'Situação encontrada'}</span><div class="p-notes">${esc(q.diag.trim())}</div></div>` : ''}
@@ -1828,16 +1905,20 @@ function paperHTML(q, c, mode = docMode(q)) {
     </div>
     <dl class="p-cond">
       ${rep ? `<dt>Execução</dt><dd>${fmtDate(q.doneAt)}</dd>` : ''}
+      ${rep && approvalText(q) ? `<dt>Aprovação</dt><dd>${esc(approvalText(q))}</dd>` : ''}
       <dt>Pagamento</dt><dd>${esc(payText(q, c))}</dd>
+      ${!rep && schedText(q) ? `<dt>Execução</dt><dd>${esc(schedText(q))}</dd>` : ''}
       ${!rep && q.deadline ? `<dt>Prazo</dt><dd>${esc(q.deadline)}</dd>` : ''}
       ${q.warranty ? `<dt>Garantia</dt><dd>${esc(warrantyText(q, mode))}</dd>` : ''}
       ${!rep && q.validity ? `<dt>Validade</dt><dd>Proposta válida até ${fmtDate(c.validUntil)}</dd>` : ''}
       ${c.extra ? `<dt>Adicionais</dt><dd>${esc(extrasText(q))}, sobre a mão de obra</dd>` : ''}
       ${q.trip && c.travel ? `<dt>Deslocamento</dt><dd>${esc(tripLong(q.trip))}</dd>` : ''}
     </dl>
+    ${q.warranty && s.warrantyTerms.trim() ? `<div class="p-terms"><span class="p-lab">Condições da garantia</span><p>${esc(s.warrantyTerms.trim())}</p></div>` : ''}
     ${q.recs.trim() ? `<div><span class="p-lab">Recomendações</span><div class="p-notes">${esc(q.recs.trim())}</div></div>` : ''}
     ${px ? `<div class="p-pix"><canvas data-qr width="200" height="200" aria-label="QR code do Pix"></canvas><div><b>Pague ${px.what} com Pix: ${BRL(px.value)}</b><span>Chave: ${esc(px.key)}</span><span>Abra o app do banco e leia o QR code.</span></div></div>` : ''}
     ${q.notes.trim() ? `<div><span class="p-lab">Observações</span><div class="p-notes">${esc(q.notes.trim())}</div></div>` : ''}
+    ${!rep && (approvalText(q) || s.acceptText.trim()) ? `<p class="p-accept">${esc(approvalText(q) || s.acceptText.trim())}</p>` : ''}
     <div class="p-sign"><div><b>${esc(q.client.name || 'Cliente')}</b><span>${rep ? 'Serviço recebido pelo cliente' : 'Cliente'}</span></div><div><b>${esc(s.name || s.company || 'Responsável')}</b><span>Responsável pelo serviço</span></div></div>
   </article>`;
 }
@@ -1950,12 +2031,14 @@ function quoteMessage(q, c, mode = docMode(q)) {
   if (c.travel) L.push(`Deslocamento${q.trip ? ` (${tripShort(q.trip)})` : ''}: ${BRL(c.travel)}`);
   if (c.discount) L.push(`Desconto: −${BRL(c.discount)}`);
   L.push(`*Total: ${BRL(c.total)}*`, '', `*Pagamento:* ${payText(q, c)}`);
+  if (!rep && schedText(q)) L.push(`*Execução:* ${schedText(q)}`);
   if (!rep && q.deadline) L.push(`*Prazo:* ${q.deadline}`);
   if (q.warranty) L.push(`*Garantia:* ${rep && q.doneAt ? `${plural(q.warranty, 'dia', 'dias')}, até ${fmtDate(q.doneAt + q.warranty * DAY)}` : plural(q.warranty, 'dia', 'dias')}`);
   if (!rep && q.validity) L.push(`Proposta válida até ${fmtDate(c.validUntil)}.`);
   if (q.recs.trim()) L.push('', '*Recomendações:*', q.recs.trim());
   if (q.notes.trim()) L.push('', q.notes.trim());
   const px = pixOf(q, c, mode); if (px) L.push('', `Pix para ${px.what} (${BRL(px.value)}): ${px.key}`);
+  if (!rep && (q.status === 'rascunho' || q.status === 'enviado')) L.push('', 'Para aprovar, é só responder *De acordo* nesta conversa.');
   const sig = signature(); if (sig.length) L.push('', ...sig);
   return L.join('\n');
 }
@@ -2136,7 +2219,7 @@ async function buildQuotePDF(q, mode = docMode(q)) {
   let ly = y, ry = y;
   label('Cliente', M, ly); ly += 5.4;
   wrap(q.client.name || 'Cliente', colW, 11.5, true).forEach(t => { txt(t, M, ly, { size: 11.5, bold: true }); ly += lh(11.5); });
-  [q.client.phone ? fmtPhone(q.client.phone) : '', q.client.address].filter(Boolean).forEach(v => wrap(v, colW, 9.3).forEach(t => { txt(t, M, ly, { size: 9.3, color: PC.muted }); ly += lh(9.3); }));
+  [q.client.doc ? fmtDoc(q.client.doc) : '', q.client.phone ? fmtPhone(q.client.phone) : '', q.client.address].filter(Boolean).forEach(v => wrap(v, colW, 9.3).forEach(t => { txt(t, M, ly, { size: 9.3, color: PC.muted }); ly += lh(9.3); }));
   label(rep ? 'Serviço executado' : 'Serviço', rx, ry); ry += 5.4;
   wrap(q.title || 'Serviços elétricos', colW, 11.5, true).forEach(t => { txt(t, rx, ry, { size: 11.5, bold: true }); ry += lh(11.5); });
   y = Math.max(ly, ry) + 5;
@@ -2239,7 +2322,7 @@ async function buildQuotePDF(q, mode = docMode(q)) {
   y = Math.max(y + 11.5, px && qr ? top + Math.max(totH, 32) : 0) + 7.5;
 
   // condições
-  const conds = [rep && ['Execução', fmtDate(q.doneAt)], ['Pagamento', payText(q, c)], !rep && q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', warrantyText(q, mode)], !rep && q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
+  const conds = [rep && ['Execução', fmtDate(q.doneAt)], rep && approvalText(q) && ['Aprovação', approvalText(q)], ['Pagamento', payText(q, c)], !rep && schedText(q) && ['Execução', schedText(q)], !rep && q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', warrantyText(q, mode)], !rep && q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
   need(14); label(rep ? 'Informações' : 'Condições', M, y); y += 5.6;
   conds.forEach(([l, v]) => {
     const L = wrap(v, CW - 42, 9.5);
@@ -2249,9 +2332,20 @@ async function buildQuotePDF(q, mode = docMode(q)) {
     y += L.length * lh(9.5) + 1.4;
   });
 
-  // recomendações, observações e assinaturas não se separam: se não couberem juntas, vão para a página seguinte
+  // condições da garantia
+  const terms = settings.warrantyTerms.trim();
+  if (q.warranty && terms) {
+    const L = wrap(terms, CW, 8.3);
+    need(7 + Math.min(L.length, 3) * lh(8.3));
+    y += 2.5; label('Condições da garantia', M, y); y += 4.6;
+    L.forEach(t => { need(lh(8.3)); txt(t, M, y, { size: 8.3, color: PC.muted }); y += lh(8.3); });
+    y += 1.5;
+  }
+
+  // recomendações, observações, termo de aceite e assinaturas não se separam: se não couberem juntas, vão para a página seguinte
   const linesH = t => wrap(t.trim(), CW, 9.5).length * lh(9.5);
-  const tailH = (q.recs.trim() ? 2 + 5.4 + linesH(q.recs) + 2 : 0) + (q.notes.trim() ? 2 + 5.6 + linesH(q.notes) + 2 : 0) + 27;
+  const acceptL = rep ? [] : wrap(approvalText(q) || settings.acceptText.trim(), CW, 8.3).filter(Boolean);
+  const tailH = (q.recs.trim() ? 2 + 5.4 + linesH(q.recs) + 2 : 0) + (q.notes.trim() ? 2 + 5.6 + linesH(q.notes) + 2 : 0) + (acceptL.length ? 4 + acceptL.length * lh(8.3) : 0) + 27;
   if (y + tailH > bottom && tailH < bottom - M - 2) { doc.addPage(); y = M + 2; }
   if (q.recs.trim()) { y += 2; textBlock('Recomendações', q.recs); y -= 1.5; }
 
@@ -2264,8 +2358,14 @@ async function buildQuotePDF(q, mode = docMode(q)) {
     y += 2;
   }
 
+  // termo de aceite (ou o registro da aprovação) logo acima das assinaturas
+  if (acceptL.length) {
+    need(4 + acceptL.length * lh(8.3) + 27); y += 4;
+    acceptL.forEach(t => { txt(t, M, y, { size: 8.3, color: PC.muted }); y += lh(8.3); });
+  }
+
   // assinaturas
-  need(27); y += 15;
+  need(27); y += acceptL.length ? 12 : 15;
   const sw = (CW - 14) / 2, sx = M + sw + 14;
   doc.setDrawColor(...PC.ink); doc.setLineWidth(0.3);
   doc.line(M, y, M + sw, y); doc.line(sx, y, M + CW, y);
@@ -2389,7 +2489,7 @@ async function buildReceiptPDF(q, value, ref, method) {
   label('Valor', M + CW - 66, y + 5.5);
   txt(BRL(value), M + CW - 4, y + 13, { size: 16, bold: true, align: 'right' });
   y += 30;
-  const body = `Recebi de ${q.client.name || 'cliente'} a importância de ${BRL(value)} (${extenso(value)}), referente a ${ref || 'serviços elétricos'}.`;
+  const body = `Recebi de ${q.client.name || 'cliente'}${q.client.doc ? ', ' + fmtDoc(q.client.doc) + ',' : ''} a importância de ${BRL(value)} (${extenso(value)}), referente a ${ref || 'serviços elétricos'}.`;
   wrap(body, CW, 12).forEach(t => { txt(t, M, y, { size: 12 }); y += 6.6; });
   y += 3;
   txt(`Forma de pagamento: ${method}.`, M, y, { size: 12 }); y += 14;
@@ -2588,6 +2688,13 @@ VIEWS.settings = {
         <div class="field"><label for="st-notes">Observações que sempre vão na proposta</label><textarea id="st-notes" data-set="notes" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.notes)}</textarea></div>
       </section>
       <section class="card">
+        <div><h2 class="card-h">Textos dos documentos</h2><p class="hint">Saem em todos os orçamentos e relatórios. Deixe em branco para não usar.</p></div>
+        <div class="field"><label for="st-acceptText">Termo de aceite (acima da assinatura do orçamento)</label><textarea id="st-acceptText" data-set="acceptText">${esc(s.acceptText)}</textarea>
+          ${s.acceptText !== ACCEPT_DEFAULT ? '<button class="linkish" data-reset="acceptText">Voltar ao texto sugerido</button>' : ''}</div>
+        <div class="field"><label for="st-warrantyTerms">Condições da garantia</label><textarea id="st-warrantyTerms" data-set="warrantyTerms">${esc(s.warrantyTerms)}</textarea>
+          ${s.warrantyTerms !== WARRANTY_DEFAULT ? '<button class="linkish" data-reset="warrantyTerms">Voltar ao texto sugerido</button>' : ''}</div>
+      </section>
+      <section class="card">
         <div><h2 class="card-h">Seus dados ficam neste celular</h2><p class="hint">Nada vai para a internet. Exporte uma cópia de vez em quando, ou para passar tudo para outro aparelho.</p></div>
         <div class="grid2"><button class="btn ghost" data-export>${I.dl}Exportar cópia</button><button class="btn ghost" data-import>${I.ul}Importar cópia</button></div>
         <input type="file" id="st-import" accept="application/json,.json" hidden>
@@ -2620,6 +2727,7 @@ VIEWS.settings = {
       });
     });
     $$('[data-pm]', v).forEach(b => b.onclick = () => { settings.payMode = b.dataset.pm; saveSettings(); rerender(); });
+    $$('[data-reset]', v).forEach(b => b.onclick = () => { const k = b.dataset.reset; settings[k] = k === 'acceptText' ? ACCEPT_DEFAULT : WARRANTY_DEFAULT; saveSettings(); rerender(); toast('Texto sugerido de volta.'); });
     $$('[data-ep]', v).forEach(b => b.onclick = () => { settings.entryPct = +b.dataset.ep; saveSettings(); rerender(); });
     const lf = $('#st-logo', v);
     $('[data-logo]', v).onclick = () => lf.click();
