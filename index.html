@@ -400,6 +400,44 @@ mark{background:var(--volt-soft);color:inherit;border-radius:3px;padding:0 1px}
 
 /* ambientes, adicionais e deslocamento */
 .switch-row.solo{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+details.fold{background:var(--surface);border:1px solid var(--line);border-radius:18px;min-width:0}
+details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 12px 12px 16px;min-height:62px;-webkit-tap-highlight-color:transparent}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary:focus-visible{outline:2px solid var(--volt-text);outline-offset:-2px;border-radius:18px}
+.f-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.f-t b{font-family:var(--f-display);font-weight:800;font-stretch:106%;font-size:17px;letter-spacing:-.01em}
+.f-t small{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.fold[open]>summary .f-t small{display:none}
+.f-r{font-weight:700;font-variant-numeric:tabular-nums;font-size:15px;flex:none}
+.f-ch{flex:none;color:var(--faint);display:grid;place-items:center;width:24px;transition:transform .18s}
+.f-ch svg{width:20px;height:20px}
+details.fold[open]>summary .f-ch{transform:rotate(90deg)}
+.f-in{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px;min-width:0}
+details.fold.sub{background:var(--surface-2);border:0;border-radius:14px}
+details.fold.sub>summary{min-height:54px;padding:9px 8px 9px 12px}
+details.fold.sub .f-t b{font-family:var(--f-body);font-weight:700;font-size:15.5px;font-stretch:100%;letter-spacing:0}
+details.fold.sub .f-t small{font-size:13.5px}
+details.fold.sub>.f-in{padding:0 12px 12px}
+details.fold.sub .switch-row{background:var(--surface)}
+details.fold.multi .f-t small{display:block}
+.next-btn{align-self:flex-end;min-height:44px;font-size:15px}
+.next-btn svg{width:18px;height:18px}
+.blk{display:flex;flex-direction:column;gap:10px}
+.blk+.blk{border-top:1px solid var(--line);padding-top:14px}
+.blk-h{margin:0;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.done-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.done-row input{max-width:190px}
+.kind-pick{display:flex;flex-direction:column;gap:10px}
+.kind-pick button{display:flex;gap:14px;align-items:flex-start;text-align:left;border:1.5px solid var(--line-2);background:var(--surface);border-radius:16px;padding:16px;color:var(--ink)}
+.kind-pick button:hover{border-color:var(--volt-text)}
+.kind-pick .ki{flex:none;width:44px;height:44px;border-radius:12px;background:var(--volt-soft);color:var(--volt-text);display:grid;place-items:center}
+.kind-pick .ki svg{width:24px;height:24px}
+.kind-pick b{display:block;font-size:17px;margin-bottom:2px}
+.kind-pick small{display:block;color:var(--muted);font-size:14.5px;line-height:1.35}
+button.grp-h{width:100%;border:0;background:none;text-align:left;cursor:pointer}
+.grp-h .gc{display:inline-flex;align-items:center;gap:4px}
+.grp-h .gc svg{width:16px;height:16px;transition:transform .18s}
+.grp-h[aria-expanded="true"] .gc svg{transform:rotate(90deg)}
 .card-hr.room{align-items:center}
 .room-h{display:flex;flex-direction:column;min-width:0}
 .room-h .hint{font-size:13.5px}
@@ -1039,18 +1077,15 @@ function linkSheet() {
     } });
 }
 function syncCardHTML() {
-  if (!syncOn()) return `<section class="card">
-    <div><h2 class="card-h">Usar em vários aparelhos</h2><p class="hint">Conecte sua conta GitHub e tenha os mesmos orçamentos, preços e ajustes no celular, no tablet e no computador. O que você muda num aparelho aparece nos outros.</p></div>
-    <button class="btn primary" data-sync-start>${I.cloud}Ativar sincronização</button>
-  </section>`;
-  return `<section class="card">
-    <div class="card-hr"><h2 class="card-h">Sincronização</h2>${sync.err === 'auth' ? '<span class="sync-pill off">Parada</span>' : `<span class="sync-pill">${I.check}Ligada</span>`}</div>
-    <p class="hint" style="margin:0">Conta GitHub <b>@${esc(sync.login)}</b>.</p>
-    <p class="hint${syncState === 'error' ? ' bad' : ''}" id="sync-status" style="margin:0">${esc(syncStatusText())}</p>
+  const sum = settingsSums().sync;
+  if (!syncOn()) return panel('st:sync', 'sync', 'Usar em vários aparelhos', sum, `<p class="hint">Conecte sua conta GitHub e tenha os mesmos orçamentos, preços e ajustes no celular, no tablet e no computador. O que você muda num aparelho aparece nos outros.</p>
+    <button class="btn primary" data-sync-start>${I.cloud}Ativar sincronização</button>`);
+  return panelOpen('st:sync', 'sync', 'Sincronização', sum, { right: sync.err === 'auth' ? '<span class="sync-pill off">Parada</span>' : syncState === 'error' ? '<span class="sync-pill off">Com erro</span>' : `<span class="sync-pill">${I.check}Ligada</span>` }) + `
+    <p class="hint" style="margin:0">Conta GitHub <b>@${esc(sync.login)}</b>.</p>    <p class="hint${syncState === 'error' ? ' bad' : ''}" id="sync-status" style="margin:0">${esc(syncStatusText())}</p>
     ${sync.err === 'auth' ? `<button class="btn primary" data-sync-start>Colar chave nova</button>` : ''}
     <div class="grid2"><button class="btn ghost" data-sync-now>Sincronizar agora</button><button class="btn ghost" data-sync-link>${I.phone}Outro aparelho</button></div>
     <button class="linkish" data-sync-off style="color:var(--muted)">Desconectar este aparelho</button>
-  </section>`;
+  ${panelClose}`;
 }
 function bindSyncCard(v) {
   $$('[data-sync-start]', v).forEach(b => b.onclick = connectSheet);
@@ -1345,6 +1380,30 @@ function fitMark(root) {
 const autoGrow = t => { if (!t.offsetParent) return; t.style.height = 'auto'; t.style.height = Math.max(88, t.scrollHeight + 2) + 'px'; };
 document.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') autoGrow(e.target); });
 document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('details')) $$('textarea', e.target).forEach(autoGrow); }, true);
+// seções recolhíveis: mostram uma linha de resumo e abrem quando precisa
+const PANEL = {};
+const panelOpen = (key, id, title, sum, o = {}) => `<details class="fold${o.sub ? ' sub' : ''}${o.multi ? ' multi' : ''}" data-panel="${esc(key)}"${o.attrs || ''}${(o.force ?? (key in PANEL ? PANEL[key] : !!o.def)) ? ' open' : ''}><summary><span class="f-t"><b>${title}</b>${sum !== null ? `<small${id ? ` data-sum="${id}"` : ''}>${esc(sum)}</small>` : ''}</span>${o.right != null ? `<span class="f-r"${id ? ` data-sumr="${id}"` : ''}>${o.right}</span>` : ''}${o.tool || ''}<span class="f-ch">${I.chev}</span></summary><div class="f-in">`;
+const panelClose = '</div></details>';
+const panel = (key, id, title, sum, body, o) => panelOpen(key, id, title, sum, o) + body + panelClose;
+function paintSums(root, map) {
+  for (const k in map) {
+    if (k.endsWith('R')) { const e = $(`[data-sumr="${k.slice(0, -1)}"]`, root); if (e) e.textContent = map[k]; }
+    else { const e = $(`[data-sum="${k}"]`, root); if (e) e.textContent = map[k]; }
+  }
+}
+document.addEventListener('toggle', e => {
+  const d = e.target; if (!d.matches || !d.matches('details.fold')) return;
+  PANEL[d.dataset.panel] = d.open;
+  if (!d.open || d.classList.contains('sub') || d.classList.contains('multi')) return;
+  // abrir uma seção fecha as outras do mesmo nível
+  $$(':scope > details.fold[open]:not(.sub):not(.multi)', d.parentNode).forEach(x => { if (x !== d) x.open = false; });
+  requestAnimationFrame(() => {
+    const ab = $('.appbar'), top = d.getBoundingClientRect().top, lim = ab ? ab.getBoundingClientRect().bottom + 6 : 6;
+    if (top < lim) window.scrollTo({ top: window.scrollY + top - lim });
+  });
+}, true);
+// botões dentro do título da seção não abrem nem fecham a seção
+document.addEventListener('click', e => { if (e.target.closest('summary button')) e.preventDefault(); }, true);
 const vibrate = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
 
 /* ================= navegação ================= */
@@ -1412,10 +1471,19 @@ $('#nav').addEventListener('click', e => {
 
 /* ================= criar, duplicar, excluir ================= */
 function createQuote(client) {
+  openSheet({ title: 'O que você vai fazer?', body: `<div class="kind-pick">
+      <button data-kind="quote"><span class="ki">${I.doc}</span><span><b>Orçamento</b><small>Antes do serviço. Proposta com valores, prazos e validade para o cliente aprovar.</small></span></button>
+      <button data-kind="report"><span class="ki">${I.check}</span><span><b>Relatório de serviço</b><small>Serviço já feito. Registra o diagnóstico, o que foi executado, os testes e os valores.</small></span></button>
+    </div>`,
+    onMount: s => $$('[data-kind]', s).forEach(b => b.onclick = () => { closeSheet(true); startQuote(client, b.dataset.kind === 'report'); }) });
+}
+function startQuote(client, report) {
   const q = blankQuote();
   settings.seq = (settings.seq || 0) + 1; q.num = settings.seq; saveSettings();
   if (client) q.client = { name: client.name, phone: client.phone || '', address: client.address || '' };
-  quotes.unshift(q); saveQuotes();
+  quotes.unshift(q);
+  if (report) { setStatus(q, 'concluido'); q.prevStatus = 'rascunho'; }
+  saveQuotes();
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
   go('/q/' + q.id);
   if (!isTouch && !client) setTimeout(() => $('#q-name')?.focus(), 60);
@@ -1499,7 +1567,9 @@ function homeListHTML() {
     const G = [['enviado', 'Aguardando resposta'], ['aprovado', 'Aprovados · a executar'], ['rascunho', 'Rascunhos']];
     const html = G.map(([s, l]) => {
       const L = quotes.filter(q => q.status === s && match(q)).sort(byDate);
-      return L.length ? `<div class="grp-h" id="grp-${s}"><span>${l}</span><span>${L.length}</span></div>${L.map(quoteCard).join('')}` : '';
+      if (!L.length) return '';
+      const open = qf || (('home:' + s) in PANEL ? PANEL['home:' + s] : s !== 'rascunho' || L.length <= 3);
+      return `<button class="grp-h" id="grp-${s}" data-grp-t="${s}" aria-expanded="${!!open}"><span class="gc">${I.chev}${l}</span><span>${L.length}</span></button>${open ? L.map(quoteCard).join('') : ''}`;
     }).join('');
     return html || `<div class="empty">${qf ? 'Nenhum orçamento encontrado.' : 'Nenhum orçamento em aberto.<br>Toque em <b>Novo orçamento</b> para começar.'}</div>`;
   }
@@ -1551,7 +1621,10 @@ VIEWS.home = {
     $('[data-sync-start]', v)?.addEventListener('click', connectSheet);
     $('[data-tip-off]', v)?.addEventListener('click', () => { sync.tipOff = true; saveSync(); rerender(); });
     $$('[data-go]', v).forEach(b => b.onclick = () => go(b.dataset.go, true));
-    v.addEventListener('click', e => { const b = e.target.closest('[data-open]'); if (b) go('/q/' + b.dataset.open); });
+    v.addEventListener('click', e => {
+      const b = e.target.closest('[data-open]'); if (b) return go('/q/' + b.dataset.open);
+      const g = e.target.closest('[data-grp-t]'); if (g) { PANEL['home:' + g.dataset.grpT] = g.getAttribute('aria-expanded') !== 'true'; $('#q-list').innerHTML = homeListHTML(); }
+    });
     $$('[data-filter]', v).forEach(b => b.onclick = () => { homeFilter = b.dataset.filter; rerender(); });
     $$('[data-jump]', v).forEach(b => b.onclick = () => {
       if (homeFilter !== 'aberto') { homeFilter = 'aberto'; rerender(); }
@@ -1743,21 +1816,26 @@ function techSheet(q, key, idx, onAdd) {
 function techChips(key) {
   return `<div class="chips tech-chips">${TECH[key].map((it, k) => `<button class="chip sm-ico" data-tc="${key}" data-ti="${k}">${I.plus}${esc(it.l)}</button>`).join('')}</div>`;
 }
-function techField(q, key, label, ph, hint) {
-  return `<div class="field"><label for="q-${key}">${label}</label>${hint ? `<p class="hint">${hint}</p>` : ''}${techChips(key)}<textarea id="q-${key}" data-tech="${key}" placeholder="${esc(ph)}">${esc(q[key])}</textarea></div>`;
+const firstLine = (t, empty) => (String(t || '').trim().split('\n')[0] || empty);
+function techField(q, key, label, ph, extra = '') {
+  return panel(`q:${q.id}:${key}`, key, label, firstLine(q[key], 'Toque para preencher'),
+    `${techChips(key)}<textarea id="q-${key}" data-tech="${key}" aria-label="${esc(label)}" placeholder="${esc(ph)}">${esc(q[key])}</textarea>${extra}`, { sub: true });
 }
-const testsHTML = q => `<div class="field"><span class="lab">Testes e verificações</span><p class="hint">Escolha o teste e depois onde foi feito e o resultado.</p>${techChips('tests')}
-  <div class="test-list">${q.tests.map((t, k) => `<div class="test-row"><span class="tk">${I.check}</span><span class="tt">${esc(t)}</span><button class="icon-btn sm" data-test-rm="${k}" aria-label="Remover teste">${I.x}</button></div>`).join('')}</div></div>`;
+const testsSum = q => q.tests.length ? plural(q.tests.length, 'teste registrado', 'testes registrados') : 'Toque para registrar';
+const testsHTML = q => panel(`q:${q.id}:tests`, 'tests', 'Testes e verificações', testsSum(q), `<p class="hint">Escolha o teste e depois onde foi feito e o resultado.</p>${techChips('tests')}
+  <div class="test-list">${q.tests.map((t, k) => `<div class="test-row"><span class="tk">${I.check}</span><span class="tt">${esc(t)}</span><button class="icon-btn sm" data-test-rm="${k}" aria-label="Remover teste">${I.x}</button></div>`).join('')}</div>`, { sub: true });
+function techSum(q) {
+  const L = [q.diag.trim() && 'diagnóstico', q.work.trim() && 'serviços', q.tests.length && plural(q.tests.length, 'teste', 'testes'), q.recs.trim() && 'recomendações'].filter(Boolean);
+  return L.length ? capFirst(joinPt(L)) : 'Diagnóstico, serviços, testes e recomendações';
+}
 function techCardHTML(q) {
   if (!isReport(q)) return '';
-  return `<section class="card" aria-labelledby="h-tech">
-      <div><h2 class="card-h" id="h-tech">Relatório técnico</h2><p class="hint">Toque no que se aplica e complete os detalhes: a frase entra pronta. Dá para escrever ou ajustar à vontade.</p></div>
+  return panel(`q:${q.id}:tech`, 'tech', 'Relatório técnico', techSum(q), `<p class="hint">Toque no que se aplica e complete os detalhes: a frase entra pronta.</p>
       ${techField(q, 'diag', 'Diagnóstico', 'O que você encontrou: causa do problema, estado da instalação…')}
-      ${techField(q, 'work', 'Serviços realizados', 'O que foi feito, com mais detalhe que a lista de itens.')}
-      ${q.items.some(i => i.kind === 'svc') ? '<button class="linkish" data-work-items>Preencher com os serviços lançados</button>' : ''}
+      ${techField(q, 'work', 'Serviços realizados', 'O que foi feito, com mais detalhe que a lista de itens.', q.items.some(i => i.kind === 'svc') ? '<button class="linkish" data-work-items>Preencher com os serviços lançados</button>' : '')}
       ${testsHTML(q)}
-      ${techField(q, 'recs', 'Recomendações ao cliente', 'O que ainda precisa de atenção, riscos e cuidados de uso.')}
-    </section>`;
+      ${techField(q, 'recs', 'Recomendações', 'O que ainda precisa de atenção, riscos e cuidados de uso.')}
+      ${nextBtn(q, 'tech')}`);
 }
 function lineHTML(q, i) {
   const cli = i.kind === 'mat' && q.materialBy === 'cliente';
@@ -1771,6 +1849,30 @@ function lineHTML(q, i) {
       <div class="qty">${i.qty <= 1 ? `<button class="rm" data-rm="${i.id}" aria-label="Remover">${I.trash}</button>` : `<button data-dq="-1" data-id="${i.id}" aria-label="Menos">${I.minus}</button>`}<span>${fmtQty(i.qty)}</span><button data-dq="1" data-id="${i.id}" aria-label="Mais">${I.plus}</button></div>
     </div>
   </div>`;
+}
+const payShort = p => ({ avista: 'À vista', entrada: `Entrada de ${p.entryPct}%`, parcelado: `Cartão em ${p.installments}×`, combinar: 'Pagamento a combinar' })[p.mode] || '';
+// ordem das etapas: o botão "Próximo" no fim de cada seção abre a seguinte
+function nextBtn(q, from) {
+  const order = isReport(q) ? ['cli', 'tech', 'items', 'val', 'cond', 'notes'] : ['cli', 'items', 'val', 'cond', 'notes'];
+  const k = order[order.indexOf(from) + 1]; if (!k) return '';
+  const T = { tech: 'relatório técnico', items: q.useRooms ? 'ambientes e itens' : 'serviços e material', val: 'valores', cond: isReport(q) ? 'pagamento e garantia' : 'pagamento, datas e garantia', notes: 'observações' };
+  return `<button class="btn ghost next-btn" data-next="q:${q.id}:${k}">Próximo: ${T[k]}${I.arrow}</button>`;
+}
+function quoteSums(q, c) {
+  const rep = isReport(q), nS = q.items.filter(i => i.kind === 'svc').length, nM = q.items.filter(i => i.kind === 'mat').length;
+  const ds = ts => new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  const val = [c.extra && `adicional +${c.surPct}%`, c.travel && `deslocamento ${BRL(c.travel)}`, c.discount && `desconto ${BRL(c.discount)}`].filter(Boolean);
+  return {
+    cli: [q.client.name, q.title].filter(Boolean).join(' · ') || 'Nome, WhatsApp, endereço e serviço',
+    items: q.items.length ? [nS && plural(nS, 'serviço', 'serviços'), nM && plural(nM, 'material', 'materiais'), q.useRooms && q.rooms.length && plural(q.rooms.length, 'ambiente', 'ambientes')].filter(Boolean).join(' · ') : 'Nenhum item ainda',
+    itemsR: BRL(c.labor + (c.matIn ? c.matTotal : 0)),
+    tech: techSum(q),
+    diag: firstLine(q.diag, 'Toque para preencher'), work: firstLine(q.work, 'Toque para preencher'), recs: firstLine(q.recs, 'Toque para preencher'), tests: testsSum(q),
+    val: val.length ? capFirst(val.join(' · ')) : 'Adicionais, deslocamento e desconto',
+    valR: BRL(c.total),
+    cond: [payShort(q.payment), !rep && (q.dateTbd ? 'datas a combinar' : q.startAt ? `início ${ds(q.startAt)}` : ''), q.warranty ? `garantia ${q.warranty} dias` : 'sem garantia'].filter(Boolean).join(' · '),
+    notes: firstLine(q.notes, 'Nada anotado'),
+  };
 }
 function statusBanner(q, c) {
   const px = pixOf(q, c);
@@ -1786,9 +1888,9 @@ function statusBanner(q, c) {
   if (q.status === 'concluido') {
     const pr = pixOf(q, c, 'report');
     return `<div class="banner b-done">
-    <p><b>Serviço concluído.</b> O documento agora é o Relatório de Serviços Executados.</p>
-    <div class="field"><label for="q-donedate">Executado em</label><input id="q-donedate" type="date" value="${dateInput(q.doneAt)}" max="${dateInput(Date.now())}"></div>
-    <div class="banner-act"><button class="btn sm dark" data-receipt>${I.receipt}Gerar recibo</button>${pr ? `<button class="btn sm ghost" data-pix-rest>${I.pix}Pix d${pr.what}</button>` : ''}<button class="btn sm ghost" data-undone>Desfazer conclusão</button></div>
+    <div class="done-row"><label for="q-donedate"><b>Executado em</b></label><input id="q-donedate" type="date" value="${dateInput(q.doneAt)}" max="${dateInput(Date.now())}"></div>
+    <div class="banner-act"><button class="btn sm dark" data-receipt>${I.receipt}Gerar recibo</button>${pr ? `<button class="btn sm ghost" data-pix-rest>${I.pix}Pix d${pr.what}</button>` : ''}</div>
+    <button class="linkish" data-undone style="color:var(--muted);font-size:14px">${q.prevStatus && q.prevStatus !== 'rascunho' ? 'Desfazer conclusão' : 'Transformar em orçamento'}</button>
   </div>`;
   }
   if (q.status === 'recusado') return `<div class="banner b-bad">
@@ -1812,32 +1914,32 @@ function paySumHTML(q, c) {
   return `<div><span>Forma de pagamento a combinar com o cliente</span></div>`;
 }
 const matSwitchHTML = q => `<label class="switch-row" for="q-matcli"><span><b>O cliente compra o material</b><small>${q.materialBy === 'cliente' ? 'A lista vai na proposta, com valores estimados fora do total.' : 'Desligado: o material entra no total da proposta.'}</small></span><input type="checkbox" class="sw" id="q-matcli" ${q.materialBy === 'cliente' ? 'checked' : ''}></label>`;
-const roomToggleHTML = q => `<label class="switch-row solo" for="q-rooms"><span><b>Separar por ambiente</b><small>${q.useRooms ? 'Cada cômodo com a sua contagem de pontos e de material.' : 'Sala, cozinha, quartos… para contar e conferir cômodo por cômodo.'}</small></span><input type="checkbox" class="sw" id="q-rooms" ${q.useRooms ? 'checked' : ''}></label>`;
+const roomToggleHTML = q => `<label class="switch-row" for="q-rooms"><span><b>Separar por ambiente</b><small>${q.useRooms ? 'Cada cômodo com a sua contagem de pontos e de material.' : 'Sala, cozinha, quartos… para contar e conferir cômodo por cômodo.'}</small></span><input type="checkbox" class="sw" id="q-rooms" ${q.useRooms ? 'checked' : ''}></label>`;
 function kindCardsHTML(q, c) {
-  return `<section class="card" aria-labelledby="h-svc">
-      <div class="card-hr"><h2 class="card-h" id="h-svc">Mão de obra</h2><span class="card-sum" data-t="labor">${BRL(c.labor)}</span></div>
+  return `<div class="blk">
+      <div class="card-hr"><h3 class="blk-h">Mão de obra</h3><span class="card-sum" data-t="labor">${BRL(c.labor)}</span></div>
       ${c.svc.length ? `<div class="lines">${c.svc.map(i => lineHTML(q, i)).join('')}</div>` : '<p class="empty-line">Escolha os serviços na sua tabela de preços.</p>'}
       <button class="add-btn" data-add="svc">${I.plus}Adicionar mão de obra</button>
-    </section>
-    <section class="card" aria-labelledby="h-mat">
-      <div class="card-hr"><h2 class="card-h" id="h-mat">Material</h2><span class="card-sum" data-t="mat">${BRL(c.matTotal)}</span></div>
+    </div>
+    <div class="blk">
+      <div class="card-hr"><h3 class="blk-h">Material</h3><span class="card-sum" data-t="mat">${BRL(c.matTotal)}</span></div>
       ${matSwitchHTML(q)}
       ${c.mat.length ? `<div class="lines">${c.mat.map(i => lineHTML(q, i)).join('')}</div>` : ''}
       <button class="add-btn" data-add="mat">${I.plus}Adicionar material</button>
-    </section>`;
+    </div>`;
 }
 function roomsHTML(q, c) {
   const card = g => {
     const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
     const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
-    return `<section class="card" data-room-card="${g.id}">
-      <div class="card-hr room"><div class="room-h"><h2 class="card-h">${esc(g.name)}</h2><span class="hint">${g.id ? plural(g.items.length, 'item', 'itens') : 'Quadro, entrada de energia e itens da casa toda'}</span></div>
-        <div class="room-r"><span class="card-sum">${BRL(st)}</span>${g.id ? `<button class="icon-btn sm" data-room-menu="${g.id}" aria-label="Opções de ${esc(g.name)}">${I.more}</button>` : ''}</div></div>
+    const sumTxt = g.items.length ? [svc.length && plural(svc.length, 'serviço', 'serviços'), mat.length && plural(mat.length, 'material', 'materiais')].filter(Boolean).join(' · ') : (g.id ? 'Vazio' : 'Quadro, entrada de energia e itens da casa toda');
+    return panelOpen(`q:${q.id}:room:${g.id || 'geral'}`, '', esc(g.name), sumTxt, { sub: true, def: !g.items.length && !!g.id, right: BRL(st), attrs: ` data-room-card="${g.id}"`,
+      tool: g.id ? `<button class="icon-btn sm" data-room-menu="${g.id}" aria-label="Opções de ${esc(g.name)}">${I.more}</button>` : '' }) + `
       ${svc.length ? `<div class="sublab">Mão de obra</div><div class="lines">${svc.map(i => lineHTML(q, i)).join('')}</div>` : ''}
       ${mat.length ? `<div class="sublab">Material</div><div class="lines">${mat.map(i => lineHTML(q, i)).join('')}</div>` : ''}
       ${g.items.length ? '' : `<p class="empty-line">${g.id ? 'Toque em adicionar e conte cada tomada, interruptor e luminária.' : 'Nada por aqui ainda.'}</p>`}
       <button class="add-btn" data-add-room="${g.id}">${I.plus}Adicionar em ${esc(g.name)}</button>
-    </section>`;
+    ${panelClose}`;
   };
   const groups = roomList(q), general = groups.pop();
   return groups.map(card).join('') + `<button class="add-btn room" data-new-room>${I.plus}Novo ambiente</button>` + card(general) + conferenceHTML(q);
@@ -1849,16 +1951,12 @@ function conferenceHTML(q) {
     const L = consolidate(q, kind); if (!L.length) return '';
     return `<div class="sublab">${title}</div><div class="conf">${L.map(e => `<div class="conf-row"><span><b>${esc(e.name)}</b><small>${esc(byText(e))}</small></span><span class="num">${fmtQty(e.qty)} ${unitTxt(e.qty, e.unit)}</span></div>`).join('')}</div>`;
   };
-  return `<section class="card" aria-labelledby="h-conf">
-    <div class="card-hr room"><div class="room-h"><h2 class="card-h" id="h-conf">Conferência</h2><span class="hint">Total de cada item, somando os ambientes</span></div><button class="btn sm ghost" data-conf-pdf>${I.share}PDF</button></div>
-    ${block('mat', 'Material')}${block('svc', 'Mão de obra')}
-  </section>`;
+  return panel(`q:${q.id}:conf`, '', 'Conferência', 'Total de cada item, somando os ambientes', `${block('mat', 'Material')}${block('svc', 'Mão de obra')}
+    <button class="btn ghost" data-conf-pdf>${I.share}PDF da conferência</button>`, { sub: true });
 }
 function valuesHTML(q, c) {
   const d = q.discount, rt = q.trip ? tripCalc(q.trip) : null;
-  return `<section class="card" aria-labelledby="h-val">
-    <h2 class="card-h" id="h-val">Valores</h2>
-    <div class="vrows">
+  return `<div class="vrows">
       <div class="vrow"><span>Mão de obra</span><b data-t="labor">${BRL(c.labor)}</b></div>
       <div class="xchips" role="group" aria-label="Adicionais sobre a mão de obra"><span class="lab">Adicional sobre a mão de obra</span>${EXTRAS.map(([k, l, sk]) => { const on = q.extras[k] > 0; return `<button class="chip" data-x="${k}" aria-pressed="${on}">${l} +${on ? q.extras[k] : settings[sk]}%</button>`; }).join('')}</div>
       ${c.extra ? `<div class="vrow"><span>Adicionais (+${c.surPct}%)</span><b>${BRL(c.extra)}</b></div>` : ''}
@@ -1869,22 +1967,20 @@ function valuesHTML(q, c) {
         ? `<input id="q-disc" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${d.value ? BRL(d.value) : ''}">`
         : `<input id="q-disc" type="text" inputmode="decimal" placeholder="0" value="${d.pct ? fmtQty(d.pct) : ''}" aria-label="Desconto em porcentagem">`}</div></div>
       <div class="vrow total"><span>Total</span><b data-t="total">${BRL(c.total)}</b></div>
-    </div>
-  </section>`;
+    </div>`;
 }
 VIEWS.quote = {
   html(r) {
-    const q = getQ(r.id), c = compute(q);
+    const q = getQ(r.id), c = compute(q), S = quoteSums(q, c);
     return `<header class="appbar"><div class="appbar-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
-      <div class="ab-title"><span class="ab-eyebrow">${q.example ? 'Exemplo' : (isReport(q) ? 'Relatório ' : 'Orçamento ') + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-main" id="ab-name">${esc(q.client.name || 'Novo orçamento')}</span></div>
+      <div class="ab-title"><span class="ab-eyebrow">${q.example ? 'Exemplo' : (isReport(q) ? 'Relatório ' : 'Orçamento ') + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-main" id="ab-name">${esc(q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'))}</span></div>
       <button class="icon-btn" data-menu aria-label="Mais opções">${I.more}</button>
     </div></header>
     <main class="page bar">
       ${q.example ? `<div class="banner b-tip"><p><b>Este é um orçamento de exemplo.</b> Mexa à vontade para conhecer o app e exclua quando quiser pelo menu ⋯.</p></div>` : ''}
       ${statusBanner(q, c)}
-      <section class="card" aria-labelledby="h-cli">
-        <h2 class="card-h" id="h-cli">Cliente</h2>
+      ${panelOpen(`q:${q.id}:cli`, 'cli', 'Cliente e serviço', S.cli, { def: !q.client.name })}
         <div class="field"><label for="q-name">Nome</label><input id="q-name" type="text" autocapitalize="words" autocomplete="off" placeholder="Nome do cliente" value="${esc(q.client.name)}"></div>
         <div class="grid2 stack">
           <div class="field"><label for="q-phone">WhatsApp</label><input id="q-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="(11) 90000-0000" value="${esc(fmtPhone(q.client.phone))}"></div>
@@ -1892,16 +1988,14 @@ VIEWS.quote = {
         </div>
         <div class="field"><label for="q-addr">Endereço da obra</label><input id="q-addr" type="text" autocomplete="off" placeholder="Rua, número, bairro" value="${esc(q.client.address)}"></div>
         <div class="field"><label for="q-title">Serviço</label><input id="q-title" type="text" autocomplete="off" placeholder="Ex.: Troca do quadro e instalação de chuveiro" value="${esc(q.title)}"></div>
-      </section>
+        ${nextBtn(q, 'cli')}
+      ${panelClose}
 
       ${techCardHTML(q)}
-      ${isReport(q) ? '' : `<label class="switch-row solo" for="q-done"><span><b>Serviço já realizado</b><small>O documento vira Relatório de Serviços Executados, sem validade.</small></span><input type="checkbox" class="sw" id="q-done"></label>`}
-      ${roomToggleHTML(q)}
-      ${q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)}
-      ${valuesHTML(q, c)}
+      ${panel(`q:${q.id}:items`, 'items', q.useRooms ? 'Ambientes e itens' : 'Serviços e material', S.items, roomToggleHTML(q) + (q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)) + nextBtn(q, 'items'), { def: !!q.client.name && !q.items.length, right: S.itemsR })}
+      ${panel(`q:${q.id}:val`, 'val', 'Valores', S.val, valuesHTML(q, c) + nextBtn(q, 'val'), { right: S.valR })}
 
-      <section class="card" aria-labelledby="h-cond">
-        <h2 class="card-h" id="h-cond">Condições</h2>
+      ${panelOpen(`q:${q.id}:cond`, 'cond', isReport(q) ? 'Pagamento e garantia' : 'Pagamento, datas e garantia', S.cond, { attrs: ' id="h-cond"' })}
         <div class="field"><span class="lab">Pagamento</span>
           <div class="seg" role="group" aria-label="Forma de pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${q.payment.mode === k}">${l}</button>`).join('')}</div>
         </div>
@@ -1920,9 +2014,12 @@ VIEWS.quote = {
           <div class="field"><label for="q-war">Garantia (dias)</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
           ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade (dias)</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
         </div>
-        <div class="field"><label for="q-notes">Observações</label><textarea id="q-notes" placeholder="O que está fora do orçamento, cuidados no dia do serviço…">${esc(q.notes)}</textarea>
+        ${nextBtn(q, 'cond')}
+      ${panelClose}
+      ${panelOpen(`q:${q.id}:notes`, 'notes', 'Observações', S.notes)}
+        <div class="field"><textarea id="q-notes" aria-label="Observações" placeholder="O que está fora do orçamento, cuidados no dia do serviço…">${esc(q.notes)}</textarea>
           <div class="chips">${NOTE_CHIPS.map(([l, t], k) => `<button class="chip" data-note="${k}" ${q.notes.includes(t) ? 'disabled' : ''}>${I.plus.replace('class="i"', 'class="i" style="width:16px;height:16px"')}${l}</button>`).join('')}</div></div>
-      </section>
+      ${panelClose}
     </main>
     <div class="bbar"><div class="bbar-in">
       <div class="bb-total"><small>Total</small><b data-t="total">${BRL(c.total)}</b></div>
@@ -1937,14 +2034,17 @@ VIEWS.quote = {
       $$('[data-t="mat"]', v).forEach(e => e.textContent = BRL(c.matTotal));
       $$('[data-t="total"]', v).forEach(e => e.textContent = BRL(c.total));
       const ps = $('#pay-sum', v); if (ps) ps.innerHTML = paySumHTML(q, c);
+      paintSums(v, quoteSums(q, c));
     };
+    ['input', 'change'].forEach(ev => v.addEventListener(ev, () => requestAnimationFrame(paint)));
+    v.addEventListener('click', e => { const b = e.target.closest('[data-next]'); if (!b) return; const d = $(`details[data-panel="${b.dataset.next}"]`, v); if (d) d.open = true; });
     $('[data-back]', v).onclick = () => back('/');
     $('[data-menu]', v).onclick = () => quoteMenu(q);
     $('[data-preview]', v).onclick = () => go('/q/' + q.id + '/proposta');
 
     // cliente
     const nm = $('#q-name', v);
-    nm.addEventListener('input', () => { q.client.name = nm.value.replace(/\s+/g, ' ').trimStart(); $('#ab-name').textContent = q.client.name || 'Novo orçamento'; touch(q); });
+    nm.addEventListener('input', () => { q.client.name = nm.value.replace(/\s+/g, ' ').trimStart(); $('#ab-name').textContent = q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'); touch(q); });
     nm.addEventListener('change', () => { q.client.name = nm.value.trim().replace(/\s+/g, ' '); touch(q); });
     attachSuggest(nm, () => clientList().map(k => ({ label: k.name, right: k.phone ? fmtPhone(k.phone) : k.address, k })), x => {
       q.client.name = x.k.name;
@@ -3011,7 +3111,9 @@ function priceListHTML() {
   const qf = fold(priceQuery);
   const list = prices.filter(p => p.kind === priceKind && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
   if (!list.length) return `<div class="empty">${qf ? 'Nenhum item encontrado.' : 'Nenhum item nesta tabela.'}</div>`;
-  return groupByCat(list).map(([cat, L]) => `<section class="card"><div class="card-hr"><h2 class="card-h">${esc(cat)}</h2><span class="card-sum">${L.length}</span></div><div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}</small></span><span class="prow-price">${BRL(p.price)}</span></button>`).join('')}</div></section>`).join('');
+  return groupByCat(list).map(([cat, L]) => panel(`pr:${priceKind}:${cat}`, '', esc(cat), qf ? null : L.slice(0, 3).map(p => p.name).join(' · ') + (L.length > 3 ? '…' : ''),
+    `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}</small></span><span class="prow-price">${BRL(p.price)}</span></button>`).join('')}</div>`,
+    { multi: true, right: `<span class="card-sum">${L.length}</span>`, force: qf ? true : undefined })).join('');
 }
 VIEWS.prices = {
   html() {
@@ -3020,7 +3122,7 @@ VIEWS.prices = {
     <main class="page">
       <div class="seg" role="group" aria-label="Tipo"><button data-k="svc" aria-pressed="${priceKind === 'svc'}">Mão de obra · ${n('svc')}</button><button data-k="mat" aria-pressed="${priceKind === 'mat'}">Material · ${n('mat')}</button></div>
       <label class="search">${I.search}<input type="search" id="pr-q" placeholder="Buscar item ou categoria" value="${esc(priceQuery)}" aria-label="Buscar na tabela"></label>
-      <div id="pr-list" style="display:flex;flex-direction:column;gap:14px">${priceListHTML()}</div>
+      <div id="pr-list" style="display:flex;flex-direction:column;gap:10px">${priceListHTML()}</div>
       <p class="foot-note">Os preços que vêm com o app são só uma referência. Toque em um item para colocar o seu valor.</p>
     </main>
     <button class="fab" data-new-price>${I.plus}Novo item</button>`;
@@ -3115,17 +3217,31 @@ function readLogo(file) {
     fr.onerror = rej; fr.readAsDataURL(file);
   });
 }
+function settingsSums() {
+  const s = settings;
+  return {
+    sync: syncOn() ? `Ligada · @${sync.login}` : 'Desligada · use o app em vários aparelhos',
+    me: [s.company || s.name, s.phone ? fmtPhone(s.phone) : ''].filter(Boolean).join(' · ') || 'Nome, contato, CPF ou CNPJ e logotipo',
+    pix: s.pix || 'Nenhuma chave cadastrada',
+    car: s.kmPerL || s.fuelPrice ? [s.kmPerL && `${fmtQty(s.kmPerL)} km/l`, s.fuelPrice && `combustível ${BRL(s.fuelPrice)}`].filter(Boolean).join(' · ') : 'Consumo do veículo e preço do combustível',
+    sur: `Urgência ${s.surUrgent}% · noturno ${s.surNight}% · fim de semana ${s.surWeekend}%`,
+    def: `Validade ${s.validity} dias · garantia ${s.warranty} dias · ${payShort({ mode: s.payMode, entryPct: s.entryPct, installments: s.installments }).toLowerCase()}`,
+    txt: 'Termo de aceite e condições da garantia',
+    bak: 'Exportar ou importar os dados num arquivo',
+    inst: 'Abre como aplicativo e funciona sem internet',
+  };
+}
 VIEWS.settings = {
   html() {
-    const s = settings;
+    const s = settings, S = settingsSums();
     const money = (k, label, ph) => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" data-money type="text" inputmode="numeric" value="${s[k] ? BRL(s[k]) : ''}" placeholder="${esc(ph)}"></div>`;
     const pct = (k, label) => `<div class="field"><label for="st-${k}">${label} (%)</label><input id="st-${k}" data-set="${k}" data-int type="text" inputmode="numeric" value="${s[k]}"></div>`;
     const f = (k, label, ph, type = 'text', extra = '') => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" type="${type}" value="${esc(k === 'phone' ? fmtPhone(s[k]) : s[k])}" placeholder="${esc(ph)}" ${extra}></div>`;
     return `<header class="appbar"><div class="appbar-in"><div class="ab-title"><span class="ab-main big">Ajustes</span></div></div></header>
     <main class="page">
       ${syncCardHTML()}
-      <section class="card">
-        <div><h2 class="card-h">Seus dados</h2><p class="hint">Saem no cabeçalho das propostas e dos recibos.</p></div>
+      ${panelOpen('st:me', 'me', 'Seus dados', S.me)}
+        <p class="hint">Saem no cabeçalho das propostas e dos recibos.</p>
         <div class="logo-row">
           <button class="logo-pick" data-logo aria-label="Escolher logotipo">${s.logo ? `<img src="${s.logo}" alt="Seu logotipo">` : I.image}</button>
           <div><b>Logotipo</b><small>Opcional. Sem logo, a proposta usa o raio do app.</small>${s.logo ? '<button class="linkish" data-logo-rm style="margin-top:4px;font-size:14px;color:var(--bad)">Remover logotipo</button>' : ''}</div>
@@ -3139,13 +3255,13 @@ VIEWS.settings = {
           ${f('doc', 'CPF ou CNPJ (opcional)', 'Sai no recibo')}
           ${f('city', 'Cidade', 'Ex.: São Paulo', 'text', 'autocapitalize="words"')}
         </div>
-      </section>
-      <section class="card">
-        <div><h2 class="card-h">Pix</h2><p class="hint">Com a chave, a proposta já sai com o QR code da entrada (ou do total, no pagamento à vista).</p></div>
+      ${panelClose}
+      ${panelOpen('st:pix', 'pix', 'Pix', S.pix)}
+        <p class="hint">Com a chave, a proposta já sai com o QR code da entrada (ou do total, no pagamento à vista).</p>
         ${f('pix', 'Chave Pix', 'CPF, celular, e-mail ou chave aleatória', 'text', 'autocapitalize="off" spellcheck="false"')}
-      </section>
-      <section class="card">
-        <div><h2 class="card-h">Veículo e deslocamento</h2><p class="hint">Base da calculadora de deslocamento. O preço do combustível também pode ser atualizado direto no orçamento.</p></div>
+      ${panelClose}
+      ${panelOpen('st:car', 'car', 'Veículo e deslocamento', S.car)}
+        <p class="hint">Base da calculadora de deslocamento. O preço do combustível também pode ser atualizado direto no orçamento.</p>
         <div class="grid2">
           <div class="field"><label for="st-kmPerL">Consumo médio (km/l)</label><input id="st-kmPerL" data-set="kmPerL" data-dec type="text" inputmode="decimal" value="${s.kmPerL ? fmtQty(s.kmPerL) : ''}" placeholder="Ex.: 10"></div>
           ${money('fuelPrice', 'Combustível (litro)', 'Ex.: R$ 6,19')}
@@ -3154,15 +3270,15 @@ VIEWS.settings = {
         </div>
         ${money('minVisit', 'Mínimo por visita', 'Opcional')}
         <p class="hint">O desgaste cobre pneus, óleo e manutenção. A hora entra quando você informa o tempo de viagem. O mínimo protege as obras muito perto.</p>
-      </section>
-      <section class="card">
-        <div><h2 class="card-h">Adicionais sobre a mão de obra</h2><p class="hint">Percentual usado quando você marca o adicional no orçamento. Se marcar mais de um, eles se somam.</p></div>
+      ${panelClose}
+      ${panelOpen('st:sur', 'sur', 'Adicionais sobre a mão de obra', S.sur)}
+        <p class="hint">Percentual usado quando você marca o adicional no orçamento. Se marcar mais de um, eles se somam.</p>
         <div class="grid3">
           ${pct('surUrgent', 'Urgência')}${pct('surNight', 'Noturno')}${pct('surWeekend', 'Fim de sem.')}
         </div>
-      </section>
-      <section class="card">
-        <div><h2 class="card-h">Padrão de cada orçamento novo</h2><p class="hint">Dá para mudar em cada orçamento.</p></div>
+      ${panelClose}
+      ${panelOpen('st:def', 'def', 'Padrão de cada orçamento novo', S.def)}
+        <p class="hint">Dá para mudar em cada orçamento.</p>
         <div class="grid2">
           ${f('validity', 'Validade (dias)', '15', 'text', 'inputmode="numeric" data-int')}
           ${f('warranty', 'Garantia (dias)', '90', 'text', 'inputmode="numeric" data-int')}
@@ -3170,28 +3286,29 @@ VIEWS.settings = {
         <div class="field"><span class="lab">Pagamento</span><div class="seg" role="group">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${s.payMode === k}">${l}</button>`).join('')}</div></div>
         ${s.payMode === 'entrada' ? `<div class="field"><span class="lab">Entrada</span><div class="chips row5">${[30, 40, 50, 60, 70].map(n => `<button class="chip" data-ep="${n}" aria-pressed="${s.entryPct === n}">${n}%</button>`).join('')}</div></div>` : ''}
         <div class="field"><label for="st-notes">Observações que sempre vão na proposta</label><textarea id="st-notes" data-set="notes" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.notes)}</textarea></div>
-      </section>
-      <section class="card">
-        <div><h2 class="card-h">Textos dos documentos</h2><p class="hint">Saem em todos os orçamentos e relatórios. Deixe em branco para não usar.</p></div>
+      ${panelClose}
+      ${panelOpen('st:txt', 'txt', 'Textos dos documentos', S.txt)}
+        <p class="hint">Saem em todos os orçamentos e relatórios. Deixe em branco para não usar.</p>
         <div class="field"><label for="st-acceptText">Termo de aceite (acima da assinatura do orçamento)</label><textarea id="st-acceptText" data-set="acceptText">${esc(s.acceptText)}</textarea>
           ${s.acceptText !== ACCEPT_DEFAULT ? '<button class="linkish" data-reset="acceptText">Voltar ao texto sugerido</button>' : ''}</div>
         <div class="field"><label for="st-warrantyTerms">Condições da garantia</label><textarea id="st-warrantyTerms" data-set="warrantyTerms">${esc(s.warrantyTerms)}</textarea>
           ${s.warrantyTerms !== WARRANTY_DEFAULT ? '<button class="linkish" data-reset="warrantyTerms">Voltar ao texto sugerido</button>' : ''}</div>
-      </section>
-      <section class="card">
-        ${syncOn() ? '<div><h2 class="card-h">Cópia em arquivo</h2><p class="hint">Além da sincronização, você pode guardar uma cópia dos dados num arquivo.</p></div>' : '<div><h2 class="card-h">Cópia em arquivo</h2><p class="hint">Sem a sincronização, os dados ficam só neste aparelho. Exporte uma cópia de vez em quando.</p></div>'}
+      ${panelClose}
+      ${panelOpen('st:bak', 'bak', 'Cópia em arquivo', S.bak)}
+        <p class="hint">${syncOn() ? 'Além da sincronização, você pode guardar uma cópia dos dados num arquivo.' : 'Sem a sincronização, os dados ficam só neste aparelho. Exporte uma cópia de vez em quando.'}</p>
         <div class="grid2"><button class="btn ghost" data-export>${I.dl}Exportar cópia</button><button class="btn ghost" data-import>${I.ul}Importar cópia</button></div>
         <input type="file" id="st-import" accept="application/json,.json" hidden>
-      </section>
-      ${isStandalone() ? '' : `<section class="card">
-        <div><h2 class="card-h">Instalar na tela de início</h2><p class="hint">Abre como um aplicativo, em tela cheia, e funciona sem internet.</p></div>
+      ${panelClose}
+      ${isStandalone() ? '' : `${panelOpen('st:inst', 'inst', 'Instalar na tela de início', S.inst)}
+        <p class="hint">Abre como um aplicativo, em tela cheia, e funciona sem internet.</p>
         ${installEvt ? `<button class="btn primary" data-install>${I.phone}Instalar o Elétrica Fácil</button>` : `<p style="margin:0;font-size:15px"><b>iPhone:</b> no Safari, toque em Compartilhar e depois em <b>Adicionar à Tela de Início</b>.<br><b>Android:</b> no Chrome, abra o menu ⋮ e toque em <b>Instalar app</b>.</p>`}
-      </section>`}
-      <p class="foot-note">Elétrica Fácil · versão 2.3</p>
+      ${panelClose}`}
+      <p class="foot-note">Elétrica Fácil · versão 2.4</p>
     </main>`;
   },
   bind(v) {
     bindSyncCard(v);
+    v.addEventListener('input', () => setTimeout(() => paintSums(v, settingsSums()), 300));
     let t;
     $$('[data-set]', v).forEach(i => {
       const save = () => {
