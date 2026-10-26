@@ -160,7 +160,7 @@ svg.bolt{fill:currentColor;stroke:currentColor;stroke-width:.8}
 .hint{color:var(--muted);font-size:14px;margin:0}
 .field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .field > label,.lab{font-size:13.5px;font-weight:600;color:var(--muted)}
-input[type=text],input[type=tel],input[type=email],input[type=search],input:not([type]),select,textarea{width:100%;min-height:48px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:16px;appearance:none;-webkit-appearance:none}
+input[type=text],input[type=tel],input[type=email],input[type=search],input[type=date],input:not([type]),select,textarea{width:100%;min-height:48px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:16px;appearance:none;-webkit-appearance:none}
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23959081' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:18px;padding-right:38px}
 textarea{min-height:88px;resize:vertical;line-height:1.45}
 input::placeholder,textarea::placeholder{color:var(--faint)}
@@ -334,7 +334,7 @@ mark{background:var(--volt-soft);color:inherit;border-radius:3px;padding:0 1px}
 .p-who span{display:block;color:var(--paper-muted);font-size:11.5px;line-height:1.35}
 @supports not (text-box:trim-both cap alphabetic){.p-who b{margin-top:-3.5px}.p-who span:last-child,.p-who b:last-child{margin-bottom:-3px}}
 .p-num{text-align:right;flex:none;line-height:1.25}
-.p-num span{display:block;font-size:10px;letter-spacing:.12em;font-weight:700;color:var(--paper-muted)}
+.p-num span{display:block;font-size:10px;letter-spacing:.12em;font-weight:700;color:var(--paper-muted);max-width:150px;margin-left:auto;line-height:1.35}
 .p-num b{display:block;font-family:var(--f-display);font-size:17px;font-weight:850;font-stretch:108%}
 .p-num small{display:block;font-size:11.5px;color:var(--paper-muted)}
 .p-rule{height:4px;background:var(--paper-volt);border-radius:2px;margin-top:-4px}
@@ -429,6 +429,16 @@ details.more .more-in{padding:0 14px 14px;display:flex;flex-direction:column;gap
 .p-table tr.p-sub td:last-child{color:var(--paper-ink);font-weight:700}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .grid3 label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc-seg{margin-bottom:-2px}
+.paper{container-type:inline-size;container-name:paper}
+/* título longo (relatório) em tela estreita: o número desce para baixo do cabeçalho */
+@container paper (max-width:480px){
+  .p-head.long{flex-direction:column;gap:14px}
+  .p-head.long .p-num{text-align:left}
+  .p-head.long .p-num span{max-width:none;margin-left:0}
+}
+.banner .field label{color:var(--muted)}
+.banner input[type=date]{background:var(--surface)}
 @media (max-width:380px){
   .hero-stats b{font-size:19px}
   .hero-stats span{font-size:12px}
@@ -776,8 +786,22 @@ function consolidate(q, kind) {
   });
   return [...m.values()];
 }
+// antes do serviço o documento é orçamento; depois de concluído, relatório de serviços executados
+const isReport = q => q.status === 'concluido';
+const previewDoc = {};
+const docMode = q => isReport(q) ? (previewDoc[q.id] || 'report') : 'quote';
+const DOC = {
+  quote: { title: 'ORÇAMENTO', name: 'Orçamento', file: 'Orcamento' },
+  report: { title: 'RELATÓRIO DE SERVIÇOS EXECUTADOS', name: 'Relatório', file: 'Relatorio' },
+};
+const dateInput = ts => { const d = new Date(ts || Date.now()); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+function warrantyText(q, mode) {
+  const base = `${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado`;
+  return mode === 'report' && q.doneAt ? `${base}, até ${fmtDate(q.doneAt + q.warranty * DAY)}` : base;
+}
 function setStatus(q, st) {
   const now = Date.now();
+  if (st === 'concluido' && q.status !== 'concluido') q.prevStatus = q.status;
   q.status = st;
   if (st === 'rascunho') { q.approvedAt = q.doneAt = q.refusedAt = null; }
   if (st === 'enviado') { q.sentAt = q.sentAt || now; q.approvedAt = q.doneAt = q.refusedAt = null; }
@@ -1173,12 +1197,16 @@ function statusBanner(q, c) {
   </div>`;
   if (q.status === 'aprovado') return `<div class="banner b-ok">
     <p><b>Aprovado ${rel(q.approvedAt)}.</b> Quando terminar o serviço, marque como concluído para gerar o recibo.</p>
-    <div class="banner-act"><button class="btn sm ok" data-st="concluido">${I.check}Serviço concluído</button>${px ? `<button class="btn sm ghost" data-pix>${I.pix}Pix da ${px.label}</button>` : `<button class="btn sm ghost" data-receipt>${I.receipt}Recibo</button>`}</div>
+    <div class="banner-act"><button class="btn sm ok" data-st="concluido">${I.check}Serviço concluído</button>${px ? `<button class="btn sm ghost" data-pix>${I.pix}Pix d${px.what}</button>` : `<button class="btn sm ghost" data-receipt>${I.receipt}Recibo</button>`}</div>
   </div>`;
-  if (q.status === 'concluido') return `<div class="banner b-done">
-    <p><b>Serviço concluído em ${fmtDate(q.doneAt)}.</b></p>
-    <div class="banner-act"><button class="btn sm dark" data-receipt>${I.receipt}Gerar recibo</button></div>
+  if (q.status === 'concluido') {
+    const pr = pixOf(q, c, 'report');
+    return `<div class="banner b-done">
+    <p><b>Serviço concluído.</b> O documento agora é o Relatório de Serviços Executados.</p>
+    <div class="field"><label for="q-donedate">Executado em</label><input id="q-donedate" type="date" value="${dateInput(q.doneAt)}" max="${dateInput(Date.now())}"></div>
+    <div class="banner-act"><button class="btn sm dark" data-receipt>${I.receipt}Gerar recibo</button>${pr ? `<button class="btn sm ghost" data-pix-rest>${I.pix}Pix d${pr.what}</button>` : ''}<button class="btn sm ghost" data-undone>Desfazer conclusão</button></div>
   </div>`;
+  }
   if (q.status === 'recusado') return `<div class="banner b-bad">
     <p><b>Recusado em ${fmtDate(q.refusedAt)}.</b> Se o cliente mudar de ideia, reabra e ajuste os valores.</p>
     <div class="banner-act"><button class="btn sm ghost" data-st="rascunho">Reabrir como rascunho</button></div>
@@ -1265,7 +1293,7 @@ VIEWS.quote = {
     const q = getQ(r.id), c = compute(q);
     return `<header class="appbar"><div class="appbar-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
-      <div class="ab-title"><span class="ab-eyebrow">${q.example ? 'Exemplo' : 'Orçamento ' + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-main" id="ab-name">${esc(q.client.name || 'Novo orçamento')}</span></div>
+      <div class="ab-title"><span class="ab-eyebrow">${q.example ? 'Exemplo' : (isReport(q) ? 'Relatório ' : 'Orçamento ') + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-main" id="ab-name">${esc(q.client.name || 'Novo orçamento')}</span></div>
       <button class="icon-btn" data-menu aria-label="Mais opções">${I.more}</button>
     </div></header>
     <main class="page bar">
@@ -1281,6 +1309,7 @@ VIEWS.quote = {
         <div class="field"><label for="q-title">Serviço</label><input id="q-title" type="text" autocomplete="off" placeholder="Ex.: Troca do quadro e instalação de chuveiro" value="${esc(q.title)}"></div>
       </section>
 
+      ${isReport(q) ? '' : `<label class="switch-row solo" for="q-done"><span><b>Serviço já realizado</b><small>O documento vira Relatório de Serviços Executados, sem validade.</small></span><input type="checkbox" class="sw" id="q-done"></label>`}
       ${roomToggleHTML(q)}
       ${q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)}
       ${valuesHTML(q, c)}
@@ -1291,11 +1320,11 @@ VIEWS.quote = {
           <div class="seg" role="group" aria-label="Forma de pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${q.payment.mode === k}">${l}</button>`).join('')}</div>
         </div>
         ${payBlockHTML(q, c)}
-        <div class="field"><label for="q-dead">Prazo de execução</label><input id="q-dead" type="text" placeholder="Ex.: 2 dias úteis" value="${esc(q.deadline)}">
-          <div class="chips">${DEADLINES.map(t => `<button class="chip" data-dl="${esc(t)}" aria-pressed="${q.deadline === t}">${t}</button>`).join('')}</div></div>
+        ${isReport(q) ? '' : `<div class="field"><label for="q-dead">Prazo de execução</label><input id="q-dead" type="text" placeholder="Ex.: 2 dias úteis" value="${esc(q.deadline)}">
+          <div class="chips">${DEADLINES.map(t => `<button class="chip" data-dl="${esc(t)}" aria-pressed="${q.deadline === t}">${t}</button>`).join('')}</div></div>`}
         <div class="grid2">
           <div class="field"><label for="q-war">Garantia (dias)</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
-          <div class="field"><label for="q-val">Validade (dias)</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>
+          ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade (dias)</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
         </div>
         <div class="field"><label for="q-notes">Observações</label><textarea id="q-notes" placeholder="O que está fora do orçamento, cuidados no dia do serviço…">${esc(q.notes)}</textarea>
           <div class="chips">${NOTE_CHIPS.map(([l, t], k) => `<button class="chip" data-note="${k}" ${q.notes.includes(t) ? 'disabled' : ''}>${I.plus.replace('class="i"', 'class="i" style="width:16px;height:16px"')}${l}</button>`).join('')}</div></div>
@@ -1303,7 +1332,7 @@ VIEWS.quote = {
     </main>
     <div class="bbar"><div class="bbar-in">
       <div class="bb-total"><small>Total</small><b data-t="total">${BRL(c.total)}</b></div>
-      <button class="btn primary" data-preview>Ver proposta${I.arrow}</button>
+      <button class="btn primary" data-preview>${isReport(q) ? 'Ver relatório' : 'Ver proposta'}${I.arrow}</button>
     </div></div>`;
   },
   bind(v, r) {
@@ -1365,10 +1394,18 @@ VIEWS.quote = {
     $$('[data-ep]', v).forEach(b => b.onclick = () => { q.payment.entryPct = +b.dataset.ep; touch(q); rerender(); });
     $$('[data-in]', v).forEach(b => b.onclick = () => { q.payment.installments = Math.max(2, Math.min(12, (q.payment.installments || 3) + +b.dataset.in)); touch(q); rerender(); });
     const dl = $('#q-dead', v);
-    dl.addEventListener('input', () => { q.deadline = dl.value; touch(q); $$('[data-dl]', v).forEach(c => c.setAttribute('aria-pressed', c.dataset.dl === dl.value)); });
+    dl?.addEventListener('input', () => { q.deadline = dl.value; touch(q); $$('[data-dl]', v).forEach(c => c.setAttribute('aria-pressed', c.dataset.dl === dl.value)); });
     $$('[data-dl]', v).forEach(b => b.onclick = () => { q.deadline = dl.value = b.dataset.dl; touch(q); $$('[data-dl]', v).forEach(c => c.setAttribute('aria-pressed', c === b)); });
     $('#q-war', v).addEventListener('input', e => { q.warranty = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
-    $('#q-val', v).addEventListener('input', e => { q.validity = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
+    $('#q-val', v)?.addEventListener('input', e => { q.validity = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
+    // serviço já realizado: vira relatório; desfazer volta para a situação anterior
+    $('#q-done', v)?.addEventListener('change', e => { if (!e.target.checked) return; setStatus(q, 'concluido'); rerender(); window.scrollTo({ top: 0 }); toast('Agora é um Relatório de Serviços Executados.'); });
+    $('#q-donedate', v)?.addEventListener('change', e => { if (!e.target.value) return; q.doneAt = new Date(e.target.value + 'T12:00').getTime(); touch(q); toast('Data de execução salva.'); });
+    $('[data-undone]', v)?.addEventListener('click', () => {
+      const prev = q.prevStatus && q.prevStatus !== 'concluido' ? q.prevStatus : 'rascunho';
+      setStatus(q, prev); rerender(); toast(`Voltou para ${STATUS[prev].toLowerCase()}. O documento é orçamento de novo.`);
+    });
+    $('[data-pix-rest]', v)?.addEventListener('click', () => { const px = pixOf(q, compute(q), 'report'); if (px) pixSheet(px); });
     const nt = $('#q-notes', v);
     nt.addEventListener('input', () => { q.notes = nt.value; touch(q); $$('[data-note]', v).forEach(c => c.disabled = q.notes.includes(NOTE_CHIPS[+c.dataset.note][1])); });
     $$('[data-note]', v).forEach(b => b.onclick = () => {
@@ -1390,7 +1427,7 @@ function removeLine(q, id) {
 function quoteMenu(q) {
   openSheet({ title: q.client.name || 'Orçamento', body: `<div class="opts">
       <button class="opt" data-o="status">${I.flag}<span>Alterar situação<small>Agora: ${STATUS[q.status]}</small></span></button>
-      <button class="opt" data-o="preview">${I.doc}<span>Ver e enviar a proposta</span></button>
+      <button class="opt" data-o="preview">${I.doc}<span>Ver e enviar ${isReport(q) ? 'o relatório' : 'a proposta'}</span></button>
       ${['aprovado', 'concluido'].includes(q.status) ? `<button class="opt" data-o="receipt">${I.receipt}<span>Gerar recibo</span></button>` : ''}
       <button class="opt" data-o="dup">${I.dup}<span>Duplicar<small>Cria um rascunho igual, com novo número</small></span></button>
       <button class="opt danger" data-o="del">${I.trash}<span>Excluir orçamento</span></button>
@@ -1651,8 +1688,8 @@ function tripSheet(q) {
 }
 
 /* ================= tela: proposta ================= */
-function paperHTML(q, c) {
-  const s = settings, px = pixOf(q, c);
+function paperHTML(q, c, mode = docMode(q)) {
+  const s = settings, px = pixOf(q, c, mode), rep = mode === 'report';
   const biz = s.company || s.name;
   const sub = [s.company && s.name ? s.name : '', s.phone ? fmtPhone(s.phone) : '', s.email, s.doc, s.city].filter(Boolean);
   const row = (i, dim) => `<tr${dim ? ' class="dim"' : ''}><td>${esc(i.name)}<small>${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)}</small></td><td>${BRL(lineTotal(i))}</td></tr>`;
@@ -1664,21 +1701,21 @@ function paperHTML(q, c) {
       return `<tr class="p-sec"><td colspan="2">${esc(g.name)}</td></tr>${svc.map(i => row(i)).join('')}${mat.map(i => row(i, !c.matIn)).join('')}<tr class="p-sub"><td>Subtotal ${esc(g.name)}</td><td>${BRL(st)}</td></tr>`;
     }).join('');
     if (!body) body = '<tr class="dim"><td colspan="2">Nenhum item lançado</td></tr>';
-    else if (c.mat.length && !c.matIn) body += '<tr class="p-note"><td colspan="2">Material por conta do cliente: valores estimados, fora do total.</td></tr>';
+    else if (c.mat.length && !c.matIn) body += `<tr class="p-note"><td colspan="2">${rep ? 'Material fornecido pelo cliente: valores de referência, fora do total.' : 'Material por conta do cliente: valores estimados, fora do total.'}</td></tr>`;
   } else {
     body = `<tr class="p-sec"><td colspan="2">Mão de obra</td></tr>
       ${c.svc.length ? c.svc.map(i => row(i)).join('') : '<tr class="dim"><td colspan="2">Nenhum serviço lançado</td></tr>'}
-      ${c.mat.length ? `<tr class="p-sec"><td colspan="2">Material</td></tr>${c.matIn ? '' : '<tr class="p-note"><td colspan="2">Por conta do cliente: valores estimados, fora do total.</td></tr>'}${c.mat.map(i => row(i, !c.matIn)).join('')}` : ''}`;
+      ${c.mat.length ? `<tr class="p-sec"><td colspan="2">Material</td></tr>${c.matIn ? '' : `<tr class="p-note"><td colspan="2">${rep ? 'Fornecido pelo cliente: valores de referência, fora do total.' : 'Por conta do cliente: valores estimados, fora do total.'}</td></tr>`}${c.mat.map(i => row(i, !c.matIn)).join('')}` : ''}`;
   }
-  return `<article class="paper" aria-label="Prévia da proposta">
-    <header class="p-head">
+  return `<article class="paper" aria-label="Prévia do documento">
+    <header class="p-head${rep ? ' long' : ''}">
       <div class="p-brand"><div class="p-mark">${s.logo ? `<img src="${s.logo}" alt="">` : APP_MARK}</div><div class="p-who"><b>${esc(biz || 'Seu nome ou empresa')}</b>${sub.map(x => `<span>${esc(x)}</span>`).join('')}</div></div>
-      <div class="p-num"><span>ORÇAMENTO</span><b>${esc(numLabel(q))}</b><small>${fmtDate(q.createdAt)}</small></div>
+      <div class="p-num"><span>${DOC[mode].title}</span><b>${esc(numLabel(q))}</b><small>${rep ? 'Executado em ' + fmtDate(q.doneAt) : fmtDate(q.createdAt)}</small></div>
     </header>
     <div class="p-rule"></div>
     <div class="p-parties">
       <div><span class="p-lab">Cliente</span><b>${esc(q.client.name || '—')}</b>${q.client.phone ? `<span>${esc(fmtPhone(q.client.phone))}</span>` : ''}${q.client.address ? `<span>${esc(q.client.address)}</span>` : ''}</div>
-      <div><span class="p-lab">Serviço</span><b>${esc(q.title || 'Serviços elétricos')}</b></div>
+      <div><span class="p-lab">${rep ? 'Serviço executado' : 'Serviço'}</span><b>${esc(q.title || 'Serviços elétricos')}</b></div>
     </div>
     <table class="p-table">
       <thead><tr><th>Descrição</th><th>Total</th></tr></thead>
@@ -1693,16 +1730,17 @@ function paperHTML(q, c) {
       <div class="p-grand"><span>TOTAL</span><span>${BRL(c.total)}</span></div>
     </div>
     <dl class="p-cond">
+      ${rep ? `<dt>Execução</dt><dd>${fmtDate(q.doneAt)}</dd>` : ''}
       <dt>Pagamento</dt><dd>${esc(payText(q, c))}</dd>
-      ${q.deadline ? `<dt>Prazo</dt><dd>${esc(q.deadline)}</dd>` : ''}
-      ${q.warranty ? `<dt>Garantia</dt><dd>${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado</dd>` : ''}
-      ${q.validity ? `<dt>Validade</dt><dd>Proposta válida até ${fmtDate(c.validUntil)}</dd>` : ''}
+      ${!rep && q.deadline ? `<dt>Prazo</dt><dd>${esc(q.deadline)}</dd>` : ''}
+      ${q.warranty ? `<dt>Garantia</dt><dd>${esc(warrantyText(q, mode))}</dd>` : ''}
+      ${!rep && q.validity ? `<dt>Validade</dt><dd>Proposta válida até ${fmtDate(c.validUntil)}</dd>` : ''}
       ${c.extra ? `<dt>Adicionais</dt><dd>${esc(extrasText(q))}, sobre a mão de obra</dd>` : ''}
       ${q.trip && c.travel ? `<dt>Deslocamento</dt><dd>${esc(tripLong(q.trip))}</dd>` : ''}
     </dl>
-    ${px ? `<div class="p-pix"><canvas data-qr width="200" height="200" aria-label="QR code do Pix"></canvas><div><b>Pague a ${px.label} com Pix: ${BRL(px.value)}</b><span>Chave: ${esc(px.key)}</span><span>Abra o app do banco e leia o QR code.</span></div></div>` : ''}
+    ${px ? `<div class="p-pix"><canvas data-qr width="200" height="200" aria-label="QR code do Pix"></canvas><div><b>Pague ${px.what} com Pix: ${BRL(px.value)}</b><span>Chave: ${esc(px.key)}</span><span>Abra o app do banco e leia o QR code.</span></div></div>` : ''}
     ${q.notes.trim() ? `<div><span class="p-lab">Observações</span><div class="p-notes">${esc(q.notes.trim())}</div></div>` : ''}
-    <div class="p-sign"><div><b>${esc(q.client.name || 'Cliente')}</b><span>Cliente</span></div><div><b>${esc(s.name || s.company || 'Responsável')}</b><span>Responsável pelo serviço</span></div></div>
+    <div class="p-sign"><div><b>${esc(q.client.name || 'Cliente')}</b><span>${rep ? 'Serviço recebido pelo cliente' : 'Cliente'}</span></div><div><b>${esc(s.name || s.company || 'Responsável')}</b><span>Responsável pelo serviço</span></div></div>
   </article>`;
 }
 function markSent(q) {
@@ -1711,24 +1749,25 @@ function markSent(q) {
 }
 VIEWS.preview = {
   html(r) {
-    const q = getQ(r.id), c = compute(q);
+    const q = getQ(r.id), c = compute(q), mode = docMode(q);
     const warn = [];
     if (!settings.name && !settings.company) warn.push('Seu nome e telefone ainda não aparecem no cabeçalho.');
     if (!q.client.name) warn.push('Falta o nome do cliente.');
     if (!q.items.length) warn.push('Nenhum item lançado.');
     return `<header class="appbar"><div class="appbar-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
-      <div class="ab-title"><span class="ab-eyebrow">Proposta · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Cliente sem nome')}</span></div>
+      <div class="ab-title"><span class="ab-eyebrow">${mode === 'report' ? 'Relatório' : 'Proposta'} · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Cliente sem nome')}</span></div>
       <button class="icon-btn" data-edit aria-label="Editar orçamento">${ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')}</button>
     </div></header>
     <main class="page bar">
       ${warn.length ? `<div class="banner b-tip"><p><b>Antes de enviar:</b> ${esc(warn.join(' '))}</p>${!settings.name && !settings.company ? '<div class="banner-act"><button class="btn sm dark" data-me>Preencher meus dados</button></div>' : ''}</div>` : ''}
-      ${paperHTML(q, c)}
+      ${isReport(q) ? `<div class="seg doc-seg" role="group" aria-label="Documento"><button data-doc="report" aria-pressed="${mode === 'report'}">Relatório de serviços</button><button data-doc="quote" aria-pressed="${mode === 'quote'}">Orçamento original</button></div>` : ''}
+      ${paperHTML(q, c, mode)}
       <p class="foot-note">O PDF sai em folha A4, com este mesmo conteúdo.</p>
     </main>
     <div class="bbar"><div class="bbar-in acts">
       <button class="btn primary" data-pdf>${I.share}Enviar PDF</button>
-      <a class="btn wa" data-wa href="${waLink(q.client.phone, quoteMessage(q, c))}" target="_blank" rel="noopener">${I.wa}WhatsApp</a>
+      <a class="btn wa" data-wa href="${waLink(q.client.phone, quoteMessage(q, c, mode))}" target="_blank" rel="noopener">${I.wa}WhatsApp</a>
       <button class="icon-btn boxed" data-more aria-label="Mais opções de envio">${I.more}</button>
     </div></div>`;
   },
@@ -1740,6 +1779,7 @@ VIEWS.preview = {
     $('[data-edit]', v).onclick = () => back('/q/' + q.id);
     $('[data-me]', v)?.addEventListener('click', () => go('/ajustes'));
     const cv = $('canvas[data-qr]', v);
+    $$('[data-doc]', v).forEach(b => b.onclick = () => { previewDoc[q.id] = b.dataset.doc; rerender(); });
     if (cv) { const px = pixOf(q, compute(q)); qrMatrix(pixPayload(px)).then(m => drawQR(cv.getContext('2d'), m, 0, 0, 200)).catch(() => cv.replaceWith(Object.assign(document.createElement('span'), { textContent: '' }))); }
     $('[data-pdf]', v).onclick = e => sharePDF(q, e.currentTarget);
     $('[data-wa]', v).addEventListener('click', () => setTimeout(() => markSent(q), 400));
@@ -1749,18 +1789,18 @@ VIEWS.preview = {
 async function sharePDF(q, btn) {
   const html = btn.innerHTML; btn.disabled = true; btn.textContent = 'Gerando…';
   try {
-    const blob = await buildQuotePDF(q);
-    if (await saveFile(fileName('Orcamento', q), blob)) markSent(q);
+    const mode = docMode(q), blob = await buildQuotePDF(q, mode);
+    if (await saveFile(fileName(DOC[mode].file, q), blob)) markSent(q);
   } catch (e) { console.warn(e); toast('Não foi possível gerar o PDF. Na primeira vez, o app precisa de internet.'); }
   btn.disabled = false; btn.innerHTML = html;
 }
 function shareMore(q) {
   const c = compute(q), px = pixOf(q, c);
   openSheet({ title: 'Mais opções', body: `<div class="opts">
-      <button class="opt" data-o="copy">${I.copy}<span>Copiar texto da proposta<small>Para colar em outro aplicativo</small></span></button>
+      <button class="opt" data-o="copy">${I.copy}<span>Copiar texto${isReport(q) ? '' : ' da proposta'}<small>Para colar em outro aplicativo</small></span></button>
       ${q.useRooms && q.items.length ? `<button class="opt" data-o="conf">${I.list}<span>Conferência por ambiente (PDF)<small>Quantidades de cada cômodo, sem preços, para conferir na obra</small></span></button>` : ''}
       ${c.mat.length ? `<a class="opt" data-o="mat" href="${waLink(q.client.phone, materialMessage(q, c))}" target="_blank" rel="noopener">${I.wa}<span>Lista de material pelo WhatsApp<small>Total de cada item, para o cliente comprar</small></span></a>` : ''}
-      ${px ? `<button class="opt" data-o="pix">${I.pix}<span>QR code do Pix<small>${BRL(px.value)} · ${px.label}</small></span></button>` : ''}
+      ${px ? `<button class="opt" data-o="pix">${I.pix}<span>QR code do Pix<small>${BRL(px.value)} · ${px.what}</small></span></button>` : ''}
       <button class="opt" data-o="status">${I.flag}<span>Alterar situação<small>Agora: ${STATUS[q.status]}</small></span></button>
     </div>`,
     onMount: s => $$('[data-o]', s).forEach(b => b.addEventListener('click', () => {
@@ -1787,20 +1827,21 @@ function waLink(phone, text) {
   return `https://wa.me/${ph.length >= 12 ? ph : ''}?text=${encodeURIComponent(text)}`;
 }
 const signature = () => [settings.name, settings.company && settings.company !== settings.name ? settings.company : '', settings.phone ? fmtPhone(settings.phone) : ''].filter(Boolean);
-function quoteMessage(q, c) {
-  const L = [], fn = firstName(q.client.name);
+function quoteMessage(q, c, mode = docMode(q)) {
+  const L = [], fn = firstName(q.client.name), rep = mode === 'report';
   const line = (i, tag) => `• ${i.name}${tag && i.kind === 'mat' ? ' (material)' : ''}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)} = ${BRL(lineTotal(i))}`;
-  L.push(`Olá${fn ? ', ' + fn : ''}! Segue o orçamento ${numLabel(q)}${q.title ? ' – ' + q.title : ''}.`);
+  L.push(rep ? `Olá${fn ? ', ' + fn : ''}! Segue o relatório dos serviços executados${q.doneAt ? ' em ' + fmtDate(q.doneAt) : ''} (${numLabel(q)}${q.title ? ' – ' + q.title : ''}).`
+    : `Olá${fn ? ', ' + fn : ''}! Segue o orçamento ${numLabel(q)}${q.title ? ' – ' + q.title : ''}.`);
   if (q.useRooms) {
     roomList(q).filter(g => g.items.length).forEach(g => {
       L.push('', `*${g.name}*`);
       [...g.items.filter(i => i.kind === 'svc'), ...g.items.filter(i => i.kind === 'mat')].forEach(i => L.push(line(i, true)));
     });
-    if (c.mat.length && !c.matIn) L.push('', '_Material por sua conta: valores estimados, fora do total._');
+    if (c.mat.length && !c.matIn) L.push('', rep ? '_Material fornecido por você: valores de referência, fora do total._' : '_Material por sua conta: valores estimados, fora do total._');
   } else {
     const block = (title, items, note) => { if (!items.length) return; L.push('', `*${title}*${note || ''}`); items.forEach(i => L.push(line(i))); };
     block('Mão de obra', c.svc);
-    block('Material', c.mat, c.matIn ? '' : ' _(por sua conta, valores estimados)_');
+    block('Material', c.mat, c.matIn ? '' : rep ? ' _(fornecido por você, valores de referência)_' : ' _(por sua conta, valores estimados)_');
   }
   L.push('', `Mão de obra: ${BRL(c.labor)}`);
   if (c.extra) L.push(`Adicionais – ${extrasText(q).replace(/^./, ch => ch.toLowerCase())}: ${BRL(c.extra)}`);
@@ -1808,11 +1849,11 @@ function quoteMessage(q, c) {
   if (c.travel) L.push(`Deslocamento${q.trip ? ` (${tripShort(q.trip)})` : ''}: ${BRL(c.travel)}`);
   if (c.discount) L.push(`Desconto: −${BRL(c.discount)}`);
   L.push(`*Total: ${BRL(c.total)}*`, '', `*Pagamento:* ${payText(q, c)}`);
-  if (q.deadline) L.push(`*Prazo:* ${q.deadline}`);
-  if (q.warranty) L.push(`*Garantia:* ${plural(q.warranty, 'dia', 'dias')}`);
-  if (q.validity) L.push(`Proposta válida até ${fmtDate(c.validUntil)}.`);
+  if (!rep && q.deadline) L.push(`*Prazo:* ${q.deadline}`);
+  if (q.warranty) L.push(`*Garantia:* ${rep && q.doneAt ? `${plural(q.warranty, 'dia', 'dias')}, até ${fmtDate(q.doneAt + q.warranty * DAY)}` : plural(q.warranty, 'dia', 'dias')}`);
+  if (!rep && q.validity) L.push(`Proposta válida até ${fmtDate(c.validUntil)}.`);
   if (q.notes.trim()) L.push('', q.notes.trim());
-  const px = pixOf(q, c); if (px) L.push('', `Pix para a ${px.label} (${BRL(px.value)}): ${px.key}`);
+  const px = pixOf(q, c, mode); if (px) L.push('', `Pix para ${px.what} (${BRL(px.value)}): ${px.key}`);
   const sig = signature(); if (sig.length) L.push('', ...sig);
   return L.join('\n');
 }
@@ -1861,9 +1902,12 @@ function pixPayload(px) {
     + pixField('62', pixField('05', '***')) + '6304';
   return p + crc16(p);
 }
-function pixOf(q, c) {
-  if (!settings.pix || !c.pixValue) return null;
-  return { key: settings.pix, name: settings.company || settings.name || 'Recebedor', city: settings.city, value: c.pixValue, label: q.payment.mode === 'entrada' ? 'entrada' : 'proposta' };
+function pixOf(q, c, mode = docMode(q)) {
+  if (!settings.pix) return null;
+  let value = c.pixValue, what = q.payment.mode === 'entrada' ? 'a entrada' : 'o total';
+  if (mode === 'report' && q.payment.mode === 'entrada') { value = c.rest; what = 'o restante'; }
+  if (!value) return null;
+  return { key: settings.pix, name: settings.company || settings.name || 'Recebedor', city: settings.city, value, what };
 }
 let qrReady;
 function loadQR() {
@@ -1885,7 +1929,7 @@ function drawQR(ctx, m, x, y, size) {
 }
 function pixSheet(px) {
   const code = pixPayload(px);
-  openSheet({ title: `Pix da ${px.label}`, body: `<p class="hint" style="font-size:16px"><b style="color:var(--ink)">${BRL(px.value)}</b> para ${esc(px.name)}</p>
+  openSheet({ title: `Pix d${px.what}`, body: `<p class="hint" style="font-size:16px"><b style="color:var(--ink)">${BRL(px.value)}</b> para ${esc(px.name)}</p>
       <div style="background:#FFFFFF;border-radius:16px;padding:14px;display:grid;place-items:center"><canvas id="px-qr" width="480" height="480" style="width:min(250px,70vw);height:auto;image-rendering:pixelated" aria-label="QR code do Pix"></canvas></div>
       <div class="field"><span class="lab">Pix copia e cola</span><textarea readonly rows="4" style="font-size:13px;word-break:break-all">${esc(code)}</textarea></div>`,
     foot: `<button class="btn primary" data-copy>${I.copy}Copiar código Pix</button>`,
@@ -1952,9 +1996,10 @@ function pdfHeader(K, kind, num, extra) {
   ly += 5.4 - NL;
   subs.forEach(t => { txt(t, x, ly, { size: SS, color: PC.muted }); ly += SL; });
   const rx = M + CW;
-  txt(kind, rx, top + 4.2, { size: 8, bold: true, color: PC.muted, align: 'right' });
-  txt(num, rx, top + 11.4, { size: 16, bold: true, align: 'right' });
-  let ry = top + 16.6;
+  const kl = wrap(kind, 46, 8, true), ko = (kl.length - 1) * 3.6;
+  kl.forEach((t, k) => txt(t, rx, top + 4.2 + k * 3.6, { size: 8, bold: true, color: PC.muted, align: 'right' }));
+  txt(num, rx, top + 11.4 + ko, { size: 16, bold: true, align: 'right' });
+  let ry = top + 16.6 + ko;
   extra.forEach(t => { txt(t, rx, ry, { size: 8.8, color: PC.muted, align: 'right' }); ry += 4.1; });
   const yy = Math.max(top + boxH + 1, ry - 1.2) + 3.5;
   doc.setFillColor(...PC.volt); doc.rect(M, yy, CW, 1.4, 'F');
@@ -1974,12 +2019,13 @@ function pdfQR(doc, m, x, y, size) {
   doc.setFillColor(255, 255, 255); doc.rect(x, y, size, size, 'F'); doc.setFillColor(0, 0, 0);
   for (let r = 0; r < m.n; r++) for (let c = 0; c < m.n; c++) if (m.dark(r, c)) doc.rect(x + (c + 2) * cell, y + (r + 2) * cell, cell + 0.02, cell + 0.02, 'F');
 }
-async function buildQuotePDF(q) {
+async function buildQuotePDF(q, mode = docMode(q)) {
+  const rep = mode === 'report';
   const JsPDF = await loadJsPDF();
-  const c = compute(q), px = pixOf(q, c);
+  const c = compute(q), px = pixOf(q, c, mode);
   let qr = null; if (px) { try { qr = await qrMatrix(pixPayload(px)); } catch {} }
   const K = pdfKit(JsPDF), { doc, H, M, CW, txt, wrap, lh, label } = K;
-  let y = pdfHeader(K, 'ORÇAMENTO', numLabel(q), [fmtDate(q.createdAt)]);
+  let y = pdfHeader(K, DOC[mode].title, numLabel(q), [rep ? `Executado em ${fmtDate(q.doneAt)}` : fmtDate(q.createdAt)]);
   const bottom = H - 19;
   const need = h => { if (y + h > bottom) { doc.addPage(); y = M + 2; return true; } return false; };
 
@@ -1989,7 +2035,7 @@ async function buildQuotePDF(q) {
   label('Cliente', M, ly); ly += 5.4;
   wrap(q.client.name || 'Cliente', colW, 11.5, true).forEach(t => { txt(t, M, ly, { size: 11.5, bold: true }); ly += lh(11.5); });
   [q.client.phone ? fmtPhone(q.client.phone) : '', q.client.address].filter(Boolean).forEach(v => wrap(v, colW, 9.3).forEach(t => { txt(t, M, ly, { size: 9.3, color: PC.muted }); ly += lh(9.3); }));
-  label('Serviço', rx, ry); ry += 5.4;
+  label(rep ? 'Serviço executado' : 'Serviço', rx, ry); ry += 5.4;
   wrap(q.title || 'Serviços elétricos', colW, 11.5, true).forEach(t => { txt(t, rx, ry, { size: 11.5, bold: true }); ry += lh(11.5); });
   y = Math.max(ly, ry) + 5;
 
@@ -2032,11 +2078,11 @@ async function buildQuotePDF(q) {
       txt(`Subtotal ${g.name}`, unitR, y + 4.4, { size: 8.6, color: PC.muted, align: 'right' });
       txt(BRL(st), totR, y + 4.4, { size: 9.2, bold: true, align: 'right' }); y += 6.5;
     });
-    if (c.mat.length && !c.matIn) { need(7); txt('Material por conta do cliente: valores estimados, fora do total.', M + 2.5, y + 4, { size: 8.5, italic: true, color: PC.muted }); y += 6; }
+    if (c.mat.length && !c.matIn) { need(7); txt(rep ? 'Material fornecido pelo cliente: valores de referência, fora do total.' : 'Material por conta do cliente: valores estimados, fora do total.', M + 2.5, y + 4, { size: 8.5, italic: true, color: PC.muted }); y += 6; }
   } else {
     section('Mão de obra');
     if (c.svc.length) c.svc.forEach(i => row(i)); else { txt('Nenhum serviço lançado', M + 6, y + 4.5, { size: 9.5, color: PC.muted }); y += 7; }
-    if (c.mat.length) { section('Material', c.matIn ? '' : 'Por conta do cliente: valores estimados, fora do total.'); c.mat.forEach(i => row(i, !c.matIn)); }
+    if (c.mat.length) { section('Material', c.matIn ? '' : rep ? 'Fornecido pelo cliente: valores de referência, fora do total.' : 'Por conta do cliente: valores estimados, fora do total.'); c.mat.forEach(i => row(i, !c.matIn)); }
   }
 
   // totais
@@ -2056,7 +2102,7 @@ async function buildQuotePDF(q) {
     pdfQR(doc, qr, M + 3, top + (ph - 26) / 2, 26);
     const tx = M + 32, tw = pw - 35;
     let ty = top + 7.5;
-    txt(`Pix da ${px.label}`, tx, ty, { size: 9.5, bold: true }); ty += 6.2;
+    txt(`Pix d${px.what}`, tx, ty, { size: 9.5, bold: true }); ty += 6.2;
     txt(BRL(px.value), tx, ty, { size: 13, bold: true }); ty += 5.6;
     wrap(px.key, tw, 8.3).slice(0, 2).forEach(t => { txt(t, tx, ty, { size: 8.3, color: PC.muted }); ty += 3.8; });
     ty += 0.8;
@@ -2070,8 +2116,8 @@ async function buildQuotePDF(q) {
   y = Math.max(y + 11.5, px && qr ? top + Math.max(totH, 32) : 0) + 7.5;
 
   // condições
-  const conds = [['Pagamento', payText(q, c)], q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', `${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado`], q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
-  need(14); label('Condições', M, y); y += 5.6;
+  const conds = [rep && ['Execução', fmtDate(q.doneAt)], ['Pagamento', payText(q, c)], !rep && q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', warrantyText(q, mode)], !rep && q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
+  need(14); label(rep ? 'Informações' : 'Condições', M, y); y += 5.6;
   conds.forEach(([l, v]) => {
     const L = wrap(v, CW - 42, 9.5);
     need(L.length * lh(9.5) + 2);
@@ -2095,11 +2141,11 @@ async function buildQuotePDF(q) {
   doc.setDrawColor(...PC.ink); doc.setLineWidth(0.3);
   doc.line(M, y, M + sw, y); doc.line(sx, y, M + CW, y);
   txt(q.client.name || 'Cliente', M, y + 5, { size: 9.2, bold: true });
-  txt('Cliente', M, y + 9.6, { size: 8, color: PC.muted });
+  txt(rep ? 'Serviço recebido pelo cliente' : 'Cliente', M, y + 9.6, { size: 8, color: PC.muted });
   txt(settings.name || settings.company || 'Responsável', sx, y + 5, { size: 9.2, bold: true });
   txt('Responsável pelo serviço', sx, y + 9.6, { size: 8, color: PC.muted });
 
-  pdfFooter(K, `Orçamento ${numLabel(q)}${q.client.name ? ' · ' + q.client.name : ''}`);
+  pdfFooter(K, `${DOC[mode].name} ${numLabel(q)}${q.client.name ? ' · ' + q.client.name : ''}`);
   return doc.output('blob');
 }
 
@@ -2187,7 +2233,7 @@ function receiptSheet(q) {
   openSheet({ title: 'Recibo de pagamento', body: `
       <div class="field"><label for="rc-val">Valor recebido</label><input id="rc-val" type="text" inputmode="numeric" data-money value="${BRL(def)}"></div>
       <div class="chips" aria-label="Sugestões de valor">${[['Total', c.total], q.payment.mode === 'entrada' ? ['Entrada', c.entry] : null, q.payment.mode === 'entrada' ? ['Restante', c.rest] : null].filter(Boolean).map(([l, v]) => `<button class="chip" data-v="${v}">${l} · ${BRL(v)}</button>`).join('')}</div>
-      <div class="field"><label for="rc-ref">Referente a</label><input id="rc-ref" type="text" value="${esc((q.title || 'serviços elétricos').replace(/^./, ch => ch.toLowerCase()))} (orçamento ${esc(numLabel(q))})"></div>
+      <div class="field"><label for="rc-ref">Referente a</label><input id="rc-ref" type="text" value="${esc((q.title || 'serviços elétricos').replace(/^./, ch => ch.toLowerCase()))} (${isReport(q) ? 'relatório' : 'orçamento'} ${esc(numLabel(q))})"></div>
       <div class="field"><span class="lab">Forma de pagamento</span><div class="seg" role="group">${['Pix', 'Dinheiro', 'Cartão', 'Transferência'].map(m => `<button data-m="${m}" aria-pressed="${m === method}">${m}</button>`).join('')}</div></div>
       <p class="hint" id="rc-ext"></p>`,
     foot: `<button class="btn primary" data-go>${I.share}Gerar recibo em PDF</button>`,
