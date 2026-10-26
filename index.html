@@ -461,9 +461,25 @@ details.tech > summary::after{content:"+";font-size:24px;line-height:1;color:var
 details.tech[open] > summary::after{content:"–"}
 .tech-in{display:flex;flex-direction:column;gap:14px;margin-top:14px}
 .chip.sm-ico svg{width:16px;height:16px}
+.tech-chips{margin-bottom:2px}
+.lab-opt{font-weight:500;color:var(--faint);font-size:13px;margin-left:4px}
+.chip.sm{min-height:34px;padding:0 12px;font-size:14px}
+.sh-foot:has(.tb-prev){flex-wrap:wrap}
+.tb-prev{flex:1 1 100%;display:flex;flex-direction:column;gap:4px}
+.tb-prev label{font-size:13px;font-weight:600;color:var(--muted)}
+.tb-prev textarea{background:var(--volt-soft);font-weight:600;min-height:0;font-size:15px;padding:8px 10px;resize:none}
+.test-list{display:flex;flex-direction:column}
+.test-list:empty{display:none}
+.test-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+.test-row .tk{color:var(--ok);display:grid;place-items:center;flex:none}
+.test-row .tk svg{width:18px;height:18px}
+.test-row .tt{flex:1;font-size:15px}
 .p-checks{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:3px 16px}
 .p-checks li::before{content:"✓";color:#1C7A46;font-weight:800;margin-right:7px}
-.p-terms p,.p-accept{margin:0;font-size:11.5px;color:var(--paper-muted);line-height:1.45}
+.p-accept{margin:0;font-size:11.5px;color:var(--paper-muted);line-height:1.45}
+.p-final .p-notes{font-size:12.5px;line-height:1.45}
+.p-table tr.p-kind td{text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-muted);padding:7px 0 2px 9px;border-bottom:0}
+.p-checks{grid-template-columns:1fr !important}
 .p-accept{margin:6px 0 -6px}
 .sched{display:flex;flex-direction:column;gap:10px}
 input[type=date]:disabled{opacity:.45}
@@ -653,6 +669,8 @@ const DEF = { name: '', company: '', phone: '', email: '', doc: '', city: '', pi
   kmPerL: 0, fuelPrice: 0, wearPerKm: 0, hourRate: 0, minVisit: 0, roundTrip: true,
   surUrgent: 50, surNight: 30, surWeekend: 50, seedV: 0,
   acceptText: ACCEPT_DEFAULT, warrantyTerms: WARRANTY_DEFAULT };
+const TESTS_V1 = { tensao: 'Medição de tensão nas tomadas e no quadro de distribuição.', dr: 'Teste do DR pelo botão de teste.', terra: 'Verificação do aterramento.',
+  func: 'Teste de funcionamento dos circuitos e equipamentos.', aquec: 'Verificação de aquecimento nas conexões.', carga: 'Teste do circuito com carga.', isol: 'Medição de resistência de isolamento.' };
 const STATUS = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado', concluido: 'Concluído', recusado: 'Recusado' };
 
 let settings = { ...DEF, ...LS.get('settings', {}) };
@@ -691,7 +709,7 @@ function fixQuote(q) {
   q.useRooms = !!q.useRooms;
   q.trip = q.trip && typeof q.trip === 'object' ? q.trip : null;
   ['diag', 'work', 'recs'].forEach(k => { q[k] = String(q[k] || ''); });
-  q.tests = Array.isArray(q.tests) ? q.tests.map(String) : [];
+  q.tests = Array.isArray(q.tests) ? q.tests.map(t => TESTS_V1[t] || String(t)).filter(Boolean) : [];
   if (!STATUS[q.status]) q.status = 'rascunho';
   ['isExample', 'active', 'savedAt', 'closedAt', 'total', 'statusAt'].forEach(k => delete q[k]);
   return q;
@@ -1554,64 +1572,192 @@ const NOTE_CHIPS = [
   ['Conforme NBR 5410', 'Serviço executado conforme a norma NBR 5410.'],
   ['Energia desligada', 'A energia será desligada durante parte do serviço.'],
 ];
-// textos prontos do relatório técnico: [rótulo do botão, texto que entra no campo]
+// relatório técnico em duas etapas: 1) o que (dispositivo, serviço, teste); 2) como, onde e com qual resultado
+// listas de lugares: [rótulo, forma "no/na", forma "do/da"]
+const PLACES = {
+  circ: [['Geral', 'no circuito geral', 'geral'], ['Chuveiro', 'no circuito do chuveiro', 'do circuito do chuveiro'], ['Tomadas', 'no circuito de tomadas', 'do circuito de tomadas'],
+    ['Iluminação', 'no circuito de iluminação', 'do circuito de iluminação'], ['Ar-condicionado', 'no circuito do ar-condicionado', 'do circuito do ar-condicionado'],
+    ['Forno ou cooktop', 'no circuito do forno ou cooktop', 'do circuito do forno ou cooktop'], ['Máquina de lavar', 'no circuito da máquina de lavar', 'do circuito da máquina de lavar'],
+    ['Torneira elétrica', 'no circuito da torneira elétrica', 'do circuito da torneira elétrica'], ['Bomba ou portão', 'no circuito da bomba ou do portão', 'do circuito da bomba ou do portão']],
+  pts: [['Quadro', 'no quadro de distribuição', 'do quadro de distribuição'], ['Padrão de entrada', 'no padrão de entrada', 'do padrão de entrada'], ['Tomadas', 'nas tomadas', 'das tomadas'],
+    ['Interruptores', 'nos interruptores', 'dos interruptores'], ['Iluminação', 'nos pontos de iluminação', 'dos pontos de iluminação'], ['Chuveiro', 'no chuveiro', 'do chuveiro'],
+    ['Conexões', 'nas conexões', 'das conexões'], ['Equipamentos', 'nos equipamentos', 'dos equipamentos'], ['Todos os circuitos', 'em todos os circuitos', 'de todos os circuitos']],
+};
+const ROOMS_STD = ['Sala', 'Cozinha', 'Banheiro', 'Quartos', 'Área de serviço', 'Área externa', 'Garagem'];
+const W_CIRC = { list: 'circ', form: 2, lab: 'Qual circuito?' }, W_CIRC_NO = { list: 'circ', form: 1, lab: 'Em qual circuito?' };
+const W_PTS = { list: 'pts', form: 1, lab: 'Onde?' }, W_PTS_DE = { list: 'pts', form: 2, lab: 'Do quê?' };
+const opts = (lab, list, one) => ({ lab, list, one: !!one });
+// cada item: l = botão; a = início da frase; o = opções; w = lugar; r = ambiente; v = complemento; ord = ordem das partes
 const TECH = {
   diag: [
-    ['Sobrecarga', 'Disjuntor desarmando por sobrecarga no circuito.'],
-    ['Curto-circuito', 'Curto-circuito na fiação, com danos aos condutores.'],
-    ['Fiação aquecida', 'Fiação aquecida ou derretida por bitola inadequada para a carga.'],
-    ['Mau contato', 'Mau contato em conexões, com sinais de aquecimento.'],
-    ['Sem aterramento', 'Tomadas e equipamentos sem aterramento.'],
-    ['Sem DR', 'Instalação sem dispositivo DR (proteção contra choque elétrico).'],
-    ['Falta de fase', 'Falta de fase em parte da instalação.'],
-    ['Resistência queimada', 'Resistência do chuveiro queimada.'],
-    ['Quadro antigo', 'Quadro de distribuição antigo, sem identificação dos circuitos.'],
+    { l: 'Disjuntor', a: 'disjuntor', w: W_CIRC, r: true, o: opts('Qual a falha?', [
+      ['Desarma por sobrecarga', 'desarmando por sobrecarga'], ['Desarma por curto', 'desarmando por curto-circuito'],
+      ['Não rearma', 'com falha interna: não rearma'], ['Desarma sem carga', 'com falha interna: desarma sem carga ligada'],
+      ['Não desarma', 'com falha interna: não desarma (sem proteção)'], ['Mecanismo quebrado', 'com mecanismo travado ou quebrado'],
+      ['Terminais carbonizados', 'com terminais aquecidos ou carbonizados'], ['Mau contato', 'com mau contato nos terminais'],
+      ['Pequeno para a carga', 'subdimensionado para a carga do circuito'], ['Grande para o cabo', 'superdimensionado para o cabo (não protege a fiação)'],
+      ['Fora de padrão', 'antigo e fora de padrão']]) },
+    { l: 'DR', a: 'DR', w: W_CIRC, o: opts('Qual a falha?', [
+      ['Fuga de corrente', 'desarmando por fuga de corrente no circuito'], ['Desarma sem fuga', 'com falha interna: desarma sem fuga de corrente'],
+      ['Não desarma no teste', 'não desarma no botão de teste'], ['Não rearma', 'com falha interna: não rearma'], ['Ligação errada', 'ligado de forma incorreta']]) },
+    { l: 'DPS', a: 'DPS', o: opts('Qual a falha?', [
+      ['Fim de vida útil', 'com sinalização de fim de vida útil'], ['Queimado', 'queimado por surto de tensão'], ['Sem terra', 'sem ligação ao aterramento'], ['Ligação errada', 'ligado de forma incorreta']]) },
+    { l: 'Tomada', a: 'tomada', r: true, o: opts('Qual a falha?', [
+      ['Mau contato', 'com mau contato'], ['Derretida', 'derretida ou carbonizada'], ['Terminais frouxos', 'com terminais frouxos'], ['Solta', 'solta da caixa'],
+      ['Quebrada', 'quebrada'], ['Sem aterramento', 'sem aterramento'], ['Fase e neutro invertidos', 'com fase e neutro invertidos'],
+      ['10 A para aparelho de 20 A', 'de 10 A usada por aparelho que exige 20 A'], ['Padrão antigo', 'fora do padrão atual (NBR 14136)']]) },
+    { l: 'Interruptor', a: 'interruptor', r: true, o: opts('Qual a falha?', [
+      ['Mau contato', 'com mau contato'], ['Não liga ou desliga', 'sem acionar a carga'], ['Aquecendo', 'aquecendo durante o uso'], ['Quebrado', 'quebrado'],
+      ['Corta o neutro', 'ligado no neutro (não interrompe a fase)']]) },
+    { l: 'Chuveiro', a: 'chuveiro', r: true, o: opts('Qual a falha?', [
+      ['Resistência queimada', 'com resistência queimada'], ['Ligação derretida', 'com fiação de ligação derretida'], ['Conexões aquecidas', 'com conexões aquecidas'],
+      ['Dando choque', 'com fuga de corrente (dando choque)'], ['Sem aterramento', 'sem aterramento'], ['Potência alta', 'com potência acima do que o circuito suporta']]) },
+    { l: 'Iluminação', a: '', r: true, o: opts('Qual a falha?', [
+      ['Lâmpada queimada', 'lâmpada queimada'], ['Reator queimado', 'reator queimado'], ['Driver queimado', 'driver de LED queimado'], ['Mau contato', 'luminária com mau contato'],
+      ['Soquete danificado', 'soquete danificado'], ['Sensor de presença', 'sensor de presença com defeito'], ['Fotocélula', 'fotocélula com defeito']]) },
+    { l: 'Fiação', a: 'fiação', w: W_CIRC, r: true, o: opts('Qual o problema?', [
+      ['Aquecida ou derretida', 'aquecida ou derretida'], ['Bitola pequena', 'com bitola inadequada para a carga'], ['Isolamento ressecado', 'com isolamento ressecado ou danificado'],
+      ['Emendas sem isolamento', 'com emendas sem isolamento adequado'], ['Emendas com mau contato', 'com mau contato nas emendas'], ['Curto-circuito', 'em curto-circuito'],
+      ['Fuga de corrente', 'com fuga de corrente'], ['Exposta', 'exposta, sem eletroduto'], ['Roída', 'danificada por animais']]) },
+    { l: 'Quadro', a: 'quadro de distribuição', o: opts('Qual o problema?', [
+      ['Sem identificação', 'sem identificação dos circuitos'], ['Conexões frouxas', 'com conexões frouxas'], ['Sinais de aquecimento', 'com sinais de aquecimento'],
+      ['Barramento oxidado', 'com barramento oxidado'], ['Sem tampa', 'sem tampa de proteção'], ['Sem espaço', 'sem espaço para novos circuitos'],
+      ['Com fusíveis', 'antigo, com fusíveis'], ['Sem barramento de terra', 'sem barramento de terra']]) },
+    { l: 'Aterramento', a: '', o: opts('Qual o problema?', [
+      ['Sem aterramento', 'instalação sem aterramento'], ['Terra ausente nas tomadas', 'condutor de proteção (terra) ausente nas tomadas'], ['Resistência alta', 'aterramento com resistência elevada'],
+      ['Haste corroída', 'haste de aterramento corroída ou desconectada'], ['Terra no neutro', 'terra ligado ao neutro']]) },
+    { l: 'Proteção', a: '', o: opts('O que falta?', [
+      ['Sem DR', 'instalação sem DR (proteção contra choque elétrico)'], ['Sem DPS', 'instalação sem DPS (proteção contra surtos)'],
+      ['Chuveiro sem circuito próprio', 'chuveiro sem circuito exclusivo'], ['Disjuntor compartilhado', 'vários circuitos ligados no mesmo disjuntor']]) },
+    { l: 'Rede elétrica', a: '', w: W_PTS, o: opts('Qual o problema?', [
+      ['Falta de fase', 'falta de fase'], ['Neutro interrompido', 'neutro interrompido'], ['Oscilação', 'oscilação de tensão'],
+      ['Tensão baixa', 'tensão abaixo do normal'], ['Tensão alta', 'tensão acima do normal']], true), v: { lab: 'Tensão medida (opcional)', pre: ': ', sug: ['127 V', '220 V', '110 V', '240 V'] } },
   ],
   work: [
-    ['Isolamento da falha', 'Localização e isolamento do ponto de falha.'],
-    ['Troca de cabos', 'Substituição dos cabos danificados por cabos de bitola adequada.'],
-    ['Troca de disjuntor', 'Troca do disjuntor por modelo compatível com o circuito.'],
-    ['Reaperto do quadro', 'Reaperto das conexões do quadro de distribuição.'],
-    ['Etiquetagem', 'Identificação dos circuitos no quadro de distribuição.'],
-    ['Instalação de DR', 'Instalação de DR para proteção contra choque elétrico.'],
+    { l: 'Troca', a: 'substituição', ord: ['o', 'w'], w: W_CIRC, r: true, o: opts('O que foi trocado?', [
+      ['Disjuntor', 'do disjuntor'], ['DR', 'do DR'], ['DPS', 'do DPS'], ['Tomadas', 'das tomadas'], ['Interruptores', 'dos interruptores'], ['Chuveiro', 'do chuveiro'],
+      ['Resistência', 'da resistência do chuveiro'], ['Lâmpadas', 'das lâmpadas'], ['Reator ou driver', 'do reator ou driver'], ['Luminária', 'da luminária'], ['Quadro', 'do quadro de distribuição']]),
+      v: { lab: 'Por qual? (opcional)', pre: ' por ', sug: ['modelo equivalente', 'disjuntor de 32 A', 'disjuntor de 40 A', 'DR de 40 A 30 mA', 'tomada de 20 A'] } },
+    { l: 'Instalação', a: 'instalação', ord: ['o', 'w'], w: W_CIRC_NO, r: true, o: opts('O que foi instalado?', [
+      ['DR', 'de DR'], ['DPS', 'de DPS'], ['Tomadas', 'de tomadas'], ['Interruptores', 'de interruptores'], ['Luminárias', 'de luminárias'], ['Chuveiro', 'de chuveiro'],
+      ['Circuito novo', 'de circuito novo'], ['Quadro', 'de quadro de distribuição'], ['Haste de terra', 'de haste de aterramento']]) },
+    { l: 'Fiação', a: '', ord: ['o', 'w'], w: W_CIRC, r: true, o: opts('O que foi feito?', [
+      ['Troca dos cabos', 'substituição dos cabos'], ['Cabos novos', 'passagem de cabos novos'], ['Emendas refeitas', 'emendas refeitas com conectores adequados'],
+      ['Isolamento', 'isolamento das emendas'], ['Bitola adequada', 'adequação da bitola dos cabos à carga']]),
+      v: { lab: 'Bitola do cabo (opcional)', pre: ', com cabos de ', sug: ['1,5 mm²', '2,5 mm²', '4 mm²', '6 mm²', '10 mm²'] } },
+    { l: 'Reparo', a: '', ord: ['o', 'w'], w: W_CIRC_NO, r: true, o: opts('O que foi feito?', [
+      ['Achar a falha', 'localização e isolamento do ponto de falha'], ['Reparo do curto', 'reparo do ponto de curto-circuito'], ['Polaridade', 'correção da polaridade (fase e neutro)'],
+      ['Interruptor na fase', 'ligação do interruptor na fase'], ['Separar neutro e terra', 'separação de neutro e terra'], ['Dividir circuito', 'divisão do circuito sobrecarregado']]) },
+    { l: 'Quadro', a: '', o: opts('O que foi feito?', [
+      ['Reaperto', 'reaperto das conexões do quadro de distribuição'], ['Identificação', 'identificação dos circuitos no quadro de distribuição'],
+      ['Organização', 'organização da fiação do quadro de distribuição'], ['Barramentos', 'instalação de barramentos de terra e neutro no quadro']]) },
+    { l: 'Aterramento', a: '', o: opts('O que foi feito?', [
+      ['Haste', 'instalação de haste de aterramento'], ['Terra nas tomadas', 'ligação do condutor de proteção (terra) às tomadas'], ['Terra no quadro', 'interligação do aterramento ao quadro de distribuição']]) },
+  ],
+  tests: [
+    { l: 'Tensão', a: 'medição de tensão', w: W_PTS, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['127 V', '220 V', '127/220 V', 'dentro do normal'] } },
+    { l: 'Corrente', a: 'medição de corrente', w: W_CIRC_NO, v: { lab: 'Resultado', pre: ': ', sug: ['dentro da capacidade do disjuntor', 'acima da capacidade do disjuntor'] } },
+    { l: 'DR', a: 'teste do DR', w: W_CIRC, o: opts('Como foi testado?', [['Botão de teste', 'pelo botão de teste'], ['Com instrumento', 'com instrumento (corrente de disparo)']], true),
+      v: { lab: 'Resultado', pre: ': ', sug: ['desarmou corretamente', 'não desarmou'] } },
+    { l: 'Aterramento', a: 'verificação do aterramento', w: W_PTS, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['presente e funcionando', 'ausente', 'resistência de 10 Ω'] } },
+    { l: 'Isolamento', a: 'medição de resistência de isolamento', w: { list: 'circ', form: 2, lab: 'De qual circuito?' }, v: { lab: 'Resultado', pre: ': ', sug: ['acima de 1 MΩ (aprovado)', 'abaixo do mínimo'] } },
+    { l: 'Polaridade', a: 'verificação de polaridade', w: W_PTS, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['correta', 'corrigida'] } },
+    { l: 'Aquecimento', a: 'verificação de aquecimento', w: W_PTS, o: opts('Como?', [['Termômetro', 'com termômetro infravermelho'], ['Visual', 'por inspeção visual']], true),
+      v: { lab: 'Resultado', pre: ': ', sug: ['sem aquecimento', 'aquecimento corrigido'] } },
+    { l: 'Funcionamento', a: 'teste de funcionamento', w: W_PTS_DE, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['funcionando normalmente'] } },
+    { l: 'Com carga', a: 'teste com carga', w: W_CIRC_NO, v: { lab: 'Resultado', pre: ': ', sug: ['sem desarme e sem aquecimento'] } },
+    { l: 'Continuidade', a: 'teste de continuidade', w: { list: 'circ', form: 2, lab: 'De qual circuito?' }, v: { lab: 'Resultado', pre: ': ', sug: ['aprovado'] } },
+    { l: 'Outro', free: true },
   ],
   recs: [
-    ['Trocar o quadro', 'Recomenda-se a troca do quadro de distribuição.'],
-    ['Instalar DR', 'Recomenda-se a instalação de DR, conforme a NBR 5410.'],
-    ['Revisão geral', 'Recomenda-se uma revisão completa da instalação elétrica.'],
-    ['Evitar sobrecarga', 'Evitar ligar aparelhos de alta potência ao mesmo tempo no mesmo circuito.'],
-    ['Sem benjamins', 'Não usar benjamins e extensões como ligação permanente.'],
-    ['Cliente recusou', 'O cliente foi informado dos riscos e optou por não realizar os serviços recomendados neste momento.'],
+    { l: 'Trocar', a: 'recomenda-se a substituição', ord: ['o', 'w'], w: W_CIRC, r: true, o: opts('O quê?', [
+      ['Quadro', 'do quadro de distribuição'], ['Fiação', 'da fiação'], ['Disjuntores', 'dos disjuntores'], ['Tomadas antigas', 'das tomadas fora do padrão'], ['Chuveiro', 'do chuveiro']]) },
+    { l: 'Instalar', a: 'recomenda-se a instalação', o: opts('O quê?', [
+      ['DR', 'de DR, conforme a NBR 5410'], ['DPS', 'de DPS, para proteção contra surtos'], ['Aterramento', 'de aterramento'],
+      ['Circuito do chuveiro', 'de circuito exclusivo para o chuveiro'], ['Circuito do ar', 'de circuito exclusivo para o ar-condicionado'], ['Mais tomadas', 'de mais tomadas, para não usar benjamins']]) },
+    { l: 'Revisão geral', s: 'Recomenda-se uma revisão completa da instalação elétrica.' },
+    { l: 'Evitar sobrecarga', s: 'Evitar ligar aparelhos de alta potência ao mesmo tempo no mesmo circuito.' },
+    { l: 'Sem benjamins', s: 'Não usar benjamins e extensões como ligação permanente.' },
+    { l: 'Cliente recusou', s: 'O cliente foi informado dos riscos e optou por não realizar os serviços recomendados neste momento.' },
   ],
 };
-const TESTS = [
-  ['tensao', 'Tensão medida', 'Medição de tensão nas tomadas e no quadro'],
-  ['dr', 'Teste do DR', 'Teste do DR pelo botão de teste'],
-  ['terra', 'Aterramento', 'Verificação do aterramento'],
-  ['func', 'Funcionamento', 'Teste de funcionamento dos circuitos e equipamentos'],
-  ['aquec', 'Aquecimento', 'Verificação de aquecimento nas conexões'],
-  ['carga', 'Teste com carga', 'Teste do circuito com carga'],
-  ['isol', 'Isolamento', 'Medição de resistência de isolamento'],
-];
-const testsDone = q => TESTS.filter(t => q.tests.includes(t[0]));
-function techField(q, key, label, ph) {
-  return `<div class="field"><label for="q-${key}">${label}</label><textarea id="q-${key}" data-tech="${key}" placeholder="${esc(ph)}">${esc(q[key])}</textarea>
-    <div class="chips">${TECH[key].map(([l, t], k) => `<button class="chip sm-ico" data-tc="${key}" data-ti="${k}" ${q[key].includes(t) ? 'disabled' : ''}>${I.plus}${l}</button>`).join('')}</div></div>`;
+const joinPt = L => L.length < 2 ? (L[0] || '') : L.slice(0, -1).join(', ') + ' e ' + L[L.length - 1];
+const capFirst = s => s.charAt(0).toUpperCase() + s.slice(1);
+function techRooms(q) {
+  const out = [], seen = new Set();
+  [...(q.useRooms ? q.rooms.map(r => r.name) : []), ...ROOMS_STD].forEach(n => { const k = fold(n); if (!seen.has(k)) { seen.add(k); out.push(n); } });
+  return out;
 }
+function techSentence(it, sel, rooms) {
+  const part = {
+    o: it.o ? joinPt(sel.o.map(i => it.o.list[i][1])) : '',
+    w: it.w ? joinPt(sel.w.map(i => PLACES[it.w.list][i][it.w.form])) : '',
+  };
+  let s = [it.a, ...(it.ord || ['w', 'o']).map(k => part[k])].filter(Boolean).join(' ');
+  if (sel.r.length) s += ` (${joinPt(sel.r.map(i => rooms[i].charAt(0).toLowerCase() + rooms[i].slice(1)))})`;
+  if (sel.v.trim()) s += (it.v.pre || ': ') + sel.v.trim();
+  s = capFirst(s.trim());
+  return s && !/[.!?]$/.test(s) ? s + '.' : s;
+}
+const TECH_TITLE = { diag: 'Diagnóstico', work: 'Serviço realizado', tests: 'Teste ou verificação', recs: 'Recomendação' };
+// etapa 2: escolhe falha, lugar, ambiente e resultado; a frase aparece pronta e pode ser ajustada
+function techSheet(q, key, idx, onAdd) {
+  const it = TECH[key][idx], rooms = techRooms(q), sel = { o: [], w: [], r: [], v: '' };
+  $('.toast')?.remove();
+  const chips = (grp, list, one) => `<div class="chips" data-grp="${grp}"${one ? ' data-one' : ''}>${list.map((x, i) => `<button class="chip" data-i="${i}" aria-pressed="false">${esc(x)}</button>`).join('')}</div>`;
+  const body = it.free
+    ? `<div class="field"><label for="tb-out">Descreva o teste e o resultado</label><textarea id="tb-out" placeholder="Ex.: Medição da corrente de fuga do chuveiro: dentro do limite."></textarea></div>`
+    : `${it.o ? `<div class="field"><span class="lab">${esc(it.o.lab)}</span>${chips('o', it.o.list.map(x => x[0]), it.o.one)}</div>` : ''}
+      ${it.w ? `<div class="field"><span class="lab">${esc(it.w.lab)} <span class="lab-opt">opcional</span></span>${chips('w', PLACES[it.w.list].map(x => x[0]))}</div>` : ''}
+      ${it.r ? `<div class="field"><span class="lab">Ambiente <span class="lab-opt">opcional</span></span>${chips('r', rooms)}</div>` : ''}
+      ${it.v ? `<div class="field"><label for="tb-v">${esc(it.v.lab)}</label><input id="tb-v" type="text" autocomplete="off"><div class="chips">${it.v.sug.map(x => `<button class="chip sm" data-sug="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>` : ''}
+`;
+  openSheet({ title: `${TECH_TITLE[key]}: ${it.l}`, tall: true, body,
+    foot: `${it.free ? '' : '<div class="tb-prev"><label for="tb-out">Vai entrar assim</label><textarea id="tb-out" rows="2" placeholder="Escolha as opções acima"></textarea></div>'}<button class="btn ghost" data-no>Cancelar</button><button class="btn primary" data-ok>${I.plus}Adicionar</button>`,
+    onMount: s => {
+      const out = $('#tb-out', s), ok = $('[data-ok]', s);
+      let dirty = false;
+      const refresh = () => {
+        if (!it.free && !dirty) { out.value = it.o && !sel.o.length ? '' : techSentence(it, sel, rooms); out.style.height = 'auto'; out.style.height = out.scrollHeight + 2 + 'px'; }
+        ok.disabled = !out.value.trim();
+      };
+      $$('[data-grp]', s).forEach(g => g.addEventListener('click', e => {
+        const b = e.target.closest('[data-i]'); if (!b) return;
+        const grp = g.dataset.grp, i = +b.dataset.i, on = !sel[grp].includes(i);
+        if (g.hasAttribute('data-one')) { sel[grp] = on ? [i] : []; $$('[data-i]', g).forEach(x => x.setAttribute('aria-pressed', on && +x.dataset.i === i)); }
+        else { sel[grp] = on ? [...sel[grp], i] : sel[grp].filter(x => x !== i); b.setAttribute('aria-pressed', on); }
+        dirty = false; refresh();
+      }));
+      const v = $('#tb-v', s);
+      if (v) {
+        v.addEventListener('input', () => { sel.v = v.value; dirty = false; refresh(); });
+        $$('[data-sug]', s).forEach(b => b.onclick = () => { v.value = sel.v = b.dataset.sug; dirty = false; refresh(); });
+      }
+      out.addEventListener('input', () => { dirty = true; ok.disabled = !out.value.trim(); });
+      $('[data-no]', s).onclick = () => closeSheet();
+      ok.onclick = () => { const t = out.value.trim(); if (!t) return; closeSheet(true); onAdd(/[.!?]$/.test(t) ? t : t + '.'); };
+      refresh();
+      if (it.free) setTimeout(() => out.focus(), 60);
+    } });
+}
+function techChips(key) {
+  return `<div class="chips tech-chips">${TECH[key].map((it, k) => `<button class="chip sm-ico" data-tc="${key}" data-ti="${k}">${I.plus}${esc(it.l)}</button>`).join('')}</div>`;
+}
+function techField(q, key, label, ph, hint) {
+  return `<div class="field"><label for="q-${key}">${label}</label>${hint ? `<p class="hint">${hint}</p>` : ''}${techChips(key)}<textarea id="q-${key}" data-tech="${key}" placeholder="${esc(ph)}">${esc(q[key])}</textarea></div>`;
+}
+const testsHTML = q => `<div class="field"><span class="lab">Testes e verificações</span><p class="hint">Escolha o teste e depois onde foi feito e o resultado.</p>${techChips('tests')}
+  <div class="test-list">${q.tests.map((t, k) => `<div class="test-row"><span class="tk">${I.check}</span><span class="tt">${esc(t)}</span><button class="icon-btn sm" data-test-rm="${k}" aria-label="Remover teste">${I.x}</button></div>`).join('')}</div></div>`;
 function techCardHTML(q) {
-  const rep = isReport(q);
-  const fields = `${techField(q, 'diag', rep ? 'Diagnóstico' : 'Situação encontrada', 'O que você encontrou: causa do problema, estado da instalação…')}
-    ${rep ? techField(q, 'work', 'Serviços realizados', 'O que foi feito, com mais detalhe que a lista de itens.') + (q.items.some(i => i.kind === 'svc') ? '<button class="linkish" data-work-items>Preencher com os serviços lançados</button>' : '') : ''}
-    ${rep ? `<div class="field"><span class="lab">Testes e verificações feitos</span><div class="chips">${TESTS.map(([k, l]) => `<button class="chip" data-test="${k}" aria-pressed="${q.tests.includes(k)}">${l}</button>`).join('')}</div></div>` : ''}
-    ${techField(q, 'recs', 'Recomendações ao cliente', 'O que ainda precisa de atenção, riscos e cuidados de uso.')}`;
-  if (rep) return `<section class="card" aria-labelledby="h-tech">
-      <div><h2 class="card-h" id="h-tech">Relatório técnico</h2><p class="hint">O que foi encontrado, o que foi feito e como foi testado. Toque nas sugestões para preencher.</p></div>
-      ${fields}
+  if (!isReport(q)) return '';
+  return `<section class="card" aria-labelledby="h-tech">
+      <div><h2 class="card-h" id="h-tech">Relatório técnico</h2><p class="hint">Toque no que se aplica e complete os detalhes: a frase entra pronta. Dá para escrever ou ajustar à vontade.</p></div>
+      ${techField(q, 'diag', 'Diagnóstico', 'O que você encontrou: causa do problema, estado da instalação…')}
+      ${techField(q, 'work', 'Serviços realizados', 'O que foi feito, com mais detalhe que a lista de itens.')}
+      ${q.items.some(i => i.kind === 'svc') ? '<button class="linkish" data-work-items>Preencher com os serviços lançados</button>' : ''}
+      ${testsHTML(q)}
+      ${techField(q, 'recs', 'Recomendações ao cliente', 'O que ainda precisa de atenção, riscos e cuidados de uso.')}
     </section>`;
-  return `<section class="card"><details class="tech"${q.diag || q.recs ? ' open' : ''}>
-      <summary><span class="room-h"><h2 class="card-h">Diagnóstico da visita</h2><span class="hint">Opcional. Aparece na proposta.</span></span></summary>
-      <div class="tech-in">${fields}</div>
-    </details></section>`;
 }
 function lineHTML(q, i) {
   const cli = i.kind === 'mat' && q.materialBy === 'cliente';
@@ -1881,18 +2027,22 @@ VIEWS.quote = {
       q.notes = (q.notes.trim() ? q.notes.trim() + '\n' : '') + t; nt.value = q.notes; autoGrow(nt); touch(q); b.disabled = true;
     });
 
-    // relatório técnico: textos prontos entram no fim do campo
-    $$('[data-tech]', v).forEach(t => t.addEventListener('input', () => {
-      const k = t.dataset.tech; q[k] = t.value; touch(q);
-      $$(`[data-tc="${k}"]`, v).forEach(c => c.disabled = q[k].includes(TECH[k][+c.dataset.ti][1]));
-    }));
+    // relatório técnico: etapa 1 (botão) abre a etapa 2 (detalhes); a frase entra no fim do campo
+    $$('[data-tech]', v).forEach(t => t.addEventListener('input', () => { q[t.dataset.tech] = t.value; touch(q); }));
     $$('[data-tc]', v).forEach(b => b.onclick = () => {
-      const k = b.dataset.tc, t = TECH[k][+b.dataset.ti][1], ta = $('#q-' + k, v);
-      q[k] = (q[k].trim() ? q[k].trim() + '\n' : '') + t; ta.value = q[k]; autoGrow(ta); touch(q); b.disabled = true;
+      const k = b.dataset.tc, it = TECH[k][+b.dataset.ti];
+      const add = txt => {
+        if (k === 'tests') { q.tests.push(txt); touch(q); rerender(); return; }
+        const ta = $('#q-' + k); q[k] = (q[k].trim() ? q[k].trim() + '\n' : '') + txt; touch(q);
+        if (ta) { ta.value = q[k]; autoGrow(ta); }
+        toast('Adicionado.');
+      };
+      if (it.s) { if (!q[k].includes(it.s)) add(it.s); else toast('Esse texto já está no campo.'); return; }
+      techSheet(q, k, +b.dataset.ti, add);
     });
-    $$('[data-test]', v).forEach(b => b.onclick = () => {
-      const k = b.dataset.test, on = !q.tests.includes(k);
-      q.tests = on ? [...q.tests, k] : q.tests.filter(x => x !== k); touch(q); b.setAttribute('aria-pressed', on);
+    $$('[data-test-rm]', v).forEach(b => b.onclick = () => {
+      const k = +b.dataset.testRm, [gone] = q.tests.splice(k, 1); touch(q); rerender();
+      toast('Teste removido.', { label: 'Desfazer', run: () => { q.tests.splice(k, 0, gone); touch(q); rerender(); } });
     });
     $('[data-work-items]', v)?.addEventListener('click', () => {
       const txt = q.items.filter(i => i.kind === 'svc').map(i => `${i.name}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)}.`).join('\n');
@@ -2202,7 +2352,7 @@ function paperHTML(q, c, mode = docMode(q)) {
     body = roomList(q).filter(g => g.items.length).map(g => {
       const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
       const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
-      return `<tr class="p-sec"><td colspan="2">${esc(g.name)}</td></tr>${svc.map(i => row(i)).join('')}${mat.map(i => row(i, !c.matIn)).join('')}<tr class="p-sub"><td>Subtotal ${esc(g.name)}</td><td>${BRL(st)}</td></tr>`;
+      return `<tr class="p-sec"><td colspan="2">${esc(g.name)}</td></tr>${svc.length ? `<tr class="p-kind"><td colspan="2">Mão de obra</td></tr>${svc.map(i => row(i)).join('')}` : ''}${mat.length ? `<tr class="p-kind"><td colspan="2">Material${c.matIn ? '' : ' (cliente)'}</td></tr>${mat.map(i => row(i, !c.matIn)).join('')}` : ''}<tr class="p-sub"><td>Subtotal ${esc(g.name)}</td><td>${BRL(st)}</td></tr>`;
     }).join('');
     if (!body) body = '<tr class="dim"><td colspan="2">Nenhum item lançado</td></tr>';
     else if (c.mat.length && !c.matIn) body += `<tr class="p-note"><td colspan="2">${rep ? 'Material fornecido pelo cliente: valores de referência, fora do total.' : 'Material por conta do cliente: valores estimados, fora do total.'}</td></tr>`;
@@ -2221,9 +2371,10 @@ function paperHTML(q, c, mode = docMode(q)) {
       <div><span class="p-lab">Cliente</span><b>${esc(q.client.name || '—')}</b>${q.client.doc ? `<span>${esc(fmtDoc(q.client.doc))}</span>` : ''}${q.client.phone ? `<span>${esc(fmtPhone(q.client.phone))}</span>` : ''}${q.client.address ? `<span>${esc(q.client.address)}</span>` : ''}</div>
       <div><span class="p-lab">${rep ? 'Serviço executado' : 'Serviço'}</span><b>${esc(q.title || 'Serviços elétricos')}</b></div>
     </div>
-    ${q.diag.trim() ? `<div><span class="p-lab">${rep ? 'Diagnóstico' : 'Situação encontrada'}</span><div class="p-notes">${esc(q.diag.trim())}</div></div>` : ''}
+    ${rep && q.diag.trim() ? `<div><span class="p-lab">Diagnóstico</span><div class="p-notes">${esc(q.diag.trim())}</div></div>` : ''}
     ${rep && q.work.trim() ? `<div><span class="p-lab">Serviços realizados</span><div class="p-notes">${esc(q.work.trim())}</div></div>` : ''}
-    ${rep && q.tests.length ? `<div><span class="p-lab">Testes e verificações</span><ul class="p-checks">${testsDone(q).map(t => `<li>${esc(t[2])}</li>`).join('')}</ul></div>` : ''}
+    ${rep && q.tests.length ? `<div><span class="p-lab">Testes e verificações</span><ul class="p-checks">${q.tests.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}
+    ${rep && q.recs.trim() ? `<div><span class="p-lab">Recomendações</span><div class="p-notes">${esc(q.recs.trim())}</div></div>` : ''}
     <table class="p-table">
       <thead><tr><th>Descrição</th><th>Total</th></tr></thead>
       <tbody>${body}</tbody>
@@ -2247,10 +2398,9 @@ function paperHTML(q, c, mode = docMode(q)) {
       ${c.extra ? `<dt>Adicionais</dt><dd>${esc(extrasText(q))}, sobre a mão de obra</dd>` : ''}
       ${q.trip && c.travel ? `<dt>Deslocamento</dt><dd>${esc(tripLong(q.trip))}</dd>` : ''}
     </dl>
-    ${q.warranty && s.warrantyTerms.trim() ? `<div class="p-terms"><span class="p-lab">Condições da garantia</span><p>${esc(s.warrantyTerms.trim())}</p></div>` : ''}
-    ${q.recs.trim() ? `<div><span class="p-lab">Recomendações</span><div class="p-notes">${esc(q.recs.trim())}</div></div>` : ''}
     ${px ? `<div class="p-pix"><canvas data-qr width="200" height="200" aria-label="QR code do Pix"></canvas><div><b>Pague ${px.what} com Pix: ${BRL(px.value)}</b><span>Chave: ${esc(px.key)}</span><span>Abra o app do banco e leia o QR code.</span></div></div>` : ''}
-    ${q.notes.trim() ? `<div><span class="p-lab">Observações</span><div class="p-notes">${esc(q.notes.trim())}</div></div>` : ''}
+    ${q.warranty && s.warrantyTerms.trim() ? `<div class="p-final"><span class="p-lab">Condições da garantia</span><div class="p-notes">${esc(s.warrantyTerms.trim())}</div></div>` : ''}
+    ${q.notes.trim() ? `<div class="p-final"><span class="p-lab">Observações</span><div class="p-notes">${esc(q.notes.trim())}</div></div>` : ''}
     ${!rep && (approvalText(q) || s.acceptText.trim()) ? `<p class="p-accept">${esc(approvalText(q) || s.acceptText.trim())}</p>` : ''}
     <div class="p-sign"><div><b>${esc(q.client.name || 'Cliente')}</b><span>${rep ? 'Serviço recebido pelo cliente' : 'Cliente'}</span></div><div><b>${esc(s.name || s.company || 'Responsável')}</b><span>Responsável pelo serviço</span></div></div>
   </article>`;
@@ -2344,13 +2494,15 @@ function quoteMessage(q, c, mode = docMode(q)) {
   const line = (i, tag) => `• ${i.name}${tag && i.kind === 'mat' ? ' (material)' : ''}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)} = ${BRL(lineTotal(i))}`;
   L.push(rep ? `Olá${fn ? ', ' + fn : ''}! Segue o relatório dos serviços executados${q.doneAt ? ' em ' + fmtDate(q.doneAt) : ''} (${numLabel(q)}${q.title ? ' – ' + q.title : ''}).`
     : `Olá${fn ? ', ' + fn : ''}! Segue o orçamento ${numLabel(q)}${q.title ? ' – ' + q.title : ''}.`);
-  if (q.diag.trim()) L.push('', `*${rep ? 'Diagnóstico' : 'Situação encontrada'}:*`, q.diag.trim());
+  if (rep && q.diag.trim()) L.push('', '*Diagnóstico:*', q.diag.trim());
   if (rep && q.work.trim()) L.push('', '*Serviços realizados:*', q.work.trim());
-  if (rep && q.tests.length) L.push('', '*Testes e verificações:*', ...testsDone(q).map(t => `✓ ${t[2]}`));
+  if (rep && q.tests.length) L.push('', '*Testes e verificações:*', ...q.tests.map(t => `✓ ${t}`));
   if (q.useRooms) {
     roomList(q).filter(g => g.items.length).forEach(g => {
       L.push('', `*${g.name}*`);
-      [...g.items.filter(i => i.kind === 'svc'), ...g.items.filter(i => i.kind === 'mat')].forEach(i => L.push(line(i, true)));
+      const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
+      if (svc.length) { L.push('_Mão de obra_'); svc.forEach(i => L.push(line(i))); }
+      if (mat.length) { L.push('_Material_'); mat.forEach(i => L.push(line(i))); }
     });
     if (c.mat.length && !c.matIn) L.push('', rep ? '_Material fornecido por você: valores de referência, fora do total._' : '_Material por sua conta: valores estimados, fora do total._');
   } else {
@@ -2368,7 +2520,7 @@ function quoteMessage(q, c, mode = docMode(q)) {
   if (!rep && q.deadline) L.push(`*Prazo:* ${q.deadline}`);
   if (q.warranty) L.push(`*Garantia:* ${rep && q.doneAt ? `${plural(q.warranty, 'dia', 'dias')}, até ${fmtDate(q.doneAt + q.warranty * DAY)}` : plural(q.warranty, 'dia', 'dias')}`);
   if (!rep && q.validity) L.push(`Proposta válida até ${fmtDate(c.validUntil)}.`);
-  if (q.recs.trim()) L.push('', '*Recomendações:*', q.recs.trim());
+  if (rep && q.recs.trim()) L.push('', '*Recomendações:*', q.recs.trim());
   if (q.notes.trim()) L.push('', q.notes.trim());
   const px = pixOf(q, c, mode); if (px) L.push('', `Pix para ${px.what} (${BRL(px.value)}): ${px.key}`);
   if (!rep && (q.status === 'rascunho' || q.status === 'enviado')) L.push('', 'Para aprovar, é só responder *De acordo* nesta conversa.');
@@ -2565,18 +2717,21 @@ async function buildQuotePDF(q, mode = docMode(q)) {
     L.forEach(t => { need(lh(9.5)); txt(t, M, y, { size: 9.5 }); y += lh(9.5); });
     y += 3.5;
   };
-  if (q.diag.trim()) textBlock(rep ? 'Diagnóstico' : 'Situação encontrada', q.diag);
+  if (rep && q.diag.trim()) textBlock('Diagnóstico', q.diag);
   if (rep && q.work.trim()) textBlock('Serviços realizados', q.work);
   if (rep && q.tests.length) {
-    const T = testsDone(q), colW2 = (CW - 8) / 2, rows = Math.ceil(T.length / 2);
-    need(9 + rows * 5); label('Testes e verificações', M, y); y += 5.4;
-    T.forEach((t, k) => {
-      const x = M + (k % 2) * (colW2 + 8), yy = y + Math.floor(k / 2) * 5;
-      doc.setDrawColor(28, 122, 70); doc.setLineWidth(0.55); doc.lines([[0.9, 1.1], [2, -2.5]], x, yy - 1.5, [1, 1], 'S');
-      txt(t[2], x + 4.6, yy, { size: 9.2 });
+    const first = wrap(q.tests[0], CW - 5, 9.5).length;
+    need(9 + first * lh(9.5)); label('Testes e verificações', M, y); y += 5.4;
+    q.tests.forEach(t => {
+      const L = wrap(t, CW - 5, 9.5);
+      need(L.length * lh(9.5));
+      doc.setDrawColor(28, 122, 70); doc.setLineWidth(0.55); doc.lines([[0.9, 1.1], [2, -2.5]], M, y - 1.5, [1, 1], 'S');
+      L.forEach(l => { txt(l, M + 5, y, { size: 9.5 }); y += lh(9.5); });
+      y += 0.8;
     });
-    y += rows * 5 + 3;
+    y += 2.7;
   }
+  if (rep && q.recs.trim()) textBlock('Recomendações', q.recs);
 
   // tabela de itens
   const qtyR = M + CW - 60, unitR = M + CW - 29, totR = M + CW - 2.5, descW = qtyR - M - 24;
@@ -2593,9 +2748,15 @@ async function buildQuotePDF(q, mode = docMode(q)) {
     y += 6.8;
     if (note) { txt(note, M + 6, y + 2.5, { size: 8.5, italic: true, color: PC.muted }); y += 5.5; }
   };
+  let curRoom = '';
+  const brk = () => { thead(); if (curRoom) { txt(`${curRoom.toUpperCase()} (CONTINUAÇÃO)`, M + 2.5, y + 4.6, { size: 7.4, bold: true, color: PC.muted }); y += 6.2; } };
+  const kindLabel = t => {
+    if (need(12)) brk();
+    txt(t.toUpperCase(), M + 6, y + 4.2, { size: 7.4, bold: true, color: PC.muted }); y += 5.6;
+  };
   const row = (i, dim) => {
     const L = wrap(i.name, descW, 9.5), h = L.length * lh(9.5) + 2.7;
-    if (need(h)) thead();
+    if (need(h)) brk();
     const col = dim ? PC.muted : PC.ink;
     L.forEach((t, k) => txt(t, M + 2.5, y + 4.4 + k * lh(9.5), { size: 9.5, color: col }));
     txt(`${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)}`, qtyR, y + 4.4, { size: 9.5, color: col, align: 'right' });
@@ -2610,10 +2771,11 @@ async function buildQuotePDF(q, mode = docMode(q)) {
     if (!G.length) { txt('Nenhum item lançado', M + 6, y + 4.5, { size: 9.5, color: PC.muted }); y += 7; }
     G.forEach(g => {
       const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
-      section(g.name);
-      svc.forEach(i => row(i)); mat.forEach(i => row(i, !c.matIn));
+      curRoom = ''; section(g.name); curRoom = g.name;
+      if (svc.length) { kindLabel('Mão de obra'); svc.forEach(i => row(i)); }
+      if (mat.length) { kindLabel(c.matIn ? 'Material' : 'Material (cliente)'); mat.forEach(i => row(i, !c.matIn)); }
       const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
-      if (need(6.5)) thead();
+      if (need(6.5)) brk();
       txt(`Subtotal ${g.name}`, unitR, y + 4.4, { size: 8.6, color: PC.muted, align: 'right' });
       txt(BRL(st), totR, y + 4.4, { size: 9.2, bold: true, align: 'right' }); y += 6.5;
     });
@@ -2665,31 +2827,19 @@ async function buildQuotePDF(q, mode = docMode(q)) {
     y += L.length * lh(9.5) + 1.4;
   });
 
-  // condições da garantia
-  const terms = settings.warrantyTerms.trim();
-  if (q.warranty && terms) {
-    const L = wrap(terms, CW, 8.3);
-    need(7 + Math.min(L.length, 3) * lh(8.3));
-    y += 2.5; label('Condições da garantia', M, y); y += 4.6;
-    L.forEach(t => { need(lh(8.3)); txt(t, M, y, { size: 8.3, color: PC.muted }); y += lh(8.3); });
-    y += 1.5;
-  }
-
-  // recomendações, observações, termo de aceite e assinaturas não se separam: se não couberem juntas, vão para a página seguinte
-  const linesH = t => wrap(t.trim(), CW, 9.5).length * lh(9.5);
+  // condições da garantia e observações (mesma formatação); com o termo de aceite e as assinaturas, não se separam
+  const terms = q.warranty ? settings.warrantyTerms.trim() : '';
+  const FS = 9.2, finals = [['Condições da garantia', terms], ['Observações', q.notes.trim()]].filter(x => x[1]);
   const acceptL = rep ? [] : wrap(approvalText(q) || settings.acceptText.trim(), CW, 8.3).filter(Boolean);
-  const tailH = (q.recs.trim() ? 2 + 5.4 + linesH(q.recs) + 2 : 0) + (q.notes.trim() ? 2 + 5.6 + linesH(q.notes) + 2 : 0) + (acceptL.length ? 4 + acceptL.length * lh(8.3) : 0) + 27;
+  const tailH = sum(finals.map(([, t]) => 2.5 + 5.4 + wrap(t, CW, FS).length * lh(FS) + 1.5)) + (acceptL.length ? 4 + acceptL.length * lh(8.3) : 0) + 27;
   if (y + tailH > bottom && tailH < bottom - M - 2) { doc.addPage(); y = M + 2; }
-  if (q.recs.trim()) { y += 2; textBlock('Recomendações', q.recs); y -= 1.5; }
-
-  // observações
-  if (q.notes.trim()) {
-    const L = wrap(q.notes.trim(), CW, 9.5);
-    need(10 + Math.min(L.length, 3) * lh(9.5));
-    y += 2; label('Observações', M, y); y += 5.6;
-    L.forEach(t => { need(lh(9.5)); txt(t, M, y, { size: 9.5 }); y += lh(9.5); });
-    y += 2;
-  }
+  finals.forEach(([title, t]) => {
+    const L = wrap(t, CW, FS);
+    need(8 + Math.min(L.length, 3) * lh(FS));
+    y += 2.5; label(title, M, y); y += 5.4;
+    L.forEach(l => { need(lh(FS)); txt(l, M, y, { size: FS }); y += lh(FS); });
+    y += 1.5;
+  });
 
   // termo de aceite (ou o registro da aprovação) logo acima das assinaturas
   if (acceptL.length) {
@@ -3037,7 +3187,7 @@ VIEWS.settings = {
         <div><h2 class="card-h">Instalar na tela de início</h2><p class="hint">Abre como um aplicativo, em tela cheia, e funciona sem internet.</p></div>
         ${installEvt ? `<button class="btn primary" data-install>${I.phone}Instalar o Elétrica Fácil</button>` : `<p style="margin:0;font-size:15px"><b>iPhone:</b> no Safari, toque em Compartilhar e depois em <b>Adicionar à Tela de Início</b>.<br><b>Android:</b> no Chrome, abra o menu ⋮ e toque em <b>Instalar app</b>.</p>`}
       </section>`}
-      <p class="foot-note">Elétrica Fácil · versão 2.2</p>
+      <p class="foot-note">Elétrica Fácil · versão 2.3</p>
     </main>`;
   },
   bind(v) {
