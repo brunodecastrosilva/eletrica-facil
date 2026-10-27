@@ -1,0 +1,33 @@
+// Kit Fácil · regra do Firestore para receber as avaliações dos apps do Projeto Integrador.
+//
+// Onde colar: console do Firebase → projeto conta-facil-2c1f9 → Firestore Database → Regras.
+// Cole o bloco abaixo DENTRO de `match /databases/{database}/documents { ... }`, ao lado das regras que já
+// existem (as da comanda ao vivo, em /mesas, continuam iguais). Depois toque em Publicar.
+//
+// O que a regra faz: qualquer aparelho pode CRIAR uma avaliação, mas só no formato do Kit Fácil (campos,
+// tipos e tamanhos conferidos). Ninguém lê, altera nem apaga pelos apps: as avaliações são lidas no console
+// do Firebase (Firestore Database → Dados → coleção feedback).
+
+    match /feedback/{id} {
+      allow create: if
+        request.resource.data.keys().hasOnly(['esquema', 'app', 'versao', 'nota', 'tipo', 'mensagem', 'contato', 'tela', 'tecnico', 'enviadoEm'])
+        && request.resource.data.keys().hasAll(['esquema', 'app', 'versao', 'nota', 'tipo', 'mensagem', 'enviadoEm'])
+        && request.resource.data.esquema == 1
+        && request.resource.data.app in ['conta-facil', 'eletrica-facil', 'estudo-facil']
+        && request.resource.data.versao is string && request.resource.data.versao.size() <= 20
+        && request.resource.data.nota is int && request.resource.data.nota >= 0 && request.resource.data.nota <= 5
+        && request.resource.data.tipo in ['avaliacao', 'elogio', 'sugestao', 'critica', 'problema']
+        && request.resource.data.mensagem is string && request.resource.data.mensagem.size() <= 2000
+        && (request.resource.data.nota > 0 || request.resource.data.mensagem.size() > 0)
+        && (!('contato' in request.resource.data) || (request.resource.data.contato is string && request.resource.data.contato.size() <= 120))
+        && (!('tela' in request.resource.data) || (request.resource.data.tela is string && request.resource.data.tela.size() <= 60))
+        && (!('tecnico' in request.resource.data) || (request.resource.data.tecnico is map
+              && request.resource.data.tecnico.keys().hasOnly(['plataforma', 'navegador', 'tela', 'janela', 'instalado', 'idioma', 'erros'])))
+        && request.resource.data.enviadoEm is timestamp;
+      allow read, update, delete: if false;
+    }
+
+// Opcional, recomendado antes de divulgar os apps:
+// - Google Cloud → APIs e serviços → Credenciais: restrinja a chave "Browser key (auto created by Firebase)"
+//   a referenciadores https://brunodecastrosilva.github.io/* (e ao domínio próprio, quando houver).
+// - Firebase → App Check: ative para reduzir envios automatizados.

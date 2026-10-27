@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Elétrica Fácil</title>
 <meta name="description" content="Orçamentos de elétrica prontos em minutos">
 <meta name="theme-color" content="#EFEEE9" media="(prefers-color-scheme: light)">
@@ -17,6 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="comum/kit-facil.css">
 <style>
 /* Ferramenta de bolso: lista de orçamentos → editor de uma página → proposta em A4.
    Amarelo de segurança só onde importa (resumo do mês, ação principal, total); o resto é grafite e papel. */
@@ -528,6 +529,17 @@ input[type=date]:disabled{opacity:.45}
   .vrow .disc input{width:96px}
 }
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* Kit Fácil: componentes comuns do Projeto Integrador, com as cores do Elétrica Fácil */
+:root{
+  --kf-bg:var(--bg); --kf-surface:var(--surface); --kf-surface-2:var(--surface-2); --kf-line:var(--line); --kf-line-2:var(--line-2);
+  --kf-ink:var(--ink); --kf-muted:var(--muted); --kf-accent:var(--volt); --kf-accent-ink:var(--volt-ink); --kf-accent-soft:var(--volt-soft);
+  --kf-focus:var(--volt-text); --kf-ok:var(--ok); --kf-ok-soft:var(--ok-soft); --kf-warn:var(--warn); --kf-warn-soft:var(--volt-soft);
+  --kf-bad:var(--bad); --kf-bad-soft:var(--bad-soft); --kf-star:var(--volt); --kf-scrim:var(--scrim); --kf-shadow:var(--shadow-lg);
+  --kf-font:var(--f-body); --kf-font-display:var(--f-display); --kf-r-lg:22px; --kf-r-btn:14px; --kf-r-campo:12px;
+}
+.toast{z-index:95}
+.fold .f-in > .kf-acoes,.fold .f-in > .kf-seg{margin:0}
 </style>
 </head>
 <body>
@@ -541,8 +553,10 @@ input[type=date]:disabled{opacity:.45}
 </nav>
 <div id="sheet-root"></div>
 
+<script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
+const VERSAO = '2.5.0';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -714,9 +728,28 @@ const STATUS = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado',
 let settings = { ...DEF, ...LS.get('settings', {}) };
 let prices = LS.get('prices', null);
 let quotes = LS.get('quotes', null);
-// estado da sincronização (o código fica mais abaixo)
-let sync = { token: '', gistId: '', login: '', lastSync: 0, err: '', st: {}, del: {}, tipOff: false, ...LS.get('sync', {}) };
-const saveSync = () => LS.set('sync', sync);
+// sincronização entre aparelhos: motor comum do Kit Fácil (a regra de junção dos dados fica mais abaixo)
+KitFacil.iniciar({
+  app: 'eletrica-facil', nome: 'Elétrica Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
+  resumo: 'Orçamentos de elétrica prontos em minutos: serviços e materiais da sua tabela, deslocamento, adicionais, proposta em PDF ou WhatsApp com Pix, relatório e recibo.',
+  tela: () => route().name, toast: m => toast(m), exemploDados: 'os orçamentos e os dados dos seus clientes',
+  privacidade: [
+    'Os orçamentos, a tabela de preços, os ajustes e os dados dos clientes que você cadastra (nome, telefone, endereço, CPF ou CNPJ) ficam guardados neste aparelho. Você é responsável por eles perante os seus clientes.',
+    'Propostas, relatórios e recibos em PDF são feitos aqui no aparelho. Eles só saem quando você compartilha (WhatsApp, e-mail ou outro app).',
+  ],
+});
+KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#EFEEE9', escuro: '#0E0D0A' } });
+const SY = KitFacil.sync.criar({
+  app: 'eletrica-facil', nome: 'Elétrica Fácil', chave: 'eletricafacil.sync', dados: 'os mesmos orçamentos, preços e ajustes',
+  aplicar: R => applyRemote(R), pacote: () => syncPayload(),
+  mesmo: (out, remote) => canon(out) === canon({ settings: remote.settings, prices: remote.prices, quotes: remote.quotes, st: remote.st, del: remote.del }),
+  redesenhar: () => rerender(),
+  aoEstado: s => $$('.sync-ic').forEach(b => { b.className = 'icon-btn sync-ic s-' + s; b.setAttribute('aria-label', 'Sincronização: ' + SY.texto()); }),
+  ocupado: () => !!$('#sheet-root').innerHTML || !!(document.activeElement && document.activeElement.matches('input,textarea,select')),
+  textoLigada: () => `Sincronização ligada. ${plural(quotes.filter(q => !q.example).length, 'orçamento', 'orçamentos')} neste aparelho.`,
+});
+const sync = SY.estado;
+const saveSync = () => SY.salvar();
 let SNAP = null;
 const saveSettings = () => { stamp('settings'); return LS.set('settings', settings); };
 const savePrices = () => { stamp('prices'); return LS.set('prices', prices); };
@@ -798,13 +831,14 @@ const numLabel = q => q.example ? 'Exemplo' : 'Nº ' + String(q.num || 0).padSta
 const isEmptyQuote = q => !q.example && !q.client.name && !q.title && !q.items.length;
 
 /* ================= sincronização entre aparelhos ================= */
-// Os dados vão criptografados para um gist secreto na conta GitHub do usuário.
-// Cada orçamento, preço e campo dos ajustes guarda quando foi alterado; ao juntar, fica a alteração mais recente.
-const SYNC_FILE = 'eletrica-facil.json';
-const TOKEN_URL = 'https://github.com/settings/tokens/new?scopes=gist&description=El%C3%A9trica%20F%C3%A1cil';
-let syncTimer = null, syncBusy = null, syncAgain = false, syncState = sync.err ? (sync.err === 'offline' ? 'offline' : 'error') : 'ok', syncKey = null, pendingRR = false;
-const syncOn = () => !!sync.token;
-const canon = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
+// O motor (conexão, criptografia, gist, avisos e telas) é o do Kit Fácil, comum aos apps do projeto; o arquivo no gist
+// continua o mesmo (eletrica-facil.json, mesmo formato), então aparelhos com a versão anterior seguem sincronizando.
+// Aqui fica só a regra do Elétrica Fácil: cada orçamento, preço e campo dos ajustes guarda quando foi alterado;
+// ao juntar, fica a alteração mais recente.
+const syncOn = () => SY.ligada();
+const scheduleSync = ms => SY.agendar(ms);
+const syncNow = opts => SY.agora(opts);
+const canon = KitFacil.canon;
 function snapAll() {
   SNAP = { s: {}, p: {}, q: {} };
   for (const k in settings) SNAP.s[k] = JSON.stringify(settings[k]);
@@ -837,7 +871,6 @@ function stamp(kind) {
   }
   if (ch) { saveSync(); if (syncOn()) scheduleSync(); }
 }
-function scheduleSync(ms = 2500) { if (!syncOn()) return; clearTimeout(syncTimer); syncTimer = setTimeout(() => syncNow(), ms); }
 
 // junta duas listas por id; a versão mais recente de cada item vence
 function mergeList(L, R, lt, rt, del, onRemote) {
@@ -886,222 +919,19 @@ function applyRemote(R) {
     used.add(q.num);
   });
   settings = { ...DEF, ...S }; prices = P;
+  const vivos = new Set(P.map(p => p.id));
+  Object.keys(st).forEach(k => { if (k.startsWith('p:') && !vivos.has(k.slice(2))) delete st[k]; });
   sync.st = st; sync.del = del;
   LS.set('settings', settings); LS.set('prices', prices); LS.set('quotes', quotes);
   snapAll(); saveSync();
   return before !== canon([settings, prices, quotes]);
 }
 const syncPayload = () => ({ settings, prices, quotes: quotes.filter(q => !q.example && !isEmptyQuote(q)), st: sync.st, del: sync.del });
-
-// criptografia: a chave sai do código de acesso do GitHub, que só os aparelhos do usuário conhecem
-const b64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
-const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-async function cryptoKey() {
-  if (syncKey && syncKey.t === sync.token) return syncKey.k;
-  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(sync.token), 'PBKDF2', false, ['deriveKey']);
-  const k = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: new TextEncoder().encode('eletrica-facil:' + (sync.login || '').toLowerCase()), iterations: 150000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
-  syncKey = { t: sync.token, k };
-  return k;
-}
-async function seal(obj) {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await cryptoKey(), new TextEncoder().encode(JSON.stringify(obj)));
-  return JSON.stringify({ app: 'eletrica-facil', v: 1, enc: 'AES-GCM', iv: b64(iv), data: b64(new Uint8Array(data)) });
-}
-async function unseal(text) {
-  const j = JSON.parse(text);
-  if (j.app !== 'eletrica-facil' || !j.data) throw Object.assign(new Error('formato'), { code: 'format' });
-  try {
-    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(j.iv) }, await cryptoKey(), unb64(j.data));
-    return JSON.parse(new TextDecoder().decode(plain));
-  } catch { throw Object.assign(new Error('chave'), { code: 'key' }); }
-}
-
-async function gh(path, opt = {}, token = sync.token) {
-  let r;
-  try {
-    r = await fetch('https://api.github.com' + path, { cache: 'no-store', ...opt,
-      headers: { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + token, ...(opt.body ? { 'Content-Type': 'application/json' } : {}) } });
-  } catch { throw Object.assign(new Error('offline'), { code: 'offline' }); }
-  if (r.status === 401) throw Object.assign(new Error('auth'), { code: 'auth' });
-  if (r.status === 404) throw Object.assign(new Error('404'), { code: '404' });
-  if (!r.ok) throw Object.assign(new Error('http ' + r.status), { code: r.status === 403 ? 'scope' : 'http' });
-  return { json: await r.json(), headers: r.headers };
-}
-async function findGist() {
-  for (let page = 1; page <= 10; page++) {
-    const { json } = await gh(`/gists?per_page=100&page=${page}`);
-    const g = json.find(x => x.files && x.files[SYNC_FILE]);
-    if (g) return g.id;
-    if (json.length < 100) return '';
-  }
-  return '';
-}
-async function readRemote() {
-  const { json } = await gh('/gists/' + sync.gistId);
-  const f = json.files && json.files[SYNC_FILE];
-  if (!f) throw Object.assign(new Error('404'), { code: '404' });
-  let text = f.content;
-  if (f.truncated) { try { text = await (await fetch(f.raw_url, { cache: 'no-store' })).text(); } catch { throw Object.assign(new Error('offline'), { code: 'offline' }); } }
-  return unseal(text);
-}
-async function writeRemote(obj) {
-  const files = { [SYNC_FILE]: { content: await seal(obj) } };
-  if (sync.gistId) {
-    try { await gh('/gists/' + sync.gistId, { method: 'PATCH', body: JSON.stringify({ files }) }); return; }
-    catch (e) { if (e.code !== '404') throw e; }
-  }
-  const { json } = await gh('/gists', { method: 'POST', body: JSON.stringify({ description: 'Elétrica Fácil · dados do app, criptografados (não apague)', public: false, files }) });
-  sync.gistId = json.id;
-}
-function syncNow(opts = {}) {
-  if (!syncOn()) return Promise.resolve(false);
-  if (syncBusy) { syncAgain = true; return syncBusy; }
-  clearTimeout(syncTimer);
-  syncBusy = (async () => {
-    setSyncState('busy');
-    let changed = false, ok = false;
-    try {
-      if (!sync.gistId) sync.gistId = await findGist();
-      let remote = null;
-      if (sync.gistId) {
-        try { remote = await readRemote(); }
-        catch (e) {
-          if (e.code === '404') sync.gistId = '';
-          // chave nova (a antiga venceu): a nuvem é regravada com os dados deste aparelho
-          else if (e.code === 'key' || e.code === 'format') remote = null;
-          else throw e;
-        }
-      }
-      if (remote) changed = applyRemote(remote);
-      const out = syncPayload();
-      if (!remote || canon(out) !== canon({ settings: remote.settings, prices: remote.prices, quotes: remote.quotes, st: remote.st, del: remote.del })) await writeRemote(out);
-      sync.lastSync = Date.now(); sync.err = ''; ok = true;
-      setSyncState('ok');
-    } catch (e) {
-      sync.err = e.code || 'http';
-      setSyncState(sync.err === 'offline' ? 'offline' : 'error');
-      if (opts.manual) toast(syncErrText());
-    }
-    saveSync();
-    if (changed) afterRemoteChange(opts.quiet);
-    return ok;
-  })();
-  return syncBusy.finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; scheduleSync(400); } });
-}
-const busyTyping = () => !!$('#sheet-root').innerHTML || (document.activeElement && document.activeElement.matches('input,textarea,select'));
-function afterRemoteChange(quiet) {
-  if (busyTyping()) { pendingRR = true; return; }
-  pendingRR = false; rerender();
-  if (!quiet) toast('Atualizado com seus outros aparelhos.');
-}
-setInterval(() => { if (pendingRR && !busyTyping()) afterRemoteChange(true); }, 1500);
-function syncErrText() {
-  return { offline: 'Sem internet agora. Sincroniza quando a conexão voltar.', auth: 'A chave do GitHub não vale mais. Crie uma nova e cole em Ajustes → Sincronização.',
-    scope: 'A chave do GitHub não tem a permissão gist. Crie outra marcando gist.' }[sync.err] || 'Não foi possível sincronizar agora. Tente de novo em instantes.';
-}
-function ago(ts) {
-  const m = Math.round((Date.now() - ts) / 6e4);
-  if (m < 1) return 'agora mesmo';
-  if (m < 60) return `há ${m} min`;
-  const d = new Date(ts), hm = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  return new Date().toDateString() === d.toDateString() ? `hoje às ${hm}` : `em ${fmtDate(ts)} às ${hm}`;
-}
-function syncStatusText() {
-  if (syncState === 'busy') return 'Sincronizando…';
-  if (syncState !== 'ok') return syncErrText();
-  return sync.lastSync ? `Tudo sincronizado. Última vez ${ago(sync.lastSync)}.` : 'Conectado.';
-}
-function setSyncState(s) {
-  syncState = s;
-  $$('.sync-ic').forEach(b => { b.className = 'icon-btn sync-ic s-' + s; b.setAttribute('aria-label', 'Sincronização: ' + syncStatusText()); });
-  const t = $('#sync-status'); if (t) { t.textContent = syncStatusText(); t.classList.toggle('bad', s === 'error'); }
-}
-async function connectSync(token) {
-  token = token.trim().replace(/\s/g, '');
-  if (!/^(ghp_|github_pat_|gho_)\w{20,}$/.test(token)) { toast('Essa não parece uma chave do GitHub. Ela começa com ghp_.'); return false; }
-  let login = '';
-  try {
-    const { json, headers } = await gh('/user', {}, token);
-    const scopes = headers.get('x-oauth-scopes');
-    if (scopes !== null && !/\bgist\b/.test(scopes)) { toast('Essa chave não tem a permissão gist. Crie outra marcando gist.'); return false; }
-    login = json.login || '';
-  } catch (e) {
-    toast(e.code === 'offline' ? 'Sem internet. Conecte quando estiver on-line.' : 'O GitHub não aceitou essa chave. Confira se copiou inteira.');
-    return false;
-  }
-  const same = sync.login && sync.login.toLowerCase() === login.toLowerCase();
-  // trocar a chave na mesma conta mantém o histórico; outra conta começa do zero
-  sync = { ...sync, token, login, err: '', ...(same ? {} : { gistId: '', lastSync: 0 }) };
-  syncKey = null; saveSync();
-  const had = sync.lastSync;
-  const ok = await syncNow({ quiet: true });
-  if (ok) toast(had ? 'Chave atualizada.' : `Sincronização ligada. ${plural(quotes.filter(q => !q.example).length, 'orçamento', 'orçamentos')} neste aparelho.`);
-  else toast(syncErrText());
-  rerender();
-  return true;
-}
-function connectSheet() {
-  openSheet({ title: 'Usar em vários aparelhos', tall: true,
-    body: `<ol class="sync-steps">
-      <li><b>Crie uma chave de acesso no GitHub</b><span>Na página que vai abrir, em <b>Expiration</b> escolha <b>No expiration</b>. Deixe marcada só a opção <b>gist</b> e toque em <b>Generate token</b>, no fim da página.</span>
-        <a class="btn ghost sm" href="${TOKEN_URL}" target="_blank" rel="noopener">${I.arrow}Abrir o GitHub</a></li>
-      <li><b>Copie a chave e cole aqui</b><span>Ela começa com <b>ghp_</b>.</span>
-        <input id="sy-token" type="text" placeholder="ghp_…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Chave do GitHub"></li>
-      <li><b>Nos outros aparelhos</b><span>Depois de conectar, toque em <b>Outro aparelho</b> para mandar um link para você mesmo, ou cole a mesma chave.</span></li>
-    </ol>
-    <p class="hint">Os orçamentos, preços e ajustes ficam num gist secreto da sua conta, criptografados com a sua chave. O gist não aparece no seu perfil e só os seus aparelhos conseguem ler.</p>`,
-    foot: `<button class="btn ghost" data-no>Cancelar</button><button class="btn primary" data-ok>Conectar</button>`,
-    onMount: s => {
-      $('[data-no]', s).onclick = () => closeSheet();
-      const ok = $('[data-ok]', s), inp = $('#sy-token', s);
-      const go = async () => { ok.disabled = true; ok.textContent = 'Conectando…'; if (await connectSync(inp.value)) closeSheet(true); else { ok.disabled = false; ok.textContent = 'Conectar'; } };
-      ok.onclick = go;
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
-    } });
-}
-function linkSheet() {
-  const link = `${location.origin}${location.pathname}#/conectar/${encodeURIComponent(sync.token)}`;
-  openSheet({ title: 'Conectar outro aparelho',
-    body: `<p class="hint" style="font-size:16px">Mande este link para você mesmo e abra no outro aparelho. Ele entra com os mesmos dados.</p>
-      <div class="banner b-bad"><p><b>O link dá acesso aos seus orçamentos.</b> Não envie para outras pessoas.</p></div>
-      <p class="hint">Se no outro aparelho o app estiver instalado na tela de início, abra o app, vá em Ajustes → Ativar sincronização e cole a chave.</p>`,
-    foot: `<button class="btn ghost" data-key>${I.copy}Copiar chave</button><button class="btn primary" data-wa>${I.wa}Enviar link</button>`,
-    onMount: s => {
-      $('[data-key]', s).onclick = () => copyText(sync.token, 'Chave copiada.');
-      $('[data-wa]', s).onclick = async () => {
-        const text = 'Link para conectar o Elétrica Fácil neste aparelho: ' + link;
-        if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
-        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
-      };
-    } });
-}
 function syncCardHTML() {
-  const sum = settingsSums().sync;
-  if (!syncOn()) return panel('st:sync', 'sync', 'Usar em vários aparelhos', sum, `<p class="hint">Conecte sua conta GitHub e tenha os mesmos orçamentos, preços e ajustes no celular, no tablet e no computador. O que você muda num aparelho aparece nos outros.</p>
-    <button class="btn primary" data-sync-start>${I.cloud}Ativar sincronização</button>`);
-  return panelOpen('st:sync', 'sync', 'Sincronização', sum, { right: sync.err === 'auth' ? '<span class="sync-pill off">Parada</span>' : syncState === 'error' ? '<span class="sync-pill off">Com erro</span>' : `<span class="sync-pill">${I.check}Ligada</span>` }) + `
-    <p class="hint" style="margin:0">Conta GitHub <b>@${esc(sync.login)}</b>.</p>    <p class="hint${syncState === 'error' ? ' bad' : ''}" id="sync-status" style="margin:0">${esc(syncStatusText())}</p>
-    ${sync.err === 'auth' ? `<button class="btn primary" data-sync-start>Colar chave nova</button>` : ''}
-    <div class="grid2"><button class="btn ghost" data-sync-now>Sincronizar agora</button><button class="btn ghost" data-sync-link>${I.phone}Outro aparelho</button></div>
-    <button class="linkish" data-sync-off style="color:var(--muted)">Desconectar este aparelho</button>
-  ${panelClose}`;
+  const sum = SY.resumo();
+  if (!syncOn()) return panel('st:sync', 'sync', 'Usar em vários aparelhos', sum, SY.cartaoHTML());
+  return panelOpen('st:sync', 'sync', 'Sincronização', sum, { right: sync.err === 'auth' ? '<span class="sync-pill off">Parada</span>' : SY.situacao() === 'error' ? '<span class="sync-pill off">Com erro</span>' : `<span class="sync-pill">${I.check}Ligada</span>` }) + SY.cartaoHTML() + panelClose;
 }
-function bindSyncCard(v) {
-  $$('[data-sync-start]', v).forEach(b => b.onclick = connectSheet);
-  $('[data-sync-now]', v)?.addEventListener('click', async () => { if (await syncNow({ manual: true, quiet: true })) toast('Tudo sincronizado.'); });
-  $('[data-sync-link]', v)?.addEventListener('click', linkSheet);
-  $('[data-sync-off]', v)?.addEventListener('click', () => confirmSheet('Desconectar este aparelho?', 'Os dados continuam neste aparelho e na nuvem, mas as mudanças deixam de passar de um para o outro.', 'Desconectar', () => {
-    sync = { ...sync, token: '', gistId: '', lastSync: 0, err: '' }; syncKey = null; saveSync(); rerender(); toast('Aparelho desconectado.');
-  }));
-}
-document.addEventListener('visibilitychange', () => {
-  if (!syncOn()) return;
-  if (document.visibilityState === 'visible') { if (Date.now() - (sync.lastSync || 0) > 10000) syncNow({ quiet: false }); }
-  else if (syncTimer) syncNow();
-});
-window.addEventListener('online', () => { if (syncOn()) syncNow(); });
-setInterval(() => { if (syncOn() && document.visibilityState === 'visible' && !syncBusy) syncNow(); }, 60000);
 snapAll();
 const lineTotal = i => Math.round(i.qty * i.price);
 function compute(q) {
@@ -1578,7 +1408,7 @@ function homeListHTML() {
 }
 VIEWS.home = {
   html() {
-    const bar = `<header class="appbar"><div class="appbar-in"><div class="brand"><span class="mark">${I.bolt}</span><span class="word">Elétrica Fácil</span></div>${syncOn() ? `<button class="icon-btn sync-ic s-${syncState}" data-go="/ajustes" aria-label="${esc('Sincronização: ' + syncStatusText())}">${I.cloud}</button>` : ''}</div></header>`;
+    const bar = `<header class="appbar"><div class="appbar-in"><div class="brand"><span class="mark">${I.bolt}</span><span class="word">Elétrica Fácil</span></div>${syncOn() ? `<button class="icon-btn sync-ic s-${SY.situacao()}" data-go="/ajustes" aria-label="${esc('Sincronização: ' + SY.texto())}">${I.cloud}</button>` : ''}</div></header>`;
     if (!quotes.length) return `${bar}<main class="page">
       <section class="welcome">
         <span class="big-mark">${I.bolt}</span>
@@ -1605,7 +1435,7 @@ VIEWS.home = {
           <div><b>${s.rate === null ? '–' : s.rate + '%'}</b><span>de aprovação em 90 dias</span></div>
         </div>
       </section>
-      ${!syncOn() && !sync.tipOff && !needMe && quotes.some(q => !q.example) ? `<div class="banner b-tip"><p><b>Usa o app em mais de um aparelho?</b> Ative a sincronização e tenha os mesmos orçamentos no celular e no tablet.</p><div class="banner-act"><button class="btn sm dark" data-sync-start>Ativar</button><button class="btn sm ghost" data-tip-off>Agora não</button></div></div>` : ''}
+      ${!syncOn() && !sync.tipOff && !needMe && quotes.some(q => !q.example) ? `<div class="banner b-tip"><p><b>Usa o app em mais de um aparelho?</b> Ative a sincronização e tenha os mesmos orçamentos no celular e no tablet.</p><div class="banner-act"><button class="btn sm dark" data-kf="sync-ativar">Ativar</button><button class="btn sm ghost" data-tip-off>Agora não</button></div></div>` : ''}
       ${needMe ? `<div class="banner b-tip"><p><b>Seu nome ainda não sai na proposta.</b> Preencha seus dados e chave Pix em Ajustes.</p><div class="banner-act"><button class="btn sm dark" data-go="/ajustes">Preencher meus dados</button></div></div>` : ''}
       <div class="toolbar">
         ${quotes.length > 4 ? `<label class="search">${I.search}<input type="search" id="h-q" placeholder="Buscar cliente, serviço ou número" value="${esc(homeQuery)}" aria-label="Buscar orçamento"></label>` : ''}
@@ -1618,7 +1448,6 @@ VIEWS.home = {
   bind(v) {
     $$('[data-new]', v).forEach(b => b.onclick = () => createQuote());
     $('[data-example]', v)?.addEventListener('click', createExample);
-    $('[data-sync-start]', v)?.addEventListener('click', connectSheet);
     $('[data-tip-off]', v)?.addEventListener('click', () => { sync.tipOff = true; saveSync(); rerender(); });
     $$('[data-go]', v).forEach(b => b.onclick = () => go(b.dataset.go, true));
     v.addEventListener('click', e => {
@@ -3220,7 +3049,7 @@ function readLogo(file) {
 function settingsSums() {
   const s = settings;
   return {
-    sync: syncOn() ? `Ligada · @${sync.login}` : 'Desligada · use o app em vários aparelhos',
+    sync: SY.resumo(),
     me: [s.company || s.name, s.phone ? fmtPhone(s.phone) : ''].filter(Boolean).join(' · ') || 'Nome, contato, CPF ou CNPJ e logotipo',
     pix: s.pix || 'Nenhuma chave cadastrada',
     car: s.kmPerL || s.fuelPrice ? [s.kmPerL && `${fmtQty(s.kmPerL)} km/l`, s.fuelPrice && `combustível ${BRL(s.fuelPrice)}`].filter(Boolean).join(' · ') : 'Consumo do veículo e preço do combustível',
@@ -3229,6 +3058,8 @@ function settingsSums() {
     txt: 'Termo de aceite e condições da garantia',
     bak: 'Exportar ou importar os dados num arquivo',
     inst: 'Abre como aplicativo e funciona sem internet',
+    tema: { auto: 'Automático, segue o aparelho', claro: 'Claro', escuro: 'Escuro' }[KitFacil.tema.valor],
+    ajuda: KitFacil.feedback.pendentes() ? 'Mensagem guardada, à espera de envio' : 'Avaliar o app, relatar um problema, sobre e privacidade',
   };
 }
 VIEWS.settings = {
@@ -3294,6 +3125,7 @@ VIEWS.settings = {
         <div class="field"><label for="st-warrantyTerms">Condições da garantia</label><textarea id="st-warrantyTerms" data-set="warrantyTerms">${esc(s.warrantyTerms)}</textarea>
           ${s.warrantyTerms !== WARRANTY_DEFAULT ? '<button class="linkish" data-reset="warrantyTerms">Voltar ao texto sugerido</button>' : ''}</div>
       ${panelClose}
+      ${panel('st:tema', 'tema', 'Aparência', S.tema, KitFacil.tema.seletorHTML())}
       ${panelOpen('st:bak', 'bak', 'Cópia em arquivo', S.bak)}
         <p class="hint">${syncOn() ? 'Além da sincronização, você pode guardar uma cópia dos dados num arquivo.' : 'Sem a sincronização, os dados ficam só neste aparelho. Exporte uma cópia de vez em quando.'}</p>
         <div class="grid2"><button class="btn ghost" data-export>${I.dl}Exportar cópia</button><button class="btn ghost" data-import>${I.ul}Importar cópia</button></div>
@@ -3303,12 +3135,13 @@ VIEWS.settings = {
         <p class="hint">Abre como um aplicativo, em tela cheia, e funciona sem internet.</p>
         ${installEvt ? `<button class="btn primary" data-install>${I.phone}Instalar o Elétrica Fácil</button>` : `<p style="margin:0;font-size:15px"><b>iPhone:</b> no Safari, toque em Compartilhar e depois em <b>Adicionar à Tela de Início</b>.<br><b>Android:</b> no Chrome, abra o menu ⋮ e toque em <b>Instalar app</b>.</p>`}
       ${panelClose}`}
-      <p class="foot-note">Elétrica Fácil · versão 2.4</p>
+      ${panel('st:ajuda', 'ajuda', 'Ajude a melhorar', S.ajuda, KitFacil.ajudaHTML())}
+      <p class="foot-note">Elétrica Fácil · versão ${VERSAO}</p>
     </main>`;
   },
   bind(v) {
-    bindSyncCard(v);
     v.addEventListener('input', () => setTimeout(() => paintSums(v, settingsSums()), 300));
+    v.addEventListener('click', e => { if (e.target.closest('[data-kf="tema"]')) setTimeout(() => paintSums(v, settingsSums()), 0); });
     let t;
     $$('[data-set]', v).forEach(i => {
       const save = () => {
@@ -3365,15 +3198,12 @@ VIEWS.settings = {
 /* ================= início ================= */
 try { history.scrollRestoration = 'manual'; } catch {}
 // link de "Conectar outro aparelho": a chave vem depois do #, que não sai do aparelho
-let linkToken = '';
-const lm = location.hash.match(/^#\/conectar\/(.+)$/);
-if (lm) { try { linkToken = decodeURIComponent(lm[1]); } catch {} history.replaceState({ d: 0 }, '', '#/ajustes'); }
+const linkToken = SY.tokenDoLink();
+if (linkToken) history.replaceState({ d: 0 }, '', '#/ajustes');
 if (!location.hash) history.replaceState({ d: 0 }, '', '#/');
 else if (!history.state) history.replaceState({ d: 0 }, '', location.hash);
 render();
-if (linkToken && linkToken !== sync.token) confirmSheet('Conectar este aparelho?', 'Os orçamentos deste aparelho se juntam aos da nuvem. Os preços e os ajustes passam a ser os da nuvem.', 'Conectar', () => connectSync(linkToken), false);
-else if (linkToken) toast('Este aparelho já está conectado.');
-else if (syncOn()) syncNow();
+SY.iniciar({ token: linkToken, silencioso: false, textoConfirmar: 'Os orçamentos deste aparelho se juntam aos da nuvem. Os preços e os ajustes passam a ser os da nuvem.' });
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(e => console.warn('sw', e));
 </script>
 </body>
