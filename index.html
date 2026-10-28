@@ -16,7 +16,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Barlow:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400..700&family=Atkinson+Hyperlegible+Next:wght@400..800&display=swap">
 <link rel="stylesheet" href="comum/kit-facil.css">
 <style>
 /* Ferramenta de bolso: lista de orçamentos → editor de uma página → proposta em A4.
@@ -27,14 +27,15 @@
   --ink:#17150F; --muted:#666253; --faint:#959081;
   --volt:#FFC400; --volt-ink:#17150F; --volt-soft:#FFF1C4; --volt-text:#7A5900;
   --graphite:#1D1B15; --graphite-ink:#FFD23A;
-  --sent:#1F5FA6; --sent-soft:#E3ECF8; --ok:#1C7A46; --ok-soft:#DDF1E4; --bad:#B23A2E; --bad-soft:#F9E3DF; --warn:#9A5B00;
+  --sent:#1F5FA6; --sent-soft:#E3ECF8; --ok:var(--kf-ok); --ok-soft:var(--kf-ok-soft); --bad:var(--kf-bad); --bad-soft:var(--kf-bad-soft); --warn:var(--kf-warn);
   --wa:#178A46;
   --paper:#FFFFFF; --paper-ink:#1A1813; --paper-muted:#6B675B; --paper-line:#E4E1D8; --paper-volt:#FFC400;
   --scrim:rgba(15,13,8,.52);
   --shadow:0 1px 2px rgba(23,21,15,.05),0 4px 14px rgba(23,21,15,.06);
   --shadow-lg:0 14px 40px rgba(23,21,15,.24);
-  --f-display:"Archivo","Barlow",system-ui,sans-serif;
-  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  /* fontes do sistema de design comum (comum/kit-facil.css) */
+  --f-display:var(--kf-font-display);
+  --f-body:var(--kf-font);
   --col:680px; --nav-h:64px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -42,7 +43,7 @@
   --ink:#F3F0E7; --muted:#A8A392; --faint:#7D7869;
   --volt:#FFC83A; --volt-ink:#16140E; --volt-soft:#3A300E; --volt-text:#FFD45E;
   --graphite:#F3F0E7; --graphite-ink:#16140E;
-  --sent:#86B6EE; --sent-soft:#15253A; --ok:#6CCB94; --ok-soft:#13301E; --bad:#F08E80; --bad-soft:#3A1C17; --warn:#F2B44C;
+  --sent:#86B6EE; --sent-soft:#15253A; --ok:var(--kf-ok); --ok-soft:var(--kf-ok-soft); --bad:var(--kf-bad); --bad-soft:var(--kf-bad-soft); --warn:var(--kf-warn);
   --wa:#3BC874;
   --scrim:rgba(0,0,0,.62);
   --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
@@ -53,7 +54,7 @@
   --ink:#F3F0E7; --muted:#A8A392; --faint:#7D7869;
   --volt:#FFC83A; --volt-ink:#16140E; --volt-soft:#3A300E; --volt-text:#FFD45E;
   --graphite:#F3F0E7; --graphite-ink:#16140E;
-  --sent:#86B6EE; --sent-soft:#15253A; --ok:#6CCB94; --ok-soft:#13301E; --bad:#F08E80; --bad-soft:#3A1C17; --warn:#F2B44C;
+  --sent:#86B6EE; --sent-soft:#15253A; --ok:var(--kf-ok); --ok-soft:var(--kf-ok-soft); --bad:var(--kf-bad); --bad-soft:var(--kf-bad-soft); --warn:var(--kf-warn);
   --wa:#3BC874;
   --scrim:rgba(0,0,0,.62);
   --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
@@ -72,18 +73,15 @@ button,a,label,input,select,textarea{touch-action:manipulation}
 svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 svg.bolt{fill:currentColor;stroke:currentColor;stroke-width:.8}
 
-/* barra do topo */
-.appbar{position:sticky;top:0;z-index:20;background:var(--bg);padding-top:env(safe-area-inset-top,0px)}
-.appbar-in{max-width:var(--col);margin:0 auto;min-height:60px;display:flex;align-items:center;gap:6px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
-.appbar.scrolled{box-shadow:0 1px 0 var(--line)}
+/* barra do topo: a barra comum do Kit Fácil (kf-barra); nas telas internas, voltar + título + ações */
 .ab-title{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15;padding-left:4px}
 .ab-eyebrow{font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ab-main{font-family:var(--f-display);font-weight:800;font-stretch:108%;font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
 .ab-main.big{font-size:24px}
-.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0;padding-left:6px}
-.mark{width:36px;height:36px;border-radius:10px;background:var(--volt);color:var(--volt-ink);display:grid;place-items:center;flex:none}
-.mark svg{width:22px;height:22px}
-.word{font-family:var(--f-display);font-weight:850;font-stretch:115%;font-size:21px;letter-spacing:-.02em;white-space:nowrap}
+.marca-eletrica{background:var(--volt);color:var(--volt-ink)}
+/* título da tela, no corpo da página (a barra de cima mostra a marca) */
+.tela-h{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:6px}
+.tela-h h1{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1.1;letter-spacing:-.02em;margin:0}
 .icon-btn{width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;border-radius:12px;color:var(--ink);flex:none;padding:0}
 @media (hover:hover){.icon-btn:hover{background:var(--surface-2)}}
 .icon-btn.boxed{box-shadow:inset 0 0 0 1.5px var(--line-2);width:48px;height:48px;border-radius:14px}
@@ -247,15 +245,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .b-bad{background:var(--bad-soft)}
 .b-bad b{color:var(--bad)}
 .b-tip{background:var(--volt-soft)}
-.sync-ic{position:relative;color:var(--muted)}
-.sync-ic::after{content:'';position:absolute;right:9px;bottom:11px;width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 2px var(--bg)}
-.sync-ic.s-busy::after{background:var(--volt);animation:blink .8s infinite alternate}
-.sync-ic.s-offline::after{background:var(--faint)}
-.sync-ic.s-error::after{background:var(--bad)}
 @keyframes blink{to{opacity:.25}}
-.sync-pill{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;color:var(--ok)}
-.sync-pill svg{width:16px;height:16px}
-.sync-pill.off{color:var(--bad)}
 .hint.bad{color:var(--bad)}
 .sync-steps{margin:0 0 14px;padding:0;list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:18px}
 .sync-steps li{counter-increment:st;display:flex;flex-direction:column;gap:8px;padding-left:40px;position:relative}
@@ -276,13 +266,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .bb-total b{font-family:var(--f-display);font-weight:850;font-stretch:108%;font-size:23px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bbar .acts{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;width:100%}
 
-/* navegação inferior */
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
-.nav-in{max-width:var(--col);margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);height:var(--nav-h)}
-.nav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12.5px;font-weight:600;color:var(--muted)}
-.nav .ni{width:60px;height:30px;border-radius:99px;display:grid;place-items:center;transition:background .15s}
-.nav button[aria-current="page"]{color:var(--ink)}
-.nav button[aria-current="page"] .ni{background:var(--volt);color:var(--volt-ink)}
+/* navegação: barra de baixo (kf-nav) no celular e no tablet; trilho lateral (kf-trilho) no computador */
 .fab{position:fixed;z-index:24;right:max(16px,calc(50vw - var(--col) / 2 + 16px));bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 16px);height:58px;padding:0 22px 0 18px;border-radius:18px;border:0;background:var(--volt);color:var(--volt-ink);font-weight:700;font-size:16.5px;box-shadow:var(--shadow-lg);display:flex;gap:8px;align-items:center}
 .fab svg{width:24px;height:24px}
 
@@ -530,25 +514,36 @@ input[type=date]:disabled{opacity:.45}
 }
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 
-/* Kit Fácil: componentes comuns do Projeto Integrador, com as cores do Elétrica Fácil */
+/* Kit Fácil: a cor de destaque e os neutros do Elétrica Fácil ligados ao sistema de design comum (comum/kit-facil.css) */
 :root{
   --kf-bg:var(--bg); --kf-surface:var(--surface); --kf-surface-2:var(--surface-2); --kf-line:var(--line); --kf-line-2:var(--line-2);
-  --kf-ink:var(--ink); --kf-muted:var(--muted); --kf-accent:var(--volt); --kf-accent-ink:var(--volt-ink); --kf-accent-soft:var(--volt-soft);
-  --kf-focus:var(--volt-text); --kf-ok:var(--ok); --kf-ok-soft:var(--ok-soft); --kf-warn:var(--warn); --kf-warn-soft:var(--volt-soft);
-  --kf-bad:var(--bad); --kf-bad-soft:var(--bad-soft); --kf-star:var(--volt); --kf-scrim:var(--scrim); --kf-shadow:var(--shadow-lg);
-  --kf-font:var(--f-body); --kf-font-display:var(--f-display); --kf-r-lg:22px; --kf-r-btn:14px; --kf-r-campo:12px;
+  --kf-ink:var(--ink); --kf-muted:var(--muted); --kf-accent:var(--volt); --kf-accent-ink:var(--volt-ink); --kf-accent-soft:var(--volt-soft); --kf-accent-texto:var(--volt-text);
+  --kf-focus:var(--volt-text); --kf-scrim:var(--scrim); --kf-shadow:var(--shadow-lg);
+  --kf-col-nav:var(--col);
 }
 .toast{z-index:95}
-.fold .f-in > .kf-acoes,.fold .f-in > .kf-seg{margin:0}
+.page.largo{max-width:1040px}
+.kf-barra .ab-title{padding-left:2px}
+/* no computador, o conteúdo fixo começa depois do trilho lateral */
+@media (min-width:1024px){
+  .page{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+  .bbar{left:var(--kf-trilho-w)}
+  .fab{bottom:24px;right:max(24px,calc((100vw - var(--kf-trilho-w)) / 2 - var(--col) / 2 + 16px))}
+  .toast{left:calc(50% + var(--kf-trilho-w) / 2);bottom:24px}
+  .toast.low{bottom:96px}
+}
 </style>
 </head>
-<body>
+<body class="kf-casca">
+<aside class="kf-trilho" id="trilho" aria-label="Seções"><div class="kf-marca"><span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span></div>
+  <button class="kf-trilho-it" data-nav="/" id="trilho-home"><span class="kf-nav-ic-t"></span>Orçamentos</button>
+  <button class="kf-trilho-it" data-nav="/precos" id="trilho-prices"><span class="kf-nav-ic-t"></span>Preços</button>
+</aside>
 <div id="app"></div>
-<nav class="nav" id="nav" aria-label="Seções" hidden>
-  <div class="nav-in">
-    <button data-nav="/" id="nav-home"><span class="ni"></span><span>Orçamentos</span></button>
-    <button data-nav="/precos" id="nav-prices"><span class="ni"></span><span>Preços</span></button>
-    <button data-nav="/ajustes" id="nav-settings"><span class="ni"></span><span>Ajustes</span></button>
+<nav class="kf-nav" id="nav" aria-label="Seções" hidden>
+  <div class="kf-nav-in">
+    <button class="kf-nav-it" data-nav="/" id="nav-home"><span class="kf-nav-ic"></span><span class="kf-nav-l">Orçamentos</span></button>
+    <button class="kf-nav-it" data-nav="/precos" id="nav-prices"><span class="kf-nav-ic"></span><span class="kf-nav-l">Preços</span></button>
   </div>
 </nav>
 <div id="sheet-root"></div>
@@ -556,7 +551,8 @@ input[type=date]:disabled{opacity:.45}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.5.0';
+const VERSAO = '2.6.0';
+const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -733,6 +729,9 @@ KitFacil.iniciar({
   app: 'eletrica-facil', nome: 'Elétrica Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
   resumo: 'Orçamentos de elétrica prontos em minutos: serviços e materiais da sua tabela, deslocamento, adicionais, proposta em PDF ou WhatsApp com Pix, relatório e recibo.',
   tela: () => route().name, toast: m => toast(m), exemploDados: 'os orçamentos e os dados dos seus clientes',
+  abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
+  emAjustes: () => route().name === 'settings',
+  copia: { descricao: 'Baixe um arquivo com os orçamentos, a tabela de preços e os ajustes.', baixar: () => baixarCopiaEletrica(), restaurar: f => restaurarCopiaEletrica(f) },
   privacidade: [
     'Os orçamentos, a tabela de preços, os ajustes e os dados dos clientes que você cadastra (nome, telefone, endereço, CPF ou CNPJ) ficam guardados neste aparelho. Você é responsável por eles perante os seus clientes.',
     'Propostas, relatórios e recibos em PDF são feitos aqui no aparelho. Eles só saem quando você compartilha (WhatsApp, e-mail ou outro app).',
@@ -744,7 +743,6 @@ const SY = KitFacil.sync.criar({
   aplicar: R => applyRemote(R), pacote: () => syncPayload(),
   mesmo: (out, remote) => canon(out) === canon({ settings: remote.settings, prices: remote.prices, quotes: remote.quotes, st: remote.st, del: remote.del }),
   redesenhar: () => rerender(),
-  aoEstado: s => $$('.sync-ic').forEach(b => { b.className = 'icon-btn sync-ic s-' + s; b.setAttribute('aria-label', 'Sincronização: ' + SY.texto()); }),
   ocupado: () => !!$('#sheet-root').innerHTML || !!(document.activeElement && document.activeElement.matches('input,textarea,select')),
   textoLigada: () => `Sincronização ligada. ${plural(quotes.filter(q => !q.example).length, 'orçamento', 'orçamentos')} neste aparelho.`,
 });
@@ -927,11 +925,6 @@ function applyRemote(R) {
   return before !== canon([settings, prices, quotes]);
 }
 const syncPayload = () => ({ settings, prices, quotes: quotes.filter(q => !q.example && !isEmptyQuote(q)), st: sync.st, del: sync.del });
-function syncCardHTML() {
-  const sum = SY.resumo();
-  if (!syncOn()) return panel('st:sync', 'sync', 'Usar em vários aparelhos', sum, SY.cartaoHTML());
-  return panelOpen('st:sync', 'sync', 'Sincronização', sum, { right: sync.err === 'auth' ? '<span class="sync-pill off">Parada</span>' : SY.situacao() === 'error' ? '<span class="sync-pill off">Com erro</span>' : `<span class="sync-pill">${I.check}Ligada</span>` }) + SY.cartaoHTML() + panelClose;
-}
 snapAll();
 const lineTotal = i => Math.round(i.qty * i.price);
 function compute(q) {
@@ -1257,7 +1250,13 @@ function go(path, replace) {
 function back(fallback = '/') {
   if (history.state && history.state.d > 0) history.back(); else go(fallback, true);
 }
-window.addEventListener('popstate', () => { if (curKey) scrollMem[curKey] = window.scrollY; navMode = 'pop'; closeSheet(true); render(); });
+let irDepois = null; // destino guardado enquanto o Voltar tira uma guia dos Ajustes do histórico
+window.addEventListener('popstate', () => {
+  if (irDepois) { const d = irDepois; irDepois = null; go(d, true); return; }
+  // voltar de uma guia dos Ajustes para a lista: quem cuida é o Kit Fácil, sem redesenhar a tela
+  if (route().key === curKey && route().name === 'settings' && $('[data-kf-aj]')) return;
+  if (curKey) scrollMem[curKey] = window.scrollY; navMode = 'pop'; closeSheet(true); render();
+});
 
 const VIEWS = {};
 function render(opts = {}) {
@@ -1273,10 +1272,11 @@ function render(opts = {}) {
   $('#app').innerHTML = V.html(r);
   const top = ['home', 'prices', 'settings'].includes(r.name);
   $('#nav').hidden = !top;
-  $$('#nav [data-nav]').forEach(b => {
-    const on = (b.dataset.nav === '/' && r.name === 'home') || (b.dataset.nav === '/precos' && r.name === 'prices') || (b.dataset.nav === '/ajustes' && r.name === 'settings');
+  $$('[data-nav]').forEach(b => {
+    const on = (b.dataset.nav === '/' && (r.name === 'home' || r.name === 'quote' || r.name === 'preview')) || (b.dataset.nav === '/precos' && r.name === 'prices');
     b.setAttribute('aria-current', on ? 'page' : 'false');
   });
+  KitFacil.topo.atualizar();
   prepFields($('#app'));
   V.bind($('#app'), r);
   $$('textarea', $('#app')).forEach(autoGrow);
@@ -1292,12 +1292,19 @@ function rerender() {
 }
 function onScroll() { const ab = $('.appbar'); if (ab) ab.classList.toggle('scrolled', window.scrollY > 4); }
 window.addEventListener('scroll', onScroll, { passive: true });
-$('#nav-home .ni').innerHTML = I.doc; $('#nav-prices .ni').innerHTML = I.tag; $('#nav-settings .ni').innerHTML = I.sliders;
-$('#nav').addEventListener('click', e => {
+$('#nav-home .kf-nav-ic').innerHTML = I.doc; $('#nav-prices .kf-nav-ic').innerHTML = I.tag;
+$('#trilho-home .kf-nav-ic-t').outerHTML = I.doc; $('#trilho-prices .kf-nav-ic-t').outerHTML = I.tag;
+const aoTocarNav = e => {
   const b = e.target.closest('[data-nav]'); if (!b) return;
   if (route().key === b.dataset.nav) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  // estando numa guia dos Ajustes (celular), primeiro tira a guia do histórico e depois troca de tela
+  if (history.state && history.state.kfAjPush) { irDepois = b.dataset.nav; history.back(); return; }
   go(b.dataset.nav, true);
-});
+};
+$('#nav').addEventListener('click', aoTocarNav);
+$('#trilho').addEventListener('click', aoTocarNav);
+// barra de cima das telas principais: marca à esquerda; Ajustes, nuvem e balão à direita (padrão da família)
+const barraTopo = () => `<header class="kf-barra appbar"><div class="kf-barra-in"><div class="kf-marca">${MARCA}</div>${KitFacil.topo.html({ ajustes: true })}</div></header>`;
 
 /* ================= criar, duplicar, excluir ================= */
 function createQuote(client) {
@@ -1408,7 +1415,7 @@ function homeListHTML() {
 }
 VIEWS.home = {
   html() {
-    const bar = `<header class="appbar"><div class="appbar-in"><div class="brand"><span class="mark">${I.bolt}</span><span class="word">Elétrica Fácil</span></div>${syncOn() ? `<button class="icon-btn sync-ic s-${SY.situacao()}" data-go="/ajustes" aria-label="${esc('Sincronização: ' + SY.texto())}">${I.cloud}</button>` : ''}</div></header>`;
+    const bar = barraTopo();
     if (!quotes.length) return `${bar}<main class="page">
       <section class="welcome">
         <span class="big-mark">${I.bolt}</span>
@@ -1436,7 +1443,7 @@ VIEWS.home = {
         </div>
       </section>
       ${!syncOn() && !sync.tipOff && !needMe && quotes.some(q => !q.example) ? `<div class="banner b-tip"><p><b>Usa o app em mais de um aparelho?</b> Ative a sincronização e tenha os mesmos orçamentos no celular e no tablet.</p><div class="banner-act"><button class="btn sm dark" data-kf="sync-ativar">Ativar</button><button class="btn sm ghost" data-tip-off>Agora não</button></div></div>` : ''}
-      ${needMe ? `<div class="banner b-tip"><p><b>Seu nome ainda não sai na proposta.</b> Preencha seus dados e chave Pix em Ajustes.</p><div class="banner-act"><button class="btn sm dark" data-go="/ajustes">Preencher meus dados</button></div></div>` : ''}
+      ${needMe ? `<div class="banner b-tip"><p><b>Seu nome ainda não sai na proposta.</b> Preencha seus dados e chave Pix em Ajustes.</p><div class="banner-act"><button class="btn sm dark" data-aj="conta">Preencher meus dados</button></div></div>` : ''}
       <div class="toolbar">
         ${quotes.length > 4 ? `<label class="search">${I.search}<input type="search" id="h-q" placeholder="Buscar cliente, serviço ou número" value="${esc(homeQuery)}" aria-label="Buscar orçamento"></label>` : ''}
         <div class="chips scroll" role="group" aria-label="Filtrar">${[['aberto', 'Em aberto'], ['concluido', 'Concluídos'], ['recusado', 'Recusados'], ['todos', 'Todos']].map(([k, l]) => `<button class="chip" data-filter="${k}" aria-pressed="${homeFilter === k}">${l} <span class="n">${cnt(k)}</span></button>`).join('')}</div>
@@ -1449,7 +1456,7 @@ VIEWS.home = {
     $$('[data-new]', v).forEach(b => b.onclick = () => createQuote());
     $('[data-example]', v)?.addEventListener('click', createExample);
     $('[data-tip-off]', v)?.addEventListener('click', () => { sync.tipOff = true; saveSync(); rerender(); });
-    $$('[data-go]', v).forEach(b => b.onclick = () => go(b.dataset.go, true));
+    $$('[data-aj]', v).forEach(b => b.onclick = () => KitFacil.ajustes.ir(b.dataset.aj));
     v.addEventListener('click', e => {
       const b = e.target.closest('[data-open]'); if (b) return go('/q/' + b.dataset.open);
       const g = e.target.closest('[data-grp-t]'); if (g) { PANEL['home:' + g.dataset.grpT] = g.getAttribute('aria-expanded') !== 'true'; $('#q-list').innerHTML = homeListHTML(); }
@@ -1801,10 +1808,11 @@ function valuesHTML(q, c) {
 VIEWS.quote = {
   html(r) {
     const q = getQ(r.id), c = compute(q), S = quoteSums(q, c);
-    return `<header class="appbar"><div class="appbar-in">
+    return `<header class="kf-barra appbar"><div class="kf-barra-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
       <div class="ab-title"><span class="ab-eyebrow">${q.example ? 'Exemplo' : (isReport(q) ? 'Relatório ' : 'Orçamento ') + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-main" id="ab-name">${esc(q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'))}</span></div>
       <button class="icon-btn" data-menu aria-label="Mais opções">${I.more}</button>
+      ${KitFacil.topo.html({ ajustes: false })}
     </div></header>
     <main class="page bar">
       ${q.example ? `<div class="banner b-tip"><p><b>Este é um orçamento de exemplo.</b> Mexa à vontade para conhecer o app e exclua quando quiser pelo menu ⋯.</p></div>` : ''}
@@ -2345,10 +2353,11 @@ VIEWS.preview = {
     if (!settings.name && !settings.company) warn.push('Seu nome e telefone ainda não aparecem no cabeçalho.');
     if (!q.client.name) warn.push('Falta o nome do cliente.');
     if (!q.items.length) warn.push('Nenhum item lançado.');
-    return `<header class="appbar"><div class="appbar-in">
+    return `<header class="kf-barra appbar"><div class="kf-barra-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
       <div class="ab-title"><span class="ab-eyebrow">${mode === 'report' ? 'Relatório' : 'Proposta'} · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Cliente sem nome')}</span></div>
       <button class="icon-btn" data-edit aria-label="Editar orçamento">${ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')}</button>
+      ${KitFacil.topo.html({ ajustes: false })}
     </div></header>
     <main class="page bar">
       ${warn.length ? `<div class="banner b-tip"><p><b>Antes de enviar:</b> ${esc(warn.join(' '))}</p>${!settings.name && !settings.company ? '<div class="banner-act"><button class="btn sm dark" data-me>Preencher meus dados</button></div>' : ''}</div>` : ''}
@@ -2368,7 +2377,7 @@ VIEWS.preview = {
     fitMark(v);
     $('[data-back]', v).onclick = () => back('/q/' + q.id);
     $('[data-edit]', v).onclick = () => back('/q/' + q.id);
-    $('[data-me]', v)?.addEventListener('click', () => go('/ajustes'));
+    $('[data-me]', v)?.addEventListener('click', () => KitFacil.ajustes.ir('conta'));
     const cv = $('canvas[data-qr]', v);
     $$('[data-doc]', v).forEach(b => b.onclick = () => { previewDoc[q.id] = b.dataset.doc; rerender(); });
     if (cv) { const px = pixOf(q, compute(q)); qrMatrix(pixPayload(px)).then(m => drawQR(cv.getContext('2d'), m, 0, 0, 200)).catch(() => cv.replaceWith(Object.assign(document.createElement('span'), { textContent: '' }))); }
@@ -2947,8 +2956,9 @@ function priceListHTML() {
 VIEWS.prices = {
   html() {
     const n = k => prices.filter(p => p.kind === k).length;
-    return `<header class="appbar"><div class="appbar-in"><div class="ab-title"><span class="ab-main big">Tabela de preços</span></div><button class="btn sm ghost" data-adjust>${I.percent}Reajustar</button></div></header>
+    return `${barraTopo()}
     <main class="page">
+      <div class="tela-h"><h1>Tabela de preços</h1><button class="btn sm ghost" data-adjust>${I.percent}Reajustar</button></div>
       <div class="seg" role="group" aria-label="Tipo"><button data-k="svc" aria-pressed="${priceKind === 'svc'}">Mão de obra · ${n('svc')}</button><button data-k="mat" aria-pressed="${priceKind === 'mat'}">Material · ${n('mat')}</button></div>
       <label class="search">${I.search}<input type="search" id="pr-q" placeholder="Buscar item ou categoria" value="${esc(priceQuery)}" aria-label="Buscar na tabela"></label>
       <div id="pr-list" style="display:flex;flex-direction:column;gap:10px">${priceListHTML()}</div>
@@ -3026,9 +3036,6 @@ function adjustSheet() {
 }
 
 /* ================= tela: ajustes ================= */
-let installEvt = null;
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (route().name === 'settings') rerender(); });
-const isStandalone = () => { try { return navigator.standalone === true || matchMedia('(display-mode: standalone)').matches; } catch { return false; } };
 function readLogo(file) {
   return new Promise((res, rej) => {
     const fr = new FileReader();
@@ -3049,99 +3056,101 @@ function readLogo(file) {
 function settingsSums() {
   const s = settings;
   return {
-    sync: SY.resumo(),
-    me: [s.company || s.name, s.phone ? fmtPhone(s.phone) : ''].filter(Boolean).join(' · ') || 'Nome, contato, CPF ou CNPJ e logotipo',
+    conta: [s.company || s.name, s.phone ? fmtPhone(s.phone) : ''].filter(Boolean).join(' · ') || undefined,
     pix: s.pix || 'Nenhuma chave cadastrada',
-    car: s.kmPerL || s.fuelPrice ? [s.kmPerL && `${fmtQty(s.kmPerL)} km/l`, s.fuelPrice && `combustível ${BRL(s.fuelPrice)}`].filter(Boolean).join(' · ') : 'Consumo do veículo e preço do combustível',
-    sur: `Urgência ${s.surUrgent}% · noturno ${s.surNight}% · fim de semana ${s.surWeekend}%`,
-    def: `Validade ${s.validity} dias · garantia ${s.warranty} dias · ${payShort({ mode: s.payMode, entryPct: s.entryPct, installments: s.installments }).toLowerCase()}`,
-    txt: 'Termo de aceite e condições da garantia',
-    bak: 'Exportar ou importar os dados num arquivo',
-    inst: 'Abre como aplicativo e funciona sem internet',
-    tema: { auto: 'Automático, segue o aparelho', claro: 'Claro', escuro: 'Escuro' }[KitFacil.tema.valor],
-    ajuda: KitFacil.feedback.pendentes() ? 'Mensagem guardada, à espera de envio' : 'Avaliar o app, relatar um problema, sobre e privacidade',
+    deslocamento: s.kmPerL || s.fuelPrice ? [s.kmPerL && `${fmtQty(s.kmPerL)} km/l`, s.fuelPrice && `combustível ${BRL(s.fuelPrice)}`].filter(Boolean).join(' · ') : 'Consumo do veículo e preço do combustível',
+    adicionais: `Urgência ${s.surUrgent}% · noturno ${s.surNight}% · fim de semana ${s.surWeekend}%`,
+    padrao: `Validade ${s.validity} dias · garantia ${s.warranty} dias · ${payShort({ mode: s.payMode, entryPct: s.entryPct, installments: s.installments }).toLowerCase()}`,
+    textos: 'Termo de aceite e condições da garantia',
   };
 }
+function pintarResumos() { const S = settingsSums(); for (const k in S) KitFacil.ajustes.resumo(k, S[k]); }
+/* cópia de segurança no formato comum da família (as cópias antigas, { app: 'eletrica-facil', v: 1 ou 2 }, continuam valendo) */
+function baixarCopiaEletrica() { KitFacil.copia.baixar({ settings, prices, quotes: quotes.filter(q => !q.example) }, 2); }
+async function restaurarCopiaEletrica(file) {
+  const j = await KitFacil.copia.ler(file, { antigos: true });
+  let data = null;
+  try {
+    if (j && j.dados) data = { settings: j.dados.settings || {}, prices: j.dados.prices || seedPrices(), quotes: (j.dados.quotes || []).map(fixQuote) };
+    else if (j && j.antigo && j.antigo.app === 'eletrica-facil') { const o = j.antigo; data = o.v >= 2 ? { settings: o.settings || {}, prices: o.prices || seedPrices(), quotes: (o.quotes || []).map(fixQuote) } : fromV1(o.catalog, o.bills, o.draft); }
+  } catch { data = null; }
+  if (!data || !Array.isArray(data.quotes) || !Array.isArray(data.prices)) { toast('Esse arquivo não é uma cópia do Elétrica Fácil.'); return; }
+  confirmSheet('Restaurar a cópia?', `O arquivo tem ${plural(data.quotes.length, 'orçamento', 'orçamentos')} e ${plural(data.prices.length, 'preço', 'preços')}. Os dados deste aparelho${syncOn() ? ' e dos outros aparelhos conectados' : ''} serão substituídos.`, 'Restaurar', () => {
+    settings = { ...DEF, ...data.settings }; prices = data.prices; quotes = data.quotes.map(fixQuote);
+    settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
+    saveSettings(); savePrices(); saveQuotes(); rerender(); toast('Cópia restaurada.');
+  });
+}
+const ICONES_AJ = {
+  pix: '<path d="m12 3 9 9-9 9-9-9z"/><path d="m8.5 12 3.5-3.5 3.5 3.5-3.5 3.5z"/>',
+  deslocamento: '<path d="M3 16V9l2.5-4h9L17 9h2a2 2 0 0 1 2 2v5"/><path d="M3 16h18"/><circle cx="7.5" cy="17.5" r="2"/><circle cx="16.5" cy="17.5" r="2"/>',
+  adicionais: '<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+  padrao: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v7M8.5 14.5h7"/>',
+  textos: '<path d="M4 6h16M4 11h16M4 16h10M4 21h6"/>',
+};
 VIEWS.settings = {
   html() {
     const s = settings, S = settingsSums();
     const money = (k, label, ph) => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" data-money type="text" inputmode="numeric" value="${s[k] ? BRL(s[k]) : ''}" placeholder="${esc(ph)}"></div>`;
     const pct = (k, label) => `<div class="field"><label for="st-${k}">${label} (%)</label><input id="st-${k}" data-set="${k}" data-int type="text" inputmode="numeric" value="${s[k]}"></div>`;
     const f = (k, label, ph, type = 'text', extra = '') => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" type="${type}" value="${esc(k === 'phone' ? fmtPhone(s[k]) : s[k])}" placeholder="${esc(ph)}" ${extra}></div>`;
-    return `<header class="appbar"><div class="appbar-in"><div class="ab-title"><span class="ab-main big">Ajustes</span></div></div></header>
-    <main class="page">
-      ${syncCardHTML()}
-      ${panelOpen('st:me', 'me', 'Seus dados', S.me)}
-        <p class="hint">Saem no cabeçalho das propostas e dos recibos.</p>
-        <div class="logo-row">
-          <button class="logo-pick" data-logo aria-label="Escolher logotipo">${s.logo ? `<img src="${s.logo}" alt="Seu logotipo">` : I.image}</button>
-          <div><b>Logotipo</b><small>Opcional. Sem logo, a proposta usa o raio do app.</small>${s.logo ? '<button class="linkish" data-logo-rm style="margin-top:4px;font-size:14px;color:var(--bad)">Remover logotipo</button>' : ''}</div>
-          <input type="file" id="st-logo" accept="image/*" hidden>
-        </div>
-        ${f('name', 'Seu nome', 'Ex.: Carlos Pereira', 'text', 'autocapitalize="words"')}
-        ${f('company', 'Nome da empresa (opcional)', 'Ex.: Pereira Instalações Elétricas', 'text', 'autocapitalize="words"')}
-        <div class="grid2 stack">
-          ${f('phone', 'WhatsApp', '(11) 90000-0000', 'tel', 'inputmode="tel"')}
-          ${f('email', 'E-mail (opcional)', 'voce@email.com', 'email', 'autocapitalize="off"')}
-          ${f('doc', 'CPF ou CNPJ (opcional)', 'Sai no recibo')}
-          ${f('city', 'Cidade', 'Ex.: São Paulo', 'text', 'autocapitalize="words"')}
-        </div>
-      ${panelClose}
-      ${panelOpen('st:pix', 'pix', 'Pix', S.pix)}
-        <p class="hint">Com a chave, a proposta já sai com o QR code da entrada (ou do total, no pagamento à vista).</p>
-        ${f('pix', 'Chave Pix', 'CPF, celular, e-mail ou chave aleatória', 'text', 'autocapitalize="off" spellcheck="false"')}
-      ${panelClose}
-      ${panelOpen('st:car', 'car', 'Veículo e deslocamento', S.car)}
-        <p class="hint">Base da calculadora de deslocamento. O preço do combustível também pode ser atualizado direto no orçamento.</p>
-        <div class="grid2">
-          <div class="field"><label for="st-kmPerL">Consumo médio (km/l)</label><input id="st-kmPerL" data-set="kmPerL" data-dec type="text" inputmode="decimal" value="${s.kmPerL ? fmtQty(s.kmPerL) : ''}" placeholder="Ex.: 10"></div>
-          ${money('fuelPrice', 'Combustível (litro)', 'Ex.: R$ 6,19')}
-          ${money('wearPerKm', 'Desgaste por km', 'Opcional')}
-          ${money('hourRate', 'Valor da sua hora', 'Opcional')}
-        </div>
-        ${money('minVisit', 'Mínimo por visita', 'Opcional')}
-        <p class="hint">O desgaste cobre pneus, óleo e manutenção. A hora entra quando você informa o tempo de viagem. O mínimo protege as obras muito perto.</p>
-      ${panelClose}
-      ${panelOpen('st:sur', 'sur', 'Adicionais sobre a mão de obra', S.sur)}
-        <p class="hint">Percentual usado quando você marca o adicional no orçamento. Se marcar mais de um, eles se somam.</p>
-        <div class="grid3">
-          ${pct('surUrgent', 'Urgência')}${pct('surNight', 'Noturno')}${pct('surWeekend', 'Fim de sem.')}
-        </div>
-      ${panelClose}
-      ${panelOpen('st:def', 'def', 'Padrão de cada orçamento novo', S.def)}
-        <p class="hint">Dá para mudar em cada orçamento.</p>
-        <div class="grid2">
-          ${f('validity', 'Validade (dias)', '15', 'text', 'inputmode="numeric" data-int')}
-          ${f('warranty', 'Garantia (dias)', '90', 'text', 'inputmode="numeric" data-int')}
-        </div>
-        <div class="field"><span class="lab">Pagamento</span><div class="seg" role="group">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${s.payMode === k}">${l}</button>`).join('')}</div></div>
-        ${s.payMode === 'entrada' ? `<div class="field"><span class="lab">Entrada</span><div class="chips row5">${[30, 40, 50, 60, 70].map(n => `<button class="chip" data-ep="${n}" aria-pressed="${s.entryPct === n}">${n}%</button>`).join('')}</div></div>` : ''}
-        <div class="field"><label for="st-notes">Observações que sempre vão na proposta</label><textarea id="st-notes" data-set="notes" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.notes)}</textarea></div>
-      ${panelClose}
-      ${panelOpen('st:txt', 'txt', 'Textos dos documentos', S.txt)}
-        <p class="hint">Saem em todos os orçamentos e relatórios. Deixe em branco para não usar.</p>
-        <div class="field"><label for="st-acceptText">Termo de aceite (acima da assinatura do orçamento)</label><textarea id="st-acceptText" data-set="acceptText">${esc(s.acceptText)}</textarea>
-          ${s.acceptText !== ACCEPT_DEFAULT ? '<button class="linkish" data-reset="acceptText">Voltar ao texto sugerido</button>' : ''}</div>
-        <div class="field"><label for="st-warrantyTerms">Condições da garantia</label><textarea id="st-warrantyTerms" data-set="warrantyTerms">${esc(s.warrantyTerms)}</textarea>
-          ${s.warrantyTerms !== WARRANTY_DEFAULT ? '<button class="linkish" data-reset="warrantyTerms">Voltar ao texto sugerido</button>' : ''}</div>
-      ${panelClose}
-      ${panel('st:tema', 'tema', 'Aparência', S.tema, KitFacil.tema.seletorHTML())}
-      ${panelOpen('st:bak', 'bak', 'Cópia em arquivo', S.bak)}
-        <p class="hint">${syncOn() ? 'Além da sincronização, você pode guardar uma cópia dos dados num arquivo.' : 'Sem a sincronização, os dados ficam só neste aparelho. Exporte uma cópia de vez em quando.'}</p>
-        <div class="grid2"><button class="btn ghost" data-export>${I.dl}Exportar cópia</button><button class="btn ghost" data-import>${I.ul}Importar cópia</button></div>
-        <input type="file" id="st-import" accept="application/json,.json" hidden>
-      ${panelClose}
-      ${isStandalone() ? '' : `${panelOpen('st:inst', 'inst', 'Instalar na tela de início', S.inst)}
-        <p class="hint">Abre como um aplicativo, em tela cheia, e funciona sem internet.</p>
-        ${installEvt ? `<button class="btn primary" data-install>${I.phone}Instalar o Elétrica Fácil</button>` : `<p style="margin:0;font-size:15px"><b>iPhone:</b> no Safari, toque em Compartilhar e depois em <b>Adicionar à Tela de Início</b>.<br><b>Android:</b> no Chrome, abra o menu ⋮ e toque em <b>Instalar app</b>.</p>`}
-      ${panelClose}`}
-      ${panel('st:ajuda', 'ajuda', 'Ajude a melhorar', S.ajuda, KitFacil.ajudaHTML())}
-      <p class="foot-note">Elétrica Fácil · versão ${VERSAO}</p>
+    const bloco = (titulo, corpo) => `<div class="kf-bloco"><h3>${titulo}</h3>${corpo}</div>`;
+    return `${barraTopo()}
+    <main class="page largo">
+      ${KitFacil.ajustes.html({
+        resumos: { conta: S.conta },
+        extras: {
+          conta: bloco('Seus dados na proposta', `<p class="kf-ajuda">Saem no cabeçalho das propostas, dos relatórios e dos recibos.</p>
+            <div class="logo-row">
+              <button class="logo-pick" data-logo aria-label="Escolher logotipo">${s.logo ? `<img src="${s.logo}" alt="Seu logotipo">` : I.image}</button>
+              <div><b>Logotipo</b><small>Opcional. Sem logo, a proposta usa o raio do app.</small>${s.logo ? '<button class="linkish" data-logo-rm style="margin-top:4px;font-size:14px;color:var(--bad)">Remover logotipo</button>' : ''}</div>
+              <input type="file" id="st-logo" accept="image/*" hidden>
+            </div>
+            ${f('name', 'Seu nome', 'Ex.: Carlos Pereira', 'text', 'autocapitalize="words"')}
+            ${f('company', 'Nome da empresa (opcional)', 'Ex.: Pereira Instalações Elétricas', 'text', 'autocapitalize="words"')}
+            <div class="grid2 stack">
+              ${f('phone', 'WhatsApp', '(11) 90000-0000', 'tel', 'inputmode="tel"')}
+              ${f('email', 'E-mail (opcional)', 'voce@email.com', 'email', 'autocapitalize="off"')}
+              ${f('doc', 'CPF ou CNPJ (opcional)', 'Sai no recibo')}
+              ${f('city', 'Cidade', 'Ex.: São Paulo', 'text', 'autocapitalize="words"')}
+            </div>`),
+        },
+        produto: [
+          { id: 'pix', titulo: 'Pix', icone: ICONES_AJ.pix, resumo: S.pix, html: bloco('Chave Pix', `<p class="kf-ajuda">Com a chave, a proposta já sai com o QR code da entrada (ou do total, no pagamento à vista).</p>
+              ${f('pix', 'Chave Pix', 'CPF, celular, e-mail ou chave aleatória', 'text', 'autocapitalize="off" spellcheck="false"')}`) },
+          { id: 'deslocamento', titulo: 'Veículo e deslocamento', icone: ICONES_AJ.deslocamento, resumo: S.deslocamento, html: bloco('Calculadora de deslocamento', `<p class="kf-ajuda">Base da calculadora de deslocamento. O preço do combustível também pode ser atualizado direto no orçamento.</p>
+              <div class="grid2">
+                <div class="field"><label for="st-kmPerL">Consumo médio (km/l)</label><input id="st-kmPerL" data-set="kmPerL" data-dec type="text" inputmode="decimal" value="${s.kmPerL ? fmtQty(s.kmPerL) : ''}" placeholder="Ex.: 10"></div>
+                ${money('fuelPrice', 'Combustível (litro)', 'Ex.: R$ 6,19')}
+                ${money('wearPerKm', 'Desgaste por km', 'Opcional')}
+                ${money('hourRate', 'Valor da sua hora', 'Opcional')}
+              </div>
+              ${money('minVisit', 'Mínimo por visita', 'Opcional')}
+              <p class="kf-ajuda">O desgaste cobre pneus, óleo e manutenção. A hora entra quando você informa o tempo de viagem. O mínimo protege as obras muito perto.</p>`) },
+          { id: 'adicionais', titulo: 'Adicionais', icone: ICONES_AJ.adicionais, resumo: S.adicionais, html: bloco('Adicionais sobre a mão de obra', `<p class="kf-ajuda">Percentual usado quando você marca o adicional no orçamento. Se marcar mais de um, eles se somam.</p>
+              <div class="grid3">${pct('surUrgent', 'Urgência')}${pct('surNight', 'Noturno')}${pct('surWeekend', 'Fim de sem.')}</div>`) },
+          { id: 'padrao', titulo: 'Orçamento novo', icone: ICONES_AJ.padrao, resumo: S.padrao, html: bloco('Padrão de cada orçamento novo', `<p class="kf-ajuda">Dá para mudar em cada orçamento.</p>
+              <div class="grid2">
+                ${f('validity', 'Validade (dias)', '15', 'text', 'inputmode="numeric" data-int')}
+                ${f('warranty', 'Garantia (dias)', '90', 'text', 'inputmode="numeric" data-int')}
+              </div>
+              <div class="field"><span class="lab">Pagamento</span><div class="seg" role="group" aria-label="Pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${s.payMode === k}">${l}</button>`).join('')}</div></div>
+              ${s.payMode === 'entrada' ? `<div class="field"><span class="lab">Entrada</span><div class="chips row5" role="group" aria-label="Entrada">${[30, 40, 50, 60, 70].map(n => `<button class="chip" data-ep="${n}" aria-pressed="${s.entryPct === n}">${n}%</button>`).join('')}</div></div>` : ''}
+              <div class="field"><label for="st-notes">Observações que sempre vão na proposta</label><textarea id="st-notes" data-set="notes" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.notes)}</textarea></div>`) },
+          { id: 'textos', titulo: 'Textos dos documentos', icone: ICONES_AJ.textos, resumo: S.textos, html: bloco('Textos dos documentos', `<p class="kf-ajuda">Saem em todos os orçamentos e relatórios. Deixe em branco para não usar.</p>
+              <div class="field"><label for="st-acceptText">Termo de aceite (acima da assinatura do orçamento)</label><textarea id="st-acceptText" data-set="acceptText">${esc(s.acceptText)}</textarea>
+                ${s.acceptText !== ACCEPT_DEFAULT ? '<button class="linkish" data-reset="acceptText">Voltar ao texto sugerido</button>' : ''}</div>
+              <div class="field"><label for="st-warrantyTerms">Condições da garantia</label><textarea id="st-warrantyTerms" data-set="warrantyTerms">${esc(s.warrantyTerms)}</textarea>
+                ${s.warrantyTerms !== WARRANTY_DEFAULT ? '<button class="linkish" data-reset="warrantyTerms">Voltar ao texto sugerido</button>' : ''}</div>`) },
+        ],
+      })}
     </main>`;
   },
   bind(v) {
-    v.addEventListener('input', () => setTimeout(() => paintSums(v, settingsSums()), 300));
-    v.addEventListener('click', e => { if (e.target.closest('[data-kf="tema"]')) setTimeout(() => paintSums(v, settingsSums()), 0); });
+    KitFacil.ajustes.ligar(v);
+    v.addEventListener('input', () => setTimeout(pintarResumos, 300));
+    // as guias com texto longo crescem conforme o conteúdo quando são abertas
+    v.addEventListener('click', e => { if (e.target.closest('[data-kf-aj-ir]')) requestAnimationFrame(() => $$('textarea', v).forEach(autoGrow)); });
     let t;
     $$('[data-set]', v).forEach(i => {
       const save = () => {
@@ -3158,7 +3167,7 @@ VIEWS.settings = {
         const k = i.dataset.set;
         if (k === 'pix' && settings.pix) { settings.pix = normPixKey(settings.pix); i.value = settings.pix; }
         if (k === 'phone') i.value = fmtPhone(settings.phone);
-        saveSettings(); toast('Salvo.');
+        saveSettings(); pintarResumos(); toast('Salvo.');
       });
     });
     $$('[data-pm]', v).forEach(b => b.onclick = () => { settings.payMode = b.dataset.pm; saveSettings(); rerender(); });
@@ -3172,26 +3181,6 @@ VIEWS.settings = {
       catch { toast('Não foi possível abrir essa imagem.'); }
     });
     $('[data-logo-rm]', v)?.addEventListener('click', () => { settings.logo = ''; saveSettings(); rerender(); });
-    $('[data-export]', v).onclick = async () => {
-      const data = JSON.stringify({ app: 'eletrica-facil', v: 2, at: Date.now(), settings, prices, quotes: quotes.filter(q => !q.example) });
-      await saveFile(`eletrica-facil-copia-${new Date().toISOString().slice(0, 10)}.json`, new Blob([data], { type: 'application/json' }));
-    };
-    const imp = $('#st-import', v);
-    $('[data-import]', v).onclick = () => imp.click();
-    imp.addEventListener('change', async () => {
-      const file = imp.files[0]; imp.value = ''; if (!file) return;
-      try {
-        const j = JSON.parse(await file.text());
-        if (j.app !== 'eletrica-facil') throw new Error('arquivo');
-        const data = j.v >= 2 ? { settings: j.settings || {}, prices: j.prices || seedPrices(), quotes: (j.quotes || []).map(fixQuote) } : fromV1(j.catalog, j.bills, j.draft);
-        confirmSheet('Importar cópia?', `O arquivo tem ${plural(data.quotes.length, 'orçamento', 'orçamentos')} e ${plural(data.prices.length, 'preço', 'preços')}. Os dados deste aparelho${syncOn() ? ' e dos outros aparelhos conectados' : ''} serão substituídos.`, 'Importar', () => {
-          settings = { ...DEF, ...data.settings }; prices = data.prices; quotes = data.quotes.map(fixQuote);
-          settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
-          saveSettings(); savePrices(); saveQuotes(); rerender(); toast('Cópia importada.');
-        });
-      } catch { toast('Esse arquivo não é uma cópia do Elétrica Fácil.'); }
-    });
-    $('[data-install]', v)?.addEventListener('click', async () => { const e = installEvt; installEvt = null; if (e) { e.prompt(); try { await e.userChoice; } catch {} } rerender(); });
   },
 };
 

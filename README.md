@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.5.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 2.6.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -16,7 +16,8 @@ Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fá
 - Envie a proposta em PDF (folha A4) ou pelo WhatsApp, com QR code do Pix da entrada
 - Acompanhe o que está aguardando resposta, aprovado e concluído; gere relatório técnico e recibo no fim do serviço
 - **Use em vários aparelhos (opcional):** orçamentos, preços e ajustes sincronizados, criptografados, num gist secreto da sua conta GitHub
-- **Avalie o app e relate problemas** em Ajustes → Ajude a melhorar
+- **Avalie o app e relate problemas** pelo balão no alto da tela (ou em Ajustes → Avaliação e feedback)
+- **Nuvem no alto da tela:** mostra se os dados estão sincronizados, sincronizando, pendentes, com erro ou sem internet
 - Tema claro, escuro ou automático; funciona sem internet depois da primeira visita
 
 ## Como usar
@@ -27,7 +28,7 @@ Abra o endereço em qualquer navegador, no celular, no tablet ou no computador. 
 - **Android:** no Chrome, menu **⋮ → Instalar app**
 - **Computador:** ícone de instalar na barra de endereço do Chrome ou do Edge
 
-Sem a sincronização, os dados ficam só no aparelho; ative em **Ajustes → Usar em vários aparelhos**.
+Sem a sincronização, os dados ficam só no aparelho; toque na **nuvem** no alto da tela (ou vá em **Ajustes → Sincronização e armazenamento**).
 
 ## Onde ficam os dados
 
@@ -39,7 +40,7 @@ Sem a sincronização, os dados ficam só no aparelho; ative em **Ajustes → Us
 | Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback` |
 
 O app guarda dados pessoais dos clientes de quem usa (nome, telefone, endereço, CPF ou CNPJ).
-A janela **Ajustes → Ajude a melhorar → Sobre e privacidade** explica isso para quem usa o app.
+A guia **Ajustes → Privacidade e segurança** explica isso para quem usa o app.
 
 ## Para desenvolver
 
@@ -57,12 +58,22 @@ npm run verificar                 # padrão do Projeto Integrador, segredos e ve
 Os testes simulam o GitHub (sincronização) e o Firebase (avaliações); nada toca nos dados reais.
 O modo sem internet (service worker) só funciona em `https`, ou seja, no endereço publicado.
 
+## Interface
+
+Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
+
+- **Alto da tela, à direita:** Ajustes, nuvem da sincronização e balão de avaliação, nessa ordem. No orçamento e na
+  proposta, só a nuvem e o balão (o Voltar e o menu do orçamento ficam à esquerda deles)
+- **Navegação:** Orçamentos e Preços na barra de baixo (celular e tablet) ou no menu lateral (computador, a partir de 1024 px)
+- **Ajustes:** as oito guias comuns e as guias próprias **Pix**, **Veículo e deslocamento**, **Adicionais**,
+  **Orçamento novo** e **Textos dos documentos**. "Seus dados na proposta" (nome, contato, CPF ou CNPJ e logotipo) fica em Conta e perfil.
+
 ## Estrutura
 
 | Arquivo | Conteúdo |
 |---|---|
 | `index.html` | o app inteiro: estrutura, estilo e código |
-| `comum/` | **Kit Fácil**: avaliação, Sobre e privacidade, tema, motor de sincronização e o padrão do projeto. Igual nos três apps: não edite só aqui |
+| `comum/` | **Kit Fácil**: sistema de design comum, barra superior, Ajustes, avaliação, sincronização e o padrão do projeto. Igual nos três apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
 | `tests/` | testes do app |
 
