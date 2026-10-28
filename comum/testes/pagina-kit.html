@@ -7,33 +7,37 @@
 <title>Teste do Kit Fácil</title>
 <link rel="stylesheet" href="../kit-facil.css">
 <style>
-/* página usada só pelos testes automáticos (comum/testes/kit.test.mjs) */
-:root{--kf-bg:#F4F4F1;--kf-surface:#fff;--kf-surface-2:#EDEDE8;--kf-line:#D8D6CE;--kf-ink:#16150F;--kf-muted:#5E5C54;--kf-accent:#1D5A3B;--kf-accent-ink:#fff;--kf-accent-soft:#DCEBE1}
-:root[data-theme="dark"]{--kf-bg:#111;--kf-surface:#1B1B1B;--kf-ink:#EEE}
-body{font-family:system-ui,sans-serif;margin:0;padding:16px;background:var(--kf-bg);color:var(--kf-ink)}
-.caixa{display:flex;flex-direction:column;gap:12px;max-width:560px;margin:0 auto 24px}
+/* página usada só pelos testes automáticos (comum/testes/kit.test.mjs): um app mínimo com a moldura do kit */
+:root{--kf-bg:#F4F4F1;--kf-surface:#fff;--kf-surface-2:#EDEDE8;--kf-line:#D8D6CE;--kf-line-2:#C9C6BC;--kf-ink:#16150F;--kf-muted:#5E5C54;--kf-accent:#1D5A3B;--kf-accent-ink:#fff;--kf-accent-soft:#DCEBE1;--kf-accent-texto:#1D5A3B;--kf-col:900px}
+:root[data-theme="dark"]{--kf-bg:#111;--kf-surface:#1B1B1B;--kf-surface-2:#232323;--kf-line:#333;--kf-ink:#EEE;--kf-muted:#AAA;--kf-accent:#46A272;--kf-accent-ink:#06120B;--kf-accent-soft:#1C3A2A;--kf-accent-texto:#6FC696}
+body{font-family:var(--kf-font);margin:0;background:var(--kf-bg);color:var(--kf-ink)}
+main{max-width:900px;margin:0 auto;padding:8px 16px calc(var(--kf-nav-h) + 40px)}
+@media (min-width:1024px){main{padding-bottom:40px}}
+.marca-ic{background:var(--kf-accent);color:#fff}
 </style>
 </head>
-<body>
-<main class="caixa">
-  <h1>Página de teste do Kit Fácil</h1>
-  <p>Usada pelos testes automáticos. Não faz parte do app.</p>
-  <section class="caixa" id="ajuda"></section>
-  <section class="caixa" id="tema"></section>
-  <section class="caixa" id="sync"></section>
-  <ul id="notas"></ul>
-</main>
+<body class="kf-casca">
+<header class="kf-barra" id="barra"><div class="kf-barra-in"><div class="kf-marca"><span class="kf-marca-ic marca-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/></svg></span><span class="kf-marca-nome">Teste</span></div><div id="topo"></div></div></header>
+<aside class="kf-trilho" aria-label="Seções"><div class="kf-marca"><span class="kf-marca-ic marca-ic"></span><span class="kf-marca-nome">Teste</span></div>
+  <button class="kf-trilho-it" data-ir="inicio">Início</button><button class="kf-trilho-it" data-ir="notas">Notas</button></aside>
+<main id="main"></main>
+<nav class="kf-nav" aria-label="Seções"><div class="kf-nav-in">
+  <button class="kf-nav-it" data-ir="inicio"><span class="kf-nav-ic"></span><span class="kf-nav-l">Início</span></button>
+  <button class="kf-nav-it" data-ir="notas"><span class="kf-nav-ic"></span><span class="kf-nav-l">Notas</span></button></div></nav>
 <script src="../kit-facil.js"></script>
 <script>
 'use strict';
 const app = new URLSearchParams(location.search).get('app') || 'conta-facil';
 const fam = KitFacil.FAMILIA.find(f => f.app === app) || KitFacil.FAMILIA[0];
-KitFacil.iniciar({ app: fam.app, nome: fam.nome, versao: '0.0.0-teste', resumo: 'Página de teste do kit.', icone: '../../icons/icon-192.png',
-  tela: () => 'teste', privacidade: ['As notas de teste ficam guardadas neste aparelho.'], exemploDados: 'as notas de teste' });
-KitFacil.tema.iniciar({ chave: 'teste.pref', cores: { claro: '#F4F4F1', escuro: '#111111' } });
+const CH = 'teste.' + fam.app + '.';
+let tela = 'inicio';
+KitFacil.iniciar({ app: fam.app, nome: fam.nome, versao: '0.0.0-teste', resumo: 'Página de teste do kit.', icone: '../../icons/icon-192.png', prefixo: CH,
+  tela: () => tela, privacidade: ['As notas de teste ficam guardadas neste aparelho.'], exemploDados: 'as notas de teste',
+  abrirAjustes: () => ir('ajustes'), emAjustes: () => tela === 'ajustes',
+  copia: { descricao: 'Baixe um arquivo com as notas.', baixar: () => KitFacil.copia.baixar({ notas }, 1), restaurar: async f => { const j = await KitFacil.copia.ler(f); if (j) { notas = j.dados.notas; guardar(); carimbar(); desenhar(); KitFacil.avisar('Cópia restaurada.'); } else KitFacil.avisar('Esse arquivo não é uma cópia.'); } } });
+KitFacil.tema.iniciar({ chave: CH + 'pref', cores: { claro: '#F4F4F1', escuro: '#111111' } });
 
 /* mini app: uma lista de notas sincronizada pelo motor do kit, com a mesma regra dos apps (a alteração mais recente vence) */
-const CH = 'teste.' + fam.app + '.';
 let notas = JSON.parse(localStorage.getItem(CH + 'notas') || '[]');
 let SNAP = new Map(notas.map(n => [n.id, JSON.stringify(n)]));
 function guardar() { localStorage.setItem(CH + 'notas', JSON.stringify(notas)); }
@@ -59,26 +63,42 @@ function aplicar(R) {
   guardar(); SNAP = new Map(notas.map(n => [n.id, JSON.stringify(n)])); SY.salvar();
   return antes !== KitFacil.canon(notas);
 }
+function ir(t) {
+  if (t === tela && t !== 'ajustes') return;
+  if (t === 'ajustes') history.pushState({ tela: t }, ''); else history.replaceState({ tela: t }, '');
+  tela = t; desenhar();
+}
+window.addEventListener('popstate', () => { const t = (history.state && history.state.tela) || 'inicio'; if (t !== tela) { tela = t; desenhar(); } });
+document.addEventListener('click', e => { const b = e.target.closest('[data-ir]'); if (b) ir(b.dataset.ir); });
 function desenhar() {
-  document.getElementById('ajuda').innerHTML = KitFacil.ajudaHTML();
-  document.getElementById('tema').innerHTML = KitFacil.tema.seletorHTML();
-  document.getElementById('sync').innerHTML = SY.cartaoHTML();
-  document.getElementById('notas').innerHTML = notas.map(n => `<li data-id="${KitFacil.esc(n.id)}">${KitFacil.esc(n.t)}</li>`).join('');
+  document.querySelectorAll('[data-ir]').forEach(b => b.setAttribute('aria-current', b.dataset.ir === tela ? 'page' : 'false'));
+  const m = document.getElementById('main');
+  if (tela === 'ajustes') {
+    m.innerHTML = KitFacil.ajustes.html({
+      extras: { conta: '<div class="kf-bloco" id="extra-conta"><h3>Perfil do teste</h3><p class="kf-ajuda">Conteúdo do app.</p></div>' },
+      produto: [{ id: 'notas', titulo: 'Notas', icone: '<path d="M6 4h12v16H6z"/>', resumo: `${notas.length} notas`, html: '<div class="kf-bloco"><h3>Preferências das notas</h3><label class="kf-check"><input type="checkbox" id="prod-opcao"><span>Opção do produto</span></label></div>' }],
+    });
+    KitFacil.ajustes.ligar(m);
+  } else m.innerHTML = `<h1>${tela === 'inicio' ? 'Início' : 'Notas'}</h1><ul id="notas">${notas.map(n => `<li data-id="${KitFacil.esc(n.id)}">${KitFacil.esc(n.t)}</li>`).join('')}</ul>`;
+  KitFacil.topo.atualizar();
 }
 const SY = KitFacil.sync.criar({ app: fam.app, nome: fam.nome, chave: CH + 'sync', dados: 'as notas de teste',
   carimbar, aplicar, pacote: () => ({ notas, st: SY.estado.st, del: SY.estado.del }),
   mesmo: (a, r) => KitFacil.canon(a) === KitFacil.canon({ notas: r.notas, st: r.st, del: r.del }),
-  redesenhar: desenhar, aoEstado: s => { document.body.dataset.sync = s; } });
+  redesenhar: desenhar });
 window.T = {
-  SY,
+  SY, ir,
   notas: () => notas.map(n => n.t).sort(),
   add(t) { notas.push({ id: KitFacil.novoId(), t }); guardar(); carimbar(); SY.agendar(50); desenhar(); },
+  addLento(t) { notas.push({ id: KitFacil.novoId(), t }); guardar(); carimbar(); SY.agendar(60000); },
   editar(t, novo) { const n = notas.find(x => x.t === t); if (n) { n.t = novo; guardar(); carimbar(); SY.agendar(50); desenhar(); } },
   remover(t) { notas = notas.filter(x => x.t !== t); guardar(); carimbar(); SY.agendar(50); desenhar(); },
 };
+document.getElementById('topo').innerHTML = KitFacil.topo.html({ ajustes: true });
+history.replaceState({ tela: 'inicio' }, '');
 desenhar();
 const link = SY.tokenDoLink();
-if (link) history.replaceState(null, '', location.pathname + location.search);
+if (link) history.replaceState({ tela: 'inicio' }, '', location.pathname + location.search);
 SY.iniciar({ token: link, textoConfirmar: 'As notas deste aparelho se juntam às da nuvem.' });
 </script>
 </body>

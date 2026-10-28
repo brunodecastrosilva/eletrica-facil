@@ -3,15 +3,16 @@
    outras duas e rode `npm run verificar` em cada repositório (o MANIFESTO.json acusa cópias diferentes).
    Sem dependências e sem etapa de build: script clássico que cria window.KitFacil.
 
-   O que tem aqui:
-   - avaliação e feedback (mesmos campos em todos os apps, envio com fila para quando estiver sem internet)
-   - Sobre e privacidade (versão, onde ficam os dados, outros apps)
-   - tema claro, escuro ou automático
+   O que tem aqui (veja comum/PADRAO.md):
+   - área superior direita padronizada: Ajustes, nuvem (estado real da sincronização) e balão (avaliação e feedback)
+   - avaliação e feedback: escolha entre "Avaliar o app" e "Relatar um problema", com os mesmos componentes
+   - tela de Ajustes em guias: as guias comuns, sempre na mesma ordem, e as guias próprias de cada app
+   - tema claro, escuro ou automático; instalar; cópia de segurança; armazenamento; apagar dados do aparelho
    - sincronização entre aparelhos por um gist secreto e criptografado na conta GitHub do usuário
-   - janelas (diálogos) acessíveis, avisos e cópia de segurança em arquivo */
+   - janelas (diálogos) acessíveis e avisos */
 (function (global) {
   'use strict';
-  const VERSAO = '1.0.0';
+  const VERSAO = '2.0.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -34,6 +35,7 @@
   const canon = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
   const pad = n => String(n).padStart(2, '0');
   const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
+  const maiuscula = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   function novoId() {
     try { if (crypto.randomUUID) return crypto.randomUUID(); } catch {}
     const b = crypto.getRandomValues(new Uint8Array(16));
@@ -41,38 +43,74 @@
   }
   const instalado = () => { try { return navigator.standalone === true || matchMedia('(display-mode: standalone)').matches; } catch { return false; } };
   const ehIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  function haQuanto(ts) {
+    const m = Math.round((Date.now() - ts) / 6e4);
+    if (m < 1) return 'agora mesmo';
+    if (m < 60) return `há ${m} min`;
+    const d = new Date(ts), hm = `${pad(d.getHours())}h${pad(d.getMinutes())}`;
+    return d.toDateString() === new Date().toDateString() ? `hoje às ${hm}` : `em ${pad(d.getDate())}/${pad(d.getMonth() + 1)} às ${hm}`;
+  }
 
+  /* ================= ícones comuns (mesmo traço, 24 × 24) ================= */
   const svg = p => `<svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+  const P = {
+    nuvem: '<path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.1 4.75 4.75 0 0 0 7 18.5z"/>',
+    balao: '<path d="M20 15.5a2 2 0 0 1-2 2H8.5L4 21V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/><path d="M8.5 9h7M8.5 12.5h4.5"/>',
+    ajustes: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+    pessoa: '<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.8-3.6 3.9-5.8 7.5-5.8s6.7 2.2 7.5 5.8"/>',
+    aparencia: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/>',
+    preferencias: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 3.6 5.2 3.6 8.5s-1.2 6.1-3.6 8.5c-2.4-2.4-3.6-5.2-3.6-8.5s1.2-6.1 3.6-8.5z"/>',
+    sino: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
+    escudo: '<path d="M12 3 5 6v5.5c0 4.3 3 7.6 7 9.5 4-1.9 7-5.2 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.1"/>',
+  };
   const IC = {
     x: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
     estrela: '<svg class="kf-i kf-estrela" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.2 2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>',
     check: svg('<path d="m5 12.5 4.5 4.5L19 7.5"/>'),
-    nuvem: svg('<path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.1 4.75 4.75 0 0 0 7 18.5z"/>'),
+    nuvem: svg(P.nuvem),
+    balao: svg(P.balao),
+    msg: svg(P.balao),
+    ajustes: svg(P.ajustes),
+    pessoa: svg(P.pessoa),
+    aparencia: svg(P.aparencia),
+    preferencias: svg(P.preferencias),
+    sino: svg(P.sino),
+    escudo: svg(P.escudo),
+    info: svg(P.info),
     celular: svg('<rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/>'),
     copiar: svg('<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/>'),
     link: svg('<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>'),
     externo: svg('<path d="M14 4.5h5.5V10M19.5 4.5 11 13M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>'),
-    msg: svg('<path d="M20 15.5a2 2 0 0 1-2 2H8.5L4 21V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/><path d="M8.5 9h7M8.5 12.5h4.5"/>'),
     alerta: svg('<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.1"/>'),
-    info: svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.1"/>'),
     email: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>'),
+    chev: svg('<path d="m9.5 6 6 6-6 6"/>'),
+    voltar: svg('<path d="m14.5 6-6 6 6 6"/>'),
+    baixar: svg('<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/>'),
+    subir: svg('<path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9M5 19.5h14"/>'),
+    lixo: svg('<path d="M4.5 7h15M10 11v6M14 11v6"/><path d="M6.5 7l.8 12.2A1.5 1.5 0 0 0 8.8 20.5h6.4a1.5 1.5 0 0 0 1.5-1.3L17.5 7M9.5 7V4.5h5V7"/>'),
+    atualizar: svg('<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4.5v4.2h-4.2"/>'),
   };
 
   /* ================= configuração do app ================= */
   const C = {
-    app: '', nome: '', versao: '', resumo: '', icone: 'icons/icon-192.png',
+    app: '', nome: '', versao: '', resumo: '', icone: 'icons/icon-192.png', prefixo: '',
     tela: () => '', toast: null, privacidade: [], suporteEmail: '', feedback: { ...DESTINO_PADRAO },
+    exemploDados: '', abrirAjustes: null, emAjustes: null, copia: null, textos: {},
   };
   let iniciado = false;
   function iniciar(o) {
     Object.assign(C, o || {});
     C.feedback = { ...DESTINO_PADRAO, ...((o && o.feedback) || {}) };
+    C.textos = { ...((o && o.textos) || {}) };
+    if (!C.prefixo) C.prefixo = (FAMILIA.find(f => f.app === C.app) || {}).prefixo || (C.app + '.');
     if (!C.app || !C.nome || !C.versao) console.warn('KitFacil.iniciar: informe app, nome e versao');
     raiz();
     if (!iniciado) {
       iniciado = true;
       capturarErros();
-      window.addEventListener('online', () => fila.tentar());
+      window.addEventListener('online', () => { fila.tentar(); atualizarTopo(); });
+      window.addEventListener('offline', () => atualizarTopo());
       setTimeout(() => fila.tentar(), 4000);
     }
   }
@@ -118,13 +156,13 @@
     else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
   }
   /* abre uma janela: no celular sobe do pé da tela; em telas largas fica no centro */
-  function abrirDialogo({ titulo, corpo, pe = '', aoMontar, aoFechar, classe = '' }) {
+  function abrirDialogo({ titulo, corpo, pe = '', aoMontar, aoFechar, classe = '', nome = '' }) {
     const origem = atual ? atual.origem : document.activeElement;
     fecharDialogo(true);
     const idT = 'kf-t-' + Math.random().toString(36).slice(2, 8);
     const wrap = document.createElement('div');
     wrap.className = 'kf-ov';
-    wrap.innerHTML = `<div class="kf-dlg ${esc(classe)}" role="dialog" aria-modal="true" aria-labelledby="${idT}" tabindex="-1">
+    wrap.innerHTML = `<div class="kf-dlg ${esc(classe)}" role="dialog" aria-modal="true" aria-labelledby="${idT}" tabindex="-1"${nome ? ` data-kf-dialogo="${esc(nome)}"` : ''}>
       <div class="kf-dlg-cab"><h2 id="${idT}">${esc(titulo)}</h2><button type="button" class="kf-fechar" data-kf-fechar aria-label="Fechar">${IC.x}</button></div>
       <div class="kf-dlg-corpo">${corpo}</div>${pe ? `<div class="kf-dlg-pe">${pe}</div>` : ''}</div>`;
     raiz().appendChild(wrap);
@@ -139,7 +177,7 @@
       if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); fecharDialogo(); }
       else if (e.key === 'Tab') prender(e, dlg);
     });
-    atual = { el: wrap, dlg, origem, aoFechar };
+    atual = { el: wrap, dlg, origem, aoFechar, nome };
     if (aoMontar) aoMontar(dlg);
     const alvo = $('[autofocus]', dlg) || dlg;
     try { alvo.focus({ preventScroll: true }); } catch { alvo.focus(); }
@@ -185,9 +223,13 @@
   /* ================= avaliação e feedback ================= */
   /* Padrão do registro (esquema 1), igual em todos os apps:
      { esquema: 1, app, versao, nota: 0..5 (0 = sem nota), tipo: avaliacao|elogio|sugestao|critica|problema,
-       mensagem (até 2000), contato? (até 120), tela? (até 60), tecnico? { plataforma, navegador, tela, janela, instalado, idioma, erros },
-       enviadoEm (data e hora do aparelho) } */
-  const TIPOS = [['elogio', 'Elogio'], ['sugestao', 'Sugestão'], ['critica', 'Crítica'], ['problema', 'Problema']];
+       mensagem (até 2000), contato? (até 120), tela? (até 60),
+       categoria? (só em problema: funcionamento|erro|dados|tela|outro), gravidade? (só em problema: baixa|media|alta),
+       tecnico? { plataforma, navegador, tela, janela, instalado, idioma, erros }, enviadoEm (data e hora do aparelho) } */
+  const COMENTARIOS = [['elogio', 'Elogio'], ['sugestao', 'Sugestão'], ['critica', 'Crítica']];
+  const CATEGORIAS = [['funcionamento', 'Algo não funciona'], ['erro', 'Erro ou travamento'], ['dados', 'Dados ou sincronização'], ['tela', 'Tela ou texto'], ['outro', 'Outro']];
+  const GRAVIDADES = [['baixa', 'Incomoda, mas dá para usar'], ['media', 'Atrapalha o uso'], ['alta', 'Impede o uso']];
+  const TIPO_TXT = { avaliacao: 'Avaliação', elogio: 'Elogio', sugestao: 'Sugestão', critica: 'Crítica', problema: 'Problema' };
   const NOTAS = ['Muito ruim', 'Ruim', 'Regular', 'Bom', 'Ótimo'];
   const LIM = { mensagem: 2000, contato: 120, tela: 60 };
   const DICAS = {
@@ -195,7 +237,7 @@
     elogio: 'O que você mais gosta no app?',
     sugestao: 'Que função ou mudança ajudaria você?',
     critica: 'O que está atrapalhando ou incomodando?',
-    problema: 'O que aconteceu? Conte o que estava fazendo e o que esperava que acontecesse.',
+    problema: 'Conte o que você estava fazendo, o que esperava e o que aconteceu.',
   };
   function infoTecnica() {
     const ua = navigator.userAgent || '';
@@ -216,16 +258,29 @@
   }
   function camposFS(o) { const f = {}; for (const k of Object.keys(o)) if (o[k] !== undefined) f[k] = valorFS(o[k], k); return f; }
   /* envia um registro. Resposta: 'ok' (recebido), 'offline' (sem internet), 'recusado' (o banco não aceitou) ou 'falha' (tentar depois) */
-  async function enviarRegistro(reg) {
+  async function enviarUma(id, dados) {
     const d = C.feedback || {};
     if (d.tipo !== 'firestore' || !d.projeto || !d.chaveApi) return 'recusado';
-    const url = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(d.projeto)}/databases/(default)/documents/${encodeURIComponent(d.colecao || 'feedback')}?documentId=${encodeURIComponent(reg.id)}&key=${encodeURIComponent(d.chaveApi)}`;
+    const url = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(d.projeto)}/databases/(default)/documents/${encodeURIComponent(d.colecao || 'feedback')}?documentId=${encodeURIComponent(id)}&key=${encodeURIComponent(d.chaveApi)}`;
     let r;
-    try { r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: camposFS(reg.dados) }), cache: 'no-store' }); }
+    try { r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: camposFS(dados) }), cache: 'no-store' }); }
     catch { return navigator.onLine === false ? 'offline' : 'falha'; }
     if (r.ok || r.status === 409) return 'ok'; // 409: já tinha chegado numa tentativa anterior
     if (r.status === 400 || r.status === 401 || r.status === 403 || r.status === 404) return 'recusado';
     return 'falha';
+  }
+  /* registro no formato da regra anterior (sem categoria e gravidade): os dois vão no começo da mensagem */
+  function semCamposNovos(dados) {
+    const { categoria, gravidade, ...resto } = dados;
+    const partes = [categoria && `Categoria: ${(CATEGORIAS.find(c => c[0] === categoria) || [, categoria])[1]}`, gravidade && `Gravidade: ${(GRAVIDADES.find(g => g[0] === gravidade) || [, gravidade])[1]}`].filter(Boolean);
+    resto.mensagem = (`[${partes.join(' · ')}] ` + (resto.mensagem || '')).slice(0, LIM.mensagem);
+    return resto;
+  }
+  async function enviarRegistro(reg) {
+    const r = await enviarUma(reg.id, reg.dados);
+    // banco com a regra anterior (ainda sem categoria e gravidade): manda de novo no formato antigo, sem perder nada
+    if (r === 'recusado' && (reg.dados.categoria || reg.dados.gravidade)) return enviarUma(reg.id, semCamposNovos(reg.dados));
+    return r;
   }
   /* fila neste aparelho: o que não saiu é reenviado sozinho quando a conexão volta */
   const fila = {
@@ -252,36 +307,58 @@
       } finally { this.ocupada = false; }
     },
   };
-  const textoPendentes = n => n ? `${plural(n, 'mensagem guardada', 'mensagens guardadas')} neste aparelho, à espera de envio.` : '';
+  const textoPendentes = n => n ? `${plural(n, 'mensagem guardada', 'mensagens guardadas')} neste aparelho, à espera de envio. O app envia sozinho quando conseguir.` : '';
   function pintarPendentes() {
     const n = fila.quantos();
     $$('[data-kf-pendentes]').forEach(el => { el.textContent = textoPendentes(n); el.hidden = !n; });
+    $$('[data-kf="feedback"]').forEach(b => b.classList.toggle('kf-com-pendente', !!n));
+    resumoAjustes('feedback', resumoFeedback());
   }
+  const resumoFeedback = () => fila.quantos() ? plural(fila.quantos(), 'mensagem à espera de envio', 'mensagens à espera de envio') : 'Avaliar o app ou relatar um problema';
   function textoDoRegistro(dados) {
-    const linhas = [`${C.nome} ${C.versao}`, `Tipo: ${(TIPOS.find(t => t[0] === dados.tipo) || ['', 'Avaliação'])[1]}`];
+    const linhas = [`${C.nome} ${C.versao}`, `Tipo: ${TIPO_TXT[dados.tipo] || 'Avaliação'}`];
     if (dados.nota) linhas.push(`Nota: ${dados.nota} de 5 (${NOTAS[dados.nota - 1]})`);
+    if (dados.categoria) linhas.push(`Categoria: ${(CATEGORIAS.find(c => c[0] === dados.categoria) || [, ''])[1]}`);
+    if (dados.gravidade) linhas.push(`Gravidade: ${(GRAVIDADES.find(g => g[0] === dados.gravidade) || [, ''])[1]}`);
     if (dados.mensagem) linhas.push('', dados.mensagem);
     if (dados.contato) linhas.push('', `Contato: ${dados.contato}`);
     if (dados.tecnico) linhas.push('', `Aparelho: ${dados.tecnico.plataforma}, ${dados.tecnico.navegador}, tela ${dados.tecnico.tela}${dados.tecnico.instalado ? ', app instalado' : ''}`);
     return linhas.join('\n');
   }
+  /* as duas opções do balão: os mesmos botões aparecem na guia "Avaliação e feedback" dos Ajustes */
+  function escolhasHTML() {
+    return `<div class="kf-escolhas">
+        <button type="button" class="kf-escolha" data-kf="avaliar"><span class="kf-escolha-ic">${IC.estrela}</span><span class="kf-escolha-tx"><b>Avaliar o app</b><small>Dê uma nota de 1 a 5 e, se quiser, deixe um comentário.</small></span>${IC.chev}</button>
+        <button type="button" class="kf-escolha" data-kf="problema"><span class="kf-escolha-ic">${IC.alerta}</span><span class="kf-escolha-tx"><b>Relatar um problema</b><small>Conte o que deu errado para a gente corrigir.</small></span>${IC.chev}</button>
+      </div>
+      <p class="kf-ajuda" data-kf-pendentes aria-live="polite"${fila.quantos() ? '' : ' hidden'}>${textoPendentes(fila.quantos())}</p>`;
+  }
+  function abrirEscolhaFeedback() {
+    abrirDialogo({ titulo: 'Avaliação e feedback', classe: 'kf-curto', nome: 'feedback',
+      corpo: `<p class="kf-texto">Sua mensagem vai direto para quem faz o ${esc(C.nome)}.</p>${escolhasHTML()}`,
+      pe: `<button type="button" class="kf-btn kf-sec" data-kf-fechar>Fechar</button>` });
+  }
+  const opcoesHTML = (nome, lista, marcado = '') => `<div class="kf-opcoes">${lista.map(([k, l]) => `<label class="kf-opcao"><input type="radio" name="${nome}" value="${k}"${k === marcado ? ' checked' : ''}><span>${esc(l)}</span></label>`).join('')}</div>`;
+  /* Os dois formulários usam os mesmos componentes e a mesma ordem: classificação, texto, contato, informações técnicas.
+     Muda só o objetivo: a avaliação pede a nota; o relato pede a descrição e, se a pessoa quiser, categoria e gravidade. */
   function abrirFeedback(opcoes = {}) {
-    const tipo0 = TIPOS.some(t => t[0] === opcoes.tipo) ? opcoes.tipo : '';
-    const titulo = tipo0 === 'problema' ? 'Relatar um problema' : `Avaliar o ${C.nome}`;
-    const corpo = `<form class="kf-form" id="kf-form" novalidate>
-      <p class="kf-texto">${tipo0 === 'problema' ? `Conte o que deu errado no ${esc(C.nome)}. Quanto mais detalhes, mais rápido dá para corrigir.` : `Sua opinião ajuda a melhorar o ${esc(C.nome)}. Leva menos de um minuto.`}</p>
-      <fieldset class="kf-campo">
-        <legend class="kf-rotulo">Como está sendo usar o app?${tipo0 === 'problema' ? ' <span class="kf-opcional">(opcional)</span>' : ''}</legend>
-        <div class="kf-estrelas">${NOTAS.map((n, i) => `<input type="radio" name="kf-nota" id="kf-n${i + 1}" value="${i + 1}" class="kf-so-leitor"><label for="kf-n${i + 1}" title="${n}"><span class="kf-so-leitor">${i + 1} de 5, ${n}</span>${IC.estrela}</label>`).join('')}</div>
-        <span class="kf-ajuda" data-kf-nota-txt aria-live="polite">Toque numa estrela para dar sua nota.</span>
-      </fieldset>
-      <fieldset class="kf-campo">
-        <legend class="kf-rotulo">Sobre o que você quer falar?</legend>
-        <div class="kf-opcoes">${TIPOS.map(([k, l]) => `<label class="kf-opcao"><input type="radio" name="kf-tipo" value="${k}"${k === tipo0 ? ' checked' : ''}><span>${l}</span></label>`).join('')}</div>
-      </fieldset>
+    const modo = opcoes.tipo === 'problema' ? 'problema' : opcoes.tipo === 'avaliar' || opcoes.tipo === 'avaliacao' ? 'avaliar' : '';
+    if (!modo) return abrirEscolhaFeedback();
+    const problema = modo === 'problema';
+    const titulo = problema ? 'Relatar um problema' : `Avaliar o ${C.nome}`;
+    const classificacao = problema
+      ? `<fieldset class="kf-campo"><legend class="kf-rotulo">Que tipo de problema? <span class="kf-opcional">(opcional)</span></legend>${opcoesHTML('kf-categoria', CATEGORIAS)}</fieldset>
+         <fieldset class="kf-campo"><legend class="kf-rotulo">Quanto atrapalha? <span class="kf-opcional">(opcional)</span></legend>${opcoesHTML('kf-gravidade', GRAVIDADES)}</fieldset>`
+      : `<fieldset class="kf-campo"><legend class="kf-rotulo">Sua nota para o app</legend>
+          <div class="kf-estrelas">${NOTAS.map((n, i) => `<input type="radio" name="kf-nota" id="kf-n${i + 1}" value="${i + 1}" class="kf-so-leitor"><label for="kf-n${i + 1}" title="${n}"><span class="kf-so-leitor">${i + 1} de 5, ${n}</span>${IC.estrela}</label>`).join('')}</div>
+          <span class="kf-ajuda" data-kf-nota-txt aria-live="polite">Toque numa estrela para dar sua nota.</span></fieldset>
+         <fieldset class="kf-campo"><legend class="kf-rotulo">Seu comentário é… <span class="kf-opcional">(opcional)</span></legend>${opcoesHTML('kf-tipo', COMENTARIOS)}</fieldset>`;
+    const corpo = `<form class="kf-form" id="kf-form" data-kf-modo="${modo}" novalidate>
+      <p class="kf-texto">${problema ? `Conte o que deu errado no ${esc(C.nome)}. Quanto mais detalhes, mais rápido dá para corrigir.` : `Sua opinião ajuda a melhorar o ${esc(C.nome)}. Leva menos de um minuto.`}</p>
+      ${classificacao}
       <div class="kf-campo">
-        <label class="kf-rotulo" for="kf-msg">Sua mensagem</label>
-        <textarea id="kf-msg" class="kf-entrada" rows="4" maxlength="${LIM.mensagem}" placeholder="${esc(DICAS[tipo0])}"></textarea>
+        <label class="kf-rotulo" for="kf-msg">${problema ? 'O que aconteceu?' : 'Comentário <span class="kf-opcional">(opcional)</span>'}</label>
+        <textarea id="kf-msg" class="kf-entrada" rows="4" maxlength="${LIM.mensagem}" placeholder="${esc(DICAS[problema ? 'problema' : ''])}"${problema ? ' aria-required="true"' : ''}></textarea>
         <span class="kf-ajuda kf-contador" data-kf-cont aria-live="polite">0 de ${LIM.mensagem} caracteres</span>
       </div>
       <div class="kf-campo">
@@ -289,32 +366,37 @@
         <input id="kf-contato" class="kf-entrada" type="text" maxlength="${LIM.contato}" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="E-mail ou WhatsApp">
         <span class="kf-ajuda">Preencha só se quiser resposta.</span>
       </div>
-      <label class="kf-check"><input type="checkbox" id="kf-tec" checked><span>Enviar informações técnicas: versão do app, tipo de aparelho, navegador e tamanho da tela${tipo0 === 'problema' ? ', e os últimos erros do app' : ''}. Ajudam a resolver problemas.</span></label>
+      <label class="kf-check"><input type="checkbox" id="kf-tec"${problema ? ' checked' : ''}><span>Enviar informações técnicas: versão do app, tipo de aparelho, navegador e tamanho da tela${problema ? ', e os últimos erros do app' : ''}. Ajudam a resolver problemas.</span></label>
       <details class="kf-det"><summary>O que é enviado e para onde</summary>
-        <p class="kf-ajuda">A nota, o tipo, a mensagem, o contato (se você preencher), a versão do app e a tela em que você está, com as informações técnicas se a opção acima estiver marcada. Tudo vai para o banco de dados do projeto no Firebase (Google), usado só para melhorar os apps. Não enviamos seus dados do app, como ${esc(C.exemploDados || 'os registros que você guarda nele')}.</p></details>
+        <p class="kf-ajuda">${problema ? 'A categoria e a gravidade (se você escolher), a descrição' : 'A nota, o tipo de comentário (se você escolher), o comentário'}, o contato (se você preencher), o app, a versão e a tela em que você está, com as informações técnicas se a opção acima estiver marcada. Tudo vai para o banco de dados do projeto no Firebase (Google), usado só para melhorar os apps. Não enviamos seus dados do app, como ${esc(C.exemploDados || 'os registros que você guarda nele')}.</p></details>
       <p class="kf-erro-form" data-kf-erro role="alert" hidden></p>
     </form>`;
-    abrirDialogo({ titulo, corpo, classe: 'kf-feedback',
-      pe: `<button type="button" class="kf-btn kf-sec" data-kf-fechar>Cancelar</button><button type="submit" form="kf-form" class="kf-btn kf-pri" data-kf-enviar>Enviar</button>`,
+    abrirDialogo({ titulo, corpo, classe: 'kf-feedback', nome: modo,
+      pe: `<button type="button" class="kf-btn kf-sec" data-kf-voltar-fb>Voltar</button><button type="submit" form="kf-form" class="kf-btn kf-pri" data-kf-enviar>Enviar</button>`,
       aoMontar: d => {
         const form = $('#kf-form', d), msg = $('#kf-msg', d), cont = $('[data-kf-cont]', d), notaTxt = $('[data-kf-nota-txt]', d), erro = $('[data-kf-erro]', d);
-        const nota = () => +((($('input[name="kf-nota"]:checked', d) || {}).value) || 0);
-        const tipo = () => (($('input[name="kf-tipo"]:checked', d) || {}).value) || '';
+        const valor = n => (($(`input[name="${n}"]:checked`, d) || {}).value) || '';
+        const nota = () => +(valor('kf-nota') || 0);
         const pintar = () => {
-          const n = nota();
-          $$('.kf-estrelas label', d).forEach((l, i) => l.classList.toggle('kf-on', i < n));
-          notaTxt.textContent = n ? `${n} de 5: ${NOTAS[n - 1]}` : 'Toque numa estrela para dar sua nota.';
-          msg.placeholder = DICAS[tipo()] || DICAS[''];
+          if (!problema) {
+            const n = nota();
+            $$('.kf-estrelas label', d).forEach((l, i) => l.classList.toggle('kf-on', i < n));
+            notaTxt.textContent = n ? `${n} de 5: ${NOTAS[n - 1]}` : 'Toque numa estrela para dar sua nota.';
+            msg.placeholder = DICAS[valor('kf-tipo')] || DICAS[''];
+          }
           erro.hidden = true;
         };
-        d.addEventListener('change', e => { if (e.target.name === 'kf-nota' || e.target.name === 'kf-tipo') pintar(); });
+        $('[data-kf-voltar-fb]', d).onclick = () => abrirEscolhaFeedback();
+        d.addEventListener('change', e => { if (/^kf-(nota|tipo|categoria|gravidade)$/.test(e.target.name)) pintar(); });
         msg.addEventListener('input', () => { cont.textContent = `${msg.value.length} de ${LIM.mensagem} caracteres`; erro.hidden = true; });
         form.addEventListener('submit', async e => {
           e.preventDefault();
-          const n = nota(), t = tipo(), texto = msg.value.trim(), contato = $('#kf-contato', d).value.trim();
-          const falta = !n && !texto ? 'Dê uma nota ou escreva uma mensagem.' : (t && t !== 'elogio' && !texto) ? 'Escreva uma mensagem contando os detalhes.' : '';
-          if (falta) { erro.textContent = falta; erro.hidden = false; (texto ? $('input[name="kf-nota"]', d) : msg).focus(); return; }
-          const dados = { esquema: 1, app: C.app, versao: String(C.versao).slice(0, 20), nota: n, tipo: t || 'avaliacao', mensagem: texto.slice(0, LIM.mensagem), enviadoEm: new Date().toISOString() };
+          const n = nota(), texto = msg.value.trim(), contato = $('#kf-contato', d).value.trim();
+          const falta = problema ? (!texto ? 'Conte o que aconteceu.' : '') : (!n ? 'Toque numa estrela para dar sua nota.' : '');
+          if (falta) { erro.textContent = falta; erro.hidden = false; (problema ? msg : $('input[name="kf-nota"]', d)).focus(); return; }
+          const dados = { esquema: 1, app: C.app, versao: String(C.versao).slice(0, 20), nota: problema ? 0 : n, tipo: problema ? 'problema' : (valor('kf-tipo') || 'avaliacao'), mensagem: texto.slice(0, LIM.mensagem), enviadoEm: new Date().toISOString() };
+          if (problema && valor('kf-categoria')) dados.categoria = valor('kf-categoria');
+          if (problema && valor('kf-gravidade')) dados.gravidade = valor('kf-gravidade');
           if (contato) dados.contato = contato.slice(0, LIM.contato);
           let tela = ''; try { tela = String(C.tela() || ''); } catch {}
           if (tela) dados.tela = tela.slice(0, LIM.tela);
@@ -331,17 +413,17 @@
   function resultadoFeedback(r, dados) {
     const ok = r === 'ok';
     const corpo = ok
-      ? `<div class="kf-fim"><span class="kf-fim-ic kf-ok">${IC.check}</span><p class="kf-texto"><b>Obrigado! Recebemos sua mensagem.</b></p><p class="kf-texto">${dados.contato ? 'Se precisar, respondemos no contato que você deixou.' : 'Ela vai ajudar a decidir as próximas melhorias.'}</p></div>`
+      ? `<div class="kf-fim"><span class="kf-fim-ic kf-ok">${IC.check}</span><p class="kf-texto"><b>Obrigado! Recebemos sua mensagem.</b></p><p class="kf-texto">${dados.contato ? 'Se precisar, respondemos no contato que você deixou.' : dados.tipo === 'problema' ? 'Ela vai ajudar a corrigir o problema.' : 'Ela vai ajudar a decidir as próximas melhorias.'}</p></div>`
       : `<div class="kf-fim"><span class="kf-fim-ic kf-alerta">${r === 'offline' ? IC.nuvem : IC.alerta}</span>
           <p class="kf-texto"><b>${r === 'offline' ? 'Você está sem internet.' : 'Não foi possível enviar agora.'}</b></p>
-          <p class="kf-texto">A mensagem ficou guardada neste aparelho e o app envia sozinho ${r === 'offline' ? 'quando a conexão voltar' : 'numa próxima tentativa'}.</p></div>`;
+          <p class="kf-texto">A mensagem ficou guardada neste aparelho e o app envia sozinho ${r === 'offline' ? 'quando a conexão voltar' : 'numa próxima tentativa'}.${C.suporteEmail ? ' Se preferir, mande por e-mail.' : ' Se preferir, copie o texto e mande por outro meio.'}</p></div>`;
     const pe = ok ? `<button type="button" class="kf-btn kf-pri" data-kf-fechar autofocus>Fechar</button>`
       : `<button type="button" class="kf-btn kf-sec" data-kf-copiar>${IC.copiar}Copiar mensagem</button>${C.suporteEmail ? `<a class="kf-btn kf-sec" href="mailto:${esc(C.suporteEmail)}?subject=${encodeURIComponent(C.nome + ' ' + C.versao)}&body=${encodeURIComponent(textoDoRegistro(dados))}">${IC.email}Enviar por e-mail</a>` : ''}<button type="button" class="kf-btn kf-pri" data-kf-fechar autofocus>Fechar</button>`;
-    abrirDialogo({ titulo: ok ? 'Mensagem enviada' : 'Mensagem guardada', corpo, pe, classe: 'kf-curto',
+    abrirDialogo({ titulo: ok ? 'Mensagem enviada' : 'Mensagem guardada', corpo, pe, classe: 'kf-curto', nome: 'feedback-resultado',
       aoMontar: d => { const c = $('[data-kf-copiar]', d); if (c) c.onclick = () => copiar(textoDoRegistro(dados), 'Mensagem copiada.'); } });
   }
 
-  /* ================= Sobre e privacidade ================= */
+  /* ================= Sobre o aplicativo e privacidade ================= */
   function irmaos() {
     // os apps ficam lado a lado no mesmo endereço: …github.io/conta-facil/, …/eletrica-facil/, …/estudo-facil/
     const partes = location.pathname.split('/');
@@ -353,33 +435,31 @@
   function itensPrivacidade() {
     const l = [...(C.privacidade || [])];
     l.push('Sincronização entre aparelhos (opcional): quando você liga, os dados vão para um gist secreto da sua conta GitHub, criptografados neste aparelho (AES-256) com uma chave que sai do seu código de acesso. Só os seus aparelhos conseguem ler.');
-    l.push('Avaliações (opcional): só o que você escreve no formulário de avaliação, com a nota, a versão do app e, se você permitir, informações técnicas do aparelho, vai para o banco de dados do projeto no Firebase (Google). O contato só vai se você preencher.');
+    l.push('Avaliações e relatos de problema (opcionais): só o que você escreve no formulário, com o app, a versão e, se você permitir, informações técnicas do aparelho, vai para o banco de dados do projeto no Firebase (Google). O contato só vai se você preencher.');
     l.push('Sem anúncios, sem rastreamento de uso e sem venda de dados.');
     return l;
   }
-  function abrirSobre() {
+  function sobreHTML() {
     const outros = irmaos();
-    const corpo = `<div class="kf-sobre-cab"><img src="${esc(C.icone)}" alt="" width="56" height="56"><div><b>${esc(C.nome)}</b><span>Versão ${esc(C.versao)}</span></div></div>
+    return `<div class="kf-sobre-cab"><img src="${esc(C.icone)}" alt="" width="56" height="56"><div><b>${esc(C.nome)}</b><span>Versão ${esc(C.versao)}</span></div></div>
       ${C.resumo ? `<p class="kf-texto">${esc(C.resumo)}</p>` : ''}
-      <div class="kf-aviso kf-alerta">${IC.info}<p><b>Versão em testes.</b> O app ainda está em desenvolvimento: telas e funções podem mudar. Guarde uma cópia dos dados importantes.</p></div>
-      <h3 class="kf-sub">Seus dados e sua privacidade</h3>
-      <ul class="kf-lista">${itensPrivacidade().map(t => `<li>${esc(t)}</li>`).join('')}</ul>
-      <h3 class="kf-sub">Ajude a melhorar</h3>
-      <div class="kf-acoes"><button type="button" class="kf-btn kf-sec" data-kf="avaliar">${IC.estrela}Avaliar o app</button><button type="button" class="kf-btn kf-sec" data-kf="problema">${IC.alerta}Relatar um problema</button></div>
-      ${outros.length ? `<h3 class="kf-sub">Outros apps</h3><ul class="kf-apps">${outros.map(f => `<li><a href="${esc(f.url)}" target="_blank" rel="noopener"><b>${esc(f.nome)}</b><span>${esc(f.resumo)}</span>${IC.externo}</a></li>`).join('')}</ul>` : ''}
+      <div class="kf-aviso kf-alerta">${IC.info}<p><b>Versão em testes.</b> O app ainda está em desenvolvimento, sem cobrança: telas e funções podem mudar. Guarde uma cópia dos dados importantes.</p></div>
+      <h3 class="kf-sub">Termos e políticas</h3>
+      <dl class="kf-dados"><div><dt>Termos de uso</dt><dd>Ainda não publicados: o app está em fase de testes.</dd></div>
+        <div><dt>Privacidade</dt><dd>O resumo de como o app trata os seus dados está em <b>Privacidade e segurança</b>.</dd></div></dl>
+      ${outros.length ? `<h3 class="kf-sub">Outros apps da família</h3><ul class="kf-apps">${outros.map(f => `<li><a href="${esc(f.url)}" target="_blank" rel="noopener"><b>${esc(f.nome)}</b><span>${esc(f.resumo)}</span>${IC.externo}</a></li>`).join('')}</ul>` : ''}
       <p class="kf-rodape">${esc(C.nome)} ${esc(C.versao)} · Kit Fácil ${VERSAO}</p>`;
-    abrirDialogo({ titulo: 'Sobre e privacidade', corpo, pe: `<button type="button" class="kf-btn kf-pri" data-kf-fechar>Fechar</button>` });
   }
-  /* bloco pronto para a tela de Ajustes: avaliar, relatar problema e sobre */
-  function ajudaHTML() {
-    const n = fila.quantos();
-    return `<p class="kf-ajuda">Conte o que achou, sugira melhorias ou relate um problema. Sua mensagem vai direto para quem faz o app.</p>
-      <div class="kf-acoes"><button type="button" class="kf-btn kf-sec" data-kf="avaliar">${IC.estrela}Avaliar o app</button><button type="button" class="kf-btn kf-sec" data-kf="problema">${IC.alerta}Relatar um problema</button></div>
-      <p class="kf-ajuda" data-kf-pendentes aria-live="polite"${n ? '' : ' hidden'}>${textoPendentes(n)}</p>
-      <button type="button" class="kf-btn kf-link" data-kf="sobre">${IC.info}Sobre e privacidade</button>`;
+  function abrirSobre() {
+    abrirDialogo({ titulo: 'Sobre o aplicativo', nome: 'sobre',
+      corpo: `${sobreHTML()}<h3 class="kf-sub">Seus dados e sua privacidade</h3><ul class="kf-lista">${itensPrivacidade().map(t => `<li>${esc(t)}</li>`).join('')}</ul>`,
+      pe: `<button type="button" class="kf-btn kf-pri" data-kf-fechar>Fechar</button>` });
   }
+  /* bloco antigo da tela de Ajustes (mantido para quem ainda usa) */
+  function ajudaHTML() { return escolhasHTML(); }
 
   /* ================= tema: automático, claro ou escuro (vale só neste aparelho) ================= */
+  const TEMAS = [['auto', 'Automático'], ['claro', 'Claro'], ['escuro', 'Escuro']];
   const tema = {
     chave: '', cores: { claro: '#FFFFFF', escuro: '#000000' }, valor: 'auto', ouvindo: false,
     iniciar({ chave, cores }) {
@@ -405,9 +485,11 @@
       const p = ler(this.chave, {}) || {}; p.tema = v; gravar(this.chave, p);
       this.aplicar();
       $$('[data-kf="tema"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v)));
+      resumoAjustes('aparencia', this.nome());
     },
+    nome() { return { auto: 'Automático, segue o aparelho', claro: 'Claro', escuro: 'Escuro' }[this.valor]; },
     seletorHTML() {
-      return `<div class="kf-seg" role="group" aria-label="Tema">${[['auto', 'Automático'], ['claro', 'Claro'], ['escuro', 'Escuro']].map(([k, l]) => `<button type="button" data-kf="tema" data-v="${k}" aria-pressed="${this.valor === k}">${l}</button>`).join('')}</div>
+      return `<div class="kf-seg" role="group" aria-label="Tema">${TEMAS.map(([k, l]) => `<button type="button" data-kf="tema" data-v="${k}" aria-pressed="${this.valor === k}">${l}</button>`).join('')}</div>
         <p class="kf-ajuda">No automático, o app segue o tema do aparelho. Vale só para este aparelho.</p>`;
     },
   };
@@ -417,7 +499,7 @@
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); pedidoInstalar = e; $$('[data-kf-instalar-bloco]').forEach(el => { el.outerHTML = instalarHTML(); }); });
   function instalarHTML() {
     if (instalado()) return '';
-    return `<div data-kf-instalar-bloco>${pedidoInstalar ? `<p class="kf-ajuda">Abre como aplicativo, em tela cheia, e funciona sem internet.</p><button type="button" class="kf-btn kf-pri" data-kf="instalar">${IC.celular}Instalar o ${esc(C.nome)}</button>`
+    return `<div data-kf-instalar-bloco class="kf-pilha">${pedidoInstalar ? `<p class="kf-ajuda">Abre como aplicativo, em tela cheia, e funciona sem internet.</p><button type="button" class="kf-btn kf-pri" data-kf="instalar">${IC.celular}Instalar o ${esc(C.nome)}</button>`
       : ehIOS() ? `<p class="kf-ajuda">No iPhone, abra este endereço no Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</p>`
       : `<p class="kf-ajuda">Abre como aplicativo e funciona sem internet. No Android, use <b>Instalar app</b> no menu do Chrome. No computador, use o ícone de instalar na barra de endereço.</p>`}</div>`;
   }
@@ -428,7 +510,7 @@
     $$('[data-kf-instalar-bloco]').forEach(el => { el.outerHTML = instalarHTML(); });
   }
 
-  /* ================= cópia de segurança em arquivo ================= */
+  /* ================= cópia de segurança, armazenamento e apagar dados ================= */
   /* formato padrão: { formato: 'copia-facil', app, esquema, versaoApp, em, dados } */
   function copiaEnvelope(dados, esquema = 1) {
     return { formato: 'copia-facil', app: C.app, esquema, versaoApp: C.versao, em: new Date().toISOString(), dados };
@@ -447,31 +529,274 @@
     if (ok) avisar('Cópia baixada.');
     return ok;
   }
-  /* lê um arquivo de cópia padrão; devolve null se não for do app */
-  async function lerCopia(arquivo) {
+  /* lê um arquivo de cópia: devolve o envelope padrão, { antigo: json } para formatos antigos, ou null */
+  async function lerCopia(arquivo, { antigos = false } = {}) {
     let j; try { j = JSON.parse(await arquivo.text()); } catch { return null; }
-    if (!j || j.formato !== 'copia-facil' || j.app !== C.app || !j.dados) return null;
-    return j;
+    if (j && j.formato === 'copia-facil' && j.app === C.app && j.dados) return j;
+    return antigos && j && typeof j === 'object' ? { antigo: j } : null;
+  }
+  const prefixosApp = () => [C.prefixo, `kitfacil.${C.app}.`];
+  const prefixosFamilia = () => [...FAMILIA.map(f => f.prefixo), 'kitfacil.', C.prefixo];
+  function bytesDe(prefixos) {
+    let n = 0;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (prefixos.some(p => k.startsWith(p))) n += (k.length + (localStorage.getItem(k) || '').length) * 2;
+      }
+    } catch {}
+    return n;
+  }
+  const tamanho = n => n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1).replace('.', ',')} MB`;
+  function armazenamentoHTML() {
+    const meu = bytesDe(prefixosApp()), todos = bytesDe(prefixosFamilia());
+    return `<p class="kf-ajuda">O ${esc(C.nome)} ocupa <b>${tamanho(meu)}</b> neste navegador. Os apps do projeto dividem o mesmo espaço, de cerca de 5 MB, e juntos usam ${tamanho(todos)}.</p>`;
+  }
+  let apagando = false;
+  function apagarDadosDoAparelho() {
+    const S = syncAtual, nuvem = S && S.ligada();
+    confirmar({ titulo: 'Apagar os dados deste aparelho?', ok: 'Apagar deste aparelho', perigo: true,
+      texto: `Tudo o que o ${C.nome} guardou neste navegador sai daqui${C.exemploDados ? `: ${C.exemploDados}` : ''}, além das preferências. ${nuvem ? 'A cópia na nuvem e os outros aparelhos continuam como estão. Para trazer os dados de volta, conecte a sincronização de novo.' : 'Sem a sincronização ligada, isso não tem volta: baixe uma cópia de segurança antes, se quiser.'}`,
+      aoConfirmar: () => {
+        apagando = true;
+        if (S) S._parar();
+        const pre = prefixosApp(), chaves = [];
+        try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (pre.some(p => k.startsWith(p))) chaves.push(k); } } catch {}
+        chaves.forEach(k => { try { localStorage.removeItem(k); } catch {} });
+        try { sessionStorage.clear(); } catch {}
+        location.replace(location.pathname + location.search);
+      } });
+  }
+
+  /* ================= área superior direita: Ajustes, nuvem e balão ================= */
+  /* Estado da nuvem, igual nos três apps: nunca mostra "sincronizado" com alterações pendentes ou com falha. */
+  const ESTADOS = {
+    sincronizado: { rotulo: 'Sincronizado', selo: '<path d="M3.2 6.3 5.2 8.3 8.9 4.3"/>' },
+    sincronizando: { rotulo: 'Sincronizando', selo: '<path d="M9 6a3 3 0 1 1-.9-2.1"/><path d="M8.6 1.6v2.6H6"/>' },
+    pendente: { rotulo: 'Alterações a enviar', selo: '<path d="M6 9.2V3.4M3.7 5.6 6 3.3l2.3 2.3"/>' },
+    erro: { rotulo: 'Erro na sincronização', selo: '<path d="M6 2.8v4"/><path d="M6 9.1v.2"/>' },
+    offline: { rotulo: 'Sem internet', selo: '' },
+    desligada: { rotulo: 'Sincronização desligada', selo: '<path d="M3.3 6h5.4"/>' },
+  };
+  function estadoNuvem() {
+    const S = syncAtual;
+    if (!S || !S.ligada()) return 'desligada';
+    const s = S.situacao();
+    if (s === 'busy') return 'sincronizando';
+    if (s === 'offline' || navigator.onLine === false) return 'offline';
+    if (s === 'error') return 'erro';
+    if (S.estado.sujo || !S.estado.lastSync) return 'pendente';
+    return 'sincronizado';
+  }
+  function detalheNuvem(e = estadoNuvem()) {
+    const S = syncAtual;
+    return {
+      sincronizado: `Tudo sincronizado ${S && S.estado.lastSync ? haQuanto(S.estado.lastSync) : ''}. Os seus aparelhos têm os mesmos dados.`,
+      sincronizando: 'Enviando e recebendo as alterações dos seus aparelhos.',
+      pendente: 'Há alterações deste aparelho esperando para ir para a nuvem. Elas sobem em instantes.',
+      erro: S ? S.textoErro() : 'Não foi possível sincronizar.',
+      offline: 'Sem conexão com a internet. As alterações ficam guardadas neste aparelho e sobem quando a conexão voltar.',
+      desligada: `Os dados ficam só neste aparelho. Ligue a sincronização para usar o ${C.nome} no celular, no tablet e no computador.`,
+    }[e];
+  }
+  function iconeNuvem(e) {
+    const sel = ESTADOS[e].selo;
+    return `<svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true">${P.nuvem}${e === 'offline' ? '<path d="M3.5 3.5l17 17"/>' : ''}</svg>${sel ? `<span class="kf-selo" aria-hidden="true"><svg viewBox="0 0 12 12">${sel}</svg></span>` : ''}`;
+  }
+  function botaoNuvem() {
+    const e = estadoNuvem(), r = ESTADOS[e].rotulo;
+    return `<button type="button" class="kf-topo-btn kf-nuvem" data-kf="nuvem" data-kf-nuvem data-estado="${e}" aria-label="${esc(`Sincronização: ${r}. Ver detalhes`)}" title="${esc(`Sincronização: ${r}`)}">${iconeNuvem(e)}</button>`;
+  }
+  /* o = { ajustes: true } mostra o botão de Ajustes à esquerda da nuvem (nas telas principais) */
+  function topoHTML(o = {}) {
+    const em = !!(C.emAjustes && C.emAjustes());
+    return `<div class="kf-topo" data-kf-topo>${o.ajustes === false ? '' : `<button type="button" class="kf-topo-btn" data-kf="ajustes" aria-label="Ajustes" title="Ajustes" aria-current="${em ? 'page' : 'false'}">${IC.ajustes}</button>`}<span class="kf-topo-par">${botaoNuvem()}<button type="button" class="kf-topo-btn${fila.quantos() ? ' kf-com-pendente' : ''}" data-kf="feedback" aria-label="Avaliação e feedback" title="Avaliação e feedback">${IC.balao}<span class="kf-ponto" aria-hidden="true"></span></button></span></div>`;
+  }
+  function atualizarTopo() {
+    const e = estadoNuvem(), r = ESTADOS[e].rotulo, det = detalheNuvem(e);
+    $$('[data-kf-nuvem]').forEach(b => {
+      if (b.dataset.estado !== e) { b.dataset.estado = e; b.innerHTML = iconeNuvem(e); }
+      b.setAttribute('aria-label', `Sincronização: ${r}. Ver detalhes`); b.title = `Sincronização: ${r}`;
+    });
+    $$('[data-kf-sync-status]').forEach(el => { el.textContent = det; el.classList.toggle('kf-ruim', e === 'erro'); });
+    const ult = syncAtual && syncAtual.estado.lastSync ? maiuscula(haQuanto(syncAtual.estado.lastSync)) : 'Nunca';
+    $$('[data-kf-ultima]').forEach(el => { el.textContent = ult; });
+    $$('[data-kf-estado-nuvem]').forEach(el => { if (el.dataset.estado !== e || el.dataset.det !== det) el.outerHTML = estadoNuvemHTML(); });
+    const em = !!(C.emAjustes && C.emAjustes());
+    $$('[data-kf="ajustes"]').forEach(b => b.setAttribute('aria-current', em ? 'page' : 'false'));
+    $$('[data-kf="feedback"]').forEach(b => b.classList.toggle('kf-com-pendente', !!fila.quantos()));
+    resumoAjustes('sincronizacao', resumoSincronizacao());
+    resumoAjustes('conta', resumoConta());
+    if (atual && atual.nome === 'nuvem' && document.contains(atual.dlg)) pintarDialogoNuvem(atual.dlg);
+  }
+  function estadoNuvemHTML() {
+    const e = estadoNuvem(), det = detalheNuvem(e);
+    return `<div class="kf-estado" data-kf-estado-nuvem data-estado="${e}" data-det="${esc(det)}" role="status"><span class="kf-nuvem kf-estado-ic" data-estado="${e}">${iconeNuvem(e)}</span><div><b>${ESTADOS[e].rotulo}</b><p>${esc(det)}</p></div></div>`;
+  }
+  function pintarDialogoNuvem(d) {
+    const S = syncAtual, e = estadoNuvem(), est = S ? S.estado : {};
+    const linhas = [
+      ['Conta', S && S.ligada() ? `GitHub @${est.login}` : 'Não conectada'],
+      ['Última sincronização', est.lastSync ? maiuscula(haQuanto(est.lastSync)) : 'Nunca'],
+      ['Este aparelho', !S || !S.ligada() ? 'Os dados ficam só aqui' : est.sujo || !est.lastSync ? 'Tem alterações esperando envio' : 'Nada pendente'],
+    ];
+    $('.kf-dlg-corpo', d).innerHTML = `${estadoNuvemHTML()}<dl class="kf-dados">${linhas.map(([a, b]) => `<div><dt>${a}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl>`;
+    const principal = e === 'desligada' ? `<button type="button" class="kf-btn kf-pri" data-kf="sync-ativar">Ativar sincronização</button>`
+      : est.err === 'auth' ? `<button type="button" class="kf-btn kf-pri" data-kf="sync-ativar">Colar chave nova</button>`
+      : e === 'sincronizando' ? `<button type="button" class="kf-btn kf-pri" data-kf-fechar>Fechar</button>`
+      : `<button type="button" class="kf-btn kf-pri" data-kf="sync-agora">${e === 'erro' || e === 'offline' ? 'Tentar de novo' : 'Sincronizar agora'}</button>`;
+    const pe = $('.kf-dlg-pe', d), foco = pe.contains(document.activeElement);
+    pe.innerHTML = `<button type="button" class="kf-btn kf-sec" data-kf="ajustes-sincronizacao">Ver nos Ajustes</button>${principal}`;
+    if (foco) { const b = $('.kf-btn.kf-pri', pe); if (b) b.focus({ preventScroll: true }); }
+  }
+  function abrirDialogoNuvem() {
+    abrirDialogo({ titulo: 'Sincronização', classe: 'kf-curto', nome: 'nuvem', corpo: '', pe: '<span></span>', aoMontar: d => pintarDialogoNuvem(d) });
+  }
+  function irAjustes(secao) {
+    if (typeof C.abrirAjustes === 'function') C.abrirAjustes(secao);
+    if (secao) requestAnimationFrame(() => abrirSecao(secao));
+  }
+
+  /* ================= tela de Ajustes em guias ================= */
+  /* As guias comuns ficam sempre nesta ordem, com estes nomes e ícones, nos três apps.
+     As guias próprias de cada app vêm depois, num grupo com o nome do app. */
+  const SECOES = [
+    { id: 'conta', titulo: 'Conta e perfil', icone: P.pessoa },
+    { id: 'sincronizacao', titulo: 'Sincronização e armazenamento', icone: P.nuvem },
+    { id: 'aparencia', titulo: 'Aparência', icone: P.aparencia },
+    { id: 'preferencias', titulo: 'Preferências gerais', icone: P.preferencias },
+    { id: 'notificacoes', titulo: 'Notificações', icone: P.sino },
+    { id: 'privacidade', titulo: 'Privacidade e segurança', icone: P.escudo },
+    { id: 'feedback', titulo: 'Avaliação e feedback', icone: P.balao },
+    { id: 'sobre', titulo: 'Sobre o aplicativo', icone: P.info },
+  ];
+  const resumoConta = () => syncAtual && syncAtual.ligada() ? `Sem cadastro · GitHub @${syncAtual.estado.login}` : 'Sem cadastro · dados neste aparelho';
+  const resumoSincronizacao = () => syncAtual && syncAtual.ligada() ? ESTADOS[estadoNuvem()].rotulo : 'Desligada · dados só neste aparelho';
+  function resumoAjustes(id, texto) { if (texto == null) return; $$(`[data-kf-aj-resumo="${id}"]`).forEach(el => { el.textContent = texto; }); }
+  const bloco = (titulo, corpo, classe = '') => corpo ? `<div class="kf-bloco ${classe}">${titulo ? `<h3>${esc(titulo)}</h3>` : ''}${corpo}</div>` : '';
+  function conteudoComum(id, o) {
+    const S = syncAtual, ligada = S && S.ligada(), extra = (o.extras || {})[id] || '';
+    if (id === 'conta') return bloco('Sua conta', ligada
+      ? `<p class="kf-texto">Você usa o ${esc(C.nome)} sem criar cadastro. Para sincronizar os seus aparelhos, o app usa a sua conta GitHub <b>@${esc(S.estado.login)}</b>.</p><button type="button" class="kf-btn kf-sec" data-kf-aj-ir="sincronizacao">${IC.nuvem}Gerenciar a sincronização</button>`
+      : `<p class="kf-texto">Você usa o ${esc(C.nome)} sem criar cadastro: os dados ficam neste aparelho.</p><p class="kf-ajuda">Para usar o app em vários aparelhos, ligue a sincronização com a sua conta GitHub (gratuita).</p><button type="button" class="kf-btn kf-sec" data-kf="sync-ativar">${IC.nuvem}Ligar a sincronização</button>`) + extra;
+    if (id === 'sincronizacao') return bloco('Sincronização entre aparelhos', `${estadoNuvemHTML()}${S ? S.cartaoHTML() : ''}`)
+      + bloco('Armazenamento neste aparelho', armazenamentoHTML())
+      + (C.copia ? bloco('Cópia de segurança', `<p class="kf-ajuda">${esc(C.copia.descricao || 'Baixe um arquivo com os seus dados e guarde onde quiser.')} ${ligada ? 'Com a sincronização ligada, os dados já ficam na nuvem: a cópia é uma garantia extra.' : 'Sem a sincronização, os dados ficam só neste aparelho: guarde uma cópia de vez em quando.'}</p>
+          <div class="kf-acoes"><button type="button" class="kf-btn kf-sec" data-kf="copia-baixar">${IC.baixar}Baixar cópia</button><button type="button" class="kf-btn kf-sec" data-kf="copia-restaurar">${IC.subir}Restaurar cópia</button></div>
+          <input type="file" accept=".json,application/json" data-kf-copia-arquivo hidden aria-label="Arquivo da cópia de segurança">`) : '') + extra;
+    if (id === 'aparencia') return bloco('Tema', tema.seletorHTML()) + extra;
+    if (id === 'preferencias') {
+      let zona = ''; try { zona = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch {}
+      return bloco('Idioma e região', `<dl class="kf-dados"><div><dt>Idioma</dt><dd>Português (Brasil)</dd></div><div><dt>Moeda</dt><dd>Real (R$)</dd></div><div><dt>Data e hora</dt><dd>As do aparelho${zona ? ` (${esc(zona.replace(/_/g, ' '))})` : ''}</dd></div></dl><p class="kf-ajuda">Outros idiomas ainda não estão disponíveis.</p>`)
+        + bloco('Usar como aplicativo', instalarHTML() || `<p class="kf-ajuda">O ${esc(C.nome)} já está instalado neste aparelho e funciona sem internet.</p>`) + extra;
+    }
+    if (id === 'notificacoes') return bloco('Notificações', `<p class="kf-texto">${esc(C.textos.notificacoes || `O ${C.nome} não envia notificações para o aparelho. Os avisos aparecem na tela enquanto o app está aberto.`)}</p>`) + extra;
+    if (id === 'privacidade') return bloco('Seus dados', `<ul class="kf-lista">${itensPrivacidade().map(t => `<li>${esc(t)}</li>`).join('')}</ul>`)
+      + bloco('Segurança', ligada
+        ? `<p class="kf-ajuda">A chave da sincronização fica guardada só neste aparelho e dá acesso apenas aos gists da sua conta. Não envie a chave nem o link de outro aparelho para outras pessoas.</p><button type="button" class="kf-btn kf-sec" data-kf="sync-sair">Desconectar este aparelho</button>`
+        : `<p class="kf-ajuda">Nenhuma conta está conectada neste aparelho. Os dados não saem daqui, a não ser quando você compartilha um arquivo ou envia uma avaliação.</p>`)
+      + extra
+      + bloco('Apagar os dados deste aparelho', `<p class="kf-ajuda">Tira deste navegador tudo o que o ${esc(C.nome)} guardou. Útil antes de devolver ou emprestar o aparelho.</p><button type="button" class="kf-btn kf-perigo-sec" data-kf="apagar-aparelho">${IC.lixo}Apagar dados deste aparelho</button>`);
+    if (id === 'feedback') return bloco('', `<p class="kf-texto">Sua mensagem vai direto para quem faz o ${esc(C.nome)}. O balão no alto da tela abre as mesmas opções.</p>${escolhasHTML()}`) + extra;
+    if (id === 'sobre') return bloco('', sobreHTML()) + extra;
+    return extra;
+  }
+  function secaoAtiva() { const s = history.state; return s && typeof s.kfAj === 'string' ? s.kfAj : ''; }
+  /* o = { extras: { idDaGuia: html }, resumos: { idDaGuia: texto }, produto: [{ id, titulo, icone, resumo, html }] } */
+  function ajustesHTML(o = {}) {
+    const produto = (o.produto || []).filter(p => p && p.id && p.titulo);
+    const todas = [...SECOES, ...produto];
+    let ativa = secaoAtiva();
+    if (ativa && !todas.some(s => s.id === ativa)) ativa = '';
+    const resumos = { conta: resumoConta(), sincronizacao: resumoSincronizacao(), aparencia: tema.nome(), preferencias: 'Idioma, região e instalação',
+      notificacoes: 'Sem notificações no aparelho', privacidade: 'Seus dados, segurança e apagar dados', feedback: resumoFeedback(), sobre: `Versão ${C.versao}`, ...(o.resumos || {}) };
+    const item = s => `<li><button type="button" class="kf-aj-item" data-kf-aj-ir="${esc(s.id)}" aria-controls="kf-aj-${esc(s.id)}"${s.id === ativa ? ' aria-current="true"' : ''}>
+        <span class="kf-aj-ic"><svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true">${s.icone || P.ajustes}</svg></span>
+        <span class="kf-aj-tx"><b>${esc(s.titulo)}</b><small data-kf-aj-resumo="${esc(s.id)}">${esc(s.resumo != null ? s.resumo : resumos[s.id] || '')}</small></span>${IC.chev}</button></li>`;
+    const secao = (s, corpo) => `<section class="kf-aj-sec${s.id === ativa ? ' kf-aberta' : ''}" id="kf-aj-${esc(s.id)}" data-kf-aj-sec="${esc(s.id)}" aria-labelledby="kf-aj-t-${esc(s.id)}">
+        <div class="kf-aj-sec-h"><button type="button" class="kf-aj-voltar" data-kf-aj-voltar>${IC.voltar}Ajustes</button><h2 id="kf-aj-t-${esc(s.id)}" tabindex="-1">${esc(s.titulo)}</h2></div>
+        <div class="kf-aj-corpo">${corpo}</div></section>`;
+    return `<div class="kf-aj" data-kf-aj data-ativa="${esc(ativa)}">
+      <div class="kf-aj-grade">
+        <nav class="kf-aj-lista" aria-label="Guias dos Ajustes">
+          <h1 class="kf-aj-h">Ajustes</h1>
+          <p class="kf-aj-grupo" id="kf-aj-g1">Geral</p>
+          <ul aria-labelledby="kf-aj-g1">${SECOES.map(item).join('')}</ul>
+          ${produto.length ? `<p class="kf-aj-grupo" id="kf-aj-g2">${esc(C.nome)}</p><ul aria-labelledby="kf-aj-g2">${produto.map(item).join('')}</ul>` : ''}
+          <p class="kf-aj-versao">${esc(C.nome)} ${esc(C.versao)}</p>
+        </nav>
+        <div class="kf-aj-paineis">${SECOES.map(s => secao(s, conteudoComum(s.id, o))).join('')}${produto.map(p => secao(p, p.html || '')).join('')}</div>
+      </div></div>`;
+  }
+  const largo = root => root.getBoundingClientRect().width >= 720;
+  function marcarAjustes(root) {
+    const ativa = root.dataset.ativa || '';
+    const vis = ativa || (largo(root) ? (($('.kf-aj-sec', root) || {}).dataset || {}).kfAjSec : '');
+    $$('[data-kf-aj-ir]', root).forEach(b => { if (b.closest('.kf-aj-lista')) { if (b.dataset.kfAjIr === vis) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); } });
+    $$('.kf-aj-sec', root).forEach(s => s.classList.toggle('kf-aberta', s.dataset.kfAjSec === ativa));
+  }
+  function abrirSecao(id, { foco = true } = {}) {
+    const root = $('[data-kf-aj]');
+    if (!root || !$(`[data-kf-aj-sec="${CSS.escape(id)}"]`, root)) return false;
+    const muda = root.dataset.ativa !== id;
+    root.dataset.ativa = id;
+    marcarAjustes(root);
+    if (muda) {
+      const st = { ...(history.state || {}), kfAj: id };
+      if (largo(root)) { delete st.kfAjPush; history.replaceState(st, ''); }
+      else { st.kfAjPush = true; history.pushState(st, ''); }
+    }
+    const sec = $(`[data-kf-aj-sec="${CSS.escape(id)}"]`, root);
+    if (!largo(root)) window.scrollTo(0, 0);
+    else { const r = sec.getBoundingClientRect(); if (r.top < 0 || r.top > window.innerHeight * .6) sec.scrollIntoView({ block: 'start' }); }
+    if (foco) { const h = $('h2', sec); try { h.focus({ preventScroll: true }); } catch {} }
+    return true;
+  }
+  function voltarLista(root) {
+    const id = root.dataset.ativa;
+    if (history.state && history.state.kfAjPush) { history.back(); return; }
+    const st = { ...(history.state || {}) }; delete st.kfAj; delete st.kfAjPush;
+    history.replaceState(st, '');
+    root.dataset.ativa = ''; marcarAjustes(root); window.scrollTo(0, 0);
+    const b = $(`.kf-aj-lista [data-kf-aj-ir="${CSS.escape(id || '')}"]`, root); if (b) b.focus({ preventScroll: true });
+  }
+  window.addEventListener('popstate', () => {
+    const root = $('[data-kf-aj]'); if (!root) return;
+    const antes = root.dataset.ativa;
+    root.dataset.ativa = secaoAtiva(); marcarAjustes(root);
+    if (antes && !root.dataset.ativa) { const b = $(`.kf-aj-lista [data-kf-aj-ir="${CSS.escape(antes)}"]`, root); if (b) b.focus({ preventScroll: true }); }
+  });
+  window.addEventListener('resize', () => { const root = $('[data-kf-aj]'); if (root) marcarAjustes(root); });
+  /* depois de desenhar a tela de Ajustes, o app chama ajustes.ligar(raiz) */
+  function ligarAjustes(root = document) {
+    const r = root.matches && root.matches('[data-kf-aj]') ? root : $('[data-kf-aj]', root);
+    if (r) marcarAjustes(r);
   }
 
   /* ================= sincronização entre aparelhos ================= */
   /* Os dados vão para um gist secreto da conta GitHub do usuário, criptografados no aparelho (AES-GCM 256,
      chave derivada do código de acesso com PBKDF2). Cada app decide como junta os dados (função aplicar);
-     o kit cuida da conexão, da criptografia, do envio e dos textos. O formato do arquivo é o mesmo das versões
-     anteriores do Elétrica Fácil e do Estudo Fácil, então aparelhos com versões diferentes continuam se entendendo. */
+     o kit cuida da conexão, da criptografia, do envio, do estado da nuvem e dos textos. O formato do arquivo é o mesmo
+     das versões anteriores do Elétrica Fácil e do Estudo Fácil, então aparelhos com versões diferentes continuam se entendendo. */
   let syncAtual = null;
   function criarSync(cfg) {
     const ARQ = cfg.app + '.json';
     const TOKEN_URL = 'https://github.com/settings/tokens/new?scopes=gist&description=' + encodeURIComponent(cfg.nome);
-    const est = Object.assign({ token: '', gistId: '', login: '', lastSync: 0, err: '', st: {}, del: {}, tipOff: false }, ler(cfg.chave, {}) || {});
+    const est = Object.assign({ token: '', gistId: '', login: '', lastSync: 0, err: '', st: {}, del: {}, tipOff: false, sujo: 0 }, ler(cfg.chave, {}) || {});
     if (!est.st || typeof est.st !== 'object') est.st = {};
     if (!est.del || typeof est.del !== 'object') est.del = {};
     let timer = null, ocupado = null, deNovo = false, chaveC = null, pendente = false;
     let situacao = est.err ? (est.err === 'offline' ? 'offline' : 'error') : 'ok';
-    const ligada = () => !!est.token;
-    const salvar = () => gravar(cfg.chave, est);
+    const ligada = () => !!est.token && !apagando;
+    const salvar = () => { if (!apagando) gravar(cfg.chave, est); };
     const avisa = m => (cfg.toast || avisar)(m);
-    function agendar(ms = 2500) { if (!ligada()) return; clearTimeout(timer); timer = setTimeout(() => agora(), ms); }
+    /* o app chama agendar() a cada alteração: a nuvem passa a "pendente" até a próxima sincronização dar certo */
+    function agendar(ms = 2500) {
+      if (!ligada()) return;
+      est.sujo = Date.now(); salvar();
+      clearTimeout(timer); timer = setTimeout(() => agora(), ms);
+      atualizarTopo();
+    }
 
     const b64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
     const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -537,6 +862,7 @@
       if (ocupado) { deNovo = true; return ocupado; }
       clearTimeout(timer);
       if (cfg.carimbar) cfg.carimbar();
+      const inicio = Date.now();
       ocupado = (async () => {
         definirSituacao('busy');
         let mudou = false, ok = false;
@@ -556,9 +882,13 @@
           const saida = cfg.pacote();
           if (!remoto || !cfg.mesmo(saida, remoto)) await gravarRemoto(saida);
           est.lastSync = Date.now(); est.err = ''; ok = true;
+          // o que mudou durante a sincronização continua pendente para a próxima
+          if (est.sujo && est.sujo <= inicio) est.sujo = 0;
+          salvar();
           definirSituacao('ok');
         } catch (e) {
           est.err = e.code || 'http';
+          salvar();
           definirSituacao(est.err === 'offline' ? 'offline' : 'error');
           if (opts.manual) avisa(textoErro());
         }
@@ -578,26 +908,15 @@
     setInterval(() => { if (pendente && !estaOcupado()) aposRemoto(true); }, 1500);
     function textoErro() {
       return { offline: 'Sem internet agora. Sincroniza quando a conexão voltar.',
-        auth: 'A chave do GitHub não vale mais. Crie uma nova e cole em Ajustes, Sincronização.',
+        auth: 'A chave do GitHub não vale mais. Crie uma nova e cole em Ajustes, Sincronização e armazenamento.',
         scope: 'A chave do GitHub não tem a permissão gist. Crie outra marcando gist.' }[est.err] || 'Não foi possível sincronizar agora. Tente de novo em instantes.';
     }
-    function haQuanto(ts) {
-      const m = Math.round((Date.now() - ts) / 6e4);
-      if (m < 1) return 'agora mesmo';
-      if (m < 60) return `há ${m} min`;
-      const d = new Date(ts), hm = `${pad(d.getHours())}h${pad(d.getMinutes())}`;
-      return d.toDateString() === new Date().toDateString() ? `hoje às ${hm}` : `em ${pad(d.getDate())}/${pad(d.getMonth() + 1)} às ${hm}`;
-    }
-    function texto() {
-      if (situacao === 'busy') return 'Sincronizando…';
-      if (situacao !== 'ok') return textoErro();
-      return est.lastSync ? `Tudo sincronizado, ${haQuanto(est.lastSync)}.` : 'Conectado.';
-    }
-    const rotuloCurto = () => situacao === 'ok' ? 'Sincronizado' : situacao === 'busy' ? 'Sincronizando' : situacao === 'offline' ? 'Sem internet' : 'Sincronização parada';
+    function texto() { return detalheNuvem(); }
+    const rotuloCurto = () => ESTADOS[estadoNuvem()].rotulo;
     function definirSituacao(s) {
       situacao = s;
-      $$('[data-kf-sync-status]').forEach(el => { el.textContent = texto(); el.classList.toggle('kf-ruim', s === 'error'); });
-      if (cfg.aoEstado) { try { cfg.aoEstado(s); } catch (e) { console.warn(e); } }
+      if (cfg.aoEstado) { try { cfg.aoEstado(estadoNuvem()); } catch (e) { console.warn(e); } }
+      atualizarTopo();
     }
     /* chave já usada por outro app da família neste aparelho (os apps dividem o mesmo endereço) */
     function chaveIrma() {
@@ -625,25 +944,27 @@
       // trocar a chave na mesma conta mantém o histórico; outra conta começa do zero
       Object.assign(est, { token, login, err: '' }, mesma ? {} : { gistId: '', lastSync: 0 });
       chaveC = null; salvar();
+      atualizarTopo();
       const tinha = est.lastSync;
       const ok = await agora({ quiet: true });
       if (ok) avisa(tinha ? 'Chave atualizada.' : (cfg.textoLigada ? cfg.textoLigada() : 'Sincronização ligada. Seus aparelhos agora têm os mesmos dados.'));
       else avisa(textoErro());
       if (cfg.redesenhar) cfg.redesenhar();
+      atualizarTopo();
       return true;
     }
     function dialogoConectar() {
       const irma = !ligada() ? chaveIrma() : null;
-      abrirDialogo({ titulo: 'Usar em vários aparelhos', classe: 'kf-sync',
+      abrirDialogo({ titulo: 'Usar em vários aparelhos', classe: 'kf-sync', nome: 'conectar',
         corpo: `${irma ? `<div class="kf-aviso kf-ok">${IC.check}<div><p><b>Você já sincroniza o ${esc(irma.nome)} neste aparelho.</b> Dá para usar a mesma chave, da conta @${esc(irma.login)}. Os dados do ${esc(cfg.nome)} ficam num arquivo separado.</p><button type="button" class="kf-btn kf-pri kf-p" data-kf-irma>Usar a mesma chave</button></div></div>` : ''}
           <ol class="kf-passos">
             <li><b>Crie uma chave de acesso no GitHub</b><span>Na página que vai abrir, em <b>Expiration</b> escolha <b>No expiration</b>. Deixe marcada só a opção <b>gist</b> e toque em <b>Generate token</b>, no fim da página. Se ainda não tem conta no GitHub, crie uma (é gratuita).</span>
               <a class="kf-btn kf-sec kf-p" href="${TOKEN_URL}" target="_blank" rel="noopener">${IC.externo}Abrir o GitHub</a></li>
-            <li><b>Copie a chave e cole aqui</b><span>Ela começa com <b>ghp_</b>.</span>
+            <li><b>Copie a chave e cole aqui</b><span>Ela começa com <b>ghp_</b>. A mesma chave serve para os três apps do projeto.</span>
               <input id="kf-token" class="kf-entrada" type="text" placeholder="ghp_…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Chave do GitHub"></li>
             <li><b>Nos outros aparelhos</b><span>Depois de conectar, toque em <b>Outro aparelho</b> para mandar um link para você mesmo, ou cole a mesma chave.</span></li>
           </ol>
-          <p class="kf-ajuda">${esc(cfg.dados ? cfg.dados.charAt(0).toUpperCase() + cfg.dados.slice(1) : 'Os dados')} ficam num gist secreto da sua conta, criptografados com a sua chave. O gist não aparece no seu perfil e só os seus aparelhos conseguem ler.</p>`,
+          <p class="kf-ajuda">${esc(cfg.dados ? maiuscula(cfg.dados) : 'Os dados')} ficam num gist secreto da sua conta, criptografados com a sua chave. O gist não aparece no seu perfil e só os seus aparelhos conseguem ler.</p>`,
         pe: `<button type="button" class="kf-btn kf-sec" data-kf-fechar>Cancelar</button><button type="button" class="kf-btn kf-pri" data-kf-conectar>Conectar</button>`,
         aoMontar: d => {
           const bt = $('[data-kf-conectar]', d), inp = $('#kf-token', d);
@@ -659,10 +980,10 @@
     }
     function dialogoLink() {
       const link = `${location.origin}${location.pathname}#/conectar/${encodeURIComponent(est.token)}`;
-      abrirDialogo({ titulo: 'Conectar outro aparelho', classe: 'kf-curto',
+      abrirDialogo({ titulo: 'Conectar outro aparelho', classe: 'kf-curto', nome: 'link',
         corpo: `<p class="kf-texto">Mande este link para você mesmo e abra no outro aparelho. Ele entra com os mesmos dados.</p>
           <div class="kf-aviso kf-ruim">${IC.alerta}<p><b>O link dá acesso aos seus dados.</b> Não envie para outras pessoas.</p></div>
-          <p class="kf-ajuda">Se no outro aparelho o app estiver instalado na tela de início, abra o app, vá em Ajustes, Usar em vários aparelhos, e cole a chave.</p>`,
+          <p class="kf-ajuda">Se no outro aparelho o app estiver instalado na tela de início, abra o app, vá em Ajustes, Sincronização e armazenamento, e cole a chave.</p>`,
         pe: `<button type="button" class="kf-btn kf-sec" data-kf-chave>${IC.copiar}Copiar chave</button><button type="button" class="kf-btn kf-pri" data-kf-link>${IC.link}Enviar link</button>`,
         aoMontar: d => {
           $('[data-kf-chave]', d).onclick = () => copiar(est.token, 'Chave copiada.');
@@ -676,24 +997,25 @@
     function desconectar() {
       confirmar({ titulo: 'Desconectar este aparelho?', texto: 'Os dados continuam neste aparelho e na nuvem, mas as mudanças deixam de passar de um para o outro.', ok: 'Desconectar', perigo: true,
         aoConfirmar: () => {
-          Object.assign(est, { token: '', gistId: '', lastSync: 0, err: '' }); chaveC = null; salvar();
-          definirSituacao('ok');
+          Object.assign(est, { token: '', gistId: '', lastSync: 0, err: '', sujo: 0 }); chaveC = null; salvar();
+          situacao = 'ok';
           if (cfg.redesenhar) cfg.redesenhar();
+          atualizarTopo();
           avisa('Aparelho desconectado.');
         } });
     }
     function resumo() { return ligada() ? `Ligada · @${est.login}` : 'Desligada · use o app em vários aparelhos'; }
-    /* conteúdo do cartão de sincronização da tela de Ajustes (o app põe o título e a moldura) */
+    /* conteúdo do cartão de sincronização da tela de Ajustes (o kit põe o estado da nuvem antes dele) */
     function cartaoHTML() {
       if (!ligada()) return `<p class="kf-ajuda">Conecte sua conta GitHub e tenha ${esc(cfg.dados || 'os mesmos dados')} no celular, no tablet e no computador. O que você muda num aparelho aparece nos outros.</p>
         ${cfg.observacao ? `<p class="kf-ajuda">${esc(cfg.observacao)}</p>` : ''}
-        <p class="kf-ajuda">Sem a sincronização, os dados ficam só neste aparelho.</p>
         <button type="button" class="kf-btn kf-pri" data-kf="sync-ativar">${IC.nuvem}Ativar sincronização</button>`;
-      return `<p class="kf-ajuda">Conta GitHub <b>@${esc(est.login)}</b>${est.err === 'auth' ? ' · <b class="kf-ruim">parada</b>' : ''}.</p>
-        <p class="kf-ajuda${situacao === 'error' ? ' kf-ruim' : ''}" data-kf-sync-status aria-live="polite">${esc(texto())}</p>
+      return `<dl class="kf-dados"><div><dt>Conta</dt><dd>GitHub <b>@${esc(est.login)}</b>${est.err === 'auth' ? ' · <b class="kf-ruim">parada</b>' : ''}</dd></div>
+          <div><dt>Última sincronização</dt><dd data-kf-ultima>${est.lastSync ? esc(maiuscula(haQuanto(est.lastSync))) : 'Nunca'}</dd></div></dl>
+        <p class="kf-so-leitor" data-kf-sync-status aria-live="polite">${esc(texto())}</p>
         ${cfg.observacao ? `<p class="kf-ajuda">${esc(cfg.observacao)}</p>` : ''}
         ${est.err === 'auth' ? `<button type="button" class="kf-btn kf-pri" data-kf="sync-ativar">Colar chave nova</button>` : ''}
-        <div class="kf-acoes"><button type="button" class="kf-btn kf-sec" data-kf="sync-agora">${IC.nuvem}Sincronizar agora</button><button type="button" class="kf-btn kf-sec" data-kf="sync-link">${IC.celular}Outro aparelho</button></div>
+        <div class="kf-acoes"><button type="button" class="kf-btn kf-sec" data-kf="sync-agora">${IC.atualizar}Sincronizar agora</button><button type="button" class="kf-btn kf-sec" data-kf="sync-link">${IC.celular}Outro aparelho</button></div>
         <button type="button" class="kf-btn kf-link" data-kf="sync-sair">Desconectar este aparelho</button>`;
     }
     /* link "Conectar outro aparelho": a chave vem depois do #, que não sai do aparelho */
@@ -707,29 +1029,40 @@
       else if (token) avisa('Este aparelho já está conectado.');
       else if (ligada()) agora({ quiet: silencioso });
     }
+    function parar() { clearTimeout(timer); timer = null; }
     document.addEventListener('visibilitychange', () => {
       if (!ligada()) return;
       if (document.visibilityState === 'visible') { if (Date.now() - (est.lastSync || 0) > 10000) agora({ quiet: false }); }
       else if (timer) agora();
     });
     window.addEventListener('online', () => { if (ligada()) agora(); });
-    window.addEventListener('storage', e => { if (e.key === cfg.chave) { const n = ler(cfg.chave, {}) || {}; Object.assign(est, n); chaveC = null; } });
+    window.addEventListener('storage', e => { if (e.key === cfg.chave) { const n = ler(cfg.chave, {}) || {}; Object.assign(est, n); chaveC = null; atualizarTopo(); } });
     setInterval(() => { if (ligada() && document.visibilityState === 'visible' && !ocupado) agora(); }, 60000);
+    setInterval(() => { if ($('[data-kf-estado-nuvem]') || (atual && atual.nome === 'nuvem')) atualizarTopo(); }, 30000);
     const api = { estado: est, ligada, salvar, agendar, agora, situacao: () => situacao, texto, rotuloCurto, resumo, cartaoHTML,
-      dialogoConectar, dialogoLink, desconectar, conectar, tokenDoLink, iniciar: iniciarSync, textoErro };
+      dialogoConectar, dialogoLink, desconectar, conectar, tokenDoLink, iniciar: iniciarSync, textoErro, _parar: parar };
     syncAtual = api;
     return api;
   }
 
   /* ================= ações dos botões do kit (data-kf="…") ================= */
   document.addEventListener('click', e => {
-    const b = e.target.closest && e.target.closest('[data-kf]');
+    if (!e.target.closest) return;
+    const ir = e.target.closest('[data-kf-aj-ir]');
+    if (ir) { e.preventDefault(); abrirSecao(ir.dataset.kfAjIr); return; }
+    const vo = e.target.closest('[data-kf-aj-voltar]');
+    if (vo) { e.preventDefault(); const root = vo.closest('[data-kf-aj]'); if (root) voltarLista(root); return; }
+    const b = e.target.closest('[data-kf]');
     if (!b) return;
     const a = b.dataset.kf;
     const S = syncAtual;
     const acoes = {
-      avaliar: () => abrirFeedback(),
+      avaliar: () => abrirFeedback({ tipo: 'avaliar' }),
       problema: () => abrirFeedback({ tipo: 'problema' }),
+      feedback: () => abrirEscolhaFeedback(),
+      nuvem: () => abrirDialogoNuvem(),
+      ajustes: () => { if (typeof C.abrirAjustes === 'function') C.abrirAjustes(); },
+      'ajustes-sincronizacao': () => { fecharDialogo(true); irAjustes('sincronizacao'); },
       sobre: () => abrirSobre(),
       tema: () => tema.definir(b.dataset.v),
       instalar: () => instalar(),
@@ -737,22 +1070,38 @@
       'sync-agora': async () => { if (S && await S.agora({ manual: true, quiet: true })) avisar('Tudo sincronizado.'); },
       'sync-link': () => S && S.dialogoLink(),
       'sync-sair': () => S && S.desconectar(),
+      'copia-baixar': () => { if (C.copia && C.copia.baixar) C.copia.baixar(); },
+      // o ouvinte vai direto no campo: se o app redesenhar a tela enquanto o seletor de arquivos está aberto
+      // (no celular a página fica escondida), o campo antigo sai da página e o aviso não chegaria ao documento
+      'copia-restaurar': () => { const i = b.closest('.kf-bloco') && $('[data-kf-copia-arquivo]', b.closest('.kf-bloco')); if (i) { i.addEventListener('change', aoEscolherCopia); i.click(); } },
+      'apagar-aparelho': () => apagarDadosDoAparelho(),
     };
     if (!acoes[a]) return;
     e.preventDefault();
     acoes[a]();
   });
+  function aoEscolherCopia(e) {
+    if (e.kfCopia) return; // o mesmo aviso pode passar pelo campo e pelo documento
+    e.kfCopia = true;
+    const i = e.target, f = i.files && i.files[0]; i.value = '';
+    if (f && C.copia && C.copia.restaurar) C.copia.restaurar(f);
+  }
+  document.addEventListener('change', e => { const i = e.target; if (i && i.matches && i.matches('[data-kf-copia-arquivo]')) aoEscolherCopia(e); });
 
   global.KitFacil = Object.freeze({
-    VERSAO, FAMILIA, IC, iniciar, avisar, esc, canon, novoId,
+    VERSAO, FAMILIA, IC, iniciar, avisar, esc, canon, novoId, haQuanto,
     dialogo: { abrir: abrirDialogo, fechar: fecharDialogo, aberto: dialogoAberto, confirmar },
     copiar,
-    feedback: { abrir: abrirFeedback, pendentes: () => fila.quantos(), reenviar: () => fila.tentar(), _enviar: enviarRegistro, _fila: fila, _campos: camposFS },
+    feedback: { abrir: abrirFeedback, escolha: abrirEscolhaFeedback, pendentes: () => fila.quantos(), reenviar: () => fila.tentar(), _enviar: enviarRegistro, _fila: fila, _campos: camposFS, CATEGORIAS, GRAVIDADES },
     sobre: { abrir: abrirSobre },
     ajudaHTML,
+    topo: { html: topoHTML, atualizar: atualizarTopo, estado: estadoNuvem, ESTADOS },
+    nuvem: { abrir: abrirDialogoNuvem, estado: estadoNuvem, detalhe: detalheNuvem },
+    ajustes: { SECOES, html: ajustesHTML, ligar: ligarAjustes, abrir: abrirSecao, ir: irAjustes, resumo: resumoAjustes },
     tema,
     instalarHTML,
     copia: { envelope: copiaEnvelope, baixar: baixarCopia, ler: lerCopia },
+    armazenamento: { bytes: () => bytesDe(prefixosApp()), apagar: apagarDadosDoAparelho },
     sync: { criar: criarSync },
   });
 })(window);

@@ -3,91 +3,200 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
-import { preparar, aparelho, githubFalso, firestoreFalso, TOKEN_TESTE } from './ambiente.mjs';
+import { readFile } from 'node:fs/promises';
+import { preparar, aparelho, githubFalso, firestoreFalso, TOKEN_TESTE, conferirTopo, guiasAjustes, GUIAS_COMUNS, semRolagemLateral } from './ambiente.mjs';
 
 let amb;
 before(async () => { amb = await preparar(); });
 after(async () => { await amb?.encerrar(); });
 const pagina = () => `comum/testes/pagina-kit.html?app=${amb.app}`;
 const esperar = async (cond, ms = 8000, passo = 50) => { const fim = Date.now() + ms; while (Date.now() < fim) { if (await cond()) return true; await new Promise(r => setTimeout(r, passo)); } return false; };
+const estadoNuvem = p => p.getAttribute('[data-kf-nuvem]', 'data-estado');
+const CELULAR = { width: 390, height: 844 }, COMPUTADOR = { width: 1280, height: 860 };
 
-test('feedback: confere os campos, envia no formato da regra e agradece', async () => {
-  const fs = firestoreFalso();
-  const a = await aparelho(amb, { firestore: fs, caminho: pagina() });
+/* ---------------- área superior direita ---------------- */
+test('topo: Ajustes, nuvem e balão no canto superior direito, nessa ordem, no celular e no computador', async () => {
+  for (const viewport of [CELULAR, { width: 820, height: 1180 }, COMPUTADOR]) {
+    const a = await aparelho(amb, { viewport, caminho: pagina() });
+    const t = await conferirTopo(a.page);
+    assert.deepEqual(t.erros, [], `largura ${viewport.width}: ${t.erros.join('; ')}`);
+    assert.equal(t.estado, 'desligada');
+    assert.ok(await semRolagemLateral(a.page));
+    assert.deepEqual(a.erros, []);
+    await a.fechar();
+  }
+});
+
+test('nuvem: mostra o estado real — desligada, sincronizando, sincronizado, pendente, erro e sem internet', async () => {
+  const gh = githubFalso();
+  const a = await aparelho(amb, { github: gh, caminho: pagina() });
   const p = a.page;
-  await p.click('#ajuda [data-kf="avaliar"]');
-  const dlg = p.locator('.kf-dlg[role="dialog"]');
-  await dlg.waitFor();
-  assert.equal(await dlg.getAttribute('aria-modal'), 'true');
-  assert.match(await dlg.locator('h2').textContent(), /^Avaliar o /);
-  await p.click('[data-kf-enviar]');
-  assert.match(await p.textContent('[data-kf-erro]'), /nota ou escreva/);
-  await p.click('label[for="kf-n4"]');
-  assert.match(await p.textContent('[data-kf-nota-txt]'), /4 de 5: Bom/);
-  await p.click('.kf-opcao:has-text("Sugestão")');
-  await p.click('[data-kf-enviar]');
-  assert.match(await p.textContent('[data-kf-erro]'), /mensagem/);
-  await p.fill('#kf-msg', 'Poderia ter um modo para tablet na horizontal.');
-  assert.equal(await p.textContent('[data-kf-cont]'), `${'Poderia ter um modo para tablet na horizontal.'.length} de 2000 caracteres`);
-  await p.fill('#kf-contato', 'pessoa@exemplo.com');
-  await p.click('[data-kf-enviar]');
-  await p.locator('text=Recebemos sua mensagem').waitFor();
-  assert.equal(fs.estado.recusas.length, 0, 'a regra do Firestore recusou: ' + fs.estado.recusas.join(', '));
-  assert.equal(fs.estado.docs.size, 1);
-  const [doc] = [...fs.estado.docs.values()];
-  assert.match(doc.caminho, /\/projects\/[^/]+\/databases\/\(default\)\/documents\/feedback$/);
-  const d = doc.dados;
-  assert.equal(d.app, amb.app);
-  assert.equal(d.esquema.__int, 1);
-  assert.equal(d.nota.__int, 4);
-  assert.equal(d.tipo, 'sugestao');
-  assert.equal(d.mensagem, 'Poderia ter um modo para tablet na horizontal.');
-  assert.equal(d.contato, 'pessoa@exemplo.com');
-  assert.equal(d.tela, 'teste');
-  assert.equal(d.versao, '0.0.0-teste');
-  assert.ok(d.tecnico && d.tecnico.navegador && d.tecnico.janela === '390x844');
-  assert.equal(await p.evaluate(() => KitFacil.feedback.pendentes()), 0);
+  assert.equal(await estadoNuvem(p), 'desligada');
+  assert.match(await p.getAttribute('[data-kf-nuvem]', 'aria-label'), /Sincronização desligada/);
+  gh.estado.atraso = 600;
+  const conectando = p.evaluate(t => T.SY.conectar(t), TOKEN_TESTE);
+  assert.ok(await esperar(async () => (await estadoNuvem(p)) === 'sincronizando'), 'não mostrou "sincronizando"');
+  assert.equal(await conectando, true);
+  gh.estado.atraso = 0;
+  assert.equal(await estadoNuvem(p), 'sincronizado');
+  // alteração ainda não enviada: pendente (nunca "sincronizado")
+  await p.evaluate(() => T.addLento('café'));
+  assert.equal(await estadoNuvem(p), 'pendente');
+  assert.match(await p.getAttribute('[data-kf-nuvem]', 'aria-label'), /Alterações a enviar/);
+  await p.evaluate(() => T.SY.agora({ quiet: true }));
+  assert.equal(await estadoNuvem(p), 'sincronizado');
+  // falha do servidor: erro
+  gh.estado.falha = 500;
+  await p.evaluate(() => T.SY.agora({ quiet: true }));
+  assert.equal(await estadoNuvem(p), 'erro');
+  gh.estado.falha = 0;
+  // sem internet: offline, e a alteração feita sem conexão fica pendente para depois
+  gh.estado.fora = true;
+  await a.ctx.setOffline(true);
+  assert.ok(await esperar(async () => (await estadoNuvem(p)) === 'offline'));
+  await p.evaluate(() => T.add('pão'));
+  assert.ok(await esperar(async () => (await p.evaluate(() => T.SY.situacao())) === 'offline'));
+  assert.equal(await estadoNuvem(p), 'offline');
+  assert.ok(await p.evaluate(() => T.SY.estado.sujo > 0), 'a alteração feita sem internet deveria ficar pendente');
+  gh.estado.fora = false;
+  await a.ctx.setOffline(false);
+  assert.ok(await esperar(async () => (await estadoNuvem(p)) === 'sincronizado'), 'não voltou a sincronizar');
+  assert.equal(await p.evaluate(() => T.SY.estado.sujo), 0);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
 
-test('feedback: só a nota já vale, e sem informações técnicas se a pessoa desmarcar', async () => {
-  const fs = firestoreFalso();
-  const a = await aparelho(amb, { firestore: fs, caminho: pagina() });
+test('nuvem: tocar abre o detalhe com estado, conta, última sincronização e as ações; "Ver nos Ajustes" leva à guia', async () => {
+  const gh = githubFalso();
+  const a = await aparelho(amb, { github: gh, caminho: pagina() });
   const p = a.page;
-  await p.click('#ajuda [data-kf="avaliar"]');
-  await p.click('label[for="kf-n5"]');
-  await p.uncheck('#kf-tec');
-  await p.click('[data-kf-enviar]');
-  await p.locator('text=Recebemos sua mensagem').waitFor();
-  const [doc] = [...fs.estado.docs.values()];
-  assert.equal(doc.dados.tipo, 'avaliacao');
-  assert.equal(doc.dados.nota.__int, 5);
-  assert.equal(doc.dados.mensagem, '');
-  assert.equal('tecnico' in doc.dados, false);
-  assert.equal('contato' in doc.dados, false);
+  await p.click('[data-kf-nuvem]');
+  const dlg = p.locator('.kf-dlg[data-kf-dialogo="nuvem"]');
+  await dlg.waitFor();
+  assert.match(await dlg.textContent(), /Sincronização desligada[\s\S]*Não conectada[\s\S]*Nunca/);
+  await dlg.locator('[data-kf="sync-ativar"]').click();
+  await p.fill('#kf-token', TOKEN_TESTE);
+  await p.click('[data-kf-conectar]');
+  assert.ok(await esperar(async () => (await estadoNuvem(p)) === 'sincronizado'));
+  await p.click('[data-kf-nuvem]');
+  await dlg.waitFor();
+  const t = await dlg.textContent();
+  assert.match(t, /Sincronizado/); assert.match(t, /GitHub @pessoa-teste/); assert.match(t, /Nada pendente/);
+  assert.equal(await dlg.locator('[data-kf="sync-agora"]').count(), 1);
+  await dlg.locator('[data-kf="ajustes-sincronizacao"]').click();
+  assert.ok(await esperar(() => p.evaluate(() => document.querySelector('[data-kf-aj]')?.dataset.ativa === 'sincronizacao')));
+  assert.ok(await p.isVisible('#kf-aj-sincronizacao [data-kf-estado-nuvem]'));
   await a.fechar();
 });
 
-test('feedback: sem internet a mensagem fica guardada e sai sozinha quando a conexão volta', async () => {
+/* ---------------- avaliação e feedback ---------------- */
+test('balão: abre a escolha entre "Avaliar o app" e "Relatar um problema"', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.click('.kf-topo [data-kf="feedback"]');
+  const dlg = p.locator('.kf-dlg[data-kf-dialogo="feedback"]');
+  await dlg.waitFor();
+  assert.equal(await dlg.locator('h2').textContent(), 'Avaliação e feedback');
+  assert.deepEqual(await dlg.locator('.kf-escolha b').allTextContents(), ['Avaliar o app', 'Relatar um problema']);
+  await dlg.locator('[data-kf="problema"]').click();
+  await p.locator('.kf-dlg[data-kf-dialogo="problema"]').waitFor();
+  await p.click('[data-kf-voltar-fb]');
+  await p.locator('.kf-dlg[data-kf-dialogo="feedback"]').waitFor();
+  await a.fechar();
+});
+
+test('avaliar: a nota é obrigatória, o comentário é opcional e sai no formato da regra', async () => {
+  const fs = firestoreFalso();
+  const a = await aparelho(amb, { firestore: fs, caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => KitFacil.feedback.abrir({ tipo: 'avaliar' }));
+  await p.locator('.kf-dlg[data-kf-dialogo="avaliar"]').waitFor();
+  assert.match(await p.locator('.kf-dlg h2').textContent(), /^Avaliar o /);
+  assert.equal(await p.isChecked('#kf-tec'), false, 'na avaliação, as informações técnicas não vão sem a pessoa marcar');
+  await p.click('[data-kf-enviar]');
+  assert.match(await p.textContent('[data-kf-erro]'), /estrela/);
+  await p.click('label[for="kf-n4"]');
+  assert.match(await p.textContent('[data-kf-nota-txt]'), /4 de 5: Bom/);
+  await p.click('.kf-opcao:has-text("Sugestão")');
+  const texto = 'Poderia ter um modo para tablet na horizontal.';
+  await p.fill('#kf-msg', texto);
+  assert.equal(await p.textContent('[data-kf-cont]'), `${texto.length} de 2000 caracteres`);
+  await p.fill('#kf-contato', 'pessoa@exemplo.com');
+  await p.click('[data-kf-enviar]');
+  await p.locator('text=Recebemos sua mensagem').waitFor();
+  assert.deepEqual(fs.estado.recusas, []);
+  const [doc] = [...fs.estado.docs.values()];
+  assert.match(doc.caminho, /\/projects\/[^/]+\/databases\/\(default\)\/documents\/feedback$/);
+  const d = doc.dados;
+  assert.equal(d.app, amb.app); assert.equal(d.esquema.__int, 1); assert.equal(d.nota.__int, 4);
+  assert.equal(d.tipo, 'sugestao'); assert.equal(d.mensagem, texto); assert.equal(d.contato, 'pessoa@exemplo.com');
+  assert.equal(d.tela, 'inicio'); assert.equal(d.versao, '0.0.0-teste');
+  assert.equal('tecnico' in d, false); assert.equal('categoria' in d, false);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('relatar: a descrição é obrigatória; categoria, gravidade e informações técnicas vão juntas', async () => {
+  const fs = firestoreFalso();
+  const a = await aparelho(amb, { firestore: fs, caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => KitFacil.feedback.abrir({ tipo: 'problema' }));
+  await p.locator('.kf-dlg[data-kf-dialogo="problema"]').waitFor();
+  assert.equal(await p.locator('.kf-dlg h2').textContent(), 'Relatar um problema');
+  assert.equal(await p.isChecked('#kf-tec'), true);
+  await p.click('[data-kf-enviar]');
+  assert.match(await p.textContent('[data-kf-erro]'), /Conte o que aconteceu/);
+  await p.click('.kf-opcao:has-text("Dados ou sincronização")');
+  await p.click('.kf-opcao:has-text("Impede o uso")');
+  await p.fill('#kf-msg', 'Os orçamentos sumiram depois de sincronizar.');
+  await p.click('[data-kf-enviar]');
+  await p.locator('text=Recebemos sua mensagem').waitFor();
+  const [doc] = [...fs.estado.docs.values()];
+  const d = doc.dados;
+  assert.equal(d.tipo, 'problema'); assert.equal(d.nota.__int, 0);
+  assert.equal(d.categoria, 'dados'); assert.equal(d.gravidade, 'alta');
+  assert.ok(d.tecnico && d.tecnico.navegador && d.tecnico.janela === '390x844');
+  await a.fechar();
+});
+
+test('relatar: com a regra anterior publicada, categoria e gravidade vão no texto e nada se perde', async () => {
+  const fs = firestoreFalso({ regra: 'antiga' });
+  const a = await aparelho(amb, { firestore: fs, caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => KitFacil.feedback.abrir({ tipo: 'problema' }));
+  await p.click('.kf-opcao:has-text("Erro ou travamento")');
+  await p.click('.kf-opcao:has-text("Atrapalha o uso")');
+  await p.fill('#kf-msg', 'Travou ao salvar.');
+  await p.click('[data-kf-enviar]');
+  await p.locator('text=Recebemos sua mensagem').waitFor();
+  assert.equal(fs.estado.docs.size, 1);
+  const [doc] = [...fs.estado.docs.values()];
+  assert.equal('categoria' in doc.dados, false);
+  assert.equal(doc.dados.mensagem, '[Categoria: Erro ou travamento · Gravidade: Atrapalha o uso] Travou ao salvar.');
+  assert.equal(await p.evaluate(() => KitFacil.feedback.pendentes()), 0);
+  await a.fechar();
+});
+
+test('feedback: sem internet a mensagem fica guardada, o balão avisa e ela sai sozinha quando a conexão volta', async () => {
   const fs = firestoreFalso({ modo: 'fora' });
   const a = await aparelho(amb, { firestore: fs, caminho: pagina() });
   const p = a.page;
-  await p.click('#ajuda [data-kf="problema"]');
-  assert.equal(await p.locator('.kf-dlg h2').textContent(), 'Relatar um problema');
-  assert.equal(await p.isChecked('input[name="kf-tipo"][value="problema"]'), true);
+  await p.evaluate(() => KitFacil.feedback.abrir({ tipo: 'problema' }));
   await p.fill('#kf-msg', 'O botão de salvar não respondeu.');
   await a.ctx.setOffline(true);
   await p.click('[data-kf-enviar]');
   await p.locator('text=Você está sem internet').waitFor();
   assert.equal(await p.evaluate(() => KitFacil.feedback.pendentes()), 1);
-  assert.match(await p.textContent('#ajuda'), /1 mensagem guardada/);
+  assert.equal(await p.evaluate(() => document.querySelector('.kf-topo [data-kf="feedback"]').classList.contains('kf-com-pendente')), true);
+  await p.keyboard.press('Escape');
+  await p.click('.kf-topo [data-kf="feedback"]');
+  assert.match(await p.textContent('.kf-dlg'), /1 mensagem guardada/);
+  await p.keyboard.press('Escape');
   fs.estado.modo = 'aceitar';
   await a.ctx.setOffline(false);
   assert.ok(await esperar(() => fs.estado.docs.size === 1), 'a mensagem guardada não foi reenviada');
   assert.ok(await esperar(async () => (await p.evaluate(() => KitFacil.feedback.pendentes())) === 0));
-  const [doc] = [...fs.estado.docs.values()];
-  assert.equal(doc.dados.tipo, 'problema');
+  assert.equal(await p.evaluate(() => document.querySelector('.kf-topo [data-kf="feedback"]').classList.contains('kf-com-pendente')), false);
   await a.fechar();
 });
 
@@ -95,7 +204,7 @@ test('feedback: enquanto a regra não estiver publicada (403), nada se perde e n
   const fs = firestoreFalso({ modo: 'recusar' });
   const a = await aparelho(amb, { firestore: fs, caminho: pagina() });
   const p = a.page;
-  await p.click('#ajuda [data-kf="avaliar"]');
+  await p.evaluate(() => KitFacil.feedback.abrir({ tipo: 'avaliar' }));
   await p.click('label[for="kf-n3"]');
   await p.click('[data-kf-enviar]');
   await p.locator('text=Não foi possível enviar agora').waitFor();
@@ -120,65 +229,154 @@ test('feedback: reenviar o mesmo registro não duplica', async () => {
   await a.fechar();
 });
 
-test('janela: prende o foco, fecha com Esc e devolve o foco a quem abriu', async () => {
+test('janelas: foco preso dentro, Esc fecha e o foco volta para o balão; todos os campos têm nome acessível', async () => {
   const a = await aparelho(amb, { caminho: pagina() });
   const p = a.page;
-  await p.focus('#ajuda [data-kf="sobre"]');
+  await p.focus('.kf-topo [data-kf="feedback"]');
   await p.keyboard.press('Enter');
   await p.locator('.kf-dlg').waitFor();
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 12; i++) {
     await p.keyboard.press('Tab');
     assert.equal(await p.evaluate(() => !!document.activeElement.closest('.kf-dlg')), true, 'o foco saiu da janela');
   }
   await p.keyboard.press('Escape');
   assert.equal(await p.locator('.kf-dlg').count(), 0);
-  assert.equal(await p.evaluate(() => document.activeElement.dataset.kf), 'sobre');
+  assert.equal(await p.evaluate(() => document.activeElement.dataset.kf), 'feedback');
   assert.equal(await p.evaluate(() => document.body.style.position), '');
+  for (const tipo of ['avaliar', 'problema']) {
+    await p.evaluate(t => KitFacil.feedback.abrir({ tipo: t }), tipo);
+    const sem = await p.evaluate(() => [...document.querySelectorAll('.kf-dlg input, .kf-dlg textarea, .kf-dlg button')]
+      .filter(el => !(el.labels && el.labels.length) && !el.getAttribute('aria-label') && !el.textContent.trim()).map(el => el.outerHTML.slice(0, 80)));
+    assert.deepEqual(sem, [], tipo);
+    await p.keyboard.press('Escape');
+  }
   await a.fechar();
 });
 
-test('janela: todos os campos têm nome acessível', async () => {
+/* ---------------- tela de Ajustes ---------------- */
+test('Ajustes: guias comuns na ordem do padrão e guias do app num grupo próprio', async () => {
   const a = await aparelho(amb, { caminho: pagina() });
   const p = a.page;
-  await p.click('#ajuda [data-kf="avaliar"]');
-  const sem = await p.evaluate(() => [...document.querySelectorAll('.kf-dlg input, .kf-dlg textarea, .kf-dlg button')]
-    .filter(el => !(el.labels && el.labels.length) && !el.getAttribute('aria-label') && !el.textContent.trim()).map(el => el.outerHTML.slice(0, 80)));
-  assert.deepEqual(sem, []);
+  await p.click('.kf-topo [data-kf="ajustes"]');
+  await p.locator('[data-kf-aj]').waitFor();
+  const g = await guiasAjustes(p);
+  assert.deepEqual(g.comuns, GUIAS_COMUNS);
+  assert.deepEqual(g.produto, ['Notas']);
+  assert.equal(await p.textContent('.kf-aj-lista .kf-aj-grupo:nth-of-type(2)'), (await p.evaluate(() => KitFacil.FAMILIA.find(f => f.app === new URLSearchParams(location.search).get('app')).nome)));
+  assert.equal(await p.getAttribute('.kf-topo [data-kf="ajustes"]', 'aria-current'), 'page');
+  assert.deepEqual(a.erros, []);
   await a.fechar();
 });
 
-test('sobre: versão, privacidade e outros apps', async () => {
+test('Ajustes no celular: lista → guia → volta pela seta e pelo Voltar do aparelho', async () => {
   const a = await aparelho(amb, { caminho: pagina() });
   const p = a.page;
-  await p.click('#ajuda [data-kf="sobre"]');
-  const t = await p.textContent('.kf-dlg');
-  assert.match(t, /Versão 0\.0\.0-teste/);
-  assert.match(t, /As notas de teste ficam guardadas neste aparelho/);
-  assert.match(t, /gist secreto/);
-  assert.match(t, /Firebase \(Google\)/);
-  assert.match(t, /Sem anúncios/);
-  const links = await p.$$eval('.kf-apps a', l => l.map(x => x.getAttribute('href')));
+  await p.click('.kf-topo [data-kf="ajustes"]');
+  assert.ok(await p.isVisible('.kf-aj-lista'));
+  assert.equal(await p.isVisible('#kf-aj-aparencia'), false);
+  await p.click('[data-kf-aj-ir="aparencia"]');
+  assert.ok(await p.isVisible('#kf-aj-aparencia'));
+  assert.equal(await p.isVisible('.kf-aj-lista'), false);
+  assert.equal(await p.evaluate(() => document.activeElement.id), 'kf-aj-t-aparencia');
+  await p.click('#kf-aj-aparencia [data-kf-aj-voltar]');
+  assert.ok(await esperar(() => p.isVisible('.kf-aj-lista')));
+  await p.click('[data-kf-aj-ir="notas"]');
+  assert.ok(await p.isVisible('#prod-opcao'));
+  await p.goBack();
+  assert.ok(await esperar(() => p.isVisible('.kf-aj-lista')), 'o Voltar do aparelho não voltou para a lista');
+  await p.goBack();
+  assert.ok(await esperar(() => p.evaluate(() => !document.querySelector('[data-kf-aj]'))), 'o Voltar não saiu dos Ajustes');
+  assert.ok(await semRolagemLateral(p));
+  await a.fechar();
+});
+
+test('Ajustes em tela larga: lista e guia lado a lado, primeira guia aberta, troca sem empilhar histórico', async () => {
+  const a = await aparelho(amb, { viewport: COMPUTADOR, caminho: pagina() });
+  const p = a.page;
+  await p.click('.kf-topo [data-kf="ajustes"]');
+  assert.ok(await p.isVisible('.kf-aj-lista'));
+  assert.ok(await p.isVisible('#kf-aj-conta'));
+  assert.ok(await p.isVisible('#extra-conta'));
+  assert.equal(await p.getAttribute('[data-kf-aj-ir="conta"]', 'aria-current'), 'true');
+  assert.equal(await p.isVisible('#kf-aj-conta [data-kf-aj-voltar]'), false);
+  const antes = await p.evaluate(() => history.length);
+  await p.click('[data-kf-aj-ir="privacidade"]');
+  assert.ok(await p.isVisible('#kf-aj-privacidade'));
+  assert.equal(await p.isVisible('#kf-aj-conta'), false);
+  assert.equal(await p.getAttribute('[data-kf-aj-ir="privacidade"]', 'aria-current'), 'true');
+  assert.equal(await p.evaluate(() => history.length), antes);
+  const box = await p.evaluate(() => [document.querySelector('.kf-aj-lista').getBoundingClientRect().right, document.querySelector('#kf-aj-privacidade').getBoundingClientRect().left]);
+  assert.ok(box[0] < box[1], 'lista e guia deveriam ficar lado a lado');
+  await a.fechar();
+});
+
+test('Ajustes: conteúdo das guias comuns (conta, sincronização, armazenamento, tema, preferências, notificações, privacidade, feedback, sobre)', async () => {
+  const a = await aparelho(amb, { viewport: COMPUTADOR, caminho: pagina() });
+  const p = a.page;
+  await p.click('.kf-topo [data-kf="ajustes"]');
+  const texto = async id => { await p.click(`[data-kf-aj-ir="${id}"]`); return p.textContent(`#kf-aj-${id}`); };
+  assert.match(await texto('conta'), /sem criar cadastro[\s\S]*Ligar a sincronização/);
+  const sinc = await texto('sincronizacao');
+  assert.match(sinc, /Sincronização desligada/); assert.match(sinc, /\d+ KB/); assert.match(sinc, /Baixar cópia/);
+  assert.match(await texto('aparencia'), /Automático[\s\S]*Claro[\s\S]*Escuro/);
+  assert.match(await texto('preferencias'), /Português \(Brasil\)[\s\S]*Real \(R\$\)/);
+  assert.match(await texto('notificacoes'), /não envia notificações/);
+  const priv = await texto('privacidade');
+  assert.match(priv, /As notas de teste ficam guardadas neste aparelho/); assert.match(priv, /gist secreto/); assert.match(priv, /Apagar dados deste aparelho/);
+  assert.match(await texto('feedback'), /Avaliar o app[\s\S]*Relatar um problema/);
+  const sobre = await texto('sobre');
+  assert.match(sobre, /Versão 0\.0\.0-teste/); assert.match(sobre, /Termos de uso/); assert.match(sobre, /Kit Fácil \d+\.\d+\.\d+/);
+  const links = await p.$$eval('#kf-aj-sobre .kf-apps a', l => l.map(x => x.getAttribute('href')));
   assert.equal(links.length, 2);
   for (const h of links) assert.match(h, /^\/(conta|eletrica|estudo)-facil\/$/);
-  await a.fechar();
-});
-
-test('tema: a escolha vale para o aparelho e fica guardada', async () => {
-  const a = await aparelho(amb, { caminho: pagina() });
-  const p = a.page;
+  // o resumo da guia acompanha a escolha do tema
+  await p.click('[data-kf-aj-ir="aparencia"]');
   await p.click('[data-kf="tema"][data-v="escuro"]');
+  assert.equal(await p.textContent('[data-kf-aj-resumo="aparencia"]'), 'Escuro');
   assert.equal(await p.getAttribute('html', 'data-theme'), 'dark');
-  assert.equal(await p.getAttribute('[data-kf="tema"][data-v="escuro"]', 'aria-pressed'), 'true');
   await p.reload();
   assert.equal(await p.getAttribute('html', 'data-theme'), 'dark');
   assert.equal(await p.getAttribute('meta[name="theme-color"]', 'content'), '#111111');
-  await p.click('[data-kf="tema"][data-v="auto"]');
-  assert.equal(await p.getAttribute('html', 'data-theme'), null);
   await a.fechar();
 });
 
-async function conectarPelaTela(p, token = TOKEN_TESTE) {
-  await p.click('#sync [data-kf="sync-ativar"]');
+test('Ajustes: cópia de segurança e apagar os dados deste aparelho', async () => {
+  const gh = githubFalso();
+  const a = await aparelho(amb, { github: gh, viewport: COMPUTADOR, caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => { T.add('arroz'); T.add('feijão'); });
+  await p.evaluate(t => T.SY.conectar(t), TOKEN_TESTE);
+  await p.click('.kf-topo [data-kf="ajustes"]');
+  await p.click('[data-kf-aj-ir="sincronizacao"]');
+  const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-kf="copia-baixar"]')]);
+  const copia = JSON.parse(await readFile(await dl.path(), 'utf8'));
+  assert.equal(copia.formato, 'copia-facil'); assert.equal(copia.app, amb.app); assert.equal(copia.dados.notas.length, 2);
+  await p.click('[data-kf-aj-ir="privacidade"]');
+  await p.click('[data-kf="apagar-aparelho"]');
+  assert.match(await p.textContent('.kf-dlg'), /A cópia na nuvem e os outros aparelhos continuam/);
+  await Promise.all([p.waitForNavigation(), p.click('[data-kf-ok]')]);
+  assert.deepEqual(await p.evaluate(() => T.notas()), []);
+  assert.equal(await p.evaluate(() => T.SY.ligada()), false);
+  assert.equal(await estadoNuvem(p), 'desligada');
+  assert.equal(gh.arquivo(`${amb.app}.json`) !== null, true, 'a cópia na nuvem deveria continuar');
+  // restaurar a cópia baixada
+  await p.click('.kf-topo [data-kf="ajustes"]');
+  await p.click('[data-kf-aj-ir="sincronizacao"]');
+  await p.setInputFiles('#kf-aj-sincronizacao [data-kf-copia-arquivo]', await dl.path());
+  assert.ok(await esperar(async () => (await p.evaluate(() => T.notas())).length === 2));
+  // pelo botão, com o app redesenhando a tela enquanto o seletor de arquivos está aberto (no celular a página fica escondida)
+  await p.evaluate(() => { T.remover('arroz'); T.remover('feijão'); });
+  const [seletor] = await Promise.all([p.waitForEvent('filechooser'), p.click('#kf-aj-sincronizacao [data-kf="copia-restaurar"]')]);
+  await p.evaluate(() => { T.ir('inicio'); T.ir('ajustes'); });
+  await seletor.setFiles(await dl.path());
+  assert.ok(await esperar(async () => (await p.evaluate(() => T.notas())).length === 2), 'a cópia não foi restaurada depois do redesenho');
+  await a.fechar();
+});
+
+/* ---------------- sincronização ---------------- */
+async function conectarPelaNuvem(p, token = TOKEN_TESTE) {
+  await p.click('[data-kf-nuvem]');
+  await p.click('.kf-dlg [data-kf="sync-ativar"]');
   await p.fill('#kf-token', token);
   await p.click('[data-kf-conectar]');
 }
@@ -189,9 +387,8 @@ test('sincronização: dois aparelhos, dados criptografados, exclusão e a alter
   const A = await aparelho(amb, { github: gh, caminho: pagina() });
   const B = await aparelho(amb, { github: gh, caminho: pagina() });
   await A.page.evaluate(() => { T.add('café'); T.add('pão'); });
-  await conectarPelaTela(A.page);
+  await conectarPelaNuvem(A.page);
   assert.ok(await sincronizado(A.page), 'o aparelho A não sincronizou');
-  assert.match(await A.page.textContent('#sync'), /@pessoa-teste/);
 
   // o arquivo no gist é o envelope criptografado de sempre (compatível com as versões anteriores)
   const arq = gh.arquivo(`${amb.app}.json`);
@@ -206,7 +403,7 @@ test('sincronização: dois aparelhos, dados criptografados, exclusão e a alter
   const claro = JSON.parse(new TextDecoder().decode(await s.decrypt({ name: 'AES-GCM', iv: Buffer.from(env.iv, 'base64') }, k, Buffer.from(env.data, 'base64'))));
   assert.deepEqual(claro.notas.map(n => n.t).sort(), ['café', 'pão']);
 
-  await conectarPelaTela(B.page);
+  await conectarPelaNuvem(B.page);
   assert.ok(await sincronizado(B.page));
   assert.ok(await esperar(async () => JSON.stringify(await B.page.evaluate(() => T.notas())) === JSON.stringify(['café', 'pão'])), 'B não recebeu as notas de A');
 
@@ -234,10 +431,10 @@ test('sincronização: dois aparelhos, dados criptografados, exclusão e a alter
 
 test('sincronização: aproveita a chave de outro app da família no mesmo aparelho', async () => {
   const gh = githubFalso();
-  const irma = (await import('./ambiente.mjs')).TOKEN_TESTE;
   const outro = ['conta-facil', 'eletrica-facil', 'estudo-facil'].find(x => x !== amb.app).replace('-', '');
-  const A = await aparelho(amb, { github: gh, caminho: pagina(), antes: `localStorage.setItem('${outro}.sync', JSON.stringify({ token: '${irma}', login: 'pessoa-teste' }))` });
-  await A.page.click('#sync [data-kf="sync-ativar"]');
+  const A = await aparelho(amb, { github: gh, caminho: pagina(), antes: `localStorage.setItem('${outro}.sync', JSON.stringify({ token: '${TOKEN_TESTE}', login: 'pessoa-teste' }))` });
+  await A.page.click('[data-kf-nuvem]');
+  await A.page.click('.kf-dlg [data-kf="sync-ativar"]');
   await A.page.click('[data-kf-irma]');
   assert.ok(await sincronizado(A.page));
   await A.fechar();
@@ -256,7 +453,7 @@ test('sincronização: link "Outro aparelho" conecta depois de confirmar', async
 test('sincronização: recusa chave sem a permissão gist e chave errada', async () => {
   const gh = githubFalso({ escopos: 'repo' });
   const A = await aparelho(amb, { github: gh, caminho: pagina() });
-  await conectarPelaTela(A.page);
+  await conectarPelaNuvem(A.page);
   await A.page.locator('.kf-toast >> text=não tem a permissão gist').waitFor();
   assert.equal(await A.page.evaluate(() => T.SY.ligada()), false);
   await A.page.fill('#kf-token', 'ghp_' + 'x'.repeat(36));
@@ -269,29 +466,10 @@ test('sincronização: recusa chave sem a permissão gist e chave errada', async
   await A.fechar();
 });
 
-test('sincronização: sem internet avisa e tenta de novo quando a conexão volta', async () => {
-  const gh = githubFalso();
-  const A = await aparelho(amb, { github: gh, caminho: pagina() });
-  await conectarPelaTela(A.page);
-  assert.ok(await sincronizado(A.page));
-  gh.estado.fora = true;
-  await A.ctx.setOffline(true);
-  await A.page.evaluate(() => T.add('offline'));
-  assert.ok(await esperar(async () => (await A.page.evaluate(() => T.SY.situacao())) === 'offline'));
-  assert.match(await A.page.textContent('#sync [data-kf-sync-status]'), /Sem internet/);
-  gh.estado.fora = false;
-  await A.ctx.setOffline(false);
-  assert.ok(await esperar(async () => (await A.page.evaluate(() => T.SY.situacao())) === 'ok'));
-  await A.fechar();
-});
-
 test('cópia de segurança: envelope padrão', async () => {
   const a = await aparelho(amb, { caminho: pagina() });
   const env = await a.page.evaluate(() => KitFacil.copia.envelope({ x: 1 }, 3));
-  assert.equal(env.formato, 'copia-facil');
-  assert.equal(env.app, amb.app);
-  assert.equal(env.esquema, 3);
-  assert.deepEqual(env.dados, { x: 1 });
-  assert.ok(!isNaN(Date.parse(env.em)));
+  assert.equal(env.formato, 'copia-facil'); assert.equal(env.app, amb.app); assert.equal(env.esquema, 3);
+  assert.deepEqual(env.dados, { x: 1 }); assert.ok(!isNaN(Date.parse(env.em)));
   await a.fechar();
 });
