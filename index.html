@@ -3066,7 +3066,11 @@ function settingsSums() {
 }
 function pintarResumos() { const S = settingsSums(); for (const k in S) KitFacil.ajustes.resumo(k, S[k]); }
 /* cópia de segurança no formato comum da família (as cópias antigas, { app: 'eletrica-facil', v: 1 ou 2 }, continuam valendo) */
-function baixarCopiaEletrica() { KitFacil.copia.baixar({ settings, prices, quotes: quotes.filter(q => !q.example) }, 2); }
+// no celular abre o menu de compartilhar (WhatsApp, Drive, e-mail…), como antes; no computador, baixa o arquivo
+function baixarCopiaEletrica() {
+  const env = KitFacil.copia.envelope({ settings, prices, quotes: quotes.filter(q => !q.example) }, 2);
+  saveFile(`eletrica-facil-copia-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(env, null, 1)], { type: 'application/json' }));
+}
 async function restaurarCopiaEletrica(file) {
   const j = await KitFacil.copia.ler(file, { antigos: true });
   let data = null;
