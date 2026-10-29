@@ -317,9 +317,7 @@ textarea.kf-entrada{min-height:110px;resize:vertical}
 }
 
 /* ================= Kit Fácil 2.1: chopp, item Ajustes na navegação, QR do Pix, novidades ================= */
-/* chopp: primeiro da área superior, só nas telas principais (lei 13) */
-.kf-topo-btn.kf-chopp{color:var(--kf-accent-texto,var(--kf-accent))}
-.kf-topo-btn.kf-chopp > .kf-i{stroke-width:2}
+/* chopp: entre a nuvem e o balão, só nas telas principais (lei 13); mesma cor e traço dos outros ícones do topo */
 /* barra de baixo com até seis itens (seções do app + Ajustes): em telas estreitas, nome menor para caber sem cortar */
 @media (max-width:420px){.kf-nav-in{padding-inline:0}.kf-nav-it{padding-inline:0;letter-spacing:-.01em}.kf-nav-ic{width:48px}}
 @media (max-width:380px){.kf-nav-it{font-size:11px}.kf-nav-ic{width:44px}}

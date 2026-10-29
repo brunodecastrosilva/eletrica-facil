@@ -3,7 +3,7 @@
 Regras comuns do **Conta Fácil**, do **Elétrica Fácil** e do **Estudo Fácil** e de qualquer app novo do projeto.
 Este arquivo fica em `comum/PADRAO.md`, igual nos três repositórios, junto com o **Kit Fácil** (o código comum).
 
-Versão do padrão: 2.1 · Kit Fácil 2.1.2 · outubro de 2026.
+Versão do padrão: 2.1 · Kit Fácil 2.1.3 · outubro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -168,10 +168,10 @@ um ponto de aviso e o app tenta de novo ao abrir e quando a conexão volta (até
 **Apoio ao criador (lei 13).** Os apps são gratuitos e nenhuma função depende de pagamento. O convite é o mesmo nos três:
 "Gostando do app? Pague um chopp para o criador!" (`KitFacil.apoio`).
 
-- ícone de caneca de chopp na área superior, primeiro à esquerda da nuvem, **só nas telas principais**;
+- ícone de caneca de chopp na área superior, **entre a nuvem e o balão**, com a mesma cor e o mesmo traço dos outros ícones, **só nas telas principais**;
   atalho também em *Sobre o aplicativo*;
-- tocar abre a janela "Pague um chopp para o criador!" com o QR code do Pix e os botões **Copiar código Pix**
-  (copia e cola) e **Copiar chave**; não abre sozinho, não interrompe tarefas e não bloqueia nada;
+- tocar abre a janela "Pague um chopp para o criador!" com o QR code do Pix e um só botão, **Copiar código Pix**
+  (copia e cola); não abre sozinho, não interrompe tarefas e não bloqueia nada;
 - a chave Pix é **aleatória** (nunca CPF, telefone ou e-mail no código público). Chave, nome e cidade ficam em
   `APOIO_PADRAO`, no `kit-facil.js`, iguais para os três apps; sem chave, o chopp não aparece;
 - o nome no código Pix é **não pessoal** ("PROJETO FACIL"), por decisão do criador: o banco de quem paga mostra o nome
@@ -213,11 +213,13 @@ primeiro uso (escolha do edital e da rotina), que faz esse papel.
 
 ### 7.2 Área superior direita
 
-Sempre no canto superior direito, nesta ordem e lado a lado: **chopp** · **nuvem** · **balão**
+Sempre no canto superior direito, nesta ordem e lado a lado: **nuvem** · **chopp** · **balão**
 (`KitFacil.topo.html({ principal: true })`). Nas telas internas, só nuvem e balão (`{ principal: false }`).
 
 - área de toque de 44 × 44 px, ícones de 24 px, distância de no máximo 24 px da borda direita;
-- nomes acessíveis: "Pague um chopp para o criador"; "Sincronização: <estado>. Ver detalhes"; "Avaliação e feedback";
+- nomes acessíveis: "Sincronização: <estado>. Ver detalhes"; "Pague um chopp para o criador"; "Avaliação e feedback";
+- os três ícones têm a mesma cor (a da tinta do app) e o mesmo traço; nenhum app põe outros ícones nessa área;
+- a marca (ícone e nome do app) aparece sempre à esquerda da barra de cima, também no celular;
 - o balão mostra um ponto quando há mensagem guardada à espera de envio.
 
 ### 7.3 Tela de Ajustes

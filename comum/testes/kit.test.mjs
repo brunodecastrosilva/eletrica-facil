@@ -15,7 +15,7 @@ const estadoNuvem = p => p.getAttribute('[data-kf-nuvem]', 'data-estado');
 const CELULAR = { width: 390, height: 844 }, COMPUTADOR = { width: 1280, height: 860 };
 
 /* ---------------- área superior direita ---------------- */
-test('topo: chopp, nuvem e balão no canto superior direito, nessa ordem; Ajustes na navegação, no celular e no computador', async () => {
+test('topo: nuvem, chopp e balão no canto superior direito, nessa ordem; Ajustes na navegação, no celular e no computador', async () => {
   for (const viewport of [{ width: 360, height: 740 }, CELULAR, { width: 820, height: 1180 }, COMPUTADOR]) {
     const a = await aparelho(amb, { viewport, caminho: pagina() + '&apoio=1' });
     const t = await conferirTopo(a.page, { chopp: true });
@@ -477,7 +477,7 @@ test('cópia de segurança: envelope padrão', async () => {
 });
 
 /* ---------------- Kit Fácil 2.1: apoio ao criador, novidades e boas-vindas ---------------- */
-test('chopp: sem chave Pix não aparece; com chave fica antes da nuvem e não aparece nas telas internas', async () => {
+test('chopp: sem chave Pix não aparece; com chave fica entre a nuvem e o balão e não aparece nas telas internas', async () => {
   const a = await aparelho(amb, { caminho: pagina() });
   assert.deepEqual((await conferirTopo(a.page, { chopp: false })).erros, []);
   assert.equal(await a.page.evaluate(() => KitFacil.topo.html({ principal: true }).includes('data-kf="apoio"')), false);
@@ -489,7 +489,7 @@ test('chopp: sem chave Pix não aparece; com chave fica antes da nuvem e não ap
   await b.fechar();
 });
 
-test('chopp: código Pix copia e cola no padrão do Banco Central (CRC confere) e janela com cópia do código e da chave', async () => {
+test('chopp: código Pix copia e cola no padrão do Banco Central (CRC confere) e janela com um só botão, Copiar código Pix', async () => {
   const a = await aparelho(amb, { caminho: pagina() + '&apoio=1' });
   const p = a.page;
   const cod = await p.evaluate(() => KitFacil.apoio.codigo());
@@ -509,8 +509,7 @@ test('chopp: código Pix copia e cola no padrão do Banco Central (CRC confere) 
   await p.evaluate(() => { window.__copiado = ''; navigator.clipboard.writeText = t => { window.__copiado = t; return Promise.resolve(); }; });
   await dlg.locator('[data-kf-pix-codigo]').click();
   assert.equal(await p.evaluate(() => window.__copiado), cod);
-  await dlg.locator('[data-kf-pix-chave]').click();
-  assert.equal(await p.evaluate(() => window.__copiado), '123e4567-e12b-12d1-a456-426655440000');
+  assert.equal(await dlg.locator('.kf-dlg-pe button').count(), 1, 'a janela deve ter só o botão Copiar código Pix');
   await p.keyboard.press('Escape');
   assert.equal(await p.evaluate(() => document.activeElement.dataset.kf), 'apoio');
   assert.deepEqual(a.erros, []);

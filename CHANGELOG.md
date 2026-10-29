@@ -2,6 +2,12 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.7.3 · 2026-10-29
+
+- No alto da tela, a nova ordem é nuvem, chopp e balão, com o chopp na mesma cor dos outros ícones.
+- A janela do chopp ficou mais simples: um só botão, Copiar código Pix.
+- Kit Fácil 2.1.3.
+
 ## 2.7.2 · 2026-10-29
 
 - **Prazo de guarda:** Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança.

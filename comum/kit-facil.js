@@ -4,8 +4,8 @@
    Sem dependências e sem etapa de build: script clássico que cria window.KitFacil.
 
    O que tem aqui (veja comum/PADRAO.md):
-   - área superior direita padronizada: chopp (apoio ao criador, só nas telas principais), nuvem (estado real da
-     sincronização) e balão (avaliação e feedback); Ajustes fica na navegação (barra de baixo e trilho)
+   - área superior direita padronizada: nuvem (estado real da sincronização), chopp (apoio ao criador, só nas telas
+     principais) e balão (avaliação e feedback); Ajustes fica na navegação (barra de baixo e trilho)
    - apoio ao criador: "Pague um chopp para o criador!", com QR code e código Pix copia e cola
    - novidades de cada versão (uma vez, na primeira abertura depois de atualizar) e boas-vindas no primeiro uso
    - avaliação e feedback: escolha entre "Avaliar o app" e "Relatar um problema", com os mesmos componentes
@@ -15,7 +15,7 @@
    - janelas (diálogos) acessíveis e avisos */
 (function (global) {
   'use strict';
-  const VERSAO = '2.1.2';
+  const VERSAO = '2.1.3';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -627,12 +627,12 @@
     const e = estadoNuvem(), r = ESTADOS[e].rotulo;
     return `<button type="button" class="kf-topo-btn kf-nuvem" data-kf="nuvem" data-kf-nuvem data-estado="${e}" aria-label="${esc(`Sincronização: ${r}. Ver detalhes`)}" title="${esc(`Sincronização: ${r}`)}">${iconeNuvem(e)}</button>`;
   }
-  /* Área superior, igual nos três apps: chopp · nuvem · balão.
+  /* Área superior, igual nos três apps: nuvem · chopp · balão.
      o = { principal: true } nas telas principais (mostra o chopp); { principal: false } nas telas internas (só nuvem e balão).
      O antigo { ajustes: true/false } continua valendo como principal/interna. Ajustes fica na navegação (KitFacil.nav.ajustes). */
   function topoHTML(o = {}) {
     const principal = o.principal != null ? !!o.principal : o.ajustes !== false;
-    return `<div class="kf-topo" data-kf-topo>${principal && apoioAtivo() ? botaoApoio() : ''}<span class="kf-topo-par">${botaoNuvem()}<button type="button" class="kf-topo-btn${fila.quantos() ? ' kf-com-pendente' : ''}" data-kf="feedback" aria-label="Avaliação e feedback" title="Avaliação e feedback">${IC.balao}<span class="kf-ponto" aria-hidden="true"></span></button></span></div>`;
+    return `<div class="kf-topo" data-kf-topo><span class="kf-topo-par">${botaoNuvem()}${principal && apoioAtivo() ? botaoApoio() : ''}<button type="button" class="kf-topo-btn${fila.quantos() ? ' kf-com-pendente' : ''}" data-kf="feedback" aria-label="Avaliação e feedback" title="Avaliação e feedback">${IC.balao}<span class="kf-ponto" aria-hidden="true"></span></button></span></div>`;
   }
   function atualizarTopo() {
     const e = estadoNuvem(), r = ESTADOS[e].rotulo, det = detalheNuvem(e);
@@ -727,10 +727,9 @@
         <div class="kf-qr" data-kf-qr role="img" aria-label="QR code do Pix do criador"><span class="kf-carregando">Preparando o QR code…</span></div>
         <p class="kf-ajuda">Abra o app do seu banco, escolha <b>Pix</b> e leia o QR code, ou copie o código e cole em <b>Pix copia e cola</b>.</p>
         <p class="kf-ajuda">É opcional: o ${esc(C.nome)} continua igual para todos, pagando ou não.</p>`,
-      pe: `<button type="button" class="kf-btn kf-sec" data-kf-pix-chave>${IC.copiar}Copiar chave</button><button type="button" class="kf-btn kf-pri" data-kf-pix-codigo autofocus>${IC.copiar}Copiar código Pix</button>`,
+      pe: `<button type="button" class="kf-btn kf-pri" data-kf-pix-codigo autofocus>${IC.copiar}Copiar código Pix</button>`,
       aoMontar: d => {
         $('[data-kf-pix-codigo]', d).onclick = () => copiar(codigo, 'Código Pix copiado. Cole no app do seu banco.');
-        $('[data-kf-pix-chave]', d).onclick = () => copiar(String(C.apoio.chave).trim(), 'Chave Pix copiada.');
         const caixa = $('[data-kf-qr]', d);
         carregarQR().then(qrcode => {
           if (!document.contains(caixa)) return;

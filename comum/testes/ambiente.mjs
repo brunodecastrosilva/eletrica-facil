@@ -147,7 +147,7 @@ export async function semRolagemLateral(page) {
 }
 
 /* ---------- conferências do padrão de interface, usadas pelos testes de cada app ---------- */
-/* área superior direita (Kit Fácil 2.1): chopp · nuvem · balão. Ajustes não fica mais no topo, e sim na navegação.
+/* área superior direita (Kit Fácil 2.1.3): nuvem · chopp · balão. Ajustes não fica mais no topo, e sim na navegação.
    o.chopp: true = o chopp tem de aparecer; false = não pode aparecer (telas internas); undefined = tanto faz.
    (o antigo { comAjustes: false } vale como tela interna: sem chopp) */
 export async function conferirTopo(page, o = {}) {
@@ -167,16 +167,28 @@ export async function conferirTopo(page, o = {}) {
     const n = r(nuvens[0]), b = r(baloes[0]), c = choppes[0] ? r(choppes[0]) : null;
     const vw = document.documentElement.clientWidth;
     if (!(n.d <= b.x + 1)) erros.push('a nuvem não está à esquerda do balão');
-    if (b.x - n.d > 6) erros.push(`nuvem e balão afastados (${Math.round(b.x - n.d)} px)`);
+    if (!c && b.x - n.d > 6) erros.push(`nuvem e balão afastados (${Math.round(b.x - n.d)} px)`);
     if (Math.abs(n.y - b.y) > 1) erros.push('nuvem e balão desalinhados');
     if (n.w !== 44 || n.h !== 44 || b.w !== 44 || b.h !== 44) erros.push(`área de toque diferente de 44 px: nuvem ${n.w}x${n.h}, balão ${b.w}x${b.h}`);
     if (vw - b.d > 24) erros.push(`balão longe da borda direita (${Math.round(vw - b.d)} px)`);
     if (n.y > 80) erros.push(`ícones abaixo do topo (${Math.round(n.y)} px)`);
     if (c) {
-      if (!(c.d <= n.x + 1)) erros.push('o chopp não está à esquerda da nuvem');
-      if (n.x - c.d > 6) erros.push(`chopp e nuvem afastados (${Math.round(n.x - c.d)} px)`);
+      if (!(n.d <= c.x + 1 && c.d <= b.x + 1)) erros.push('o chopp não está entre a nuvem e o balão');
+      if (c.x - n.d > 6 || b.x - c.d > 6) erros.push('chopp afastado da nuvem ou do balão');
+      const cor = el => getComputedStyle(el).color;
+      if (cor(choppes[0]) !== cor(nuvens[0]) || cor(choppes[0]) !== cor(baloes[0])) erros.push('o chopp não tem a mesma cor dos outros ícones do topo');
       if (c.w !== 44 || c.h !== 44) erros.push(`área de toque do chopp diferente de 44 px: ${c.w}x${c.h}`);
       if (choppes[0].getAttribute('aria-label') !== 'Pague um chopp para o criador') erros.push('chopp sem descrição acessível');
+    }
+    // telas principais: a barra de cima tem só a marca (ícone e nome visível) e a área superior; nada de ícones a mais
+    if (chopp !== false) {
+      const barra = nuvens[0].closest('.kf-barra-in');
+      if (barra) {
+        const extras = [...barra.querySelectorAll('button, a')].filter(el => vis(el) && !el.closest('.kf-topo'));
+        if (extras.length) erros.push(`ícones a mais na barra de cima: ${extras.map(e => e.getAttribute('aria-label') || e.textContent.trim()).join(', ')}`);
+        const nome = barra.querySelector('.kf-marca-nome');
+        if (!nome || nome.getBoundingClientRect().width < 20 || getComputedStyle(nome).clip !== 'auto' && getComputedStyle(nome).position === 'absolute') erros.push('o nome do app não aparece na barra de cima');
+      }
     }
     const estado = nuvens[0].dataset.estado, rotulo = nuvens[0].getAttribute('aria-label');
     if (!rotulo || !rotulo.startsWith('Sincronização:')) erros.push('nuvem sem descrição acessível');

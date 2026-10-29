@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.7.2 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 2.7.3 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -19,7 +19,7 @@ Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fá
 - **Avalie o app e relate problemas** pelo balão no alto da tela (ou em Ajustes → Avaliação e feedback)
 - **Nuvem no alto da tela:** mostra se os dados estão sincronizados, sincronizando, pendentes, com erro ou sem internet
 - **Ajustes na barra de baixo** (no computador, no pé do menu lateral), com as mesmas guias nos três apps
-- **Pague um chopp para o criador!** O app é gratuito; o chopp no alto da tela abre o Pix (QR code e copia e cola), se você quiser apoiar
+- **Pague um chopp para o criador!** O app é gratuito; o chopp no alto da tela, entre a nuvem e o balão, abre o Pix (QR code e copia e cola), se você quiser apoiar
 - **Novidades:** depois de cada atualização, o app mostra uma vez o que mudou
 - Tema claro, escuro ou automático; funciona sem internet depois da primeira visita
 
