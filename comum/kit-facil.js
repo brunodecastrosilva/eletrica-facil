@@ -15,7 +15,7 @@
    - janelas (diálogos) acessíveis e avisos */
 (function (global) {
   'use strict';
-  const VERSAO = '2.1.1';
+  const VERSAO = '2.1.2';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -386,7 +386,7 @@
       </div>
       <label class="kf-check"><input type="checkbox" id="kf-tec"${problema ? ' checked' : ''}><span>Enviar informações técnicas: versão do app, tipo de aparelho, navegador e tamanho da tela${problema ? ', e os últimos erros do app' : ''}. Ajudam a resolver problemas.</span></label>
       <details class="kf-det"><summary>O que é enviado e para onde</summary>
-        <p class="kf-ajuda">${problema ? 'A categoria e a gravidade (se você escolher), a descrição' : 'A nota, o tipo de comentário (se você escolher), o comentário'}, o contato (se você preencher), o app, a versão e a tela em que você está, com as informações técnicas se a opção acima estiver marcada. Tudo vai para o banco de dados do projeto no Firebase (Google), usado só para melhorar os apps. Não enviamos seus dados do app, como ${esc(C.exemploDados || 'os registros que você guarda nele')}.</p></details>
+        <p class="kf-ajuda">${problema ? 'A categoria e a gravidade (se você escolher), a descrição' : 'A nota, o tipo de comentário (se você escolher), o comentário'}, o contato (se você preencher), o app, a versão e a tela em que você está, com as informações técnicas se a opção acima estiver marcada. Tudo vai para o banco de dados do projeto no Firebase (Google), usado só para melhorar os apps e apagado depois de 2 anos. Não enviamos seus dados do app, como ${esc(C.exemploDados || 'os registros que você guarda nele')}.</p></details>
       <p class="kf-erro-form" data-kf-erro role="alert" hidden></p>
     </form>`;
     abrirDialogo({ titulo, corpo, classe: 'kf-feedback', nome: modo,
@@ -453,7 +453,7 @@
   function itensPrivacidade() {
     const l = [...(C.privacidade || [])];
     l.push('Sincronização entre aparelhos (opcional): quando você liga, os dados vão para um gist secreto da sua conta GitHub, criptografados neste aparelho (AES-256) com uma chave que sai do seu código de acesso. Só os seus aparelhos conseguem ler.');
-    l.push('Avaliações e relatos de problema (opcionais): só o que você escreve no formulário, com o app, a versão e, se você permitir, informações técnicas do aparelho, vai para o banco de dados do projeto no Firebase (Google). O contato só vai se você preencher.');
+    l.push('Avaliações e relatos de problema (opcionais): só o que você escreve no formulário, com o app, a versão e, se você permitir, informações técnicas do aparelho, vai para o banco de dados do projeto no Firebase (Google) e é apagado depois de 2 anos. O contato só vai se você preencher.');
     l.push('Sem anúncios, sem rastreamento de uso e sem venda de dados.');
     return l;
   }

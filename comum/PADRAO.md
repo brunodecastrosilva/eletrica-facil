@@ -3,7 +3,7 @@
 Regras comuns do **Conta Fácil**, do **Elétrica Fácil** e do **Estudo Fácil** e de qualquer app novo do projeto.
 Este arquivo fica em `comum/PADRAO.md`, igual nos três repositórios, junto com o **Kit Fácil** (o código comum).
 
-Versão do padrão: 2.1 · Kit Fácil 2.1.1 · outubro de 2026.
+Versão do padrão: 2.1 · Kit Fácil 2.1.2 · outubro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -187,6 +187,10 @@ só (chave `kitfacil.<app>.visto`). A lista também fica em *Sobre o aplicativo 
 se o app tiver, o botão do exemplo (`KitFacil.iniciar({ boasVindas: { novo, passos, exemplo, rotuloExemplo } })`).
 Quem vê as boas-vindas não vê as novidades na mesma abertura. Exceção registrada: o Estudo Fácil tem uma tela própria de
 primeiro uso (escolha do edital e da rotina), que faz esse papel.
+
+**Prazo de guarda no Firebase.** Avaliações e relatos ficam 2 anos (TTL do Firestore em `enviadoEm`, deslocamento de
+730 dias); comandas ao vivo, 30 dias depois de criadas ou encerradas (campo `expiraEm`). Configuração em
+`regras-firestore-feedback.txt`. Dado novo guardado em servidor só entra com prazo de guarda definido aqui.
 
 ## 7. Interface comum
 

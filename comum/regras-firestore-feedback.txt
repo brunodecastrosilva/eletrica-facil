@@ -33,6 +33,16 @@
       allow read, update, delete: if false;
     }
 
+// Prazo de guarda (política de privacidade, decisão de 29/10/2026): avaliações por 2 anos; comandas ao vivo por 30 dias
+// depois de criadas ou encerradas. Quem apaga é o próprio Firestore, com regras de TTL (Google Cloud console → Firestore →
+// banco (default) → Time-to-live → Create policy):
+// - coleção `feedback`, campo `enviadoEm`, deslocamento (expiration offset) de 730 dias;
+// - coleção `mesas`, campo `expiraEm`, sem deslocamento (o Conta Fácil já grava a data final, 30 dias à frente).
+// A exclusão acontece normalmente até 24 horas depois do prazo. Comandas antigas, criadas antes do Conta Fácil 1.3.2,
+// não têm `expiraEm`: apague-as à mão uma vez, no console (Firestore → Dados → mesas).
+// No bloco `match /mesas/{code}`, a regra de update precisa aceitar o campo `expiraEm` (data). Enquanto não aceitar,
+// a comanda ao vivo funciona normalmente, só sem o prazo.
+
 // Opcional, recomendado antes de divulgar os apps:
 // - Google Cloud → APIs e serviços → Credenciais: restrinja a chave "Browser key (auto created by Firebase)"
 //   a referenciadores https://brunodecastrosilva.github.io/* (e ao domínio próprio, quando houver).
