@@ -15,7 +15,7 @@
    - janelas (diálogos) acessíveis e avisos */
 (function (global) {
   'use strict';
-  const VERSAO = '2.1.0';
+  const VERSAO = '2.1.1';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -32,7 +32,8 @@
   /* Apoio ao criador (lei 13): Pix do criador, igual nos três apps. A chave é ALEATÓRIA, de propósito: o repositório é
      público e uma chave de CPF, telefone ou e-mail exporia dado pessoal. Nome (até 25 letras) e cidade (até 15) entram no
      código Pix copia e cola, como manda o padrão do Banco Central. Sem chave, o chopp não aparece. */
-  const APOIO_PADRAO = { chave: '', nome: '', cidade: '' };
+  // nome não pessoal de propósito (decisão do criador): o banco de quem paga mostra o nome real, vindo do cadastro da chave
+  const APOIO_PADRAO = { chave: '35b9f895-679e-478f-8bc0-4cc62745a031', nome: 'Projeto Facil', cidade: 'Gama' };
   const QR_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
 
   /* ================= utilidades ================= */

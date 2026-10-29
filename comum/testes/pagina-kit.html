@@ -33,7 +33,7 @@ const CH = 'teste.' + fam.app + '.';
 const Q = new URLSearchParams(location.search);
 let tela = 'inicio';
 KitFacil.iniciar({ app: fam.app, nome: fam.nome, versao: '0.0.0-teste', resumo: 'Página de teste do kit.', icone: '../../icons/icon-192.png', prefixo: CH,
-  apoio: Q.get('apoio') ? { chave: '123e4567-e12b-12d1-a456-426655440000', nome: 'Criador Teste', cidade: 'Brasília' } : undefined,
+  apoio: Q.get('apoio') ? { chave: '123e4567-e12b-12d1-a456-426655440000', nome: 'Criador Teste', cidade: 'Brasília' } : { chave: '' },
   novidades: Q.get('novidades') ? [{ versao: '0.0.0-teste', itens: ['Novidade um.', 'Novidade dois.'] }] : [],
   boasVindas: Q.get('novo') ? { novo: () => true, passos: [['Primeiro passo', 'Explicação do primeiro passo.'], ['Segundo passo', '']], exemplo: () => { window.EXEMPLO = true; } } : null,
   tela: () => tela, privacidade: ['As notas de teste ficam guardadas neste aparelho.'], exemploDados: 'as notas de teste',

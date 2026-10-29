@@ -3,7 +3,7 @@
 Regras comuns do **Conta Fácil**, do **Elétrica Fácil** e do **Estudo Fácil** e de qualquer app novo do projeto.
 Este arquivo fica em `comum/PADRAO.md`, igual nos três repositórios, junto com o **Kit Fácil** (o código comum).
 
-Versão do padrão: 2.1 · Kit Fácil 2.1.0 · outubro de 2026.
+Versão do padrão: 2.1 · Kit Fácil 2.1.1 · outubro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -174,6 +174,8 @@ um ponto de aviso e o app tenta de novo ao abrir e quando a conexão volta (até
   (copia e cola) e **Copiar chave**; não abre sozinho, não interrompe tarefas e não bloqueia nada;
 - a chave Pix é **aleatória** (nunca CPF, telefone ou e-mail no código público). Chave, nome e cidade ficam em
   `APOIO_PADRAO`, no `kit-facil.js`, iguais para os três apps; sem chave, o chopp não aparece;
+- o nome no código Pix é **não pessoal** ("PROJETO FACIL"), por decisão do criador: o banco de quem paga mostra o nome
+  real, que vem do cadastro da chave, e o nome completo não fica gravado no repositório público;
 - o código copia e cola segue o padrão BR Code do Banco Central, sem valor (quem paga escolhe);
 - o QR code usa a biblioteca `qrcode-generator` 1.4.4 do cdnjs, carregada só quando a janela abre; sem internet, a janela
   mostra o aviso e o código continua copiável.

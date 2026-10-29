@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.7.1 · 2026-10-29
+
+- **Pague um chopp para o criador!** O chopp passa a aparecer no alto da tela (e em *Sobre o aplicativo*), com QR code e Pix copia e cola. É opcional: o app continua gratuito e igual para todos.
+- Kit Fácil 2.1.1.
+
 ## 2.7.0 · 2026-10-28
 
 Kit Fácil 2.1, igual nos três apps (Leis Globais v1.5 do Projeto Integrador).
