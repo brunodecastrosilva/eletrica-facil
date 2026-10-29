@@ -40,7 +40,7 @@ Sem a sincronização, os dados ficam só no aparelho; toque na **nuvem** no alt
 | Orçamentos, dados dos clientes, tabela de preços e ajustes | neste aparelho (armazenamento do navegador, chaves `eletricafacil.*`) |
 | Os mesmos dados, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
 | Propostas, relatórios e recibos em PDF | gerados no aparelho; só saem quando o usuário compartilha |
-| Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback` |
+| Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback`; apagados depois de 2 anos |
 
 O app guarda dados pessoais dos clientes de quem usa (nome, telefone, endereço, CPF ou CNPJ).
 A guia **Ajustes → Privacidade e segurança** explica isso para quem usa o app.
