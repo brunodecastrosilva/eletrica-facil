@@ -147,19 +147,24 @@ export async function semRolagemLateral(page) {
 }
 
 /* ---------- conferências do padrão de interface, usadas pelos testes de cada app ---------- */
-/* área superior direita: devolve as caixas de Ajustes, nuvem e balão e confere a ordem e o alinhamento */
-export async function conferirTopo(page, { comAjustes = true } = {}) {
-  return page.evaluate(comAjustes => {
+/* área superior direita (Kit Fácil 2.1): chopp · nuvem · balão. Ajustes não fica mais no topo, e sim na navegação.
+   o.chopp: true = o chopp tem de aparecer; false = não pode aparecer (telas internas); undefined = tanto faz.
+   (o antigo { comAjustes: false } vale como tela interna: sem chopp) */
+export async function conferirTopo(page, o = {}) {
+  const chopp = o.chopp !== undefined ? o.chopp : o.comAjustes === false ? false : undefined;
+  return page.evaluate(chopp => {
     const vis = el => el && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden';
     const um = sel => [...document.querySelectorAll(sel)].filter(vis);
-    const nuvens = um('[data-kf-nuvem]'), baloes = um('[data-kf="feedback"].kf-topo-btn'), ajustes = um('.kf-topo [data-kf="ajustes"]');
+    const nuvens = um('[data-kf-nuvem]'), baloes = um('[data-kf="feedback"].kf-topo-btn'), choppes = um('.kf-topo [data-kf="apoio"]'), noTopo = um('.kf-topo [data-kf="ajustes"]');
     const erros = [];
     if (nuvens.length !== 1) erros.push(`nuvens visíveis: ${nuvens.length}`);
     if (baloes.length !== 1) erros.push(`balões visíveis: ${baloes.length}`);
-    if (comAjustes && ajustes.length !== 1) erros.push(`botões de Ajustes visíveis: ${ajustes.length}`);
+    if (noTopo.length) erros.push('Ajustes ainda aparece no topo (deve ficar na navegação)');
+    if (chopp === true && choppes.length !== 1) erros.push(`chopp visível: ${choppes.length}`);
+    if (chopp === false && choppes.length) erros.push('chopp aparece numa tela interna');
     if (erros.length) return { erros };
     const r = el => { const b = el.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height, d: b.right }; };
-    const n = r(nuvens[0]), b = r(baloes[0]), a = ajustes[0] ? r(ajustes[0]) : null;
+    const n = r(nuvens[0]), b = r(baloes[0]), c = choppes[0] ? r(choppes[0]) : null;
     const vw = document.documentElement.clientWidth;
     if (!(n.d <= b.x + 1)) erros.push('a nuvem não está à esquerda do balão');
     if (b.x - n.d > 6) erros.push(`nuvem e balão afastados (${Math.round(b.x - n.d)} px)`);
@@ -167,12 +172,39 @@ export async function conferirTopo(page, { comAjustes = true } = {}) {
     if (n.w !== 44 || n.h !== 44 || b.w !== 44 || b.h !== 44) erros.push(`área de toque diferente de 44 px: nuvem ${n.w}x${n.h}, balão ${b.w}x${b.h}`);
     if (vw - b.d > 24) erros.push(`balão longe da borda direita (${Math.round(vw - b.d)} px)`);
     if (n.y > 80) erros.push(`ícones abaixo do topo (${Math.round(n.y)} px)`);
-    if (a && !(a.d <= n.x + 1)) erros.push('Ajustes não está à esquerda da nuvem');
+    if (c) {
+      if (!(c.d <= n.x + 1)) erros.push('o chopp não está à esquerda da nuvem');
+      if (n.x - c.d > 6) erros.push(`chopp e nuvem afastados (${Math.round(n.x - c.d)} px)`);
+      if (c.w !== 44 || c.h !== 44) erros.push(`área de toque do chopp diferente de 44 px: ${c.w}x${c.h}`);
+      if (choppes[0].getAttribute('aria-label') !== 'Pague um chopp para o criador') erros.push('chopp sem descrição acessível');
+    }
     const estado = nuvens[0].dataset.estado, rotulo = nuvens[0].getAttribute('aria-label');
     if (!rotulo || !rotulo.startsWith('Sincronização:')) erros.push('nuvem sem descrição acessível');
     if (baloes[0].getAttribute('aria-label') !== 'Avaliação e feedback') erros.push('balão sem descrição acessível');
-    return { erros, estado, nuvem: n, balao: b, ajustes: a };
-  }, comAjustes);
+    return { erros, estado, nuvem: n, balao: b, chopp: c };
+  }, chopp);
+}
+/* Ajustes na navegação: último item da barra de baixo (até 1023 px) ou do trilho (computador), com nome visível */
+export async function conferirNavAjustes(page) {
+  return page.evaluate(() => {
+    const vis = el => el && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && getComputedStyle(el).display !== 'none';
+    const largo = window.innerWidth >= 1024;
+    const cont = document.querySelector(largo ? '.kf-trilho' : '.kf-nav');
+    const erros = [];
+    if (!vis(cont)) return { erros: [`${largo ? 'trilho' : 'barra de baixo'} não está visível`] };
+    const itens = [...cont.querySelectorAll(largo ? '.kf-trilho-it' : '.kf-nav-it')].filter(vis);
+    const aj = itens.filter(b => b.dataset.kf === 'ajustes');
+    if (aj.length !== 1) return { erros: [`itens Ajustes na ${largo ? 'trilho' : 'barra de baixo'}: ${aj.length}`] };
+    if (itens[itens.length - 1] !== aj[0]) erros.push('Ajustes não é o último item da navegação');
+    if (!/Ajustes/.test(aj[0].textContent)) erros.push('item Ajustes sem o nome visível');
+    const r = aj[0].getBoundingClientRect();
+    if (r.height < 44) erros.push(`item Ajustes com menos de 44 px de altura (${Math.round(r.height)})`);
+    return { erros, onde: largo ? 'trilho' : 'barra de baixo' };
+  });
+}
+/* abre os Ajustes pelo item da navegação que estiver visível (barra de baixo ou trilho) */
+export async function abrirAjustesPelaNav(page) {
+  await page.locator('.kf-nav [data-kf="ajustes"], .kf-trilho [data-kf="ajustes"]').locator('visible=true').first().click();
 }
 /* nomes das guias da tela de Ajustes, na ordem em que aparecem */
 export async function guiasAjustes(page) {

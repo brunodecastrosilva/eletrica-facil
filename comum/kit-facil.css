@@ -316,6 +316,22 @@ textarea.kf-entrada{min-height:110px;resize:vertical}
   .kf-aj-sec-h{margin-top:4px}
 }
 
+/* ================= Kit Fácil 2.1: chopp, item Ajustes na navegação, QR do Pix, novidades ================= */
+/* chopp: primeiro da área superior, só nas telas principais (lei 13) */
+.kf-topo-btn.kf-chopp{color:var(--kf-accent-texto,var(--kf-accent))}
+.kf-topo-btn.kf-chopp > .kf-i{stroke-width:2}
+/* barra de baixo com até seis itens (seções do app + Ajustes): em telas estreitas, nome menor para caber sem cortar */
+@media (max-width:420px){.kf-nav-in{padding-inline:0}.kf-nav-it{padding-inline:0;letter-spacing:-.01em}.kf-nav-ic{width:48px}}
+@media (max-width:380px){.kf-nav-it{font-size:11px}.kf-nav-ic{width:44px}}
+/* Ajustes é o último item do trilho, separado das seções do app */
+@media (min-width:1024px){.kf-trilho-it.kf-trilho-ajustes{margin-top:auto}}
+/* QR code do Pix: sempre preto no branco, também no modo escuro (para a câmera do banco ler) */
+.kf-qr{display:grid;place-items:center;width:min(240px,100%);aspect-ratio:1;margin:4px auto;padding:10px;background:#FFFFFF;border-radius:var(--kf-r-md,16px);box-shadow:0 0 0 1px var(--kf-line)}
+.kf-qr svg{width:100%;height:100%;display:block}
+.kf-qr svg rect[fill="#ffffff"],.kf-qr svg rect[fill="white"]{fill:#FFFFFF}
+.kf-qr .kf-carregando,.kf-qr .kf-ajuda{color:#5E5C54;text-align:center;padding:12px}
+.kf-novidades li{line-height:1.4}
+
 /* ================= aviso rápido (quando o app não tem o seu) ================= */
 .kf-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:95;max-width:calc(100% - 32px);background:var(--kf-ink,#15140F);color:var(--kf-bg,#F5F5F2);padding:11px 16px;border-radius:12px;font:600 15px/1.35 var(--kf-font);box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .kf-toast[hidden]{display:none}

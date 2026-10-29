@@ -19,19 +19,23 @@ main{max-width:900px;margin:0 auto;padding:8px 16px calc(var(--kf-nav-h) + 40px)
 <body class="kf-casca">
 <header class="kf-barra" id="barra"><div class="kf-barra-in"><div class="kf-marca"><span class="kf-marca-ic marca-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/></svg></span><span class="kf-marca-nome">Teste</span></div><div id="topo"></div></div></header>
 <aside class="kf-trilho" aria-label="Seções"><div class="kf-marca"><span class="kf-marca-ic marca-ic"></span><span class="kf-marca-nome">Teste</span></div>
-  <button class="kf-trilho-it" data-ir="inicio">Início</button><button class="kf-trilho-it" data-ir="notas">Notas</button></aside>
+  <button class="kf-trilho-it" data-ir="inicio">Início</button><button class="kf-trilho-it" data-ir="notas">Notas</button><span id="trilho-ajustes"></span></aside>
 <main id="main"></main>
 <nav class="kf-nav" aria-label="Seções"><div class="kf-nav-in">
   <button class="kf-nav-it" data-ir="inicio"><span class="kf-nav-ic"></span><span class="kf-nav-l">Início</span></button>
-  <button class="kf-nav-it" data-ir="notas"><span class="kf-nav-ic"></span><span class="kf-nav-l">Notas</span></button></div></nav>
+  <button class="kf-nav-it" data-ir="notas"><span class="kf-nav-ic"></span><span class="kf-nav-l">Notas</span></button><span id="nav-ajustes" hidden></span></div></nav>
 <script src="../kit-facil.js"></script>
 <script>
 'use strict';
 const app = new URLSearchParams(location.search).get('app') || 'conta-facil';
 const fam = KitFacil.FAMILIA.find(f => f.app === app) || KitFacil.FAMILIA[0];
 const CH = 'teste.' + fam.app + '.';
+const Q = new URLSearchParams(location.search);
 let tela = 'inicio';
 KitFacil.iniciar({ app: fam.app, nome: fam.nome, versao: '0.0.0-teste', resumo: 'Página de teste do kit.', icone: '../../icons/icon-192.png', prefixo: CH,
+  apoio: Q.get('apoio') ? { chave: '123e4567-e12b-12d1-a456-426655440000', nome: 'Criador Teste', cidade: 'Brasília' } : undefined,
+  novidades: Q.get('novidades') ? [{ versao: '0.0.0-teste', itens: ['Novidade um.', 'Novidade dois.'] }] : [],
+  boasVindas: Q.get('novo') ? { novo: () => true, passos: [['Primeiro passo', 'Explicação do primeiro passo.'], ['Segundo passo', '']], exemplo: () => { window.EXEMPLO = true; } } : null,
   tela: () => tela, privacidade: ['As notas de teste ficam guardadas neste aparelho.'], exemploDados: 'as notas de teste',
   abrirAjustes: () => ir('ajustes'), emAjustes: () => tela === 'ajustes',
   copia: { descricao: 'Baixe um arquivo com as notas.', baixar: () => KitFacil.copia.baixar({ notas }, 1), restaurar: async f => { const j = await KitFacil.copia.ler(f); if (j) { notas = j.dados.notas; guardar(); carimbar(); desenhar(); KitFacil.avisar('Cópia restaurada.'); } else KitFacil.avisar('Esse arquivo não é uma cópia.'); } } });
@@ -94,7 +98,9 @@ window.T = {
   editar(t, novo) { const n = notas.find(x => x.t === t); if (n) { n.t = novo; guardar(); carimbar(); SY.agendar(50); desenhar(); } },
   remover(t) { notas = notas.filter(x => x.t !== t); guardar(); carimbar(); SY.agendar(50); desenhar(); },
 };
-document.getElementById('topo').innerHTML = KitFacil.topo.html({ ajustes: true });
+document.getElementById('topo').innerHTML = KitFacil.topo.html({ principal: true });
+document.getElementById('nav-ajustes').outerHTML = KitFacil.nav.ajustes('nav');
+document.getElementById('trilho-ajustes').outerHTML = KitFacil.nav.ajustes('trilho');
 history.replaceState({ tela: 'inicio' }, '');
 desenhar();
 const link = SY.tokenDoLink();

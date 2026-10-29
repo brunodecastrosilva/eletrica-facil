@@ -4,14 +4,15 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { writeFile } from 'node:fs/promises';
-import { preparar, aparelho, githubFalso, firestoreFalso, semRolagemLateral, conferirTopo, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ } from '../comum/testes/ambiente.mjs';
+import { preparar, aparelho, githubFalso, firestoreFalso, semRolagemLateral, conferirTopo, conferirNavAjustes, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ } from '../comum/testes/ambiente.mjs';
 
 let amb, versao;
 before(async () => { amb = await preparar(); versao = JSON.parse(await readFile(RAIZ + '/package.json', 'utf8')).version; });
 after(async () => { await amb?.encerrar(); });
 const esperar = async (cond, ms = 8000) => { const fim = Date.now() + ms; while (Date.now() < fim) { if (await cond()) return true; await new Promise(r => setTimeout(r, 50)); } return false; };
 const TELAS = [[{ width: 360, height: 740 }, 'celular pequeno'], [{ width: 390, height: 844 }, 'celular'], [{ width: 820, height: 1180 }, 'tablet'], [{ width: 1440, height: 900 }, 'computador']];
-const AJ = '.kf-topo [data-kf="ajustes"]';
+// Ajustes fica na navegação: barra de baixo (celular e tablet) ou pé do trilho (computador)
+const AJ = '.kf-nav [data-kf="ajustes"]:visible, .kf-trilho [data-kf="ajustes"]:visible';
 const abrirPainel = async (p, chave) => { const d = p.locator(`details[data-panel="${chave}"]`); if (!(await d.getAttribute('open') !== null)) await d.locator('summary').first().click(); };
 /* abre uma guia dos Ajustes (no celular, a lista vira a guia aberta) */
 const guia = async (p, id) => { if (!(await p.locator('[data-kf-aj]').count())) await p.click(AJ); await p.click(`.kf-aj-lista [data-kf-aj-ir="${id}"]`); await p.locator(`#kf-aj-${id}.kf-aberta, [data-kf-aj][data-ativa="${id}"]`).first().waitFor(); };
@@ -35,7 +36,8 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral; topo 
     assert.deepEqual(topo.erros, [], `área superior no ${nome}`);
     const navs = await p.evaluate(() => ['.kf-nav', '.kf-trilho'].filter(q => document.querySelector(q).getClientRects().length));
     assert.deepEqual(navs, [viewport.width >= 1024 ? '.kf-trilho' : '.kf-nav'], `navegação no ${nome}`);
-    assert.equal(await p.locator('[data-nav="/ajustes"]').count(), 0, 'Ajustes não fica na navegação: abre pela engrenagem do topo');
+    const navAj = await conferirNavAjustes(p);
+    assert.deepEqual(navAj.erros, [], `Ajustes na navegação no ${nome}`);
     await p.click(AJ);
     await p.locator('.kf-aj-h').waitFor();
     assert.ok(await semRolagemLateral(p), `rolagem lateral nos Ajustes no ${nome}`);
@@ -45,7 +47,7 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral; topo 
     const id = await criarOrcamento(p, 'Cliente Teste', 'Troca de tomada');
     await p.evaluate(id => go('/q/' + id), id);
     await p.locator('[data-menu]').waitFor();
-    const interno = await conferirTopo(p, { comAjustes: false });
+    const interno = await conferirTopo(p, { chopp: false });
     assert.deepEqual(interno.erros, [], `área superior do orçamento no ${nome}`);
     assert.ok(await semRolagemLateral(p), `rolagem lateral no orçamento no ${nome}`);
     assert.deepEqual(a.erros, [], `erros no ${nome}`);

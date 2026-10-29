@@ -6,8 +6,9 @@
    3. se a versão é a mesma no package.json, no app, no service worker e no CHANGELOG;
    4. se o service worker guarda arquivos que existem;
    5. regras de acessibilidade da página (idioma e zoom liberado) e se o Kit Fácil está carregado;
-   6. a interface comum: fonte da família, moldura (barra, navegação e trilho), área superior com Ajustes,
-      nuvem e balão, e a tela de Ajustes em guias.
+   6. a interface comum: fonte da família, moldura (barra, navegação e trilho), área superior com chopp,
+      nuvem e balão, Ajustes na navegação (barra de baixo e trilho) e a tela de Ajustes em guias;
+   7. o manifesto do app web: id, start_url e scope do próprio caminho (os três apps dividem o mesmo endereço).
    Para atualizar o manifesto depois de mudar o kit: node comum/verificar.mjs --gerar */
 import { readFile, writeFile, readdir, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -122,6 +123,18 @@ if (/user-scalable\s*=\s*no|maximum-scale\s*=\s*1(?![.\d])/.test(vp)) falha('o z
 if (/comum\/kit-facil\.js/.test(html) && /comum\/kit-facil\.css/.test(html)) ok('Kit Fácil carregado'); else falha('index.html não carrega comum/kit-facil.js e comum/kit-facil.css');
 if (/rel="manifest"/.test(html)) ok('manifesto do app web'); else falha('sem manifest.webmanifest');
 
+/* ---------- manifesto: identidade própria de cada app (lei 2) ---------- */
+console.log('Manifesto');
+try {
+  const mf = JSON.parse(await ler('manifest.webmanifest'));
+  const caminho = `/${app}/`;
+  // o id é resolvido a partir da raiz do endereço: "./" vira o mesmo id para os três apps e o Chrome acha que um já instalou o outro
+  if (mf.id === caminho) ok(`id próprio do app (${caminho})`);
+  else falha(`manifest.webmanifest: "id" deveria ser "${caminho}" (está "${mf.id}"). Com "./", os três apps ficam com a mesma identidade e o Chrome diz que um já está instalado quando o outro está`);
+  if (typeof mf.start_url === 'string' && (mf.start_url.startsWith('./') || mf.start_url.startsWith(caminho))) ok('start_url dentro da pasta do app'); else falha(`manifest.webmanifest: "start_url" fora da pasta do app (${mf.start_url})`);
+  if (mf.scope === './' || mf.scope === caminho) ok('scope limitado à pasta do app'); else falha(`manifest.webmanifest: "scope" deveria ser "./" ou "${caminho}" (está "${mf.scope}")`);
+} catch (e) { falha('manifest.webmanifest ausente ou inválido: ' + e.message); }
+
 /* ---------- interface comum (Kit Fácil 2) ---------- */
 console.log('Interface comum');
 const codigo = (await Promise.all(fontes.map(f => ler(f)))).join('\n');
@@ -129,12 +142,16 @@ if (/fonts\.googleapis\.com\/css2\?[^"']*family=Atkinson\+Hyperlegible\+Next/.te
 else falha('index.html não carrega a fonte comum (Atkinson Hyperlegible Next) — veja o PADRAO.md, item 7');
 if (/class="kf-casca"/.test(html) && /kf-barra/.test(codigo) && /kf-nav/.test(codigo) && /kf-trilho/.test(codigo)) ok('moldura comum: barra de cima, navegação embaixo e trilho lateral');
 else falha('moldura comum incompleta: use body.kf-casca, kf-barra, kf-nav e kf-trilho (PADRAO.md, item 7)');
-if (/KitFacil\.topo\.html\(\s*\{\s*ajustes:\s*true/.test(codigo)) ok('área superior direita: Ajustes, nuvem e balão (KitFacil.topo)');
-else falha('a tela principal não usa KitFacil.topo.html({ ajustes: true }) (Ajustes, nuvem e balão)');
+if (/KitFacil\.topo\.html\(\s*\{\s*principal:\s*true/.test(codigo)) ok('área superior direita: chopp, nuvem e balão (KitFacil.topo)');
+else falha('a tela principal não usa KitFacil.topo.html({ principal: true }) (chopp, nuvem e balão)');
+const navAj = (codigo.match(/KitFacil\.nav\.ajustes\(/g) || []).length;
+if (navAj >= 2 || (/KitFacil\.nav\.ajustes\(\s*['"]nav['"]/.test(codigo) && /KitFacil\.nav\.ajustes\(\s*['"]trilho['"]/.test(codigo))) ok('Ajustes na navegação: barra de baixo e trilho (KitFacil.nav.ajustes)');
+else falha('Ajustes precisa estar na barra de baixo e no trilho: use KitFacil.nav.ajustes("nav") e KitFacil.nav.ajustes("trilho")');
+if (/novidades\s*:\s*\[/.test(codigo)) ok('novidades da versão informadas ao Kit'); else aviso('KitFacil.iniciar sem novidades: quem atualiza o app não vê o que mudou');
 if (/KitFacil\.ajustes\.html\(/.test(codigo) && /KitFacil\.ajustes\.ligar\(/.test(codigo)) ok('Ajustes em guias (KitFacil.ajustes)');
 else falha('a tela de Ajustes não usa KitFacil.ajustes.html e KitFacil.ajustes.ligar');
-if (/abrirAjustes\s*:/.test(codigo) && /emAjustes\s*:/.test(codigo)) ok('engrenagem do topo ligada à tela de Ajustes do app');
-else falha('KitFacil.iniciar sem abrirAjustes e emAjustes (a engrenagem do topo não saberia abrir os Ajustes)');
+if (/abrirAjustes\s*:/.test(codigo) && /emAjustes\s*:/.test(codigo)) ok('item Ajustes da navegação ligado à tela de Ajustes do app');
+else falha('KitFacil.iniciar sem abrirAjustes e emAjustes (o item Ajustes da navegação não saberia abrir os Ajustes)');
 if (/aoEstado\s*:/.test(codigo)) aviso('aoEstado no motor de sincronização: o estado da nuvem já é mostrado pelo kit; confira se não há um indicador duplicado');
 
 console.log(falhas.length ? `\n${falhas.length} falha(s).` : `\nTudo certo${avisos.length ? ` (${avisos.length} aviso(s))` : ''}.`);

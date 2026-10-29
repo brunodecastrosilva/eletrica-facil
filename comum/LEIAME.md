@@ -24,7 +24,7 @@ Estudo Fácil.** Não altere só num repositório: siga o item 10 do [PADRAO.md]
 <body class="kf-casca">
 <header class="kf-barra"><div class="kf-barra-in">
   <div class="kf-marca"><span class="kf-marca-ic">…ícone…</span><span class="kf-marca-nome">Nome do app</span></div>
-  <div id="topo"></div>            <!-- KitFacil.topo.html({ ajustes: true }) -->
+  <div id="topo"></div>            <!-- KitFacil.topo.html({ principal: true }): chopp, nuvem e balão -->
 </div></header>
 <aside class="kf-trilho">…marca e kf-trilho-it…</aside>   <!-- computador -->
 <main>…</main>
@@ -42,12 +42,15 @@ KitFacil.iniciar({
   exemploDados: 'os orçamentos e os dados dos clientes',
   privacidade: ['Os orçamentos, a tabela de preços e os dados dos clientes ficam neste aparelho.'],
   abrirAjustes: secao => { /* abre (ou, sem secao e já aberto, fecha) a tela de Ajustes do app */ },
-  emAjustes: () => route().name === 'settings', // destaca a engrenagem
+  emAjustes: () => route().name === 'settings', // destaca o item Ajustes da navegação
   copia: { descricao: '…', baixar: () => KitFacil.copia.baixar(dados, esquema), restaurar: arquivo => { … } },
   textos: { notificacoes: '…' },               // opcional: texto da guia Notificações
+  novidades: [{ versao: VERSAO, itens: ['O que mudou, escrito para quem usa.'] }], // janela única depois de atualizar
+  boasVindas: { novo: () => !temDados(), passos: [['Passo', 'explicação']], exemplo: () => abrirExemplo() }, // primeiro uso
 });
 KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#EFEEE9', escuro: '#0E0D0A' } });
-document.getElementById('topo').outerHTML = KitFacil.topo.html({ ajustes: true });
+document.getElementById('topo').outerHTML = KitFacil.topo.html({ principal: true });
+// Ajustes é o último item da navegação: KitFacil.nav.ajustes('nav') na barra de baixo e KitFacil.nav.ajustes('trilho') no trilho
 ```
 
 ### Tela de Ajustes

@@ -3,7 +3,9 @@
 Regras comuns do **Conta Fácil**, do **Elétrica Fácil** e do **Estudo Fácil** e de qualquer app novo do projeto.
 Este arquivo fica em `comum/PADRAO.md`, igual nos três repositórios, junto com o **Kit Fácil** (o código comum).
 
-Versão do padrão: 2.0 · Kit Fácil 2.0.0 · outubro de 2026.
+Versão do padrão: 2.1 · Kit Fácil 2.1.0 · outubro de 2026.
+
+Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
 Princípio: **os apps são percebidos como uma família.** A estrutura, os nomes, os ícones, a ordem dos Ajustes, a área
 superior e o comportamento são iguais; cada app mantém a sua cor de destaque, a sua marca e as suas funções.
@@ -25,7 +27,13 @@ Os três apps dividem o mesmo endereço (`brunodecastrosilva.github.io`). Por is
 
 - tudo o que o app guarda no navegador usa o prefixo do app (`contafacil.draft`, `eletricafacil.quotes`…);
 - o service worker de cada app só apaga e só responde pelo que é dele (cache `<app>-<versão>`, pasta do app);
-- a chave da sincronização (`<prefixo>sync`) pode ser reaproveitada por outro app da família no mesmo aparelho.
+- a chave da sincronização (`<prefixo>sync`) pode ser reaproveitada por outro app da família no mesmo aparelho;
+- o `manifest.webmanifest` de cada app tem `"id": "/<app>/"`, com `start_url` e `scope` dentro da pasta do app.
+  Com `"id": "./"` os três apps ficam com a mesma identidade e o Chrome diz que um já está instalado quando o outro está.
+  O `npm run verificar` confere.
+
+Os repositórios são públicos e **sem licença** (todos os direitos reservados). O GitHub é o ambiente de testes, sem data
+para acabar; depois, os apps vão para as lojas de apps.
 
 ## 2. Estrutura de cada repositório
 
@@ -61,7 +69,9 @@ Precisam do Node 22 ou mais novo. Os testes usam o Playwright (`npm install` e `
   `package.json`, a constante `VERSAO` do código, o cache do `sw.js` (`<app>-<versão>`) e o topo do `CHANGELOG.md`.
 - Os arquivos `.js` próprios do app são carregados com `?v=<versão>` quando a página os lista.
 - Antes de publicar: `npm run verificar`, `npm test`, abrir o app no celular e no computador, conferir o modo escuro.
-- Publicar = enviar para a branch `main`. O GitHub Pages atualiza sozinho; o service worker baixa a versão nova na próxima abertura.
+- Publicar = enviar para a branch `main`, direto (não há repositório nem branch de homologação, por decisão do projeto). O GitHub Pages atualiza sozinho; o service worker baixa a versão nova na próxima abertura.
+- Cada versão nova informa as **novidades** em `KitFacil.iniciar({ novidades: [{ versao, itens }] })`, com as mesmas
+  linhas do CHANGELOG escritas para quem usa (item 6A).
 - Commits em português, dizendo o que muda para quem usa ("Ajustes em guias, iguais nos três apps").
 
 ## 5. Dados e sincronização entre aparelhos
@@ -153,6 +163,29 @@ gravidade é reenviado com essas duas informações no início do texto, e nada 
 um ponto de aviso e o app tenta de novo ao abrir e quando a conexão volta (até 30 tentativas ou 60 dias). A tela nunca diz
 "enviado" sem a confirmação do servidor. Cada mensagem tem um identificador próprio, então reenviar não duplica.
 
+## 6A. Apoio ao criador, novidades e boas-vindas (Kit Fácil 2.1)
+
+**Apoio ao criador (lei 13).** Os apps são gratuitos e nenhuma função depende de pagamento. O convite é o mesmo nos três:
+"Gostando do app? Pague um chopp para o criador!" (`KitFacil.apoio`).
+
+- ícone de caneca de chopp na área superior, primeiro à esquerda da nuvem, **só nas telas principais**;
+  atalho também em *Sobre o aplicativo*;
+- tocar abre a janela "Pague um chopp para o criador!" com o QR code do Pix e os botões **Copiar código Pix**
+  (copia e cola) e **Copiar chave**; não abre sozinho, não interrompe tarefas e não bloqueia nada;
+- a chave Pix é **aleatória** (nunca CPF, telefone ou e-mail no código público). Chave, nome e cidade ficam em
+  `APOIO_PADRAO`, no `kit-facil.js`, iguais para os três apps; sem chave, o chopp não aparece;
+- o código copia e cola segue o padrão BR Code do Banco Central, sem valor (quem paga escolhe);
+- o QR code usa a biblioteca `qrcode-generator` 1.4.4 do cdnjs, carregada só quando a janela abre; sem internet, a janela
+  mostra o aviso e o código continua copiável.
+
+**Novidades.** Na primeira abertura depois de uma atualização, a janela "Novidades do <app>" mostra o que mudou, uma vez
+só (chave `kitfacil.<app>.visto`). A lista também fica em *Sobre o aplicativo → Novidades desta versão*.
+
+**Boas-vindas.** Quem nunca usou o app vê, uma vez, a janela "Boas-vindas ao <app>" com o resumo, os primeiros passos e,
+se o app tiver, o botão do exemplo (`KitFacil.iniciar({ boasVindas: { novo, passos, exemplo, rotuloExemplo } })`).
+Quem vê as boas-vindas não vê as novidades na mesma abertura. Exceção registrada: o Estudo Fácil tem uma tela própria de
+primeiro uso (escolha do edital e da rotina), que faz esse papel.
+
 ## 7. Interface comum
 
 ### 7.1 Moldura (igual nos três apps)
@@ -160,10 +193,12 @@ um ponto de aviso e o app tenta de novo ao abrir e quando a conexão volta (até
 | | Celular e tablet (até 1023 px) | Computador (1024 px ou mais) |
 |---|---|---|
 | Barra de cima (`kf-barra`) | marca à esquerda; à direita, a área superior (7.2) | só a área superior, à direita (a marca vai para o trilho) |
-| Navegação | barra fixa embaixo (`kf-nav`), ícone + nome, item atual destacado com a cor do app | trilho lateral fixo de 240 px (`kf-trilho`), com a marca e as seções |
+| Navegação | barra fixa embaixo (`kf-nav`), ícone + nome, item atual destacado com a cor do app; **Ajustes é o último item** | trilho lateral fixo de 240 px (`kf-trilho`), com a marca e as seções; **Ajustes fica no pé do trilho** |
 | Telas internas (um orçamento, uma proposta) | Voltar + título à esquerda; ações da tela; nuvem e balão à direita; a navegação de baixo pode sumir para dar lugar à barra de ações da tela | o trilho continua visível |
 
-- **Ajustes não fica na navegação**: abre pela engrenagem do alto da tela, em todos os apps.
+- **Ajustes fica na navegação**, em todos os apps: último item da barra de baixo e, no computador, no pé do trilho
+  (`KitFacil.nav.ajustes('nav')` e `KitFacil.nav.ajustes('trilho')`). O item fica destacado enquanto os Ajustes estão
+  abertos; tocar nele de novo volta para a lista de guias.
 - A página usa `body.kf-casca`; no computador o conteúdo começa depois do trilho e fica centralizado no espaço que sobra.
 - Barras e botões fixos do app (barra de total, botão flutuante, avisos) sobem acima da navegação de baixo e,
   no computador, começam depois do trilho.
@@ -172,12 +207,11 @@ um ponto de aviso e o app tenta de novo ao abrir e quando a conexão volta (até
 
 ### 7.2 Área superior direita
 
-Sempre no canto superior direito, nesta ordem e lado a lado: **Ajustes** (engrenagem) · **nuvem** · **balão**
-(`KitFacil.topo.html({ ajustes: true })`). Nas telas internas, só nuvem e balão (`{ ajustes: false }`).
+Sempre no canto superior direito, nesta ordem e lado a lado: **chopp** · **nuvem** · **balão**
+(`KitFacil.topo.html({ principal: true })`). Nas telas internas, só nuvem e balão (`{ principal: false }`).
 
 - área de toque de 44 × 44 px, ícones de 24 px, distância de no máximo 24 px da borda direita;
-- nomes acessíveis: "Ajustes"; "Sincronização: <estado>. Ver detalhes"; "Avaliação e feedback";
-- a engrenagem fica destacada (`aria-current="page"`) enquanto os Ajustes estão abertos; tocar de novo fecha;
+- nomes acessíveis: "Pague um chopp para o criador"; "Sincronização: <estado>. Ver detalhes"; "Avaliação e feedback";
 - o balão mostra um ponto quando há mensagem guardada à espera de envio.
 
 ### 7.3 Tela de Ajustes
@@ -191,7 +225,7 @@ Lista de guias à esquerda (ou em tela cheia no celular) e a guia aberta à dire
 5. **Notificações** — o que o app avisa e como (nenhum app envia notificações para o aparelho hoje)
 6. **Privacidade e segurança** — onde ficam os dados, segurança da chave, desconectar, apagar os dados deste aparelho
 7. **Avaliação e feedback** — as mesmas duas opções do balão
-8. **Sobre o aplicativo** — versão, fase de testes, termos e políticas, outros apps da família, versão do Kit Fácil
+8. **Sobre o aplicativo** — versão, fase de testes, termos e políticas, novidades desta versão, apoio ao criador, outros apps da família, versão do Kit Fácil
 
 Depois delas, num grupo com o nome do app, as **guias próprias**. Elas não mudam a ordem, os nomes, os ícones nem os
 componentes das guias comuns; conteúdo extra do app numa guia comum entra pelo campo `extras` (por exemplo, "Seus dados
@@ -244,7 +278,7 @@ para as do kit, para sucesso, aviso e erro serem iguais na família.
 | Blocos | `kf-bloco` (título `h3`), `kf-dados` (lista de rótulo e valor) | |
 | Estados | carregando `kf-carregando`; sucesso `kf-fim`; aviso `kf-aviso` (`kf-ok`, `kf-alerta`, `kf-ruim`); vazio `kf-vazio`; estado da nuvem `kf-estado` | a mensagem diz o que aconteceu e o que fazer; nunca só pela cor |
 | Aviso rápido | o `toast` do app | some sozinho; ação opcional ("Desfazer") |
-| Ícones | traço de 2 px, cantos arredondados, 24 × 24 (`kf-i`) | mesmo ícone para a mesma ideia nos três apps (engrenagem = Ajustes, nuvem = sincronização, balão = avaliação) |
+| Ícones | traço de 2 px, cantos arredondados, 24 × 24 (`kf-i`) | mesmo ícone para a mesma ideia nos três apps (controles deslizantes = Ajustes, caneca = chopp, nuvem = sincronização, balão = avaliação) |
 
 **Camadas (z-index):** 20 barra de cima e trilho · 25–30 navegação e barras fixas · 45–80 janelas do app ·
 85 janelas do Kit Fácil · 95 avisos rápidos (toast).
@@ -267,8 +301,8 @@ Os nomes das guias, dos estados da nuvem e das opções do balão são exatament
 
 Todo app é um app web completo (não existe versão "só celular"). Telas de referência nos testes:
 celular pequeno 360 × 740, celular 390 × 844, tablet 820 × 1180 e computador 1440 × 900. Nenhuma tela pode ter rolagem lateral.
-Os testes de cada app conferem a área superior (`conferirTopo`), as guias dos Ajustes (`guiasAjustes`) e a navegação
-(barra de baixo ou trilho) nesses tamanhos. Respeitar as áreas seguras (`env(safe-area-inset-*)`).
+Os testes de cada app conferem a área superior (`conferirTopo`), o item Ajustes na navegação (`conferirNavAjustes`),
+as guias dos Ajustes (`guiasAjustes`) e a navegação (barra de baixo ou trilho) nesses tamanhos. Respeitar as áreas seguras (`env(safe-area-inset-*)`).
 O app é instalável (PWA) e abre sem internet depois da primeira visita.
 
 ## 9. Segurança e privacidade
@@ -281,7 +315,8 @@ O app é instalável (PWA) e abre sem internet depois da primeira visita.
 - *Ajustes → Privacidade e segurança* diz, em linguagem simples, onde ficam os dados de cada app e permite apagar os
   dados do aparelho. Antes de vender ou divulgar amplamente, revisar com assessoria jurídica: termos de uso e política de
   privacidade conforme a LGPD (o Elétrica Fácil guarda dados de clientes do usuário: nome, telefone, endereço e CPF/CNPJ).
-  Enquanto não existirem, *Sobre o aplicativo* diz "Termos de uso: ainda não publicados".
+  Enquanto não existirem, *Sobre o aplicativo* diz "Termos de uso: ainda não publicados". Os rascunhos (em nome do criador,
+  contato cas_bruno@outlook.com) ficam no projeto Integrador, à espera de revisão jurídica.
 
 ## 10. Como mudar o Kit Fácil
 
@@ -294,5 +329,6 @@ O app é instalável (PWA) e abre sem internet depois da primeira visita.
 
 Copiar a pasta `comum/`, o `package.json` (trocando nome e versão), o modelo do `sw.js` e a estrutura do README;
 incluir o app em `FAMILIA` (em `kit-facil.js`) e na regra do Firestore (`app in [...]`); ligar as variáveis `--kf-*`;
-montar a moldura do item 7.1 com a área superior do 7.2; montar os Ajustes com `KitFacil.ajustes.html` (guias comuns
-e as guias próprias); chamar `KitFacil.iniciar` com nome, versão, `abrirAjustes`, `emAjustes`, `copia` e o que o app guarda.
+`manifest.webmanifest` com `"id": "/<app>/"`; montar a moldura do item 7.1 com a área superior do 7.2 e o item Ajustes
+na navegação; montar os Ajustes com `KitFacil.ajustes.html` (guias comuns e as guias próprias); chamar
+`KitFacil.iniciar` com nome, versão, `abrirAjustes`, `emAjustes`, `copia`, `novidades`, `boasVindas` e o que o app guarda.

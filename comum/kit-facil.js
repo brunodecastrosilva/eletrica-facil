@@ -4,7 +4,10 @@
    Sem dependências e sem etapa de build: script clássico que cria window.KitFacil.
 
    O que tem aqui (veja comum/PADRAO.md):
-   - área superior direita padronizada: Ajustes, nuvem (estado real da sincronização) e balão (avaliação e feedback)
+   - área superior direita padronizada: chopp (apoio ao criador, só nas telas principais), nuvem (estado real da
+     sincronização) e balão (avaliação e feedback); Ajustes fica na navegação (barra de baixo e trilho)
+   - apoio ao criador: "Pague um chopp para o criador!", com QR code e código Pix copia e cola
+   - novidades de cada versão (uma vez, na primeira abertura depois de atualizar) e boas-vindas no primeiro uso
    - avaliação e feedback: escolha entre "Avaliar o app" e "Relatar um problema", com os mesmos componentes
    - tela de Ajustes em guias: as guias comuns, sempre na mesma ordem, e as guias próprias de cada app
    - tema claro, escuro ou automático; instalar; cópia de segurança; armazenamento; apagar dados do aparelho
@@ -12,7 +15,7 @@
    - janelas (diálogos) acessíveis e avisos */
 (function (global) {
   'use strict';
-  const VERSAO = '2.0.0';
+  const VERSAO = '2.1.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -25,6 +28,12 @@
      A configuração web do Firebase é pública por natureza (não é senha): quem protege o banco são as regras
      do Firestore (veja comum/regras-firestore-feedback.txt), que só deixam criar avaliações no formato abaixo. */
   const DESTINO_PADRAO = { tipo: 'firestore', projeto: 'conta-facil-2c1f9', chaveApi: 'AIzaSyDKdtdRernEqoaC0BQdMW8P7KiZ-UNcEN0', colecao: 'feedback' };
+
+  /* Apoio ao criador (lei 13): Pix do criador, igual nos três apps. A chave é ALEATÓRIA, de propósito: o repositório é
+     público e uma chave de CPF, telefone ou e-mail exporia dado pessoal. Nome (até 25 letras) e cidade (até 15) entram no
+     código Pix copia e cola, como manda o padrão do Banco Central. Sem chave, o chopp não aparece. */
+  const APOIO_PADRAO = { chave: '', nome: '', cidade: '' };
+  const QR_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
 
   /* ================= utilidades ================= */
   const $ = (s, r = document) => r.querySelector(s);
@@ -63,6 +72,8 @@
     sino: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
     escudo: '<path d="M12 3 5 6v5.5c0 4.3 3 7.6 7 9.5 4-1.9 7-5.2 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.1"/>',
+    chopp: '<path d="M5.5 8.5h10v11a1.5 1.5 0 0 1-1.5 1.5H7a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M15.5 11h1.6a2.4 2.4 0 0 1 2.4 2.4v1.7a2.4 2.4 0 0 1-2.4 2.4h-1.6"/><path d="M5.5 8.5A2.4 2.4 0 0 1 7.6 4.7a3 3 0 0 1 5.3-.4 2.4 2.4 0 0 1 2.6 4.2"/><path d="M9 12.5v5M12 12.5v5"/>',
+    estrelaNova: '<path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3M6 6l2.1 2.1M15.9 15.9 18 18M18 6l-2.1 2.1M8.1 15.9 6 18"/><circle cx="12" cy="12" r="2.2"/>',
   };
   const IC = {
     x: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
@@ -72,6 +83,8 @@
     balao: svg(P.balao),
     msg: svg(P.balao),
     ajustes: svg(P.ajustes),
+    chopp: svg(P.chopp),
+    novidades: svg(P.estrelaNova),
     pessoa: svg(P.pessoa),
     aparencia: svg(P.aparencia),
     preferencias: svg(P.preferencias),
@@ -97,12 +110,15 @@
     app: '', nome: '', versao: '', resumo: '', icone: 'icons/icon-192.png', prefixo: '',
     tela: () => '', toast: null, privacidade: [], suporteEmail: '', feedback: { ...DESTINO_PADRAO },
     exemploDados: '', abrirAjustes: null, emAjustes: null, copia: null, textos: {},
+    apoio: { ...APOIO_PADRAO }, novidades: [], boasVindas: null, ocupado: null,
   };
   let iniciado = false;
   function iniciar(o) {
     Object.assign(C, o || {});
     C.feedback = { ...DESTINO_PADRAO, ...((o && o.feedback) || {}) };
     C.textos = { ...((o && o.textos) || {}) };
+    C.apoio = { ...APOIO_PADRAO, ...((o && o.apoio) || {}) };
+    C.novidades = Array.isArray(o && o.novidades) ? o.novidades : [];
     if (!C.prefixo) C.prefixo = (FAMILIA.find(f => f.app === C.app) || {}).prefixo || (C.app + '.');
     if (!C.app || !C.nome || !C.versao) console.warn('KitFacil.iniciar: informe app, nome e versao');
     raiz();
@@ -112,6 +128,7 @@
       window.addEventListener('online', () => { fila.tentar(); atualizarTopo(); });
       window.addEventListener('offline', () => atualizarTopo());
       setTimeout(() => fila.tentar(), 4000);
+      setTimeout(primeiraAbertura, 700);
     }
   }
 
@@ -447,6 +464,8 @@
       <h3 class="kf-sub">Termos e políticas</h3>
       <dl class="kf-dados"><div><dt>Termos de uso</dt><dd>Ainda não publicados: o app está em fase de testes.</dd></div>
         <div><dt>Privacidade</dt><dd>O resumo de como o app trata os seus dados está em <b>Privacidade e segurança</b>.</dd></div></dl>
+      ${novidadesDaVersao() ? `<h3 class="kf-sub">Novidades desta versão</h3>${listaNovidades(novidadesDaVersao())}` : ''}
+      ${apoioAtivo() ? `<h3 class="kf-sub">Apoie o criador</h3><p class="kf-ajuda">O ${esc(C.nome)} é gratuito. Gostando do app? Pague um chopp para o criador!</p><button type="button" class="kf-btn kf-sec" data-kf="apoio">${IC.chopp}Pagar um chopp</button>` : ''}
       ${outros.length ? `<h3 class="kf-sub">Outros apps da família</h3><ul class="kf-apps">${outros.map(f => `<li><a href="${esc(f.url)}" target="_blank" rel="noopener"><b>${esc(f.nome)}</b><span>${esc(f.resumo)}</span>${IC.externo}</a></li>`).join('')}</ul>` : ''}
       <p class="kf-rodape">${esc(C.nome)} ${esc(C.versao)} · Kit Fácil ${VERSAO}</p>`;
   }
@@ -607,10 +626,12 @@
     const e = estadoNuvem(), r = ESTADOS[e].rotulo;
     return `<button type="button" class="kf-topo-btn kf-nuvem" data-kf="nuvem" data-kf-nuvem data-estado="${e}" aria-label="${esc(`Sincronização: ${r}. Ver detalhes`)}" title="${esc(`Sincronização: ${r}`)}">${iconeNuvem(e)}</button>`;
   }
-  /* o = { ajustes: true } mostra o botão de Ajustes à esquerda da nuvem (nas telas principais) */
+  /* Área superior, igual nos três apps: chopp · nuvem · balão.
+     o = { principal: true } nas telas principais (mostra o chopp); { principal: false } nas telas internas (só nuvem e balão).
+     O antigo { ajustes: true/false } continua valendo como principal/interna. Ajustes fica na navegação (KitFacil.nav.ajustes). */
   function topoHTML(o = {}) {
-    const em = !!(C.emAjustes && C.emAjustes());
-    return `<div class="kf-topo" data-kf-topo>${o.ajustes === false ? '' : `<button type="button" class="kf-topo-btn" data-kf="ajustes" aria-label="Ajustes" title="Ajustes" aria-current="${em ? 'page' : 'false'}">${IC.ajustes}</button>`}<span class="kf-topo-par">${botaoNuvem()}<button type="button" class="kf-topo-btn${fila.quantos() ? ' kf-com-pendente' : ''}" data-kf="feedback" aria-label="Avaliação e feedback" title="Avaliação e feedback">${IC.balao}<span class="kf-ponto" aria-hidden="true"></span></button></span></div>`;
+    const principal = o.principal != null ? !!o.principal : o.ajustes !== false;
+    return `<div class="kf-topo" data-kf-topo>${principal && apoioAtivo() ? botaoApoio() : ''}<span class="kf-topo-par">${botaoNuvem()}<button type="button" class="kf-topo-btn${fila.quantos() ? ' kf-com-pendente' : ''}" data-kf="feedback" aria-label="Avaliação e feedback" title="Avaliação e feedback">${IC.balao}<span class="kf-ponto" aria-hidden="true"></span></button></span></div>`;
   }
   function atualizarTopo() {
     const e = estadoNuvem(), r = ESTADOS[e].rotulo, det = detalheNuvem(e);
@@ -623,7 +644,7 @@
     $$('[data-kf-ultima]').forEach(el => { el.textContent = ult; });
     $$('[data-kf-estado-nuvem]').forEach(el => { if (el.dataset.estado !== e || el.dataset.det !== det) el.outerHTML = estadoNuvemHTML(); });
     const em = !!(C.emAjustes && C.emAjustes());
-    $$('[data-kf="ajustes"]').forEach(b => b.setAttribute('aria-current', em ? 'page' : 'false'));
+    $$('[data-kf="ajustes"]').forEach(b => { b.setAttribute('aria-current', em ? 'page' : 'false'); if (b.getAttribute('role') === 'tab') b.setAttribute('aria-selected', String(em)); });
     $$('[data-kf="feedback"]').forEach(b => b.classList.toggle('kf-com-pendente', !!fila.quantos()));
     resumoAjustes('sincronizacao', resumoSincronizacao());
     resumoAjustes('conta', resumoConta());
@@ -655,6 +676,109 @@
   function irAjustes(secao) {
     if (typeof C.abrirAjustes === 'function') C.abrirAjustes(secao);
     if (secao) requestAnimationFrame(() => abrirSecao(secao));
+  }
+
+  /* ================= navegação: item Ajustes ================= */
+  /* Ajustes fica na navegação: último item da barra de baixo (celular e tablet) e do trilho lateral (computador).
+     tipo 'nav' ou 'trilho'; o = { role: 'tab' } quando a navegação do app é uma lista de abas (tablist). */
+  function navAjustesHTML(tipo = 'nav', o = {}) {
+    const em = !!(C.emAjustes && C.emAjustes());
+    const role = o.role ? ` role="${esc(o.role)}"${o.role === 'tab' ? ` aria-selected="${em}"` : ''}` : '';
+    const id = o.id ? ` id="${esc(o.id)}"` : '';
+    return tipo === 'trilho'
+      ? `<button type="button" class="kf-trilho-it kf-trilho-ajustes" data-kf="ajustes"${id}${role} aria-current="${em ? 'page' : 'false'}">${IC.ajustes}<span>Ajustes</span></button>`
+      : `<button type="button" class="kf-nav-it" data-kf="ajustes"${id}${role} aria-current="${em ? 'page' : 'false'}"><span class="kf-nav-ic">${IC.ajustes}</span><span class="kf-nav-l">Ajustes</span></button>`;
+  }
+
+  /* ================= apoio ao criador: "Pague um chopp para o criador!" ================= */
+  const apoioAtivo = () => !!(C.apoio && String(C.apoio.chave || '').trim());
+  const botaoApoio = () => `<button type="button" class="kf-topo-btn kf-chopp" data-kf="apoio" aria-label="Pague um chopp para o criador" title="Pague um chopp para o criador">${IC.chopp}</button>`;
+  /* código Pix copia e cola (BR Code, padrão EMV do Banco Central), sem valor: quem paga escolhe quanto */
+  const semAcento = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9 .\-]/g, '').trim();
+  const campo = (id, v) => id + String(v.length).padStart(2, '0') + v;
+  function crc16(t) {
+    let c = 0xFFFF;
+    for (let i = 0; i < t.length; i++) { c ^= t.charCodeAt(i) << 8; for (let j = 0; j < 8; j++) c = c & 0x8000 ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF; }
+    return c.toString(16).toUpperCase().padStart(4, '0');
+  }
+  function codigoPix({ chave, nome, cidade, txid = '***' } = C.apoio) {
+    const conta = campo('00', 'br.gov.bcb.pix') + campo('01', String(chave).trim());
+    const corpo = campo('00', '01') + campo('26', conta) + campo('52', '0000') + campo('53', '986') + campo('58', 'BR')
+      + campo('59', (semAcento(nome).toUpperCase() || 'CRIADOR').slice(0, 25)) + campo('60', (semAcento(cidade).toUpperCase() || 'BRASIL').slice(0, 15))
+      + campo('62', campo('05', txid)) + '6304';
+    return corpo + crc16(corpo);
+  }
+  let qrPromessa = null;
+  function carregarQR() {
+    if (global.qrcode) return Promise.resolve(global.qrcode);
+    if (!qrPromessa) qrPromessa = new Promise((ok, falhou) => {
+      const s = document.createElement('script'); s.src = QR_LIB; s.async = true; s.crossOrigin = 'anonymous';
+      s.onload = () => global.qrcode ? ok(global.qrcode) : falhou(new Error('qr')); s.onerror = () => { qrPromessa = null; falhou(new Error('qr')); };
+      document.head.appendChild(s);
+    });
+    return qrPromessa;
+  }
+  function abrirApoio() {
+    if (!apoioAtivo()) return;
+    const codigo = codigoPix();
+    abrirDialogo({ titulo: 'Pague um chopp para o criador!', classe: 'kf-curto kf-apoio', nome: 'apoio',
+      corpo: `<p class="kf-texto">Gostando do ${esc(C.nome)}? O app é gratuito e feito por uma pessoa só. Se ele ajuda você, pague um chopp para o criador pelo Pix. Qualquer valor ajuda.</p>
+        <div class="kf-qr" data-kf-qr role="img" aria-label="QR code do Pix do criador"><span class="kf-carregando">Preparando o QR code…</span></div>
+        <p class="kf-ajuda">Abra o app do seu banco, escolha <b>Pix</b> e leia o QR code, ou copie o código e cole em <b>Pix copia e cola</b>.</p>
+        <p class="kf-ajuda">É opcional: o ${esc(C.nome)} continua igual para todos, pagando ou não.</p>`,
+      pe: `<button type="button" class="kf-btn kf-sec" data-kf-pix-chave>${IC.copiar}Copiar chave</button><button type="button" class="kf-btn kf-pri" data-kf-pix-codigo autofocus>${IC.copiar}Copiar código Pix</button>`,
+      aoMontar: d => {
+        $('[data-kf-pix-codigo]', d).onclick = () => copiar(codigo, 'Código Pix copiado. Cole no app do seu banco.');
+        $('[data-kf-pix-chave]', d).onclick = () => copiar(String(C.apoio.chave).trim(), 'Chave Pix copiada.');
+        const caixa = $('[data-kf-qr]', d);
+        carregarQR().then(qrcode => {
+          if (!document.contains(caixa)) return;
+          const q = qrcode(0, 'M'); q.addData(codigo); q.make();
+          caixa.innerHTML = q.createSvgTag({ cellSize: 4, margin: 3, scalable: true });
+        }).catch(() => { if (document.contains(caixa)) caixa.innerHTML = '<span class="kf-ajuda">Sem internet para mostrar o QR code agora. Use o botão Copiar código Pix.</span>'; });
+      } });
+  }
+
+  /* ================= novidades da versão e boas-vindas no primeiro uso ================= */
+  /* novidades: [{ versao: '1.3.0', itens: ['…', '…'] }] em KitFacil.iniciar. A janela aparece uma vez, na primeira
+     abertura depois de atualizar; em Sobre o aplicativo a lista fica sempre à mão.
+     boasVindas: { novo: () => true se a pessoa nunca usou o app, passos: [[titulo, texto], …], exemplo: () => {…},
+     rotuloExemplo: 'Ver exemplo' }: aparece uma vez, só para quem nunca usou o app. Sem passos, só informa quem é novo
+     (o app tem a própria tela de primeiro uso) e as novidades não aparecem para essa pessoa. */
+  const chaveVisto = () => `kitfacil.${C.app}.visto`;
+  const novidadesDaVersao = () => { const n = (C.novidades || []).find(x => x && x.versao === C.versao); return n && Array.isArray(n.itens) && n.itens.length ? n : null; };
+  const listaNovidades = n => `<ul class="kf-lista kf-novidades">${n.itens.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
+  function abrirNovidades() {
+    const n = novidadesDaVersao(); if (!n) return false;
+    abrirDialogo({ titulo: `Novidades do ${C.nome}`, classe: 'kf-curto', nome: 'novidades',
+      corpo: `<p class="kf-texto">O app foi atualizado para a versão ${esc(C.versao)}. O que mudou:</p>${listaNovidades(n)}`,
+      pe: `<button type="button" class="kf-btn kf-pri" data-kf-fechar autofocus>Entendi</button>` });
+    return true;
+  }
+  function abrirBoasVindas() {
+    const b = C.boasVindas; if (!b) return false;
+    const passos = (b.passos || []).filter(x => x && x[0]);
+    // app com tela própria de primeiro uso (boasVindas só com "novo"): o kit não abre outra janela por cima
+    if (!passos.length) return false;
+    abrirDialogo({ titulo: `Boas-vindas ao ${C.nome}`, classe: 'kf-curto kf-boas-vindas', nome: 'boas-vindas',
+      corpo: `${C.resumo ? `<p class="kf-texto">${esc(C.resumo)}</p>` : ''}${passos.length ? `<ol class="kf-passos">${passos.map(([t, d]) => `<li><b>${esc(t)}</b>${d ? `<span>${esc(d)}</span>` : ''}</li>`).join('')}</ol>` : ''}
+        <p class="kf-ajuda">Os dados ficam neste aparelho. Para usar no celular, no tablet e no computador, ligue a sincronização no ícone da nuvem.</p>`,
+      pe: `${b.exemplo ? `<button type="button" class="kf-btn kf-sec" data-kf-exemplo>${esc(b.rotuloExemplo || 'Ver exemplo')}</button>` : ''}<button type="button" class="kf-btn kf-pri" data-kf-fechar autofocus>Começar</button>`,
+      aoMontar: d => { const e = $('[data-kf-exemplo]', d); if (e) e.onclick = () => { fecharDialogo(true); try { b.exemplo(); } catch (x) { console.warn(x); } }; } });
+    return true;
+  }
+  function primeiraAbertura(tentativa = 0) {
+    if (!C.app) return;
+    // nos testes automáticos (navegador controlado) as janelas automáticas só abrem quando o teste pede
+    if (navigator.webdriver && !global.KF_TESTE_ABERTURA) return;
+    // espera o app terminar de abrir as janelas dele (link de conexão, guia, primeiro uso próprio)
+    if ((dialogoAberto() || (C.ocupado && C.ocupado())) && tentativa < 20) { setTimeout(() => primeiraAbertura(tentativa + 1), 1500); return; }
+    const visto = ler(chaveVisto(), null);
+    gravar(chaveVisto(), C.versao);
+    if (visto === C.versao || dialogoAberto()) return;
+    let novo = false; try { novo = !!(C.boasVindas && C.boasVindas.novo && C.boasVindas.novo()); } catch {}
+    if (visto === null && novo) { abrirBoasVindas(); return; }
+    if (visto !== null || !novo) abrirNovidades();
   }
 
   /* ================= tela de Ajustes em guias ================= */
@@ -1061,7 +1185,13 @@
       problema: () => abrirFeedback({ tipo: 'problema' }),
       feedback: () => abrirEscolhaFeedback(),
       nuvem: () => abrirDialogoNuvem(),
-      ajustes: () => { if (typeof C.abrirAjustes === 'function') C.abrirAjustes(); },
+      ajustes: () => {
+        // na navegação, tocar em Ajustes já aberto volta para a lista de guias (como qualquer item da barra)
+        if (b.closest('.kf-nav,.kf-trilho') && C.emAjustes && C.emAjustes()) { const root = $('[data-kf-aj]'); if (root && root.dataset.ativa && !largo(root)) voltarLista(root); return; }
+        if (typeof C.abrirAjustes === 'function') C.abrirAjustes();
+      },
+      apoio: () => abrirApoio(),
+      novidades: () => abrirNovidades(),
       'ajustes-sincronizacao': () => { fecharDialogo(true); irAjustes('sincronizacao'); },
       sobre: () => abrirSobre(),
       tema: () => tema.definir(b.dataset.v),
@@ -1096,6 +1226,10 @@
     sobre: { abrir: abrirSobre },
     ajudaHTML,
     topo: { html: topoHTML, atualizar: atualizarTopo, estado: estadoNuvem, ESTADOS },
+    nav: { ajustes: navAjustesHTML },
+    apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix },
+    novidades: { abrir: abrirNovidades, daVersao: novidadesDaVersao },
+    boasVindas: { abrir: abrirBoasVindas },
     nuvem: { abrir: abrirDialogoNuvem, estado: estadoNuvem, detalhe: detalheNuvem },
     ajustes: { SECOES, html: ajustesHTML, ligar: ligarAjustes, abrir: abrirSecao, ir: irAjustes, resumo: resumoAjustes },
     tema,

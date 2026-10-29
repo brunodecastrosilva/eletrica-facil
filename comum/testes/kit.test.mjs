@@ -4,7 +4,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { preparar, aparelho, githubFalso, firestoreFalso, TOKEN_TESTE, conferirTopo, guiasAjustes, GUIAS_COMUNS, semRolagemLateral } from './ambiente.mjs';
+import { preparar, aparelho, githubFalso, firestoreFalso, TOKEN_TESTE, conferirTopo, conferirNavAjustes, abrirAjustesPelaNav, guiasAjustes, GUIAS_COMUNS, semRolagemLateral } from './ambiente.mjs';
 
 let amb;
 before(async () => { amb = await preparar(); });
@@ -15,11 +15,13 @@ const estadoNuvem = p => p.getAttribute('[data-kf-nuvem]', 'data-estado');
 const CELULAR = { width: 390, height: 844 }, COMPUTADOR = { width: 1280, height: 860 };
 
 /* ---------------- área superior direita ---------------- */
-test('topo: Ajustes, nuvem e balão no canto superior direito, nessa ordem, no celular e no computador', async () => {
-  for (const viewport of [CELULAR, { width: 820, height: 1180 }, COMPUTADOR]) {
-    const a = await aparelho(amb, { viewport, caminho: pagina() });
-    const t = await conferirTopo(a.page);
+test('topo: chopp, nuvem e balão no canto superior direito, nessa ordem; Ajustes na navegação, no celular e no computador', async () => {
+  for (const viewport of [{ width: 360, height: 740 }, CELULAR, { width: 820, height: 1180 }, COMPUTADOR]) {
+    const a = await aparelho(amb, { viewport, caminho: pagina() + '&apoio=1' });
+    const t = await conferirTopo(a.page, { chopp: true });
     assert.deepEqual(t.erros, [], `largura ${viewport.width}: ${t.erros.join('; ')}`);
+    const n = await conferirNavAjustes(a.page);
+    assert.deepEqual(n.erros, [], `largura ${viewport.width}: ${n.erros.join('; ')}`);
     assert.equal(t.estado, 'desligada');
     assert.ok(await semRolagemLateral(a.page));
     assert.deepEqual(a.erros, []);
@@ -257,13 +259,13 @@ test('janelas: foco preso dentro, Esc fecha e o foco volta para o balão; todos 
 test('Ajustes: guias comuns na ordem do padrão e guias do app num grupo próprio', async () => {
   const a = await aparelho(amb, { caminho: pagina() });
   const p = a.page;
-  await p.click('.kf-topo [data-kf="ajustes"]');
+  await abrirAjustesPelaNav(p);
   await p.locator('[data-kf-aj]').waitFor();
   const g = await guiasAjustes(p);
   assert.deepEqual(g.comuns, GUIAS_COMUNS);
   assert.deepEqual(g.produto, ['Notas']);
   assert.equal(await p.textContent('.kf-aj-lista .kf-aj-grupo:nth-of-type(2)'), (await p.evaluate(() => KitFacil.FAMILIA.find(f => f.app === new URLSearchParams(location.search).get('app')).nome)));
-  assert.equal(await p.getAttribute('.kf-topo [data-kf="ajustes"]', 'aria-current'), 'page');
+  assert.equal(await p.locator('.kf-nav [data-kf="ajustes"]').getAttribute('aria-current'), 'page');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
@@ -271,7 +273,7 @@ test('Ajustes: guias comuns na ordem do padrão e guias do app num grupo própri
 test('Ajustes no celular: lista → guia → volta pela seta e pelo Voltar do aparelho', async () => {
   const a = await aparelho(amb, { caminho: pagina() });
   const p = a.page;
-  await p.click('.kf-topo [data-kf="ajustes"]');
+  await abrirAjustesPelaNav(p);
   assert.ok(await p.isVisible('.kf-aj-lista'));
   assert.equal(await p.isVisible('#kf-aj-aparencia'), false);
   await p.click('[data-kf-aj-ir="aparencia"]');
@@ -293,7 +295,7 @@ test('Ajustes no celular: lista → guia → volta pela seta e pelo Voltar do ap
 test('Ajustes em tela larga: lista e guia lado a lado, primeira guia aberta, troca sem empilhar histórico', async () => {
   const a = await aparelho(amb, { viewport: COMPUTADOR, caminho: pagina() });
   const p = a.page;
-  await p.click('.kf-topo [data-kf="ajustes"]');
+  await abrirAjustesPelaNav(p);
   assert.ok(await p.isVisible('.kf-aj-lista'));
   assert.ok(await p.isVisible('#kf-aj-conta'));
   assert.ok(await p.isVisible('#extra-conta'));
@@ -313,7 +315,7 @@ test('Ajustes em tela larga: lista e guia lado a lado, primeira guia aberta, tro
 test('Ajustes: conteúdo das guias comuns (conta, sincronização, armazenamento, tema, preferências, notificações, privacidade, feedback, sobre)', async () => {
   const a = await aparelho(amb, { viewport: COMPUTADOR, caminho: pagina() });
   const p = a.page;
-  await p.click('.kf-topo [data-kf="ajustes"]');
+  await abrirAjustesPelaNav(p);
   const texto = async id => { await p.click(`[data-kf-aj-ir="${id}"]`); return p.textContent(`#kf-aj-${id}`); };
   assert.match(await texto('conta'), /sem criar cadastro[\s\S]*Ligar a sincronização/);
   const sinc = await texto('sincronizacao');
@@ -346,7 +348,7 @@ test('Ajustes: cópia de segurança e apagar os dados deste aparelho', async () 
   const p = a.page;
   await p.evaluate(() => { T.add('arroz'); T.add('feijão'); });
   await p.evaluate(t => T.SY.conectar(t), TOKEN_TESTE);
-  await p.click('.kf-topo [data-kf="ajustes"]');
+  await abrirAjustesPelaNav(p);
   await p.click('[data-kf-aj-ir="sincronizacao"]');
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('[data-kf="copia-baixar"]')]);
   const copia = JSON.parse(await readFile(await dl.path(), 'utf8'));
@@ -360,7 +362,7 @@ test('Ajustes: cópia de segurança e apagar os dados deste aparelho', async () 
   assert.equal(await estadoNuvem(p), 'desligada');
   assert.equal(gh.arquivo(`${amb.app}.json`) !== null, true, 'a cópia na nuvem deveria continuar');
   // restaurar a cópia baixada
-  await p.click('.kf-topo [data-kf="ajustes"]');
+  await abrirAjustesPelaNav(p);
   await p.click('[data-kf-aj-ir="sincronizacao"]');
   await p.setInputFiles('#kf-aj-sincronizacao [data-kf-copia-arquivo]', await dl.path());
   assert.ok(await esperar(async () => (await p.evaluate(() => T.notas())).length === 2));
@@ -471,5 +473,96 @@ test('cópia de segurança: envelope padrão', async () => {
   const env = await a.page.evaluate(() => KitFacil.copia.envelope({ x: 1 }, 3));
   assert.equal(env.formato, 'copia-facil'); assert.equal(env.app, amb.app); assert.equal(env.esquema, 3);
   assert.deepEqual(env.dados, { x: 1 }); assert.ok(!isNaN(Date.parse(env.em)));
+  await a.fechar();
+});
+
+/* ---------------- Kit Fácil 2.1: apoio ao criador, novidades e boas-vindas ---------------- */
+test('chopp: sem chave Pix não aparece; com chave fica antes da nuvem e não aparece nas telas internas', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  assert.deepEqual((await conferirTopo(a.page, { chopp: false })).erros, []);
+  assert.equal(await a.page.evaluate(() => KitFacil.topo.html({ principal: true }).includes('data-kf="apoio"')), false);
+  await a.fechar();
+  const b = await aparelho(amb, { caminho: pagina() + '&apoio=1' });
+  assert.equal(await b.page.evaluate(() => KitFacil.topo.html({ principal: false }).includes('data-kf="apoio"')), false);
+  assert.equal(await b.page.evaluate(() => KitFacil.topo.html({ ajustes: false }).includes('data-kf="apoio"')), false);
+  assert.equal(await b.page.evaluate(() => KitFacil.topo.html({ principal: true }).includes('data-kf="ajustes"')), false);
+  await b.fechar();
+});
+
+test('chopp: código Pix copia e cola no padrão do Banco Central (CRC confere) e janela com cópia do código e da chave', async () => {
+  const a = await aparelho(amb, { caminho: pagina() + '&apoio=1' });
+  const p = a.page;
+  const cod = await p.evaluate(() => KitFacil.apoio.codigo());
+  assert.match(cod, /^000201/);
+  assert.ok(cod.includes('0014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-426655440000'));
+  assert.ok(cod.includes('5913CRIADOR TESTE') && cod.includes('6008BRASILIA'));
+  // CRC16-CCITT recalculado aqui, independente do kit
+  const corpo = cod.slice(0, -4); let c = 0xFFFF;
+  for (let i = 0; i < corpo.length; i++) { c ^= corpo.charCodeAt(i) << 8; for (let j = 0; j < 8; j++) c = c & 0x8000 ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF; }
+  assert.equal(cod.slice(-4), c.toString(16).toUpperCase().padStart(4, '0'));
+  await p.click('.kf-topo [data-kf="apoio"]');
+  const dlg = p.locator('[data-kf-dialogo="apoio"]');
+  await dlg.waitFor();
+  assert.equal(await dlg.locator('h2').textContent(), 'Pague um chopp para o criador!');
+  // sem internet (bibliotecas bloqueadas nos testes): o QR dá lugar ao aviso e o código continua copiável
+  assert.ok(await esperar(() => dlg.locator('[data-kf-qr]').textContent().then(t => /Sem internet/.test(t))));
+  await p.evaluate(() => { window.__copiado = ''; navigator.clipboard.writeText = t => { window.__copiado = t; return Promise.resolve(); }; });
+  await dlg.locator('[data-kf-pix-codigo]').click();
+  assert.equal(await p.evaluate(() => window.__copiado), cod);
+  await dlg.locator('[data-kf-pix-chave]').click();
+  assert.equal(await p.evaluate(() => window.__copiado), '123e4567-e12b-12d1-a456-426655440000');
+  await p.keyboard.press('Escape');
+  assert.equal(await p.evaluate(() => document.activeElement.dataset.kf), 'apoio');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('novidades: aparecem uma vez para quem atualiza e ficam em Sobre o aplicativo', async () => {
+  const antes = () => { window.KF_TESTE_ABERTURA = true; if (!sessionStorage.getItem('x')) { sessionStorage.setItem('x', '1'); for (const f of ['conta-facil', 'eletrica-facil', 'estudo-facil']) localStorage.setItem(`kitfacil.${f}.visto`, '"0.0.0-antiga"'); } };
+  const a = await aparelho(amb, { caminho: pagina() + '&novidades=1', antes });
+  const p = a.page;
+  const dlg = p.locator('[data-kf-dialogo="novidades"]');
+  await dlg.waitFor({ timeout: 5000 });
+  assert.match(await dlg.textContent(), /Novidade um\.[\s\S]*Novidade dois\./);
+  await dlg.locator('[data-kf-fechar]').last().click();
+  await p.reload();
+  await p.waitForTimeout(1500);
+  assert.equal(await dlg.count(), 0, 'as novidades apareceram de novo');
+  await abrirAjustesPelaNav(p);
+  await p.click('[data-kf-aj-ir="sobre"]');
+  assert.match(await p.textContent('#kf-aj-sobre'), /Novidades desta versão[\s\S]*Novidade um\./);
+  await a.fechar();
+});
+
+test('boas-vindas: só no primeiro uso, com os passos e o atalho para o exemplo', async () => {
+  const antes = () => { window.KF_TESTE_ABERTURA = true; };
+  const a = await aparelho(amb, { caminho: pagina() + '&novo=1&novidades=1', antes });
+  const p = a.page;
+  const dlg = p.locator('[data-kf-dialogo="boas-vindas"]');
+  await dlg.waitFor({ timeout: 5000 });
+  assert.equal(await p.locator('[data-kf-dialogo="novidades"]').count(), 0, 'quem nunca usou não precisa ver novidades');
+  assert.equal(await dlg.locator('.kf-passos li').count(), 2);
+  await dlg.locator('[data-kf-exemplo]').click();
+  assert.equal(await p.evaluate(() => window.EXEMPLO), true);
+  await p.reload();
+  await p.waitForTimeout(1500);
+  assert.equal(await dlg.count(), 0, 'as boas-vindas apareceram de novo');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Ajustes na navegação: abre os Ajustes, fica marcado e tocar de novo volta para a lista de guias', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await abrirAjustesPelaNav(p);
+  await p.locator('[data-kf-aj]').waitFor();
+  assert.equal(await p.locator('.kf-nav [data-kf="ajustes"]').getAttribute('aria-current'), 'page');
+  await p.click('[data-kf-aj-ir="aparencia"]');
+  assert.ok(await p.isVisible('#kf-aj-aparencia'));
+  await abrirAjustesPelaNav(p);
+  assert.ok(await esperar(() => p.isVisible('.kf-aj-lista')), 'tocar em Ajustes não voltou para a lista');
+  await p.click('.kf-nav [data-ir="inicio"]');
+  assert.ok(await esperar(() => p.evaluate(() => !document.querySelector('[data-kf-aj]'))));
+  assert.equal(await p.locator('.kf-nav [data-kf="ajustes"]').getAttribute('aria-current'), 'false');
   await a.fechar();
 });

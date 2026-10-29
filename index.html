@@ -538,12 +538,14 @@ input[type=date]:disabled{opacity:.45}
 <aside class="kf-trilho" id="trilho" aria-label="Seções"><div class="kf-marca"><span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span></div>
   <button class="kf-trilho-it" data-nav="/" id="trilho-home"><span class="kf-nav-ic-t"></span>Orçamentos</button>
   <button class="kf-trilho-it" data-nav="/precos" id="trilho-prices"><span class="kf-nav-ic-t"></span>Preços</button>
+  <span id="trilho-ajustes"></span>
 </aside>
 <div id="app"></div>
 <nav class="kf-nav" id="nav" aria-label="Seções" hidden>
   <div class="kf-nav-in">
     <button class="kf-nav-it" data-nav="/" id="nav-home"><span class="kf-nav-ic"></span><span class="kf-nav-l">Orçamentos</span></button>
     <button class="kf-nav-it" data-nav="/precos" id="nav-prices"><span class="kf-nav-ic"></span><span class="kf-nav-l">Preços</span></button>
+    <span id="nav-ajustes"></span>
   </div>
 </nav>
 <div id="sheet-root"></div>
@@ -551,7 +553,7 @@ input[type=date]:disabled{opacity:.45}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.6.0';
+const VERSAO = '2.7.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -724,6 +726,8 @@ const STATUS = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado',
 let settings = { ...DEF, ...LS.get('settings', {}) };
 let prices = LS.get('prices', null);
 let quotes = LS.get('quotes', null);
+// primeiro uso: nada guardado ainda neste aparelho (nem da versão antiga)
+const PRIMEIRO_USO = quotes === null && !LS.get('catalog', null);
 // sincronização entre aparelhos: motor comum do Kit Fácil (a regra de junção dos dados fica mais abaixo)
 KitFacil.iniciar({
   app: 'eletrica-facil', nome: 'Elétrica Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
@@ -731,6 +735,18 @@ KitFacil.iniciar({
   tela: () => route().name, toast: m => toast(m), exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
+  novidades: [{ versao: '2.7.0', itens: [
+    'Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).',
+    'No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps.',
+    'Novo: "Pague um chopp para o criador!", com QR code e Pix copia e cola. É opcional, o app continua gratuito.',
+    'Depois de cada atualização, o app mostra uma vez o que mudou. A lista também fica em Ajustes, Sobre o aplicativo.',
+    'Correção: o Elétrica Fácil agora tem identidade própria na instalação e não se confunde mais com os outros apps no mesmo aparelho.',
+  ] }],
+  boasVindas: {
+    novo: () => PRIMEIRO_USO && !(quotes || []).some(q => !q.example),
+    passos: [['Preencha seus dados', 'Em Ajustes, Conta e perfil: nome, contato e logotipo saem na proposta.'], ['Confira a tabela de preços', 'Na aba Preços, ajuste os valores de serviços e materiais.'], ['Crie o primeiro orçamento', 'Toque no + e escolha orçamento (antes do serviço) ou relatório (depois).']],
+    exemplo: () => createExample(), rotuloExemplo: 'Ver orçamento de exemplo',
+  },
   copia: { descricao: 'Baixe um arquivo com os orçamentos, a tabela de preços e os ajustes.', baixar: () => baixarCopiaEletrica(), restaurar: f => restaurarCopiaEletrica(f) },
   privacidade: [
     'Os orçamentos, a tabela de preços, os ajustes e os dados dos clientes que você cadastra (nome, telefone, endereço, CPF ou CNPJ) ficam guardados neste aparelho. Você é responsável por eles perante os seus clientes.',
@@ -1294,6 +1310,9 @@ function onScroll() { const ab = $('.appbar'); if (ab) ab.classList.toggle('scro
 window.addEventListener('scroll', onScroll, { passive: true });
 $('#nav-home .kf-nav-ic').innerHTML = I.doc; $('#nav-prices .kf-nav-ic').innerHTML = I.tag;
 $('#trilho-home .kf-nav-ic-t').outerHTML = I.doc; $('#trilho-prices .kf-nav-ic-t').outerHTML = I.tag;
+// Ajustes é o último item da navegação (barra de baixo no celular, pé do trilho no computador)
+$('#nav-ajustes').outerHTML = KitFacil.nav.ajustes('nav', { id: 'nav-ajustes' });
+$('#trilho-ajustes').outerHTML = KitFacil.nav.ajustes('trilho', { id: 'trilho-ajustes' });
 const aoTocarNav = e => {
   const b = e.target.closest('[data-nav]'); if (!b) return;
   if (route().key === b.dataset.nav) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
@@ -1303,8 +1322,8 @@ const aoTocarNav = e => {
 };
 $('#nav').addEventListener('click', aoTocarNav);
 $('#trilho').addEventListener('click', aoTocarNav);
-// barra de cima das telas principais: marca à esquerda; Ajustes, nuvem e balão à direita (padrão da família)
-const barraTopo = () => `<header class="kf-barra appbar"><div class="kf-barra-in"><div class="kf-marca">${MARCA}</div>${KitFacil.topo.html({ ajustes: true })}</div></header>`;
+// barra de cima das telas principais: marca à esquerda; chopp, nuvem e balão à direita (padrão da família)
+const barraTopo = () => `<header class="kf-barra appbar"><div class="kf-barra-in"><div class="kf-marca">${MARCA}</div>${KitFacil.topo.html({ principal: true })}</div></header>`;
 
 /* ================= criar, duplicar, excluir ================= */
 function createQuote(client) {
@@ -1812,7 +1831,7 @@ VIEWS.quote = {
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
       <div class="ab-title"><span class="ab-eyebrow">${q.example ? 'Exemplo' : (isReport(q) ? 'Relatório ' : 'Orçamento ') + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-main" id="ab-name">${esc(q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'))}</span></div>
       <button class="icon-btn" data-menu aria-label="Mais opções">${I.more}</button>
-      ${KitFacil.topo.html({ ajustes: false })}
+      ${KitFacil.topo.html({ principal: false })}
     </div></header>
     <main class="page bar">
       ${q.example ? `<div class="banner b-tip"><p><b>Este é um orçamento de exemplo.</b> Mexa à vontade para conhecer o app e exclua quando quiser pelo menu ⋯.</p></div>` : ''}
@@ -2357,7 +2376,7 @@ VIEWS.preview = {
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
       <div class="ab-title"><span class="ab-eyebrow">${mode === 'report' ? 'Relatório' : 'Proposta'} · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Cliente sem nome')}</span></div>
       <button class="icon-btn" data-edit aria-label="Editar orçamento">${ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')}</button>
-      ${KitFacil.topo.html({ ajustes: false })}
+      ${KitFacil.topo.html({ principal: false })}
     </div></header>
     <main class="page bar">
       ${warn.length ? `<div class="banner b-tip"><p><b>Antes de enviar:</b> ${esc(warn.join(' '))}</p>${!settings.name && !settings.company ? '<div class="banner-act"><button class="btn sm dark" data-me>Preencher meus dados</button></div>' : ''}</div>` : ''}
