@@ -17,6 +17,12 @@ const abrirPainel = async (p, chave) => { const d = p.locator(`details[data-pane
 /* abre uma guia dos Ajustes (no celular, a lista vira a guia aberta) */
 const guia = async (p, id) => { if (!(await p.locator('[data-kf-aj]').count())) await abrirAjustesPelaNav(p); await p.click(`.kf-aj-lista [data-kf-aj-ir="${id}"]`); await p.locator(`#kf-aj-${id}.kf-aberta, [data-kf-aj][data-ativa="${id}"]`).first().waitFor(); };
 
+/* escolhe uma opção na lista suspensa do app (a <select> fica escondida, guardando o valor) */
+const escolher = async (p, id, valor) => {
+  await p.click(`#${id}-esc`);
+  const k = await p.evaluate(([id, v]) => [...document.getElementById(id).options].findIndex(o => o.value === v || o.textContent === v), [id, valor]);
+  await p.click(`#${id}-esc ~ .esc-lista [data-k="${k}"]`);
+};
 /* cria um orçamento usando as próprias funções do app */
 const criarOrcamento = (p, cliente, servico) => p.evaluate(([cliente, servico]) => {
   const q = blankQuote(); q.num = ++settings.seq; q.client.name = cliente;
@@ -198,10 +204,10 @@ test('sincronização: orçamentos e preços passam de um aparelho para o outro,
   assert.equal(await B.page.evaluate(n => prices.some(p => p.name === n), preco), false);
   assert.deepEqual(await B.page.evaluate(() => quotes.map(q => q.client.name)), ['Cliente do A']);
   // gestão: ferramentas, checklist e estoque também passam de um aparelho para o outro
-  await A.page.evaluate(() => { tools.push(fixTool({ id: uid(), name: 'Alicate do A' })); saveTools(); checks.push(fixCheck({ id: uid(), name: 'Escada' })); saveChecks(); prices[0].stock = 7; savePrices(); });
+  await A.page.evaluate(() => { tools.push(fixTipo({ id: 'tipo-a', name: 'Alicate do A' }), fixItem({ id: 'item-a', tipo: 'tipo-a', brand: 'Marca A', model: 'X1' })); saveTools(); checks.push(fixCheck({ id: uid(), name: 'Escada' })); saveChecks(); prices[0].stock = 7; savePrices(); });
   await A.page.evaluate(() => SY.agora({ quiet: true }));
   await B.page.evaluate(() => SY.agora({ quiet: true }));
-  assert.deepEqual(await B.page.evaluate(() => [tools.filter(t => !t.seed).map(t => t.name), checks.map(c => c.name), prices[0].stock]), [['Alicate do A'], ['Escada'], 7]);
+  assert.deepEqual(await B.page.evaluate(() => [tools.filter(t => !t.seed).map(t => t.name || t.brand), checks.map(c => c.name), prices[0].stock]), [['Alicate do A', 'Marca A'], ['Escada'], 7]);
   // as ferramentas pré-cadastradas têm o mesmo id nos dois aparelhos: não duplicam
   assert.equal(await B.page.evaluate(() => tools.length), await A.page.evaluate(() => tools.length));
   await B.page.evaluate(() => { checks[0].ida = true; saveChecks(); });
@@ -305,7 +311,7 @@ test('prazo de execução integrado ao calendário: marca os dias, aceita ajuste
   await p.evaluate(id => go('/q/' + id), id);
   await abrirPainel(p, `q:${id}:cond`);
   await p.click('[data-days="1"]'); await p.click('[data-days="1"]');
-  await p.selectOption('#q-prazo-u', 'uteis');
+  await escolher(p, 'q-prazo-u', 'uteis');
   assert.equal(await p.inputValue('#q-days'), '3');
   // dias passados não podem ser escolhidos no orçamento
   const ontem = await p.evaluate(() => maisDias(hojeTs(), -1));
@@ -323,7 +329,7 @@ test('prazo de execução integrado ao calendário: marca os dias, aceita ajuste
   // depois de mudar o prazo, o app remarca a partir do início
   assert.equal(await p.evaluate(id => getQ(id).dates.length, id), 3);
   await p.evaluate(id => { const q = getQ(id); q.dates.pop(); }, id);
-  await p.selectOption('#q-prazo-u', 'uteis');
+  await escolher(p, 'q-prazo-u', 'corridos'); await escolher(p, 'q-prazo-u', 'uteis');
   assert.equal(await p.evaluate(id => getQ(id).dates.length, id), 3, 'trocar a unidade remarca os dias');
   await p.evaluate(id => { getQ(id).dates.pop(); }, id);
   await p.click('[data-cal-reset]');
@@ -378,32 +384,44 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   // estoque: primeiro a categoria, depois o material da tabela de Preços daquela categoria
   const ref = await p.evaluate(() => { const x = prices.find(y => y.kind === 'mat'); return { id: x.id, cat: x.cat, price: x.price, name: x.name }; });
   await p.click('[data-g-new]');
-  assert.equal(await p.locator('#st-mat').isDisabled(), true, 'o material vem depois da categoria');
-  await p.selectOption('#st-cat-sel', ref.cat);
+  assert.equal(await p.locator('#st-mat-esc').isDisabled(), true, 'o material vem depois da categoria');
+  assert.equal(await p.locator('select:visible').count(), 0, 'nenhuma lista do sistema na tela');
+  await escolher(p, 'st-cat-sel', ref.cat);
   const opts = await p.locator('#st-mat option').evaluateAll(L => L.map(o => o.value));
   assert.ok(opts.includes(ref.id) && opts.includes('__novo'));
   assert.equal(await p.evaluate(([ids, cat]) => ids.filter(i => i && i !== '__novo').every(i => prices.find(x => x.id === i).cat === cat), [opts, ref.cat]), true, 'só materiais da categoria');
-  await p.selectOption('#st-mat', ref.id);
+  await escolher(p, 'st-mat', ref.id);
   assert.equal(await p.inputValue('#st-price'), await p.evaluate(v => BRL(v), ref.price), 'o repasse vem da tabela');
   await p.fill('#st-qty', '5'); await p.fill('#st-cost', '100'); await p.fill('#st-min', '3');
   await p.click('.kf-dlg [data-save]');
   assert.deepEqual(await p.evaluate(id => { const x = prices.find(y => y.id === id); return [x.stock, x.cost, x.min]; }, ref.id), [5, 100, 3]);
   // material novo numa categoria nova entra também em Preços
   await p.click('[data-g-new]');
-  await p.selectOption('#st-cat-sel', '__nova'); await p.fill('#st-cat', 'Automação');
+  await escolher(p, 'st-cat-sel', '__nova'); await p.fill('#st-cat', 'Automação');
   await p.fill('#st-name', 'Relé de impulso'); await p.fill('#st-price', '8000'); await p.fill('#st-qty', '0');
   await p.click('.kf-dlg [data-save]');
   assert.deepEqual(await p.evaluate(() => { const x = prices.find(y => y.name === 'Relé de impulso'); return [x.kind, x.cat, x.stock]; }), ['mat', 'Automação', 0]);
-  // ferramentas: já vêm cadastradas; o toque no estado troca Não tenho → Tenho → Quero comprar
+  // ferramentas: já vêm cadastradas; cada linha abre a caixa da ferramenta, onde se diz se é sua
   await p.click('[data-aba="ferramentas"]');
-  assert.ok(await p.evaluate(() => tools.filter(t => t.seed).length) >= 40, 'faltam ferramentas pré-cadastradas');
-  await p.click('[data-tf="todas"]');
-  const mult = 'ft-multimetro-digital', fur = 'ft-furadeira-de-impacto';
-  await p.click(`[data-tst="${mult}"]`);
-  await p.click(`[data-tst="${fur}"]`); await p.click(`[data-tst="${fur}"]`);
-  assert.deepEqual(await p.evaluate(([a, b]) => [tools.find(t => t.id === a).st, tools.find(t => t.id === b).st], [mult, fur]), ['tenho', 'quero']);
-  await p.click('[data-tf="tenho"]');
-  assert.match(await p.textContent('#g-body'), /Multímetro digital/);
+  assert.ok(await p.evaluate(() => tiposTool().filter(t => t.seed).length) >= 40, 'faltam ferramentas pré-cadastradas');
+  assert.deepEqual(await p.locator('[data-tf]').evaluateAll(L => L.map(b => b.firstChild.textContent.trim())), ['Minhas ferramentas', 'Quero comprar', 'Ferramentas cadastradas']);
+  assert.equal(await p.locator('[data-tst], .tst').count(), 0, 'sem botões de estado na lista');
+  await p.click('[data-tipo="ft-multimetro-digital"]');
+  await p.click('.kf-dlg [data-novo-item]');
+  await p.fill('#it-brand', 'Minipa'); await p.fill('#it-model', 'ET-1002'); await p.click('.kf-dlg [data-save]');
+  await p.click('.kf-dlg [data-novo-item]');
+  await p.fill('#it-brand', 'Fluke'); await p.fill('#it-model', '117'); await p.click('.kf-dlg [data-save]');
+  assert.equal(await p.evaluate(() => itensDe('ft-multimetro-digital').length), 2, 'duas unidades do mesmo tipo, de marcas diferentes');
+  await p.click('.kf-dlg [data-ok]');
+  // nova ferramenta: categoria, depois ferramenta, depois se é sua ou se quer comprar
+  await p.click('[data-g-new]');
+  await escolher(p, 'nt-cat', 'Furação e corte');
+  await escolher(p, 'nt-tipo', 'ft-furadeira-de-impacto');
+  await p.click('.kf-dlg [data-modo="quero"]');
+  await p.click('.kf-dlg [data-save]');
+  assert.equal(await p.evaluate(() => tools.find(t => t.id === 'ft-furadeira-de-impacto').quero), true);
+  await p.click('[data-tf="minhas"]');
+  assert.match(await p.textContent('#g-body'), /Fluke · 117/);
   assert.ok(await semRolagemLateral(p));
   // checklist fixo: ida e volta
   await p.click('[data-aba="checklist"]');
@@ -431,7 +449,7 @@ test('prazo padrão nos Ajustes vale para o orçamento novo; prazo antigo em tex
   const a = await aparelho(amb);
   const p = a.page;
   await guia(p, 'padrao');
-  await p.fill('#st-prazoN', '2'); await p.selectOption('#st-prazoU', 'semanas');
+  await p.fill('#st-prazoN', '2'); await escolher(p, 'st-prazoU', 'semanas');
   await p.locator('#st-prazoN').dispatchEvent('change');
   assert.deepEqual(await p.evaluate(() => blankQuote().prazo), { n: 2, u: 'semanas' });
   assert.deepEqual(await p.evaluate(() => fixQuote({ deadline: '3 dias úteis', prazo: { n: 1, u: 'uteis' } }).prazo), { n: 3, u: 'uteis' });

@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.11.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 2.12.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -16,13 +16,14 @@ Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fá
 - Aplique adicionais de urgência, período noturno e fim de semana sobre a mão de obra
 - Envie a proposta em PDF (folha A4) ou pelo WhatsApp, com QR code do Pix da entrada
 - Acompanhe o que está aguardando resposta, aprovado e concluído; gere relatório técnico e recibo no fim do serviço
-- **Gestão:** estoque de material ligado à tabela de Preços (categoria e material, marca, quantidade, custo, repasse, margem e mínimo), mais de 50 ferramentas pré-cadastradas para marcar como Tenho ou Quero comprar, lista de compras para copiar ou mandar pelo WhatsApp, e checklist fixo para conferir na ida e na volta da obra. O material do estoque é o mesmo da tabela de Preços; ao concluir um serviço, o app oferece dar baixa no material usado, e o que chega ao mínimo entra em Para repor
+- **Gestão:** estoque de material ligado à tabela de Preços (categoria e material, marca, quantidade, custo, repasse, margem e mínimo), ferramentas em Minhas ferramentas (com marca, modelo e quantidade, várias do mesmo tipo), Quero comprar e Ferramentas cadastradas (mais de 50 já vêm no app), lista de compras para copiar ou mandar pelo WhatsApp, e checklist fixo para conferir na ida e na volta da obra. O material do estoque é o mesmo da tabela de Preços; ao concluir um serviço, o app oferece dar baixa no material usado, e o que chega ao mínimo entra em Para repor
 - **Use em vários aparelhos (opcional):** orçamentos, preços e ajustes sincronizados, criptografados, num gist secreto da sua conta GitHub
 - **Avalie o app e relate problemas** pelo balão no alto da tela (ou em Ajustes → Avaliação e feedback)
 - **Nuvem no alto da tela:** mostra se os dados estão sincronizados, sincronizando, pendentes, com erro ou sem internet
 - **Ajustes na barra de baixo** (no computador, no pé do menu lateral), com as mesmas guias nos três apps
 - **Pague um chopp para o criador!** O app é gratuito; o chopp no alto da tela, entre a nuvem e o balão, abre o Pix (QR code e copia e cola), se você quiser apoiar
 - **Novidades:** depois de cada atualização, o app mostra uma vez o que mudou
+- Listas de escolha desenhadas pelo próprio app e o mesmo caminho (categoria, depois item) para cadastrar preço, material e ferramenta
 - Tema claro, escuro ou automático; funciona sem internet depois da primeira visita
 
 ## Como usar

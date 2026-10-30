@@ -515,11 +515,15 @@ details.tech[open] > summary::after{content:"–"}
 .g-repor .g-alert{background:none;padding:8px 0 4px}
 .g-rp{display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:44px;border:0;border-top:1px solid color-mix(in srgb,var(--bad) 18%,transparent);background:none;color:var(--ink);font:inherit;font-size:15px;text-align:left;padding:6px 0}
 .g-rp .num{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--bad)}
-.tst{flex:none;display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:0 12px;border-radius:12px;border:0;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
-.tst .i{width:16px;height:16px}
-.tst.st-nao{background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1.5px var(--line-2)}
-.tst.st-tenho{background:var(--volt);color:var(--volt-ink)}
-.tst.st-quero{background:var(--surface-2);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--volt-text)}
+.t-tem{display:inline-flex;align-items:center;gap:4px;font-size:13.5px;font-weight:700;color:var(--volt-text)}
+.t-tem .i,.t-quero .i{width:16px;height:16px}
+.t-quero{display:inline-flex;color:var(--muted)}
+.tp-corpo{display:flex;flex-direction:column;gap:12px}
+/* linha que abre alguma coisa: seta à direita (Preços, Estoque, Ferramentas) */
+.prow{grid-template-columns:minmax(0,1fr) auto 18px}
+.prow::after{content:'';width:18px;height:18px;background:var(--faint);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat}
+.prow:hover::after{background:var(--ink)}
+.prow:active{background:var(--surface-2)}
 .st-resto{display:flex;flex-direction:column;gap:14px}
 .st-resto[hidden]{display:none}
 .cp-row{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap}
@@ -579,7 +583,22 @@ details.tech[open] > summary::after{content:"–"}
 .cal-msg .linkish{margin-left:0}
 .prazo-row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
 .prazo-row .stepper{flex:none}
-.prazo-row select{flex:1;min-width:150px}
+.esc{position:relative;min-width:0;width:100%}
+.esc-btn{width:100%;min-height:48px;display:flex;align-items:center;gap:8px;justify-content:space-between;padding:11px 12px 11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:16px;text-align:left;cursor:pointer}
+.esc-btn .esc-v{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.esc-btn.vazio .esc-v{color:var(--faint)}
+.esc-btn .i{flex:none;width:18px;height:18px;color:var(--faint);transform:rotate(90deg);transition:transform .25s}
+.esc.aberta .esc-btn{border-color:var(--volt-text);box-shadow:0 0 0 1px var(--volt-text)}
+.esc.aberta .esc-btn .i{transform:rotate(-90deg)}
+.esc-btn:disabled{opacity:.5;cursor:default}
+.esc-btn:focus-visible,.esc-op:focus-visible{outline:2px solid var(--volt-text);outline-offset:-2px}
+.esc-lista{margin-top:6px;max-height:min(300px,50vh);overflow:auto;overscroll-behavior:contain;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;padding:4px;box-shadow:var(--shadow)}
+.esc-op{width:100%;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border:0;border-radius:10px;background:none;color:var(--ink);font-size:15.5px;text-align:left;cursor:pointer}
+.esc-op:hover{background:var(--surface-2)}
+.esc-op[aria-selected="true"]{background:var(--volt-soft);font-weight:700}
+.esc-op .i{flex:none;width:18px;height:18px;color:var(--volt-text)}
+.esc-op[aria-disabled="true"]{color:var(--faint);cursor:default;background:none}
+.prazo-row .esc{flex:1;min-width:150px;width:auto}
 .cal-d.velho span{opacity:.6}
 .cal-d.prazo span{background:var(--volt-soft)}
 .cal-d.fer span{position:relative}
@@ -648,7 +667,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.11.0';
+const VERSAO = '2.12.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -858,7 +877,12 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.11.0', itens: [
+  novidades: [{ versao: '2.12.0', itens: [
+    'Ferramentas em três listas: Minhas ferramentas, Quero comprar e Ferramentas cadastradas. Toque numa ferramenta para dizer se é sua, com marca, modelo e quantidade, ou se quer comprar.',
+    'Dá para ter várias ferramentas do mesmo tipo, de marcas ou modelos diferentes.',
+    'Nova ferramenta, novo material e novo preço seguem o mesmo caminho: primeiro a categoria, depois o item.',
+    'As listas de escolha agora são do próprio app, iguais no iPhone, no Android e no computador.',
+  ] }, { versao: '2.11.0', itens: [
     'Seções do orçamento: o botão Próximo saiu. Toque na seção que quer abrir. A animação ficou mais lenta e suave, e no tablet a tela não dá mais o tranco no fim.',
     'Ferramentas: o app já traz mais de 50 ferramentas de eletricista, por categoria. Toque no estado para marcar Não tenho, Tenho ou Quero comprar.',
     'Estoque e Preços juntos: ao adicionar material no estoque, escolha a categoria e depois o material da sua tabela de Preços.',
@@ -964,10 +988,26 @@ function fixQuote(q) {
   ['isExample', 'active', 'savedAt', 'closedAt', 'total', 'statusAt'].forEach(k => delete q[k]);
   return q;
 }
-// ferramenta: st = 'tenho', 'quero' (quer comprar) ou 'nao' (não tem); wish fica para aparelhos com versões antigas
-const fixTool = t => { const st = ['tenho', 'quero', 'nao'].includes(t.st) ? t.st : t.wish ? 'quero' : 'tenho';
-  return { id: String(t.id || uid()), name: String(t.name || '').trim(), brand: String(t.brand || '').trim(), qty: Math.max(1, Math.min(999, Math.round(+t.qty || 1))), st, wish: st === 'quero', cat: String(t.cat || 'Outras').trim() || 'Outras', seed: !!t.seed }; };
-const temTool = t => t.st === 'tenho';
+// ferramentas: tipos (k: 'tipo', do catálogo ou criados pelo usuário) e as unidades que o usuário tem (k: 'item'),
+// cada uma com marca, modelo e quantidade (dá para ter várias do mesmo tipo, de marcas ou modelos diferentes)
+const fixTipo = t => ({ id: String(t.id || uid()), k: 'tipo', name: String(t.name || '').trim(), cat: String(t.cat || 'Outras').trim() || 'Outras', seed: !!t.seed, quero: !!t.quero, queroQtd: Math.max(1, Math.min(999, Math.round(+t.queroQtd || 1))) });
+const fixItem = t => ({ id: String(t.id || uid()), k: 'item', tipo: String(t.tipo || ''), brand: String(t.brand || '').trim(), model: String(t.model || '').trim(), qty: Math.max(1, Math.min(999, Math.round(+t.qty || 1))) });
+// lê a lista em qualquer formato (a 2.9 a 2.11 guardavam uma ferramenta por linha, com st ou wish)
+function normTools(L) {
+  return (Array.isArray(L) ? L : []).flatMap(t => {
+    if (!t) return [];
+    if (t.k === 'tipo') return [fixTipo(t)];
+    if (t.k === 'item') return t.tipo ? [fixItem(t)] : [];
+    const st = ['tenho', 'quero', 'nao'].includes(t.st) ? t.st : t.wish ? 'quero' : 'tenho';
+    const tipo = fixTipo({ ...t, quero: st === 'quero', queroQtd: t.qty });
+    return st === 'tenho' ? [tipo, fixItem({ id: tipo.id + '-1', tipo: tipo.id, brand: t.brand, qty: t.qty })] : [tipo];
+  });
+}
+const tiposTool = () => tools.filter(t => t.k === 'tipo');
+const itensDe = id => tools.filter(t => t.k === 'item' && t.tipo === id);
+const tipoDe = it => tools.find(t => t.k === 'tipo' && t.id === it.tipo);
+const temTool = t => itensDe(t.id).length > 0;
+const itemTxt = it => [it.brand, it.model].filter(Boolean).join(' · ');
 // ferramentas que já vêm no app (ids fixos: o mesmo item em todos os aparelhos sincronizados)
 const TOOL_SEED = [
   ['Medição e teste', ['Multímetro digital', 'Alicate amperímetro', 'Caneta detectora de tensão', 'Testador de tomadas', 'Megôhmetro', 'Terrômetro', 'Sequencímetro de fase', 'Detector de tensão por aproximação']],
@@ -980,7 +1020,7 @@ const TOOL_SEED = [
   ['Segurança (EPI)', ['Luvas isolantes', 'Óculos de proteção', 'Capacete com jugular', 'Botina de segurança sem metal', 'Cinto de segurança com talabarte', 'Protetor auricular', 'Kit de bloqueio e etiquetagem']],
 ];
 const TOOL_CATS = TOOL_SEED.map(x => x[0]);
-const seedTools = () => TOOL_SEED.flatMap(([cat, L]) => L.map(name => fixTool({ id: 'ft-' + fold(name).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), name, cat, st: 'nao', seed: true })));
+const seedTools = () => TOOL_SEED.flatMap(([cat, L]) => L.map(name => fixTipo({ id: 'ft-' + fold(name).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), name, cat, st: 'nao', seed: true })));
 const fixCheck = c => ({ id: String(c.id || uid()), name: String(c.name || '').trim(), back: c.back !== false, ida: !!c.ida, volta: !!c.volta, toolId: c.toolId ? String(c.toolId) : '' });
 // material do estoque: quantidade, custo e marca ficam no próprio item da tabela de preços
 const inStock = p => p.kind === 'mat' && typeof p.stock === 'number';
@@ -1020,10 +1060,10 @@ if (!prices || !quotes) {
   saveSettings(); savePrices(); saveQuotes();
 }
 quotes = quotes.map(fixQuote);
-tools = (Array.isArray(tools) ? tools : []).map(fixTool); checks = (Array.isArray(checks) ? checks : []).map(fixCheck);
+tools = normTools(tools); checks = (Array.isArray(checks) ? checks : []).map(fixCheck);
 // ferramentas pré-cadastradas: entram uma vez, como "não tenho" (quem já tinha uma com o mesmo nome fica com a sua)
 if ((settings.toolSeedV || 0) < 1) {
-  seedTools().forEach(t => { const ja = tools.find(x => x.id === t.id || norm(x.name) === norm(t.name)); if (!ja) tools.push(t); else if (ja.cat === 'Outras') ja.cat = t.cat; });
+  seedTools().forEach(t => { const ja = tools.find(x => x.k === 'tipo' && (x.id === t.id || norm(x.name) === norm(t.name))); if (!ja) tools.push(t); else if (ja.cat === 'Outras') ja.cat = t.cat; });
   settings.toolSeedV = 1; LS.set('tools', tools); saveSettings();
 }
 settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
@@ -1131,7 +1171,7 @@ function applyRemote(R) {
   });
   // ferramentas e checklist: registro a registro (aparelhos com versões antigas não mandam essas listas)
   const juntar = (L, R, k) => Array.isArray(R) ? mergeList(L, R, x => st[k + ':' + x.id] || 0, x => rs[k + ':' + x.id] || 0, del, x => { if (rs[k + ':' + x.id]) st[k + ':' + x.id] = rs[k + ':' + x.id]; }) : L;
-  tools = juntar(tools, R.tools, 't').map(fixTool); checks = juntar(checks, R.checks, 'c').map(fixCheck);
+  tools = normTools(juntar(tools, R.tools, 't')); checks = juntar(checks, R.checks, 'c').map(fixCheck);
   settings = { ...DEF, ...S }; prices = P;
   const vivos = new Set([...P, ...tools, ...checks].map(p => p.id));
   Object.keys(st).forEach(k => { if (/^[ptc]:/.test(k) && !vivos.has(k.slice(2))) delete st[k]; });
@@ -1450,7 +1490,67 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Enter' || !t.matches || !t.matches('input') || t.form) return;
   e.preventDefault(); t.blur();
 });
-function prepFields(root) { $$('input:not([type=checkbox]):not([type=file])', root).forEach(i => { if (!i.hasAttribute('enterkeyhint')) i.setAttribute('enterkeyhint', i.form ? 'go' : 'done'); }); }
+function prepFields(root) { $$('input:not([type=checkbox]):not([type=file])', root).forEach(i => { if (!i.hasAttribute('enterkeyhint')) i.setAttribute('enterkeyhint', i.form ? 'go' : 'done'); }); escolhas(root); }
+/* ================= lista suspensa do app =================
+   Toda <select> do app vira uma lista desenhada pelo próprio app, igual em iPhone, Android e computador.
+   A <select> continua no lugar, escondida, guardando o valor: o código lê e muda .value, troca as opções e ouve
+   "change" como antes, e a lista acompanha. Ela abre dentro da tela (não por cima), então nunca fica cortada
+   numa janela. Teclado: Enter, espaço ou seta para baixo abre; setas andam; Enter escolhe; Esc fecha. */
+const VALOR_SELECT = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+function escolhas(root) {
+  $$('select:not([data-esc-ok])', root).forEach(sel => {
+    sel.setAttribute('data-esc-ok', ''); sel.hidden = true; sel.tabIndex = -1;
+    const w = document.createElement('div'); w.className = 'esc';
+    const id = (sel.id || 'esc' + uid()) + '-esc';
+    w.innerHTML = `<button type="button" class="esc-btn" id="${id}" aria-haspopup="listbox" aria-expanded="false"><span class="esc-v"></span>${I.chev}</button><div class="esc-lista" role="listbox" hidden></div>`;
+    sel.after(w);
+    const btn = $('.esc-btn', w), lista = $('.esc-lista', w);
+    // o rótulo do campo passa a apontar para o botão
+    if (sel.id) { const lb = document.querySelector(`label[for="${CSS.escape(sel.id)}"]`); if (lb) { lb.htmlFor = id; lb.id = lb.id || id + '-l'; lista.setAttribute('aria-labelledby', lb.id); } }
+    if (!lista.hasAttribute('aria-labelledby') && sel.getAttribute('aria-label')) { btn.setAttribute('aria-label', sel.getAttribute('aria-label')); lista.setAttribute('aria-label', sel.getAttribute('aria-label')); }
+    const pinta = () => {
+      const o = sel.options[sel.selectedIndex];
+      $('.esc-v', btn).textContent = o ? o.textContent : '';
+      btn.classList.toggle('vazio', !o || o.value === '');
+      btn.disabled = sel.disabled;
+      if (!lista.hidden) monta();
+    };
+    const monta = () => {
+      lista.innerHTML = [...sel.options].map((o, k) => o.value === '' ? '' : `<button type="button" role="option" class="esc-op" data-k="${k}" aria-selected="${o.selected}" ${o.disabled ? 'aria-disabled="true"' : ''} tabindex="-1"><span>${esc(o.textContent)}</span>${o.selected ? I.check : ''}</button>`).join('');
+    };
+    const abre = () => {
+      if (sel.disabled) return;
+      $$('.esc-lista:not([hidden])').forEach(x => { if (x !== lista) x.parentNode._fecha(false); });
+      monta(); lista.hidden = false; btn.setAttribute('aria-expanded', 'true'); w.classList.add('aberta');
+      if (lista.animate && !semMovimento()) lista.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2,.7,.2,1)' });
+      const at = $('[aria-selected="true"]', lista) || $('.esc-op:not([aria-disabled])', lista);
+      if (at) { at.focus({ preventScroll: true }); lista.scrollTop = at.offsetTop - lista.clientHeight / 2 + at.offsetHeight / 2; }
+      requestAnimationFrame(() => { const r = lista.getBoundingClientRect(); if (r.bottom > innerHeight - 8) lista.scrollIntoView({ block: 'nearest', behavior: semMovimento() ? 'auto' : 'smooth' }); });
+    };
+    const fecha = foco => { if (lista.hidden) return; lista.hidden = true; btn.setAttribute('aria-expanded', 'false'); w.classList.remove('aberta'); if (foco) btn.focus(); };
+    w._fecha = fecha;
+    const escolhe = k => { const o = sel.options[k]; if (!o || o.disabled) return; fecha(true); if (sel.selectedIndex !== k) { sel.selectedIndex = k; pinta(); sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); } };
+    btn.addEventListener('click', () => lista.hidden ? abre() : fecha(true));
+    btn.addEventListener('keydown', e => { if (['ArrowDown', 'ArrowUp'].includes(e.key)) { e.preventDefault(); abre(); } });
+    lista.addEventListener('click', e => { const b = e.target.closest('.esc-op'); if (b) escolhe(+b.dataset.k); });
+    lista.addEventListener('keydown', e => {
+      const ops = $$('.esc-op:not([aria-disabled])', lista), i = ops.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = ops[Math.max(0, Math.min(ops.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))]; n && n.focus(); }
+      else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); (e.key === 'Home' ? ops[0] : ops[ops.length - 1])?.focus(); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fecha(true); }
+      else if (e.key === 'Tab') fecha(false);
+      else if (e.key.length === 1 && /\S/.test(e.key)) { const L = fold(e.key), n = ops.find((b, k) => k > i && fold(b.textContent).startsWith(L)) || ops.find(b => fold(b.textContent).startsWith(L)); n && n.focus(); }
+    });
+    w.addEventListener('focusout', e => { if (!w.contains(e.relatedTarget) && e.relatedTarget) fecha(false); });
+    // mudanças feitas pelo código (valor, opções, desligar) aparecem na lista
+    Object.defineProperty(sel, 'value', { configurable: true, get() { return VALOR_SELECT.get.call(this); }, set(v) { VALOR_SELECT.set.call(this, v); pinta(); } });
+    new MutationObserver(pinta).observe(sel, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['disabled'] });
+    sel.addEventListener('change', pinta);
+    pinta();
+  });
+}
+// tocar fora fecha a lista aberta
+document.addEventListener('pointerdown', e => { $$('.esc.aberta').forEach(w => { if (!w.contains(e.target)) w._fecha(false); }); }, true);
 // sugestões ao digitar (a lista do navegador não funciona bem no iPhone)
 const lastPress = { target: null, at: 0 };
 document.addEventListener('pointerdown', e => { lastPress.target = e.target; lastPress.at = Date.now(); }, true);
@@ -3491,21 +3591,27 @@ VIEWS.prices = {
 function priceSheet(p) {
   const isNew = !p;
   const it = p ? { ...p } : { kind: priceKind, cat: '', name: '', unit: 'un', price: 0 };
-  const cats = () => [...new Set(prices.filter(x => x.kind === it.kind).map(x => x.cat || 'Outros'))];
+  // mesmo padrão do estoque e das ferramentas: 1. categoria, 2. o item
+  const cats = k => { const o = catOrder(k); return [...new Set(prices.filter(x => x.kind === k).map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = o.indexOf(a), ib = o.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); }); };
+  const catOpts = k => `${isNew ? '<option value="">Escolha a categoria</option>' : ''}${cats(k).map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option>`;
   openSheet({ title: isNew ? 'Novo item' : 'Alterar preço', body: `
       <div class="seg" role="group" aria-label="Tipo"><button data-ik="svc" aria-pressed="${it.kind === 'svc'}">Mão de obra</button><button data-ik="mat" aria-pressed="${it.kind === 'mat'}">Material</button></div>
-      <div class="field"><label for="pp-name">Descrição</label><input id="pp-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Instalação de chuveiro elétrico"></div>
+      <div class="field"><label for="pp-cat-sel">${isNew ? '1. Categoria' : 'Categoria'}</label><select id="pp-cat-sel">${catOpts(it.kind)}</select>
+        <input id="pp-cat" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
+      <div class="st-resto" id="pp-resto" ${isNew ? 'hidden' : ''}>
+      <div class="field"><label for="pp-name">${isNew ? '2. Descrição' : 'Descrição'}</label><input id="pp-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Instalação de chuveiro elétrico"></div>
       <div class="grid2">
         <div class="field"><label for="pp-price">Preço</label><input id="pp-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${it.price ? BRL(it.price) : ''}"></div>
         <div class="field"><label for="pp-unit">Cobrado por</label><select id="pp-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === it.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       </div>
-      <div class="field"><label for="pp-cat">Categoria</label><input id="pp-cat" type="text" value="${esc(it.cat)}" placeholder="Ex.: Iluminação" autocomplete="off"></div>
+      </div>
       ${p && inStock(p) ? `<p class="hint">No estoque: ${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}${p.cost ? `, custo ${BRL(p.cost)}` : ''}. O preço daqui é o repasse ao cliente. Altere a quantidade e o custo em Gestão.</p>` : ''}`,
     foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
     onMount: s => {
-      if (!isTouch) $(isNew ? '#pp-name' : '#pp-price', s).focus();
-      attachSuggest($('#pp-cat', s), () => cats().map(c => ({ label: c })));
-      $$('[data-ik]', s).forEach(b => b.onclick = () => { it.kind = b.dataset.ik; $$('[data-ik]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); });
+      if (!isTouch) $(isNew ? '#pp-cat-sel' : '#pp-price', s).focus();
+      const cs = $('#pp-cat-sel', s), cn = $('#pp-cat', s);
+      cs.addEventListener('change', () => { const nv = cs.value === '__nova'; cn.hidden = !nv; if (nv) cn.focus(); $('#pp-resto', s).hidden = !cs.value; if (cs.value && !nv && !isTouch) $('#pp-name', s).focus(); });
+      $$('[data-ik]', s).forEach(b => b.onclick = () => { it.kind = b.dataset.ik; $$('[data-ik]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); cs.innerHTML = catOpts(it.kind); cs.dispatchEvent(new Event('change')); });
       $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
       $('[data-del]', s)?.addEventListener('click', () => {
         const idx = prices.findIndex(x => x.id === p.id); if (idx < 0) return;
@@ -3514,9 +3620,11 @@ function priceSheet(p) {
       });
       $('[data-save]', s).onclick = () => {
         const name = $('#pp-name', s).value.trim().replace(/\s+/g, ' '), price = parseMoney($('#pp-price', s).value);
+        const cat = cs.value === '__nova' ? cn.value.trim().replace(/\s+/g, ' ') : cs.value;
+        if (!cat) return toast(cs.value === '__nova' ? 'Escreva o nome da nova categoria.' : 'Escolha a categoria.');
         if (!name) return toast('Escreva a descrição do item.');
         if (price === null) return toast('Informe o preço.');
-        const data = { kind: it.kind, name, price, unit: $('#pp-unit', s).value, cat: $('#pp-cat', s).value.trim().replace(/\s+/g, ' ') || 'Outros' };
+        const data = { kind: it.kind, name, price, unit: $('#pp-unit', s).value, cat };
         if (isNew) prices.push({ id: uid(), ...data }); else Object.assign(p, data);
         savePrices(); priceKind = it.kind; closeSheet(true); rerender(); toast(isNew ? `${name} adicionado.` : 'Preço salvo.');
       };
@@ -3555,7 +3663,7 @@ function adjustSheet() {
 let gestaoAba = 'estoque', gestaoQuery = '', checkLado = 'ida';
 const GESTAO = {
   estoque: { nome: 'Estoque', criar: 'Novo material', sub: 'O material que você tem guardado, com custo e preço de repasse.' },
-  ferramentas: { nome: 'Ferramentas', criar: 'Nova ferramenta', sub: 'Marque as que você tem e as que quer comprar.' },
+  ferramentas: { nome: 'Ferramentas', criar: 'Nova ferramenta', sub: 'As suas ferramentas, as que quer comprar e as cadastradas no app.' },
   checklist: { nome: 'Checklist', criar: 'Novo item', sub: 'Confira o que levar antes de ir e o que trazer antes de voltar da obra.' },
 };
 const margem = p => p.cost > 0 ? Math.round((p.price - p.cost) / p.cost * 100) : null;
@@ -3665,62 +3773,163 @@ function stockSheet(p) {
       };
     } });
 }
-// ferramentas: lista pré-cadastrada por categoria; cada uma é "Não tenho", "Tenho" (com quantidade) ou "Quero comprar"
+// ferramentas: três listas — Minhas ferramentas (as unidades que você tem), Quero comprar e Ferramentas cadastradas
+// (o catálogo). Cada linha abre a caixa da ferramenta, onde você diz se tem (com marca, modelo e quantidade) ou quer comprar
 let toolFiltro = '';
-const TOOL_ST = { nao: 'Não tenho', tenho: 'Tenho', quero: 'Quero comprar' };
-const TOOL_PROX = { nao: 'tenho', tenho: 'quero', quero: 'nao' };
-const toolStHTML = t => `<button class="tst st-${t.st}" data-tst="${t.id}" aria-label="${esc(t.name)}: ${TOOL_ST[t.st]}${t.st === 'tenho' && t.qty > 1 ? `, ${t.qty}` : ''}. Tocar para mudar para ${TOOL_ST[TOOL_PROX[t.st]]}">${t.st === 'tenho' ? I.check : t.st === 'quero' ? I.cart : ''}${TOOL_ST[t.st]}${t.st !== 'nao' && t.qty > 1 ? ` ×${t.qty}` : ''}</button>`;
+const TOOL_FILTROS = [['minhas', 'Minhas ferramentas'], ['quero', 'Quero comprar'], ['cadastradas', 'Ferramentas cadastradas']];
+const toolCats = () => { const usadas = new Set(tiposTool().map(t => t.cat)); return [...TOOL_CATS.filter(c => usadas.has(c)), ...[...usadas].filter(c => !TOOL_CATS.includes(c)).sort((a, b) => a.localeCompare(b, 'pt-BR'))]; };
 function toolsListHTML() {
-  const n = k => tools.filter(t => k === 'todas' || t.st === k).length;
-  const f = toolFiltro || (n('tenho') ? 'tenho' : 'todas');
+  const itens = tools.filter(t => t.k === 'item' && tipoDe(t)), quero = tiposTool().filter(t => t.quero), todos = tiposTool();
+  const n = { minhas: sum(itens.map(i => i.qty)), quero: quero.length, cadastradas: todos.length };
+  const f = toolFiltro || (itens.length ? 'minhas' : 'cadastradas');
   const qf = fold(gestaoQuery);
-  const L = tools.filter(t => (f === 'todas' || t.st === f) && (!qf || fold([t.name, t.brand, t.cat].join(' ')).includes(qf)));
-  const cats = [...new Set([...TOOL_CATS, ...L.map(t => t.cat)])].filter(c => L.some(t => t.cat === c));
-  const chips = `<div class="chips scroll" role="group" aria-label="Mostrar">${[['tenho', 'Tenho'], ['quero', 'Quero comprar'], ['todas', 'Todas']].map(([k, l]) => `<button class="chip" data-tf="${k}" aria-pressed="${f === k}">${l} <span class="n">${n(k)}</span></button>`).join('')}</div>`;
-  const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar ferramenta" value="${esc(gestaoQuery)}" aria-label="Buscar ferramenta"></label>`;
-  const lista = L.length ? cats.map(c => `<div class="g-card"><div class="pk-cat">${esc(c)}</div><div class="plist">${L.filter(t => t.cat === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => `<div class="g-row"><button class="prow" data-tid="${t.id}"><span><b>${hl(t.name, qf)}</b>${t.brand ? `<small>${esc(t.brand)}</small>` : ''}</span></button>${toolStHTML(t)}</div>`).join('')}</div></div>`).join('')
-    : KitFacil.ui.vazio(qf ? { titulo: 'Nenhuma ferramenta encontrada', texto: 'Confira o nome ou veja em Todas.' } : f === 'tenho' ? { titulo: 'Nenhuma ferramenta marcada como Tenho', texto: 'Em <b>Todas</b>, toque em Não tenho para marcar as suas.', icone: I.tool } : { titulo: 'Nada na lista de compras', texto: 'Em <b>Todas</b>, toque no estado da ferramenta até aparecer Quero comprar.', icone: I.cart });
-  return chips + busca + `<p class="hint">Toque no estado para trocar: Não tenho, Tenho, Quero comprar. Toque no nome para quantidade e marca.</p><div id="g-list" class="g-list">${lista}</div>`;
+  const bate = (tipo, it) => !qf || fold([tipo.name, tipo.cat, it ? itemTxt(it) : ''].join(' ')).includes(qf);
+  const chips = `<div class="chips scroll" role="group" aria-label="Mostrar">${TOOL_FILTROS.map(([k, l]) => `<button class="chip" data-tf="${k}" aria-pressed="${f === k}">${l} <span class="n">${n[k]}</span></button>`).join('')}</div>`;
+  const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar ferramenta, marca ou modelo" value="${esc(gestaoQuery)}" aria-label="Buscar ferramenta"></label>`;
+  const porCat = (L, cat, row) => toolCats().filter(c => L.some(x => cat(x) === c)).map(c => `<div class="g-card"><div class="pk-cat">${esc(c)}</div><div class="plist">${L.filter(x => cat(x) === c).map(row).join('')}</div></div>`).join('');
+  let lista = '';
+  if (f === 'minhas') {
+    const L = itens.filter(it => bate(tipoDe(it), it)).sort((a, b) => tipoDe(a).name.localeCompare(tipoDe(b).name, 'pt-BR') || itemTxt(a).localeCompare(itemTxt(b), 'pt-BR'));
+    lista = L.length ? porCat(L, it => tipoDe(it).cat, it => `<button class="prow" data-item="${it.id}"><span><b>${hl(tipoDe(it).name, qf)}</b><small>${esc(itemTxt(it) || 'Sem marca e modelo')}</small></span><span class="prow-price">${it.qty} un.</span></button>`)
+      : KitFacil.ui.vazio(qf ? { titulo: 'Nenhuma ferramenta encontrada', texto: 'Confira o nome, a marca ou o modelo.' } : { titulo: 'Nenhuma ferramenta sua ainda', texto: 'Toque em <b>Nova ferramenta</b>, ou abra uma em Ferramentas cadastradas e diga que é sua.', icone: I.tool });
+  } else {
+    const L = (f === 'quero' ? quero : todos).filter(t => bate(t)).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    const estado = t => { const its = itensDe(t.id), q = sum(its.map(i => i.qty)); return [q && `${plural(q, 'minha', 'minhas')}${its.some(itemTxt) ? ': ' + its.map(itemTxt).filter(Boolean).join(', ') : ''}`, t.quero && `quero comprar ${t.queroQtd}`].filter(Boolean).join(' · '); };
+    lista = L.length ? porCat(L, t => t.cat, t => `<button class="prow" data-tipo="${t.id}"><span><b>${hl(t.name, qf)}</b>${estado(t) ? `<small>${esc(estado(t))}</small>` : ''}</span><span class="prow-price">${temTool(t) ? `<span class="t-tem">${I.check}Minha</span>` : t.quero ? `<span class="t-quero">${I.cart}</span>` : ''}</span></button>`)
+      : KitFacil.ui.vazio(qf ? { titulo: 'Nenhuma ferramenta encontrada', texto: 'Confira o nome.' } : { titulo: 'Nada na lista de compras', texto: 'Abra uma ferramenta em <b>Ferramentas cadastradas</b> e ligue Quero comprar.', icone: I.cart });
+  }
+  return chips + busca + `<div id="g-list" class="g-list">${lista}</div>`;
 }
-function toolSheet(t) {
-  const isNew = !t;
-  const it = t ? { ...t } : { name: '', brand: '', qty: 1, st: 'tenho', cat: '' };
-  openSheet({ title: isNew ? 'Nova ferramenta' : 'Ferramenta', body: `
-      <div class="field"><label for="tl-name">Ferramenta</label><input id="tl-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Alicate amperímetro" autocomplete="off"></div>
-      <div class="field"><label for="tl-cat">Categoria</label><input id="tl-cat" type="text" value="${esc(it.cat === 'Outras' && isNew ? '' : it.cat)}" placeholder="Ex.: Medição e teste" autocomplete="off"></div>
-      <div class="field"><span class="lab" id="tl-st-l">Situação</span><div class="seg" role="group" aria-labelledby="tl-st-l">${Object.entries(TOOL_ST).map(([k, l]) => `<button data-st-t="${k}" aria-pressed="${it.st === k}">${l}</button>`).join('')}</div></div>
-      <div class="field" id="tl-qty-f" ${it.st === 'nao' ? 'hidden' : ''}><label for="tl-qty">Quantidade</label><div class="stepper"><button data-tq="-1" aria-label="Menos">${I.minus}</button><input id="tl-qty" type="text" inputmode="numeric" value="${it.qty}"><button data-tq="1" aria-label="Mais">${I.plus}</button></div></div>
-      <div class="field"><label for="tl-brand">Marca (opcional)</label><input id="tl-brand" type="text" value="${esc(it.brand)}" placeholder="Ex.: Minipa" autocomplete="off"></div>`,
-    foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
+// caixa da ferramenta: as unidades que você tem e a lista de compras
+function typeSheet(t) {
+  if (!t) return;
+  const corpo = () => {
+    const its = itensDe(t.id);
+    return `<p class="hint">${esc(t.cat)}</p>
+      <div class="pk-cat">Minhas ferramentas · ${sum(its.map(i => i.qty))}</div>
+      ${its.length ? `<div class="plist">${its.map(it => `<button class="prow" data-item="${it.id}"><span><b>${esc(itemTxt(it) || 'Sem marca e modelo')}</b></span><span class="prow-price">${it.qty} un.</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem esta ferramenta cadastrada como sua.</p>'}
+      <button class="add-btn" data-novo-item>${I.plus}${its.length ? 'Adicionar outra marca ou modelo' : 'Tenho esta ferramenta'}</button>
+      <label class="switch-row" for="tp-quero"><span><b>Quero comprar</b><small>Entra na lista de compras.</small></span><input type="checkbox" class="sw" id="tp-quero" ${t.quero ? 'checked' : ''}></label>
+      <div class="field" id="tp-qq-f" ${t.quero ? '' : 'hidden'}><label for="tp-qq">Quantas quer comprar</label><div class="stepper"><button data-qq="-1" aria-label="Menos">${I.minus}</button><input id="tp-qq" type="text" inputmode="numeric" value="${t.queroQtd}"><button data-qq="1" aria-label="Mais">${I.plus}</button></div></div>`;
+  };
+  openSheet({ title: t.name, body: `<div id="tp-corpo" class="tp-corpo">${corpo()}</div>`,
+    foot: `${t.seed ? '' : `<button class="btn danger-text" data-del>${I.trash}Excluir</button>`}<button class="btn primary${t.seed ? ' block' : ''}" data-ok>Pronto</button>`,
+    onClose: () => rerender(),
     onMount: s => {
-      if (!isTouch && isNew) $('#tl-name', s).focus();
-      attachSuggest($('#tl-brand', s), () => [...new Set(tools.filter(x => x.brand).map(x => x.brand))].map(b => ({ label: b })));
-      attachSuggest($('#tl-cat', s), () => [...new Set([...TOOL_CATS, ...tools.map(x => x.cat)])].map(c => ({ label: c })));
-      $$('[data-st-t]', s).forEach(b => b.onclick = () => { it.st = b.dataset.stT; $$('[data-st-t]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#tl-qty-f', s).hidden = it.st === 'nao'; });
-      $$('[data-tq]', s).forEach(b => b.onclick = () => { const v = parseInt($('#tl-qty', s).value, 10) || 1; $('#tl-qty', s).value = Math.max(1, Math.min(999, v + +b.dataset.tq)); });
-      $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
+      s.addEventListener('click', e => {
+        const it = e.target.closest('[data-item]'); if (it) return itemSheet(tools.find(x => x.id === it.dataset.item), t);
+        if (e.target.closest('[data-novo-item]')) return itemSheet(null, t);
+        const qq = e.target.closest('[data-qq]'); if (qq) { t.queroQtd = Math.max(1, Math.min(999, t.queroQtd + +qq.dataset.qq)); $('#tp-qq', s).value = t.queroQtd; saveTools(); }
+      });
+      s.addEventListener('change', e => {
+        if (e.target.id === 'tp-quero') { t.quero = e.target.checked; $('#tp-qq-f', s).hidden = !t.quero; saveTools(); toast(t.quero ? `${t.name} na lista de compras.` : `${t.name} saiu da lista de compras.`); }
+        if (e.target.id === 'tp-qq') { t.queroQtd = Math.max(1, Math.min(999, parseInt(e.target.value, 10) || 1)); e.target.value = t.queroQtd; saveTools(); }
+      });
+      $('[data-ok]', s).onclick = () => closeSheet();
       $('[data-del]', s)?.addEventListener('click', () => {
-        const idx = tools.findIndex(x => x.id === t.id); if (idx < 0) return;
-        const [gone] = tools.splice(idx, 1); saveTools(); closeSheet(true); rerender();
-        toast(`${gone.name} excluída.`, { label: 'Desfazer', run: () => { tools.splice(idx, 0, gone); saveTools(); rerender(); } });
+        const antes = tools.slice(); tools = tools.filter(x => x.id !== t.id && !(x.k === 'item' && x.tipo === t.id)); saveTools(); closeSheet(true); rerender();
+        toast(`${t.name} excluída.`, { label: 'Desfazer', run: () => { tools = antes; saveTools(); rerender(); } });
+      });
+    } });
+}
+// uma ferramenta sua: marca, modelo e quantidade
+function itemSheet(it, tipo, daLista) {
+  const isNew = !it;
+  const x = it ? { ...it } : { brand: '', model: '', qty: 1 };
+  tipo = tipo || tipoDe(it);
+  const volta = () => daLista ? (closeSheet(true), rerender()) : typeSheet(tipo);
+  openSheet({ title: isNew ? 'Tenho esta ferramenta' : 'Minha ferramenta', body: `
+      <p class="hint"><b>${esc(tipo.name)}</b> · ${esc(tipo.cat)}</p>
+      <div class="grid2">
+        <div class="field"><label for="it-brand">Marca (opcional)</label><input id="it-brand" type="text" value="${esc(x.brand)}" placeholder="Ex.: Bosch" autocomplete="off"></div>
+        <div class="field"><label for="it-model">Modelo (opcional)</label><input id="it-model" type="text" value="${esc(x.model)}" placeholder="Ex.: GSB 13 RE" autocomplete="off"></div>
+      </div>
+      <div class="field"><label for="it-qty">Quantidade</label><div class="stepper"><button data-iq2="-1" aria-label="Menos">${I.minus}</button><input id="it-qty" type="text" inputmode="numeric" value="${x.qty}"><button data-iq2="1" aria-label="Mais">${I.plus}</button></div></div>`,
+    foot: isNew ? `<button class="btn ghost" data-cancel>Voltar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Não tenho mais</button><button class="btn primary" data-save>Salvar</button>`,
+    onClose: () => rerender(),
+    onMount: s => {
+      if (!isTouch) $('#it-brand', s).focus();
+      attachSuggest($('#it-brand', s), () => [...new Set(tools.filter(y => y.k === 'item' && y.brand).map(y => y.brand))].map(b => ({ label: b })));
+      $$('[data-iq2]', s).forEach(b => b.onclick = () => { $('#it-qty', s).value = Math.max(1, Math.min(999, (parseInt($('#it-qty', s).value, 10) || 1) + +b.dataset.iq2)); });
+      $('[data-cancel]', s)?.addEventListener('click', volta);
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const idx = tools.findIndex(y => y.id === it.id); if (idx < 0) return;
+        const [gone] = tools.splice(idx, 1); saveTools(); volta();
+        toast('Ferramenta tirada das suas.', { label: 'Desfazer', run: () => { tools.splice(idx, 0, gone); saveTools(); rerender(); } });
       });
       $('[data-save]', s).onclick = () => {
-        const name = $('#tl-name', s).value.trim().replace(/\s+/g, ' ');
-        if (!name) return toast('Escreva o nome da ferramenta.');
-        if (isNew && tools.some(x => norm(x.name) === norm(name))) return toast(`${name} já está na lista. Busque por ela em Todas.`);
-        const data = { name, cat: $('#tl-cat', s).value.trim().replace(/\s+/g, ' ') || 'Outras', st: it.st, brand: $('#tl-brand', s).value.trim().replace(/\s+/g, ' '), qty: Math.max(1, Math.min(999, parseInt($('#tl-qty', s).value, 10) || 1)) };
-        if (isNew) tools.push(fixTool({ id: uid(), ...data })); else Object.assign(tools.find(x => x.id === t.id) || {}, fixTool({ ...t, ...data }));
-        saveTools(); closeSheet(true); rerender(); toast(isNew ? `${name} adicionada.` : 'Ferramenta salva.');
+        const data = { brand: $('#it-brand', s).value.trim().replace(/\s+/g, ' '), model: $('#it-model', s).value.trim().replace(/\s+/g, ' '), qty: Math.max(1, Math.min(999, parseInt($('#it-qty', s).value, 10) || 1)) };
+        const igual = tools.find(y => y.k === 'item' && y.tipo === tipo.id && y.id !== (it && it.id) && norm(y.brand) === norm(data.brand) && norm(y.model) === norm(data.model));
+        if (igual) { igual.qty = Math.min(999, igual.qty + data.qty); if (it) tools = tools.filter(y => y.id !== it.id); }
+        else if (isNew) tools.push(fixItem({ id: uid(), tipo: tipo.id, ...data })); else Object.assign(tools.find(y => y.id === it.id), data);
+        saveTools(); toast(igual ? `Somado à sua ${tipo.name}${itemTxt(igual) ? ' ' + itemTxt(igual) : ''}.` : isNew ? `${tipo.name} nas suas ferramentas.` : 'Ferramenta salva.'); volta();
+      };
+    } });
+}
+// nova ferramenta: 1. categoria, 2. ferramenta do catálogo (ou uma nova), depois se é sua ou se quer comprar
+function newToolSheet() {
+  let modo = 'minha';
+  const opts = c => `<option value="">Escolha a ferramenta</option>${tiposTool().filter(t => t.cat === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => `<option value="${t.id}">${esc(t.name)}${temTool(t) ? ' (já tem)' : ''}</option>`).join('')}<option value="__novo">Outra ferramenta desta categoria…</option>`;
+  openSheet({ title: 'Nova ferramenta', body: `
+      <div class="field"><label for="nt-cat">1. Categoria</label><select id="nt-cat"><option value="">Escolha a categoria</option>${toolCats().map(c => `<option>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+        <input id="nt-cat-nova" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
+      <div class="field"><label for="nt-tipo">2. Ferramenta</label><select id="nt-tipo" disabled><option value="">Escolha antes a categoria</option></select></div>
+      <div class="field" id="nt-nome-f" hidden><label for="nt-nome">Nome da ferramenta nova</label><input id="nt-nome" type="text" placeholder="Ex.: Detector de metais" autocomplete="off"><span class="hint">Ela entra também em Ferramentas cadastradas.</span></div>
+      <div class="st-resto" id="nt-resto" hidden>
+        <div class="seg" role="group" aria-label="Situação"><button data-modo="minha" aria-pressed="true">É minha</button><button data-modo="quero" aria-pressed="false">Quero comprar</button></div>
+        <div class="grid2" id="nt-marca">
+          <div class="field"><label for="nt-brand">Marca (opcional)</label><input id="nt-brand" type="text" placeholder="Ex.: Bosch" autocomplete="off"></div>
+          <div class="field"><label for="nt-model">Modelo (opcional)</label><input id="nt-model" type="text" placeholder="Ex.: GSB 13 RE" autocomplete="off"></div>
+        </div>
+        <div class="field"><label for="nt-qty">Quantidade</label><div class="stepper"><button data-nq="-1" aria-label="Menos">${I.minus}</button><input id="nt-qty" type="text" inputmode="numeric" value="1"><button data-nq="1" aria-label="Mais">${I.plus}</button></div></div>
+      </div>`,
+    foot: `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>`,
+    onMount: s => {
+      const cat = $('#nt-cat', s), nova = $('#nt-cat-nova', s), tipo = $('#nt-tipo', s);
+      cat.addEventListener('change', () => {
+        const nv = cat.value === '__nova';
+        nova.hidden = !nv; if (nv) nova.focus();
+        tipo.disabled = !cat.value;
+        tipo.innerHTML = nv ? '<option value="__novo">Ferramenta nova</option>' : cat.value ? opts(cat.value) : '<option value="">Escolha antes a categoria</option>';
+        if (nv) tipo.dispatchEvent(new Event('change')); else { $('#nt-nome-f', s).hidden = true; $('#nt-resto', s).hidden = true; }
+      });
+      tipo.addEventListener('change', () => {
+        $('#nt-nome-f', s).hidden = tipo.value !== '__novo'; $('#nt-resto', s).hidden = !tipo.value;
+        if (tipo.value === '__novo' && cat.value !== '__nova') $('#nt-nome', s).focus();
+      });
+      $$('[data-modo]', s).forEach(b => b.onclick = () => { modo = b.dataset.modo; $$('[data-modo]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#nt-marca', s).hidden = modo !== 'minha'; });
+      $$('[data-nq]', s).forEach(b => b.onclick = () => { $('#nt-qty', s).value = Math.max(1, Math.min(999, (parseInt($('#nt-qty', s).value, 10) || 1) + +b.dataset.nq)); });
+      $('[data-cancel]', s).onclick = () => closeSheet();
+      $('[data-save]', s).onclick = () => {
+        const c = cat.value === '__nova' ? nova.value.trim().replace(/\s+/g, ' ') : cat.value;
+        if (!c) return toast(cat.value === '__nova' ? 'Escreva o nome da nova categoria.' : 'Escolha a categoria.');
+        if (!tipo.value) return toast('Escolha a ferramenta.');
+        let t = tools.find(x => x.id === tipo.value);
+        if (!t) {
+          const nome = $('#nt-nome', s).value.trim().replace(/\s+/g, ' ');
+          if (!nome) return toast('Escreva o nome da ferramenta.');
+          t = tiposTool().find(x => norm(x.name) === norm(nome));
+          if (!t) { t = fixTipo({ id: uid(), name: nome, cat: c }); tools.push(t); }
+        }
+        const qty = Math.max(1, Math.min(999, parseInt($('#nt-qty', s).value, 10) || 1));
+        if (modo === 'quero') { t.quero = true; t.queroQtd = qty; }
+        else {
+          const brand = $('#nt-brand', s).value.trim().replace(/\s+/g, ' '), model = $('#nt-model', s).value.trim().replace(/\s+/g, ' ');
+          const igual = itensDe(t.id).find(y => norm(y.brand) === norm(brand) && norm(y.model) === norm(model));
+          if (igual) igual.qty = Math.min(999, igual.qty + qty); else tools.push(fixItem({ id: uid(), tipo: t.id, brand, model, qty }));
+        }
+        saveTools(); toolFiltro = modo === 'quero' ? 'quero' : 'minhas'; closeSheet(true); rerender();
+        toast(modo === 'quero' ? `${t.name} na lista de compras.` : `${t.name} nas suas ferramentas.`);
       };
     } });
 }
 /* lista de compras única: material para repor e ferramentas que você quer comprar */
 const sugestaoCompra = p => p.min > 0 ? Math.max(1, Math.ceil(p.min * 2 - p.stock)) : 1;
-const comprasN = () => prices.filter(stockLow).length + tools.filter(t => t.st === 'quero').length;
+const comprasN = () => prices.filter(stockLow).length + tiposTool().filter(t => t.quero).length;
 function comprasSheet() {
   const L = [
     ...prices.filter(stockLow).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => ({ k: 'm', id: p.id, nome: p.name, marca: p.brand || '', un: p.unit, qtd: sugestaoCompra(p), on: true, info: p.stock <= 0 ? 'em falta' : `tem ${fmtQty(p.stock)}${p.min ? `, mínimo ${fmtQty(p.min)}` : ''}` })),
-    ...tools.filter(t => t.st === 'quero').sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => ({ k: 'f', id: t.id, nome: t.name, marca: t.brand || '', un: 'un', qtd: t.qty || 1, on: true, info: t.cat })),
+    ...tiposTool().filter(t => t.quero).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => ({ k: 'f', id: t.id, nome: t.name, marca: '', un: 'un', qtd: t.queroQtd || 1, on: true, info: t.cat })),
   ];
   const texto = () => {
     const linha = x => `• ${x.nome}${x.marca ? ` (${x.marca})` : ''}: ${fmtQty(x.qtd)} ${unitTxt(x.qtd, x.un)}`;
@@ -3754,7 +3963,7 @@ function comprasSheet() {
 }
 const checkNome = c => { const t = c.toolId && tools.find(x => x.id === c.toolId); return t ? t.name : c.name; };
 function checklistHTML() {
-  const faltam = tools.filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
+  const faltam = tiposTool().filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
   const addTools = faltam.length ? `<button class="btn sm ghost" data-ck-tools>${I.plus}${checks.length ? `Adicionar ferramentas que faltam (${faltam.length})` : `Adicionar minhas ${plural(faltam.length, 'ferramenta', 'ferramentas')}`}</button>` : '';
   if (!checks.length) return KitFacil.ui.vazio({ titulo: 'Checklist vazio', texto: 'Monte uma vez a lista do que sempre vai para a obra. Toque em <b>Novo item</b>' + (faltam.length ? ' ou adicione as suas ferramentas de uma vez.' : '.'), icone: I.checklist, acao: addTools });
   const lista = checks.filter(c => checkLado === 'ida' || c.back);
@@ -3776,7 +3985,7 @@ function checkSheet(c) {
     foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
     onMount: s => {
       if (!isTouch && isNew) $('#ck-name', s).focus();
-      if (isNew) attachSuggest($('#ck-name', s), () => [...tools.filter(temTool).map(t => t.name), ...prices.filter(inStock).map(p => p.name)].filter(n => !checks.some(x => norm(checkNome(x)) === norm(n))).map(n => ({ label: n })));
+      if (isNew) attachSuggest($('#ck-name', s), () => [...tiposTool().filter(temTool).map(t => t.name), ...prices.filter(inStock).map(p => p.name)].filter(n => !checks.some(x => norm(checkNome(x)) === norm(n))).map(n => ({ label: n })));
       $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
       $('[data-del]', s)?.addEventListener('click', () => {
         const idx = checks.findIndex(x => x.id === c.id); if (idx < 0) return;
@@ -3789,7 +3998,7 @@ function checkSheet(c) {
         const back = $('#ck-back', s).checked;
         if (isNew) {
           if (checks.some(x => norm(checkNome(x)) === norm(name))) return toast(`${name} já está no checklist.`);
-          const t = tools.find(x => temTool(x) && norm(x.name) === norm(name));
+          const t = tiposTool().find(x => temTool(x) && norm(x.name) === norm(name));
           checks.push(fixCheck({ id: uid(), name, back, toolId: t ? t.id : '' }));
         } else Object.assign(checks.find(x => x.id === c.id) || {}, { name, back });
         saveChecks(); closeSheet(true); rerender(); toast(isNew ? `${name} no checklist.` : 'Item salvo.');
@@ -3810,19 +4019,18 @@ VIEWS.gestao = {
   bind(v) {
     $$('[data-aba]', v).forEach(b => b.onclick = () => { if (gestaoAba === b.dataset.aba) return; gestaoAba = b.dataset.aba; gestaoQuery = ''; rerender(); });
     $('[data-compras]', v).onclick = comprasSheet;
-    $('[data-g-new]', v).onclick = () => gestaoAba === 'estoque' ? stockSheet(null) : gestaoAba === 'ferramentas' ? toolSheet(null) : checkSheet(null);
+    $('[data-g-new]', v).onclick = () => gestaoAba === 'estoque' ? stockSheet(null) : gestaoAba === 'ferramentas' ? newToolSheet() : checkSheet(null);
     const sq = $('#g-q', v);
     if (sq) sq.addEventListener('input', () => { gestaoQuery = sq.value; const tmp = document.createElement('div'); tmp.innerHTML = gestaoAba === 'estoque' ? stockListHTML() : toolsListHTML(); $('#g-list', v).replaceWith($('#g-list', tmp)); });
     v.addEventListener('click', e => {
       const sb = e.target.closest('[data-sid]'); if (sb) return stockSheet(prices.find(p => p.id === sb.dataset.sid));
-      const ts = e.target.closest('[data-tst]');
-      if (ts) { const t = tools.find(x => x.id === ts.dataset.tst); if (!t) return; t.st = TOOL_PROX[t.st]; t.wish = t.st === 'quero'; vibrate(); saveTools(); const tmp = document.createElement('div'); tmp.innerHTML = toolStHTML(t); ts.replaceWith(tmp.firstElementChild); $(`[data-tst="${t.id}"]`, v)?.focus(); return; }
+      const ti = e.target.closest('[data-tipo]'); if (ti) return typeSheet(tools.find(x => x.id === ti.dataset.tipo));
+      const it = e.target.closest('[data-item]'); if (it) { const x = tools.find(y => y.id === it.dataset.item); return itemSheet(x, null, true); }
       const tf = e.target.closest('[data-tf]'); if (tf) { toolFiltro = tf.dataset.tf; gestaoQuery = ''; return rerender(); }
-      const tb = e.target.closest('[data-tid]'); if (tb) return toolSheet(tools.find(t => t.id === tb.dataset.tid));
       const ld = e.target.closest('[data-lado]'); if (ld) { checkLado = ld.dataset.lado; return rerender(); }
       const ce = e.target.closest('[data-ck-edit]'); if (ce) return checkSheet(checks.find(c => c.id === ce.dataset.ckEdit));
       if (e.target.closest('[data-ck-tools]')) {
-        const novos = tools.filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
+        const novos = tiposTool().filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
         novos.forEach(t => checks.push(fixCheck({ id: uid(), name: t.name, toolId: t.id, back: true })));
         saveChecks(); rerender(); return toast(`${plural(novos.length, 'ferramenta entrou', 'ferramentas entraram')} no checklist.`, { label: 'Desfazer', run: () => { checks = checks.filter(c => !novos.some(t => t.id === c.toolId)); saveChecks(); rerender(); } });
       }
@@ -3886,7 +4094,7 @@ async function restaurarCopiaEletrica(file) {
   if (!data || !Array.isArray(data.quotes) || !Array.isArray(data.prices)) { toast('Esse arquivo não é uma cópia do Elétrica Fácil.'); return; }
   confirmSheet('Restaurar a cópia?', `O arquivo tem ${plural(data.quotes.length, 'orçamento', 'orçamentos')} e ${plural(data.prices.length, 'preço', 'preços')}. Os dados deste aparelho${syncOn() ? ' e dos outros aparelhos conectados' : ''} serão substituídos.`, 'Restaurar', () => {
     settings = { ...DEF, ...data.settings }; prices = data.prices; quotes = data.quotes.map(fixQuote);
-    if (data.tools) { tools = data.tools.map(fixTool); saveTools(); }
+    if (data.tools) { tools = normTools(data.tools); saveTools(); }
     if (data.checks) { checks = data.checks.map(fixCheck); saveChecks(); }
     settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
     saveSettings(); savePrices(); saveQuotes(); rerender(); toast('Cópia restaurada.');

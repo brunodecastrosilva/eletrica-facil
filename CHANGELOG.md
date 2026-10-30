@@ -2,6 +2,21 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.12.0 · 2026-10-30
+
+- **Listas de escolha do próprio app:** todas as listas suspensas (unidade, prazo, categoria, material, ferramenta,
+  ambiente) passam a ser desenhadas pelo app, iguais em iPhone, Android e computador. A lista abre na própria tela,
+  com a opção escolhida marcada; funciona com teclado (setas, Enter, Esc) e leitor de tela.
+- **Ferramentas:** três listas, **Minhas ferramentas**, **Quero comprar** e **Ferramentas cadastradas** (o catálogo
+  do app mais as que você criou). Os botões de estado saíram da lista: cada linha tem a seta de abrir e leva à caixa
+  da ferramenta, onde você diz se ela é sua (marca, modelo e quantidade) ou se quer comprar.
+- **Várias do mesmo tipo:** dá para ter, por exemplo, dois multímetros de marcas ou modelos diferentes. Cadastrar de
+  novo a mesma marca e modelo soma na quantidade.
+- **Mesmo padrão em todo o app:** Nova ferramenta, Novo material no estoque e Novo item em Preços começam pela
+  categoria e seguem para o item. As linhas que abrem alguma coisa (Preços, Estoque, Ferramentas) têm a seta à direita.
+- Quem usava a 2.9 a 2.11 tem as ferramentas convertidas sozinhas. Atualize todos os aparelhos sincronizados para a
+  2.12: uma versão anterior não entende o formato novo das ferramentas.
+
 ## 2.11.0 · 2026-10-30
 
 - **Seções do orçamento:** o botão Próximo saiu; basta tocar na seção que você quer abrir. A animação ficou mais
