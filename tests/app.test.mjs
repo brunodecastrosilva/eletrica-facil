@@ -488,14 +488,14 @@ test('aprovação com o calendário do app (sem datas futuras) e Comprei na caix
   const id = await criarOrcamento(p, 'Cliente Aprovação', 'Troca de tomada');
   await p.evaluate(id => { setStatus(getQ(id), 'enviado'); go('/q/' + id); }, id);
   await p.click('.banner [data-st="aprovado"]');
-  assert.equal(await p.locator('.kf-dlg input[type="date"]').count(), 0, 'sem o calendário do sistema');
-  assert.match(await p.textContent('#ap-date-btn'), /\(hoje\)/);
-  await p.click('#ap-date-btn');
-  const amanha = await p.evaluate(() => maisDias(hojeTs(), 1));
-  if (await p.locator(`[data-dc="${amanha}"]`).count()) assert.equal(await p.locator(`[data-dc="${amanha}"]`).isDisabled(), true, 'aprovação não pode ser no futuro');
-  const ontem = await p.evaluate(() => maisDias(hojeTs(), -1));
-  if (!(await p.locator(`[data-dc="${ontem}"]`).count())) await p.click('[data-dcm="-1"]');
-  await p.click(`[data-dc="${ontem}"]`);
+  assert.equal(await p.locator('.kf-dlg input[type="date"]:visible').count(), 0, 'sem o calendário do sistema');
+  assert.match(await p.textContent('#ap-date-data'), /\(hoje\)/);
+  await p.click('#ap-date-data');
+  const amanha = await p.evaluate(() => isoDe(maisDias(hojeTs(), 1)));
+  if (await p.locator(`[data-kf-dia="${amanha}"]`).count()) assert.equal(await p.locator(`[data-kf-dia="${amanha}"]`).isDisabled(), true, 'aprovação não pode ser no futuro');
+  const ontemIso = await p.evaluate(() => isoDe(maisDias(hojeTs(), -1))), ontem = await p.evaluate(() => maisDias(hojeTs(), -1));
+  if (!(await p.locator(`[data-kf-dia="${ontemIso}"]`).count())) await p.click('.kf-cal [data-kf-mes="-1"]');
+  await p.click(`[data-kf-dia="${ontemIso}"]`);
   await p.click('.kf-dlg [data-ok]');
   assert.equal(await p.evaluate(([id, t]) => getQ(id).approvedAt === t, [id, ontem]), true);
   // Comprei: a ferramenta da lista de compras vai para Minhas ferramentas

@@ -84,7 +84,7 @@ export function regraFeedback(d, versao = 'atual') {
   if (!chaves.every(k => so.includes(k))) return 'campo não permitido';
   if (!todas.every(k => chaves.includes(k))) return 'campo obrigatório faltando';
   if (!int(d.esquema) || d.esquema.__int !== 1) return 'esquema';
-  if (!['conta-facil', 'eletrica-facil', 'estudo-facil'].includes(d.app)) return 'app';
+  if (!['conta-facil', 'eletrica-facil', 'estudo-facil', 'guitarra-facil'].includes(d.app)) return 'app';
   if (typeof d.versao !== 'string' || d.versao.length > 20) return 'versao';
   if (!int(d.nota) || d.nota.__int < 0 || d.nota.__int > 5) return 'nota';
   if (!['avaliacao', 'elogio', 'sugestao', 'critica', 'problema'].includes(d.tipo)) return 'tipo';

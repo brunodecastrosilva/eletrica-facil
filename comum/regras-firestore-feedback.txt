@@ -17,7 +17,7 @@
         request.resource.data.keys().hasOnly(['esquema', 'app', 'versao', 'nota', 'tipo', 'mensagem', 'contato', 'tela', 'categoria', 'gravidade', 'tecnico', 'enviadoEm'])
         && request.resource.data.keys().hasAll(['esquema', 'app', 'versao', 'nota', 'tipo', 'mensagem', 'enviadoEm'])
         && request.resource.data.esquema == 1
-        && request.resource.data.app in ['conta-facil', 'eletrica-facil', 'estudo-facil']
+        && request.resource.data.app in ['conta-facil', 'eletrica-facil', 'estudo-facil', 'guitarra-facil']
         && request.resource.data.versao is string && request.resource.data.versao.size() <= 20
         && request.resource.data.nota is int && request.resource.data.nota >= 0 && request.resource.data.nota <= 5
         && request.resource.data.tipo in ['avaliacao', 'elogio', 'sugestao', 'critica', 'problema']

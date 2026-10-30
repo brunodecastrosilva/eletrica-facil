@@ -2,6 +2,12 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.14.0 · 2026-10-30
+
+- Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas.
+- O calendário da data de aprovação agora é o calendário comum da família, com Hoje.
+- Kit Fácil 2.6.0: calendário do Kit em todo campo de data (`KitFacil.data`), movimento comum nas trocas de tela, guias dos Ajustes, listas, calendário, janelas e avisos.
+
 ## 2.13.0 · 2026-10-30
 
 - **Data da aprovação:** usa o calendário do próprio app (o mesmo do prazo), sem datas futuras, no lugar do

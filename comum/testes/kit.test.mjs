@@ -329,8 +329,8 @@ test('Ajustes: conteúdo das guias comuns (conta, sincronização, armazenamento
   const sobre = await texto('sobre');
   assert.match(sobre, /Versão 0\.0\.0-teste/); assert.match(sobre, /Termos de uso/); assert.match(sobre, /Kit Fácil \d+\.\d+\.\d+/);
   const links = await p.$$eval('#kf-aj-sobre .kf-apps a', l => l.map(x => x.getAttribute('href')));
-  assert.equal(links.length, 2);
-  for (const h of links) assert.match(h, /^\/(conta|eletrica|estudo)-facil\/$/);
+  assert.equal(links.length, 3, 'os outros apps da família');
+  for (const h of links) assert.match(h, /^\/(conta|eletrica|estudo|guitarra)-facil\/$/);
   // o resumo da guia acompanha a escolha do tema
   await p.click('[data-kf-aj-ir="aparencia"]');
   await p.click('[data-kf="tema"][data-v="escuro"]');
@@ -708,4 +708,44 @@ test('seções: abrem e fecham com movimento, fecham as outras do grupo e não p
     assert.deepEqual(a.erros, []);
     await a.fechar();
   }
+});
+
+test('Kit 2.6: campo de data com o calendário do Kit (o <input> guarda o valor) e janelas que saem com movimento', async () => {
+  const a = await aparelho(amb, { viewport: CELULAR, caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => {
+    const m = document.getElementById('main');
+    m.insertAdjacentHTML('beforeend', '<label for="d1">Data da prova</label><input type="date" id="d1" min="2026-01-05" max="2026-12-20" value="2026-03-10">');
+    window.MUDOU = 0; document.getElementById('d1').addEventListener('change', () => MUDOU++);
+  });
+  const btn = p.locator('#d1-data');
+  await btn.waitFor();
+  assert.equal(await p.locator('#d1').isVisible(), false, 'o calendário do sistema não aparece');
+  assert.match(await btn.textContent(), /10\/03\/2026/);
+  await btn.click();
+  const cal = p.locator('#d1-data-cal');
+  assert.equal(await cal.isVisible(), true);
+  assert.match(await cal.textContent(), /Março de 2026/);
+  await p.click('#d1-data-cal [data-kf-dia="2026-03-21"]');
+  assert.equal(await p.inputValue('#d1'), '2026-03-21');
+  assert.equal(await p.evaluate(() => MUDOU), 1);
+  assert.equal(await cal.isVisible(), false);
+  assert.match(await btn.textContent(), /21\/03\/2026/);
+  // limites: antes do mínimo fica desligado; o app muda .value e o botão acompanha
+  await p.evaluate(() => { document.getElementById('d1').value = '2026-01-07'; });
+  assert.match(await btn.textContent(), /07\/01\/2026/);
+  await btn.click();
+  assert.equal(await p.locator('#d1-data-cal [data-kf-dia="2026-01-04"]').isDisabled(), true, 'dia antes do mínimo');
+  assert.equal(await p.locator('#d1-data-cal [data-kf-mes="-1"]').isDisabled(), true);
+  await p.keyboard.press('Escape');
+  assert.equal(await cal.isVisible(), false);
+  // janela: some na hora para o código (nenhuma .kf-dlg) e um fantasma sai com o movimento
+  await p.evaluate(() => KitFacil.dialogo.abrir({ titulo: 'Teste', corpo: '<p>Oi</p>' }));
+  await p.locator('.kf-dlg').waitFor();
+  await p.click('.kf-dlg [data-kf-fechar]');
+  assert.equal(await p.locator('.kf-dlg').count(), 0);
+  assert.equal(await p.evaluate(() => KitFacil.dialogo.aberto()), false);
+  assert.ok(await esperar(() => p.evaluate(() => !document.querySelector('#kf-saidas > *')), 2000), 'o fantasma da janela some sozinho');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
 });

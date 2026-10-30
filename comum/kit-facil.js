@@ -16,13 +16,14 @@
    - lista de escolha do Kit no lugar da lista do sistema (toda <select>) e seções que abrem e fecham com movimento suave */
 (function (global) {
   'use strict';
-  const VERSAO = '2.5.0';
+  const VERSAO = '2.6.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
     { app: 'conta-facil', nome: 'Conta Fácil', prefixo: 'contafacil.', resumo: 'Divide a comanda do bar sem calculadora.' },
     { app: 'eletrica-facil', nome: 'Elétrica Fácil', prefixo: 'eletricafacil.', resumo: 'Orçamentos de elétrica prontos em minutos.' },
     { app: 'estudo-facil', nome: 'Estudo Fácil', prefixo: 'estudofacil.', resumo: 'Plano de estudos para concursos, dia a dia.' },
+    { app: 'guitarra-facil', nome: 'Guitarra Fácil', prefixo: 'guitarrafacil.', resumo: 'Guitarra do primeiro acorde aos solos, no seu ritmo.' },
   ];
 
   /* Destino das avaliações: banco Firestore do projeto no Firebase (plano gratuito).
@@ -186,7 +187,7 @@
   /* sub: linha pequena acima do título; classe 'kf-alto' (altura quase toda da tela) e 'kf-largo' (até 780 px) */
   function abrirDialogo({ titulo, sub = '', corpo, pe = '', aoMontar, aoFechar, classe = '', nome = '' }) {
     const origem = atual ? atual.origem : document.activeElement;
-    fecharDialogo(true);
+    fecharDialogo(true, { trocando: true });
     const idT = 'kf-t-' + Math.random().toString(36).slice(2, 8);
     const wrap = document.createElement('div');
     wrap.className = 'kf-ov';
@@ -211,10 +212,12 @@
     try { alvo.focus({ preventScroll: true }); } catch { alvo.focus(); }
     return dlg;
   }
-  function fecharDialogo(silencioso) {
+  function fecharDialogo(silencioso, { trocando = false } = {}) {
     if (!atual) return;
     const { el, origem, aoFechar } = atual;
     atual = null;
+    // a janela sai descendo (Kit 2.6); quando outra janela entra no lugar, a troca é direta
+    if (!trocando) sairDialogo(el);
     el.remove();
     destravar();
     if (origem && origem.focus && document.contains(origem)) { try { origem.focus({ preventScroll: true }); } catch {} }
@@ -959,6 +962,7 @@
       else { st.kfAjPush = true; history.pushState(st, ''); }
     }
     const sec = $(`[data-kf-aj-sec="${CSS.escape(id)}"]`, root);
+    if (muda) entrar(sec, { de: 'lado' });
     if (!largo(root)) window.scrollTo(0, 0);
     else { const r = sec.getBoundingClientRect(); if (r.top < 0 || r.top > window.innerHeight * .6) sec.scrollIntoView({ block: 'start' }); }
     if (foco) { const h = $('h2', sec); try { h.focus({ preventScroll: true }); } catch {} }
@@ -970,13 +974,15 @@
     const st = { ...(history.state || {}) }; delete st.kfAj; delete st.kfAjPush;
     history.replaceState(st, '');
     root.dataset.ativa = ''; marcarAjustes(root); window.scrollTo(0, 0);
+    if (!largo(root)) entrar($('.kf-aj-lista', root), { de: 'lado' });
     const b = $(`.kf-aj-lista [data-kf-aj-ir="${CSS.escape(id || '')}"]`, root); if (b) b.focus({ preventScroll: true });
   }
   window.addEventListener('popstate', () => {
     const root = $('[data-kf-aj]'); if (!root) return;
     const antes = root.dataset.ativa;
     root.dataset.ativa = secaoAtiva(); marcarAjustes(root);
-    if (antes && !root.dataset.ativa) { const b = $(`.kf-aj-lista [data-kf-aj-ir="${CSS.escape(antes)}"]`, root); if (b) b.focus({ preventScroll: true }); }
+    if (antes && !root.dataset.ativa) { const b = $(`.kf-aj-lista [data-kf-aj-ir="${CSS.escape(antes)}"]`, root); if (b) b.focus({ preventScroll: true }); if (!largo(root)) entrar($('.kf-aj-lista', root), { de: 'lado' }); }
+    else if (root.dataset.ativa && root.dataset.ativa !== antes) entrar($(`[data-kf-aj-sec="${CSS.escape(root.dataset.ativa)}"]`, root), { de: 'lado' });
   });
   window.addEventListener('resize', () => { const root = $('[data-kf-aj]'); if (root) marcarAjustes(root); });
   /* depois de desenhar a tela de Ajustes, o app chama ajustes.ligar(raiz) */
@@ -1321,6 +1327,65 @@
     };
   })();
 
+  /* ================= Kit 2.6: movimento em tudo =================
+     Duas durações na mesma curva: MOV.ms (560 ms) para o que cresce ou rola (seções, rolagem) e MOV.curto (280 ms)
+     para o que aparece ou some (telas, guias, menus, listas, calendário, janelas, avisos).
+     entrar(el): o conteúdo chega subindo de leve e aparecendo; o app chama a cada troca de tela ou guia.
+     Para o que some, o Kit desenha um "fantasma" (cópia sem ids, papéis nem dados) que sai sozinho: o elemento de
+     verdade já saiu do lugar, então o código e os testes nunca esperam a animação. */
+  MOV.curto = 280;
+  const MOV_SAIDA = 200;
+  function entrar(el, { de = 'baixo' } = {}) {
+    if (!el || !el.animate || semMovimento()) return;
+    // 'tela': só a opacidade (deslocar a tela inteira levaria junto os botões fixos, como o de criar)
+    if (de === 'tela') { el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: MOV.curto, easing: MOV.css }); return; }
+    const t = de === 'lado' ? 'translateX(14px)' : de === 'cima' ? 'translateY(-6px)' : 'translateY(10px)';
+    el.animate([{ opacity: 0, transform: t }, { opacity: 1, transform: 'none' }], { duration: MOV.curto, easing: MOV.css });
+  }
+  function caixaSaidas() {
+    let c = document.getElementById('kf-saidas');
+    if (!c) { c = document.createElement('div'); c.id = 'kf-saidas'; c.setAttribute('aria-hidden', 'true'); document.body.appendChild(c); }
+    else if (c.nextElementSibling) document.body.appendChild(c);
+    return c;
+  }
+  // cópia que só serve para ser vista saindo: sem ids, papéis, dados nem foco
+  function fantasma(el, trocaClasse = {}) {
+    const f = el.cloneNode(true);
+    [f, ...f.querySelectorAll('*')].forEach(n => {
+      [...n.attributes].forEach(a => { if (a.name === 'id' || a.name === 'for' || a.name === 'role' || a.name === 'name' || a.name.startsWith('data-') || a.name.startsWith('aria-')) n.removeAttribute(a.name); });
+      Object.entries(trocaClasse).forEach(([de, para]) => { if (n.classList.contains(de)) { n.classList.remove(de); n.classList.add(para); } });
+    });
+    f.setAttribute('inert', ''); f.style.pointerEvents = 'none';
+    return f;
+  }
+  function sairDialogo(wrap) {
+    if (semMovimento() || !wrap.animate || !wrap.isConnected) return;
+    const f = fantasma(wrap, { 'kf-dlg': 'kf-dlg-x' });
+    const corpo = wrap.querySelector('.kf-dlg-corpo'), fc = f.querySelector('.kf-dlg-corpo');
+    if (corpo && fc) requestAnimationFrame(() => { fc.scrollTop = corpo.scrollTop; });
+    f.style.animation = 'none';
+    caixaSaidas().appendChild(f);
+    const d = f.firstElementChild; if (d) d.style.animation = 'none';
+    const o = { duration: MOV_SAIDA, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' };
+    const a = f.animate([{ opacity: 1 }, { opacity: 0 }], o);
+    if (d) d.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(24px)', opacity: .4 }], o);
+    a.onfinish = a.oncancel = () => f.remove();
+    setTimeout(() => f.remove(), MOV_SAIDA + 200);
+  }
+  // listas e calendários que fecham: o fantasma some subindo de leve, no mesmo lugar
+  function sairLista(el, trocaClasse) {
+    if (semMovimento() || !el.animate || el.hidden) return;
+    const r = el.getBoundingClientRect(); if (!r.width) return;
+    const f = fantasma(el, trocaClasse);
+    Object.assign(f.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', margin: '0', zIndex: 84, overflow: 'hidden' });
+    f.hidden = false;
+    caixaSaidas().appendChild(f);
+    f.scrollTop = el.scrollTop;
+    const a = f.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-6px)' }], { duration: MOV_SAIDA, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+    a.onfinish = a.oncancel = () => f.remove();
+    setTimeout(() => f.remove(), MOV_SAIDA + 200);
+  }
+
   /* ================= Kit 2.5: lista de escolha =================
      Toda <select> dos apps vira a lista do Kit, igual em iPhone, Android e computador (a do sistema muda de um
      aparelho para outro). A <select> continua no lugar, escondida, guardando o valor: o app lê e muda .value, troca as
@@ -1370,12 +1435,12 @@
         if (sel.disabled) return;
         $$('.kf-esc.kf-aberta').forEach(x => { if (x !== w && x._fecha) x._fecha(false); });
         monta(); lista.hidden = false; btn.setAttribute('aria-expanded', 'true'); w.classList.add('kf-aberta');
-        if (lista.animate && !semMovimento()) lista.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: MOV.css });
+        entrar(lista, { de: 'cima' });
         const at = $('[aria-selected="true"]:not([aria-disabled])', lista) || $('.kf-esc-op:not([aria-disabled])', lista);
         if (at) { at.focus({ preventScroll: true }); lista.scrollTop = at.offsetTop - lista.clientHeight / 2 + at.offsetHeight / 2; }
         requestAnimationFrame(() => { const r = lista.getBoundingClientRect(); if (r.bottom > innerHeight - 8) lista.scrollIntoView({ block: 'nearest', behavior: semMovimento() ? 'auto' : 'smooth' }); });
       };
-      const fecha = foco => { if (lista.hidden) return; lista.hidden = true; btn.setAttribute('aria-expanded', 'false'); w.classList.remove('kf-aberta'); if (foco) btn.focus(); };
+      const fecha = foco => { if (lista.hidden) return; sairLista(lista, { 'kf-esc-lista': 'kf-esc-lista-x', 'kf-esc-op': 'kf-esc-op-x' }); lista.hidden = true; btn.setAttribute('aria-expanded', 'false'); w.classList.remove('kf-aberta'); if (foco) btn.focus(); };
       w._fecha = fecha;
       const escolhe = k => {
         const o = sel.options[k]; if (!o || o.disabled) return;
@@ -1416,6 +1481,109 @@
       .observe(document.body, { childList: true, subtree: true });
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vigiarEscolhas); else vigiarEscolhas();
+
+  /* ================= Kit 2.6: campo de data com o calendário do Kit =================
+     Todo <input type="date"> vira o campo do Kit: um botão com a data por extenso curto ("30/10/2026 (hoje)") que abre,
+     dentro da tela, o calendário do app (igual em todo aparelho). O <input> continua no lugar, escondido, guardando o
+     valor no formato de sempre (AAAA-MM-DD): o app lê e muda .value e ouve "change" como antes. min e max valem.
+     Para manter o do sistema: data-kf-nativa no <input>. */
+  const VALOR_INPUT = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  const CAL_IC = '<svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>';
+  const SETA_E = '<svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>';
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const deIso = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3], 12) : null; };
+  function dataLigar(raiz) {
+    $$('input[type="date"]:not([data-kf-data]):not([data-kf-nativa])', raiz || document).forEach(inp => {
+      inp.setAttribute('data-kf-data', ''); inp.hidden = true; inp.tabIndex = -1;
+      const w = document.createElement('div'); w.className = 'kf-esc kf-data';
+      const id = (inp.id || 'kf-data-' + novoId()) + '-data';
+      w.innerHTML = `<button type="button" class="kf-esc-btn kf-data-btn" id="${id}" aria-expanded="false" aria-controls="${id}-cal"><span class="kf-esc-v"></span>${CAL_IC}</button><div class="kf-cal" id="${id}-cal" role="group" hidden></div>`;
+      inp.after(w);
+      const btn = $('.kf-data-btn', w), cal = $('.kf-cal', w);
+      const lb = inp.id && document.querySelector(`label[for="${CSS.escape(inp.id)}"]`);
+      if (lb) { lb.htmlFor = id; lb.id = lb.id || id + '-l'; cal.setAttribute('aria-labelledby', lb.id); }
+      else {
+        const pai = inp.closest('label'), cp = pai && pai.cloneNode(true);
+        if (cp) $$('input, .kf-esc', cp).forEach(x => x.remove());
+        const nome = inp.getAttribute('aria-label') || (cp && cp.textContent.trim().replace(/\s+/g, ' ')) || 'Data';
+        btn.setAttribute('aria-label', nome); cal.setAttribute('aria-label', nome);
+        // o rótulo que envolve o campo não deve abrir nada ao ser tocado fora do botão
+        if (pai) pai.addEventListener('click', e => { if (!w.contains(e.target)) e.preventDefault(); });
+      }
+      let mes = null;
+      const valor = () => deIso(VALOR_INPUT.get.call(inp));
+      const lim = k => deIso(inp.getAttribute(k));
+      const pinta = () => {
+        const v = valor(), hoje = iso(new Date());
+        $('.kf-esc-v', btn).textContent = v ? `${v.toLocaleDateString('pt-BR')}${iso(v) === hoje ? ' (hoje)' : ''}` : (inp.getAttribute('placeholder') || 'Escolha a data');
+        btn.classList.toggle('kf-esc-vazio', !v); btn.disabled = inp.disabled;
+        if (!cal.hidden) grade();
+      };
+      const grade = () => {
+        const b = new Date(mes); b.setDate(1);
+        const y = b.getFullYear(), m = b.getMonth(), n = new Date(y, m + 1, 0).getDate(), hoje = iso(new Date()), v = valor(), vi = v && iso(v);
+        const mn = lim('min'), mx = lim('max'), mni = mn && iso(mn), mxi = mx && iso(mx);
+        const nome = b.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^./, c => c.toUpperCase());
+        let c = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => `<span class="kf-cal-s" aria-hidden="true">${d}</span>`).join('') + '<span></span>'.repeat(b.getDay());
+        for (let d = 1; d <= n; d++) {
+          const di = iso(new Date(y, m, d, 12)), off = (mni && di < mni) || (mxi && di > mxi);
+          c += `<button type="button" class="kf-cal-d${di === hoje ? ' kf-hoje' : ''}" data-kf-dia="${di}" aria-pressed="${di === vi}" aria-label="${esc(new Date(y, m, d, 12).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))}" ${off ? 'disabled' : ''} tabindex="-1"><span>${d}</span></button>`;
+        }
+        const ant = mni && iso(new Date(y, m, 0, 12)) < mni, prox = mxi && iso(new Date(y, m + 1, 1, 12)) > mxi;
+        const hojeOk = !((mni && hoje < mni) || (mxi && hoje > mxi));
+        cal.innerHTML = `<div class="kf-cal-cab"><button type="button" class="kf-cal-mes" data-kf-mes="-1" aria-label="Mês anterior" ${ant ? 'disabled' : ''}>${SETA_E}</button><b aria-live="polite">${esc(nome)}</b><button type="button" class="kf-cal-mes" data-kf-mes="1" aria-label="Próximo mês" ${prox ? 'disabled' : ''}>${SETA}</button></div>`
+          + `<div class="kf-cal-g">${c}</div>`
+          + `<div class="kf-cal-pe">${hojeOk ? '<button type="button" class="kf-btn kf-link" data-kf-hoje>Hoje</button>' : '<span></span>'}${inp.required ? '' : '<button type="button" class="kf-btn kf-link" data-kf-limpar>Limpar</button>'}</div>`;
+        const foco = $('[aria-pressed="true"]:not([disabled])', cal) || $('.kf-cal-d.kf-hoje:not([disabled])', cal) || $('.kf-cal-d:not([disabled])', cal);
+        if (foco) foco.tabIndex = 0;
+      };
+      const define = v => {
+        if (VALOR_INPUT.get.call(inp) === v) return;
+        VALOR_INPUT.set.call(inp, v); pinta();
+        inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      const abre = () => {
+        if (inp.disabled) return;
+        $$('.kf-esc.kf-aberta').forEach(x => { if (x !== w && x._fecha) x._fecha(false); });
+        const v = valor(); mes = (v || new Date()).getTime();
+        grade(); cal.hidden = false; btn.setAttribute('aria-expanded', 'true'); w.classList.add('kf-aberta');
+        entrar(cal, { de: 'cima' });
+        const f = $('.kf-cal-d[tabindex="0"]', cal); if (f) f.focus({ preventScroll: true });
+        requestAnimationFrame(() => { const r = cal.getBoundingClientRect(); if (r.bottom > innerHeight - 8) cal.scrollIntoView({ block: 'nearest', behavior: semMovimento() ? 'auto' : 'smooth' }); });
+      };
+      const fecha = foco => { if (cal.hidden) return; sairLista(cal, { 'kf-cal': 'kf-cal-x' }); cal.hidden = true; btn.setAttribute('aria-expanded', 'false'); w.classList.remove('kf-aberta'); if (foco) btn.focus(); };
+      w._fecha = fecha;
+      const muda = k => { const b = new Date(mes); b.setDate(1); b.setMonth(b.getMonth() + k); mes = b.getTime(); grade(); const g = $('.kf-cal-g', cal); if (g) entrar(g, { de: 'lado' }); };
+      btn.addEventListener('click', e => { e.preventDefault(); cal.hidden ? abre() : fecha(true); });
+      cal.addEventListener('click', e => {
+        e.preventDefault();
+        const d = e.target.closest('[data-kf-dia]'); if (d && !d.disabled) { define(d.dataset.kfDia); fecha(true); return; }
+        const mo = e.target.closest('[data-kf-mes]'); if (mo && !mo.disabled) { muda(+mo.dataset.kfMes); $(`[data-kf-mes="${mo.dataset.kfMes}"]:not([disabled])`, cal)?.focus(); return; }
+        if (e.target.closest('[data-kf-hoje]')) { define(iso(new Date())); fecha(true); return; }
+        if (e.target.closest('[data-kf-limpar]')) { define(''); fecha(true); }
+      });
+      cal.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fecha(true); return; }
+        const d = e.target.closest && e.target.closest('[data-kf-dia]'); if (!d) return;
+        const passo = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key]; if (!passo) return;
+        e.preventDefault();
+        const alvo = deIso(d.dataset.kfDia); alvo.setDate(alvo.getDate() + passo);
+        if (alvo.getMonth() !== new Date(mes).getMonth()) { mes = alvo.getTime(); grade(); }
+        const b = $(`[data-kf-dia="${iso(alvo)}"]`, cal); if (b) { $$('.kf-cal-d', cal).forEach(x => x.tabIndex = -1); b.tabIndex = 0; b.focus(); }
+      });
+      w.addEventListener('focusout', e => { if (e.relatedTarget && !w.contains(e.relatedTarget)) fecha(false); });
+      Object.defineProperty(inp, 'value', { configurable: true, get() { return VALOR_INPUT.get.call(this); }, set(v) { VALOR_INPUT.set.call(this, v); pinta(); } });
+      new MutationObserver(pinta).observe(inp, { attributes: true, attributeFilter: ['disabled', 'min', 'max', 'required', 'value'] });
+      inp.addEventListener('change', pinta);
+      pinta();
+    });
+  }
+  const vigiarDatas = () => {
+    dataLigar(document);
+    new MutationObserver(ms => { if (ms.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && (n.matches && n.matches('input[type="date"]') || n.querySelector && n.querySelector('input[type="date"]'))))) dataLigar(document); })
+      .observe(document.body, { childList: true, subtree: true });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vigiarDatas); else vigiarDatas();
 
   /* ================= Kit 2.5: seções que abrem e fecham =================
      <details data-kf-secao> abre e fecha com movimento suave: a altura cresce ou encolhe na mesma curva de toda a
@@ -1508,8 +1676,9 @@
     nav: { ajustes: navAjustesHTML, organizar: organizarNav, MAX: NAV_MAX },
     ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML },
     escolha: { ligar: escolhaLigar },
+    data: { ligar: dataLigar },
     secao: { abrir: secaoAbrir, fechar: secaoFechar, alternar: secaoAlternar, aberta: secaoAberta },
-    movimento: { ms: MOV.ms, curva: MOV.curva, css: MOV.css, reduzido: semMovimento },
+    movimento: { ms: MOV.ms, curto: MOV.curto, curva: MOV.curva, css: MOV.css, reduzido: semMovimento, entrar },
     apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix },
     novidades: { abrir: abrirNovidades, daVersao: novidadesDaVersao },
     boasVindas: { abrir: abrirBoasVindas },
