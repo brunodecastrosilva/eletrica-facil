@@ -2,6 +2,24 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.10.0 · 2026-10-30
+
+- **Prazo de execução integrado às datas:** o prazo tem quantidade e unidade (dias úteis, dias corridos, semanas ou
+  meses) e fica junto do calendário, na seção Pagamento, datas e garantia. Ao tocar no dia de início, o app marca os
+  dias do prazo: dias úteis pulam sábados, domingos e feriados nacionais (que aparecem marcados no calendário).
+  Depois é só tocar num dia para pôr ou tirar. Mudar o prazo remarca a partir do mesmo início.
+- **Conferência do prazo:** o app avisa quando os dias marcados não conferem com o prazo (ou passam do fim de um
+  prazo em semanas ou meses) e oferece o prazo que cobre os dias marcados.
+- **Sem data retroativa:** o orçamento não deixa marcar dias que já passaram; um rascunho ou orçamento enviado com
+  datas vencidas pede um novo início. O relatório continua aceitando só dias que já passaram.
+- **Baixa no estoque:** ao concluir um serviço, abre a janela Dar baixa no estoque com o material do orçamento que
+  está no estoque, a quantidade usada (ajustável) e quanto sobra. Desfazer a conclusão devolve o material.
+- **Estoque baixo:** cada material pode ter o campo "Avisar quando chegar a". No mínimo (ou zerado), ele aparece em
+  Para repor, no alto do estoque, e com aviso ao montar o orçamento.
+- **Animação:** abrir e fechar seções ficou mais suave e no mesmo ritmo da rolagem. O título da seção não salta
+  mais quando o resumo de uma linha aparece ou some.
+- A proposta, o PDF e o WhatsApp mostram o prazo com a unidade e os dias de serviço de forma resumida.
+
 ## 2.9.0 · 2026-10-30
 
 - **Gestão (nova guia na barra de baixo, entre Preços e Ajustes):**

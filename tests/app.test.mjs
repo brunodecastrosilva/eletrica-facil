@@ -289,30 +289,58 @@ test('orçamento: Próximo abre a seção seguinte e fecha a anterior, com anima
   await a.fechar();
 });
 
-test('dias de serviço: vários dias não seguidos, com conferência da quantidade', async () => {
+test('prazo de execução integrado ao calendário: marca os dias, aceita ajuste, confere e não aceita data passada', async () => {
   const a = await aparelho(amb);
   const p = a.page;
-  const id = await criarOrcamento(p, 'Cliente Dias', 'Reforma');
+  const id = await criarOrcamento(p, 'Cliente Prazo', 'Reforma');
   await p.evaluate(id => go('/q/' + id), id);
   await abrirPainel(p, `q:${id}:cond`);
   await p.click('[data-days="1"]'); await p.click('[data-days="1"]');
+  await p.selectOption('#q-prazo-u', 'uteis');
   assert.equal(await p.inputValue('#q-days'), '3');
-  const dias = p.locator('.cal-d:not([disabled])');
-  await dias.nth(2).click(); await dias.nth(4).click();
-  assert.match(await p.textContent('#cal-msg'), /Você informou 3 dias e marcou 2/);
-  await dias.nth(9).click();
-  assert.match(await p.textContent('#cal-msg'), /3 dias marcados/);
-  assert.match(await p.textContent('#cal-msg'), /não seguidos/);
-  const txt = await p.evaluate(id => schedText(getQ(id)), id);
-  assert.match(txt, /Em 3 dias, não seguidos/);
-  // desmarca um: a conferência acusa e o atalho corrige
-  await dias.nth(9).click();
+  // dias passados não podem ser escolhidos no orçamento
+  const ontem = await p.evaluate(() => maisDias(hojeTs(), -1));
+  if (await p.locator(`[data-cal="${ontem}"]`).count()) assert.equal(await p.locator(`[data-cal="${ontem}"]`).isDisabled(), true);
+  // toque no início: o app marca 3 dias úteis, pulando fins de semana e feriados
+  const ini = await p.evaluate(() => hojeTs());
+  await p.click(`[data-cal="${ini}"]`);
+  const dias = await p.evaluate(id => getQ(id).dates, id);
+  assert.equal(dias.length, 3);
+  assert.ok(await p.evaluate(L => L.slice(1).every(diaUtil), dias), 'marcou dia que não é útil');
+  assert.match(await p.textContent('#cal-msg'), /3 dias úteis/);
+  // tirar um dia: a conferência acusa e o atalho ajusta o prazo
+  await p.evaluate(id => { const q = getQ(id); q.dates = q.dates.slice(0, 2); }, id);
+  await p.click('[data-days="-1"]'); await p.click('[data-days="1"]'); // repinta
+  // depois de mudar o prazo, o app remarca a partir do início
+  assert.equal(await p.evaluate(id => getQ(id).dates.length, id), 3);
+  await p.evaluate(id => { const q = getQ(id); q.dates.pop(); }, id);
+  await p.selectOption('#q-prazo-u', 'uteis');
+  assert.equal(await p.evaluate(id => getQ(id).dates.length, id), 3, 'trocar a unidade remarca os dias');
+  await p.evaluate(id => { getQ(id).dates.pop(); }, id);
+  await p.click('[data-cal-reset]');
+  assert.equal(await p.evaluate(id => getQ(id).dates.length, id), 0);
+  // marca de novo e tira o último dia: não confere
+  await p.click(`[data-cal="${ini}"]`);
+  const ult = await p.evaluate(id => { const L = getQ(id).dates; calMonth[id] = L[2]; return L[2]; }, id);
+  await p.click('[data-calm="1"]'); await p.click('[data-calm="-1"]');
+  if (!(await p.locator(`[data-cal="${ult}"]`).count())) await p.click('[data-calm="1"]');
+  await p.click(`[data-cal="${ult}"]`);
+  assert.match(await p.textContent('#cal-msg'), /O prazo é de 3 dias úteis e há 2 dias marcados/);
   await p.click('[data-days-fix]');
-  assert.equal(await p.evaluate(id => getQ(id).days, id), 2);
+  assert.deepEqual(await p.evaluate(id => getQ(id).prazo, id), { n: 2, u: 'uteis' });
   assert.equal(await p.evaluate(id => daysOk(getQ(id)), id), true);
+  assert.equal(await p.evaluate(id => getQ(id).deadline, id), '2 dias úteis', 'o texto antigo acompanha, para outros aparelhos');
+  // semanas: os dias marcados precisam caber no período
+  assert.equal(await p.evaluate(() => { const q = { prazo: { n: 1, u: 'semanas' }, dates: [], status: 'rascunho' }; const t = maisDias(hojeTs(), 1); q.dates = [t, maisDias(t, 10)]; return prazoProblema(q); }), 'fora');
+  // orçamento com data que já passou: avisa
+  assert.equal(await p.evaluate(() => prazoProblema({ prazo: { n: 1, u: 'uteis' }, dates: [maisDias(hojeTs(), -2)], status: 'rascunho' })), 'retro');
+  // textos antigos de prazo viram quantidade e unidade
+  assert.deepEqual(await p.evaluate(() => ['2 dias úteis', '1 semana', 'No mesmo dia', '3 meses', 'xyz'].map(prazoDeTexto)), [{ n: 2, u: 'uteis' }, { n: 1, u: 'semanas' }, { n: 1, u: 'corridos' }, { n: 3, u: 'meses' }, null]);
+  // feriados nacionais
+  assert.deepEqual(await p.evaluate(() => [feriado(new Date(2026, 3, 3, 12).getTime()), feriado(new Date(2026, 10, 20, 12).getTime())]), ['Sexta-feira Santa', 'Dia da Consciência Negra']);
   // relatório: os dias valem como execução
   await p.evaluate(id => { const q = getQ(id); q.dates = [dayTs(Date.now() - 3 * DAY), dayTs(Date.now() - DAY)]; setStatus(q, 'concluido'); }, id);
-  assert.match(await p.evaluate(id => execText(getQ(id)), id), /\(2 dias\)/);
+  assert.match(await p.evaluate(id => execText(getQ(id)), id), /2 dias/);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
@@ -373,6 +401,35 @@ test('gestão: estoque ligado aos preços, ferramentas e checklist de ida e volt
   // tudo isso vai na sincronização e na cópia de segurança
   const pac = await p.evaluate(() => syncPayload());
   assert.equal(pac.tools.length, 2); assert.equal(pac.checks.length, 3);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('baixa no estoque ao concluir, devolução ao desfazer e aviso de estoque baixo', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  const id = await p.evaluate(() => {
+    const d = prices.find(x => x.kind === 'mat'); Object.assign(d, { stock: 12, cost: 1000, min: 5 }); savePrices();
+    const q = blankQuote(); q.num = ++settings.seq; q.client.name = 'Cliente Baixa'; q.status = 'aprovado'; q.approvedAt = Date.now();
+    q.items = [{ id: uid(), kind: 'mat', name: d.name, unit: d.unit, qty: 8, price: d.price, room: '' }];
+    quotes.push(q); saveQuotes(); go('/q/' + q.id); return q.id;
+  });
+  await p.click('.banner [data-st="concluido"]');
+  await p.locator('.kf-dlg [data-ok]').waitFor();
+  assert.match(await p.textContent('#bx-list'), /12 → 4/);
+  assert.match(await p.textContent('#bx-list'), /abaixo do mínimo/);
+  await p.click('.kf-dlg [data-bq="-1"]'); // usou 7
+  await p.click('.kf-dlg [data-ok]');
+  assert.equal(await p.evaluate(() => prices.find(x => x.kind === 'mat').stock), 5);
+  assert.deepEqual(await p.evaluate(id => getQ(id).baixa.map(b => b.qty), id), [7]);
+  // estoque baixo aparece na Gestão
+  await p.evaluate(() => go('/gestao'));
+  assert.match(await p.textContent('.g-repor'), /1 material para repor/);
+  assert.match(await p.textContent('.g-repor'), /5 de 5/);
+  // desfazer a conclusão devolve o material
+  await p.evaluate(id => { setStatus(getQ(id), 'aprovado'); }, id);
+  assert.equal(await p.evaluate(() => prices.find(x => x.kind === 'mat').stock), 12);
+  assert.equal(await p.evaluate(id => getQ(id).baixa, id), null);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });

@@ -296,6 +296,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .pk-row.on{border-color:var(--volt);box-shadow:inset 0 0 0 1px var(--volt)}
 .pk-name{font-weight:600;font-size:15.5px}
 .pk-st{display:block;font-weight:500;font-size:13px;color:var(--muted)}
+.pk-st.low{color:var(--bad)}
 .pk-price{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px;white-space:nowrap}
 .pk-n{background:var(--volt);color:var(--volt-ink);border-radius:99px;min-width:30px;height:30px;padding:0 6px;display:grid;place-items:center;font-weight:800;font-size:13.5px;font-variant-numeric:tabular-nums}
 .pk-plus{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--ink)}
@@ -387,8 +388,9 @@ details.fold>summary::-webkit-details-marker{display:none}
 details.fold>summary:focus-visible{outline:2px solid var(--volt-text);outline-offset:-2px;border-radius:18px}
 .f-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .f-t b{font-family:var(--f-display);font-weight:800;font-stretch:106%;font-size:17px;letter-spacing:-.01em}
-.f-t small{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-details.fold[open]>summary .f-t small{display:none}
+.f-t small{display:block;color:var(--muted);font-size:14px;line-height:20px;max-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* seção aberta esconde o resumo de uma linha (ao fechar, a classe fechando o traz de volta já durante a animação) */
+details.fold[open]:not(.fechando):not(.multi)>summary .f-t small{max-height:0;opacity:0}
 .f-r{font-weight:700;font-variant-numeric:tabular-nums;font-size:15px;flex:none}
 .f-ch{flex:none;color:var(--faint);display:grid;place-items:center;width:24px;transition:transform .18s}
 .f-ch svg{width:20px;height:20px}
@@ -398,14 +400,13 @@ details.fold.anim>.f-in{overflow:hidden}
 details.fold.fechando>summary .f-ch{transform:none}
 details.fold>summary.chegou{animation:chegou .9s ease-out}
 @keyframes chegou{0%{background:color-mix(in srgb,var(--volt) 30%,transparent)}100%{background:transparent}}
-.f-ch{transition:transform .26s cubic-bezier(.2,.7,.2,1)}
+.f-ch{transition:transform .34s cubic-bezier(.33,1,.68,1)}
 details.fold.sub{background:var(--surface-2);border:0;border-radius:14px}
 details.fold.sub>summary{min-height:54px;padding:9px 8px 9px 12px}
 details.fold.sub .f-t b{font-family:var(--f-body);font-weight:700;font-size:15.5px;font-stretch:100%;letter-spacing:0}
 details.fold.sub .f-t small{font-size:13.5px}
 details.fold.sub>.f-in{padding:0 12px 12px}
 details.fold.sub .switch-row{background:var(--surface)}
-details.fold.multi .f-t small{display:block}
 .next-btn{align-self:flex-end;min-height:44px;font-size:15px}
 .next-btn svg{width:18px;height:18px}
 .blk{display:flex;flex-direction:column;gap:10px}
@@ -506,6 +507,18 @@ details.tech[open] > summary::after{content:"–"}
 .p-checks{grid-template-columns:1fr !important}
 .p-accept{margin:6px 0 -6px}
 .sched{display:flex;flex-direction:column;gap:10px}
+.bx-list{display:flex;flex-direction:column}
+.bx-row{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.bx-row:first-child{border-top:0}
+.bx-t{flex:1;min-width:150px;display:flex;flex-direction:column;gap:2px}
+.bx-t small{color:var(--muted);font-size:13.5px}
+.bx-w{display:flex;align-items:center;gap:4px;color:var(--bad);font-weight:600}
+.bx-w .i{width:16px;height:16px}
+.bx-row .stepper input{width:60px}
+.g-repor{display:flex;flex-direction:column;background:var(--bad-soft);border-radius:14px;padding:4px 12px 6px}
+.g-repor .g-alert{background:none;padding:8px 0 4px}
+.g-rp{display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:44px;border:0;border-top:1px solid color-mix(in srgb,var(--bad) 18%,transparent);background:none;color:var(--ink);font:inherit;font-size:15px;text-align:left;padding:6px 0}
+.g-rp .num{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--bad)}
 .g-body{display:flex;flex-direction:column;gap:12px}
 .g-list{display:flex;flex-direction:column;gap:12px}
 .g-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px 16px 8px}
@@ -554,6 +567,19 @@ details.tech[open] > summary::after{content:"–"}
 .cal-msg.bad{background:var(--bad-soft)}
 .cal-msg.bad .i,.cal-msg.bad b{color:var(--bad)}
 .cal-msg .linkish{margin-left:0}
+.prazo-row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.prazo-row .stepper{flex:none}
+.prazo-row select{flex:1;min-width:150px}
+.cal-d.velho span{opacity:.6}
+.cal-d.prazo span{background:var(--volt-soft)}
+.cal-d.fer span{position:relative}
+.cal-d.fer span::after{content:'';position:absolute;bottom:4px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--bad)}
+.cal-d[aria-pressed="true"].fer span::after{background:var(--volt-ink)}
+.cal-leg{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin:0;padding:0 8px;font-size:13px;color:var(--muted)}
+.cal-leg span{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.lg-prazo{background:var(--volt-soft);box-shadow:inset 0 0 0 1px var(--line-2)}
+.lg-fer{width:6px!important;height:6px!important;background:var(--bad)}
+.cal-h .icon-btn[disabled]{opacity:.3}
 .days-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .days-row .stepper{width:auto}
 input[type=date]:disabled{opacity:.45}
@@ -612,7 +638,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.9.0';
+const VERSAO = '2.10.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -627,6 +653,19 @@ const clone = v => JSON.parse(JSON.stringify(v));
 const DAY = 864e5;
 // um dia guardado sempre ao meio-dia, para não mudar de data com o fuso ou o horário de verão
 const dayTs = ts => { if (!ts) return null; const d = new Date(ts); d.setHours(12, 0, 0, 0); return d.getTime(); };
+// prazo de execução: unidade -> [plural, singular]
+const PRAZO_U = { uteis: ['dias úteis', 'dia útil'], corridos: ['dias corridos', 'dia corrido'], semanas: ['semanas', 'semana'], meses: ['meses', 'mês'] };
+const prazoTxt = p => p ? `${p.n} ${PRAZO_U[p.u][p.n === 1 ? 1 : 0]}` : '';
+// lê o texto livre das versões antigas ("2 dias úteis", "1 semana", "No mesmo dia")
+function prazoDeTexto(t) {
+  t = String(t || '').toLowerCase();
+  if (!t.trim()) return null;
+  if (/mesmo dia/.test(t)) return { n: 1, u: 'corridos' };
+  const m = t.match(/(\d+)\s*(dias?\s*[uú]te(?:is|l)|dias?\s*corridos?|dias?|semanas?|m[eê]s(?:es)?)/);
+  if (!m) return null;
+  const u = /[uú]te/.test(m[2]) ? 'uteis' : /semana/.test(m[2]) ? 'semanas' : /m[eê]s/.test(m[2]) ? 'meses' : 'corridos';
+  return { n: +m[1], u };
+}
 const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
 function parseMoney(s) {
   s = String(s ?? '').replace(/[^\d,.]/g, '');
@@ -808,7 +847,13 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.9.0', itens: [
+  novidades: [{ versao: '2.10.0', itens: [
+    'Prazo de execução e datas num lugar só: escolha a quantidade e a unidade (dias úteis, dias corridos, semanas ou meses) e toque no dia de início. O app marca os dias, pulando fins de semana e feriados nacionais nos dias úteis, e você ajusta.',
+    'O orçamento não aceita datas que já passaram.',
+    'Ao concluir um serviço, o app oferece dar baixa no estoque do material usado. Desfazer a conclusão devolve o material.',
+    'Cada material pode ter um mínimo: ao chegar nele, entra na lista Para repor, na Gestão.',
+    'Abrir e fechar as seções do orçamento ficou mais suave, sem saltos no título.',
+  ] }, { versao: '2.9.0', itens: [
     'Nova guia Gestão, na barra de baixo: estoque de material (com custo, repasse e margem), suas ferramentas e as que quer comprar, e um checklist para conferir tudo na ida e na volta da obra.',
     'O material do estoque é o mesmo da tabela de Preços: o repasse é o preço que vai no orçamento, e a lista de material mostra quanto você tem guardado.',
     'Serviço em dias não seguidos: informe quantos dias são e marque cada um no calendário. O app avisa se a conta não fechar.',
@@ -864,7 +909,7 @@ function blankQuote() {
     startAt: null, endAt: null, dateTbd: false, approvedVia: '', days: 1, dates: [],
     travel: 0, discount: { mode: 'value', value: 0, pct: 0 },
     payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments },
-    validity: settings.validity, deadline: '', warranty: settings.warranty, notes: settings.notes,
+    validity: settings.validity, deadline: '', prazo: { n: 1, u: 'uteis' }, warranty: settings.warranty, notes: settings.notes,
     status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false,
     trip: null, extras: { urgent: 0, night: 0, weekend: 0 }, useRooms: false, rooms: [],
     diag: '', work: '', tests: [], recs: '' };
@@ -893,6 +938,9 @@ function fixQuote(q) {
   }
   if (!q.dates.length && q.status === 'concluido' && q.doneAt) q.dates = [dayTs(q.doneAt)];
   q.days = Math.max(1, Math.min(99, parseInt(q.days, 10) || q.dates.length || 1));
+  // prazo de execução: quantidade e unidade (versões antigas tinham só o texto livre ou a quantidade de dias)
+  const pz = q.prazo && typeof q.prazo === 'object' ? q.prazo : prazoDeTexto(q.deadline) || (q.dates.length > 1 || q.days > 1 ? { n: q.days, u: 'corridos' } : null) || { n: 1, u: 'uteis' };
+  q.prazo = { n: Math.max(1, Math.min(99, parseInt(pz.n, 10) || 1)), u: PRAZO_U[pz.u] ? pz.u : 'uteis' };
   ['isExample', 'active', 'savedAt', 'closedAt', 'total', 'statusAt'].forEach(k => delete q[k]);
   return q;
 }
@@ -900,6 +948,9 @@ const fixTool = t => ({ id: String(t.id || uid()), name: String(t.name || '').tr
 const fixCheck = c => ({ id: String(c.id || uid()), name: String(c.name || '').trim(), back: c.back !== false, ida: !!c.ida, volta: !!c.volta, toolId: c.toolId ? String(c.toolId) : '' });
 // material do estoque: quantidade, custo e marca ficam no próprio item da tabela de preços
 const inStock = p => p.kind === 'mat' && typeof p.stock === 'number';
+// estoque baixo: chegou ao mínimo que o usuário escolheu (ou acabou)
+const stockLow = p => inStock(p) && (p.stock <= 0 || (p.min > 0 && p.stock <= p.min));
+const stockTxt = p => !inStock(p) ? '' : p.stock <= 0 ? 'em falta no estoque' : `${fmtQty(p.stock)} em estoque${stockLow(p) ? ' · repor' : ''}`;
 // dados da primeira versão do app (mesmo aparelho ou cópia de segurança antiga)
 function fromV1(cat, bills, draft) {
   const out = { settings: {}, prices: seedPrices(), quotes: [] };
@@ -1171,28 +1222,94 @@ function datesText(L) {
   if (mesmoAno) return joinPt(L.map(fmtShort)) + '/' + y;
   return joinPt(L.map(fmtDate));
 }
-// dias de serviço que o usuário informou e dias marcados no calendário conferem?
-const daysOk = q => q.dateTbd || !q.dates.length || q.dates.length === q.days;
+// feriados nacionais (fixos e Sexta-feira Santa), pulados na contagem de dias úteis
+const FERIADOS = {};
+function feriadosDo(y) {
+  if (FERIADOS[y]) return FERIADOS[y];
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mes = Math.floor((h + l - 7 * m + 114) / 31), dia = ((h + l - 7 * m + 114) % 31) + 1;
+  const sexta = new Date(y, mes - 1, dia - 2, 12);
+  const L = { [dateInput(sexta)]: 'Sexta-feira Santa' };
+  [['01-01', 'Confraternização Universal'], ['04-21', 'Tiradentes'], ['05-01', 'Dia do Trabalho'], ['09-07', 'Independência do Brasil'], ['10-12', 'Nossa Senhora Aparecida'],
+    ['11-02', 'Finados'], ['11-15', 'Proclamação da República'], ['11-20', 'Dia da Consciência Negra'], ['12-25', 'Natal']].forEach(([md, n]) => { L[`${y}-${md}`] = n; });
+  return (FERIADOS[y] = L);
+}
+const feriado = t => feriadosDo(new Date(t).getFullYear())[dateInput(t)] || '';
+const diaUtil = t => { const w = new Date(t).getDay(); return w !== 0 && w !== 6 && !feriado(t); };
+const maisDias = (t, n) => { const d = new Date(t); d.setDate(d.getDate() + n); d.setHours(12, 0, 0, 0); return d.getTime(); };
+const ehDia = p => p.u === 'uteis' || p.u === 'corridos';
+// último dia do prazo, contando a partir do dia de início
+function prazoFim(ini, p) {
+  if (p.u === 'corridos') return maisDias(ini, p.n - 1);
+  if (p.u === 'semanas') return maisDias(ini, p.n * 7 - 1);
+  if (p.u === 'meses') { const d = new Date(ini); d.setMonth(d.getMonth() + p.n); d.setDate(d.getDate() - 1); d.setHours(12, 0, 0, 0); return d.getTime(); }
+  let t = ini, k = diaUtil(ini) ? 1 : 0;
+  while (k < p.n) { t = maisDias(t, 1); if (diaUtil(t)) k++; }
+  return t;
+}
+// dias que o app marca sozinho ao escolher o início: o dia escolhido e os seguintes do prazo (dias úteis pulam fins de semana e feriados)
+function prazoDias(ini, p) {
+  const L = [ini];
+  if (p.u === 'corridos') { for (let k = 1; k < p.n; k++) L.push(maisDias(ini, k)); return L; }
+  const fim = p.u === 'uteis' ? null : prazoFim(ini, p);
+  for (let t = maisDias(ini, 1); p.u === 'uteis' ? L.length < p.n : t <= fim; t = maisDias(t, 1)) if (diaUtil(t)) L.push(t);
+  return L;
+}
+const hojeTs = () => dayTs(Date.now());
+// orçamento não aceita data retroativa (vale enquanto ainda não foi aprovado)
+const retroativo = q => !isReport(q) && !q.dateTbd && ['rascunho', 'enviado'].includes(q.status) && q.dates.some(t => t < hojeTs());
+function prazoProblema(q) {
+  if (isReport(q)) return q.dates.length && q.dates.length !== q.days ? 'conta' : '';
+  if (q.dateTbd || !q.dates.length) return '';
+  if (retroativo(q)) return 'retro';
+  const p = q.prazo;
+  if (ehDia(p)) return q.dates.length !== p.n ? 'conta' : '';
+  return q.dates[q.dates.length - 1] > prazoFim(q.dates[0], p) ? 'fora' : '';
+}
+const daysOk = q => !prazoProblema(q);
 function daysMismatch(q) {
-  if (daysOk(q)) return '';
-  const n = q.dates.length, d = q.days, falta = d - n;
-  return `Você informou ${plural(d, 'dia', 'dias')} e marcou ${n}. ${falta > 0 ? `Marque mais ${plural(falta, 'dia', 'dias')}` : `Desmarque ${plural(-falta, 'dia', 'dias')}`} ou mude para ${plural(n, 'dia', 'dias')}.`;
+  const pr = prazoProblema(q), n = q.dates.length;
+  if (!pr) return '';
+  if (pr === 'retro') return 'Há dias marcados que já passaram. O orçamento não aceita data retroativa: escolha um novo início.';
+  const alvo = isReport(q) ? q.days : q.prazo.n, falta = alvo - n;
+  if (pr === 'conta') return `${isReport(q) ? `Você informou ${plural(alvo, 'dia', 'dias')}` : `O prazo é de ${prazoTxt(q.prazo)}`} e há ${plural(n, 'dia marcado', 'dias marcados')}. ${falta > 0 ? `Marque mais ${falta}` : `Desmarque ${-falta}`} ou mude ${isReport(q) ? 'a quantidade' : 'o prazo'} para ${n}.`;
+  return `O prazo de ${prazoTxt(q.prazo)} vai até ${fmtDate(prazoFim(q.dates[0], q.prazo))} e há dias marcados depois disso.`;
+}
+// menor prazo (na mesma unidade) que cobre os dias marcados
+function prazoQueCobre(q) {
+  const p = { ...q.prazo };
+  if (ehDia(p)) { p.n = Math.max(1, q.dates.length); return p; }
+  for (p.n = 1; p.n < 99 && prazoFim(q.dates[0], p) < q.dates[q.dates.length - 1]; p.n++);
+  return p;
+}
+// prazo nos documentos
+const prazoDoc = q => q.prazo ? prazoTxt(q.prazo) + (q.prazo.u === 'uteis' ? ' (sem fins de semana e feriados)' : '') : q.deadline;
+// todos os dias úteis entre o primeiro e o último dia marcados, e só eles?
+function soUteis(L) {
+  if (L.length < 2 || !L.every(diaUtil)) return false;
+  for (let t = L[0], k = 0; t <= L[L.length - 1]; t = maisDias(t, 1)) { if (diaUtil(t)) { if (L[k] !== t) return false; k++; } }
+  return true;
+}
+// resumo dos dias: "de 03/11 a 06/11/2026 (4 dias)", "de 03 a 19/11/2026, em dias úteis (12 dias)" ou a lista
+function diasResumo(L) {
+  if (!L.length) return '';
+  if (L.length === 1) return fmtDate(L[0]);
+  if (seguidos(L)) return `de ${fmtShort(L[0])} a ${fmtDate(L[L.length - 1])} (${L.length} dias seguidos)`;
+  if (soUteis(L)) return `de ${fmtShort(L[0])} a ${fmtDate(L[L.length - 1])}, em dias úteis (${L.length} dias)`;
+  return `${datesText(L)} (${L.length} dias, não seguidos)`;
 }
 // cabeçalho do relatório: um dia ou o período
 const execHead = q => q.dates.length > 1 ? `Executado entre ${fmtShort(q.dates[0])} e ${fmtDate(q.dates[q.dates.length - 1])}` : `Executado em ${fmtDate(q.doneAt || q.dates[0])}`;
 // texto da execução nos documentos
 function execText(q) {
-  const L = q.dates;
-  if (!L.length) return q.doneAt ? fmtDate(q.doneAt) : '';
-  if (L.length > 1 && seguidos(L)) return `de ${fmtDate(L[0])} a ${fmtDate(L[L.length - 1])} (${L.length} dias)`;
-  return L.length > 1 ? `${datesText(L)} (${L.length} dias)` : fmtDate(L[0]);
+  return q.dates.length ? diasResumo(q.dates) : q.doneAt ? fmtDate(q.doneAt) : '';
 }
 // datas de início e término (o CDC pede no orçamento prévio)
 function schedText(q) {
   if (q.dateTbd) return 'Datas de início e término a combinar na aprovação do orçamento.';
   const L = q.dates;
-  if (L.length > 1 && !seguidos(L)) return `Em ${L.length} dias, não seguidos: ${datesText(L)}. Início em ${fmtDate(L[0])} e término em ${fmtDate(L[L.length - 1])}.`;
-  if (L.length > 1) return `Início em ${fmtDate(L[0])} e término em ${fmtDate(L[L.length - 1])} (${L.length} dias).`;
+  if (L.length > 1) return `Início em ${fmtDate(L[0])} e término em ${fmtDate(L[L.length - 1])}. ${seguidos(L) ? `${L.length} dias seguidos.` : soUteis(L) ? `${L.length} dias úteis.` : `${L.length} dias de serviço, não seguidos: ${datesText(L)}.`}`;
   if (L.length === 1) return `Início e término em ${fmtDate(L[0])}.`;
   if (!q.startAt && !q.endAt) return '';
   if (q.startAt && q.endAt && dateInput(q.startAt) !== dateInput(q.endAt)) return `Início em ${fmtDate(q.startAt)} e término em ${fmtDate(q.endAt)}.`;
@@ -1207,6 +1324,11 @@ function warrantyText(q, mode) {
 function setStatus(q, st) {
   const now = Date.now();
   if (st === 'concluido' && q.status !== 'concluido') q.prevStatus = q.status;
+  // saiu de concluído: o material que tinha baixado volta para o estoque
+  if (st !== 'concluido' && q.baixa && q.baixa.length) {
+    q.baixa.forEach(b => { const p = prices.find(x => x.id === b.id); if (p && inStock(p)) p.stock = Math.round((p.stock + b.qty) * 100) / 100; });
+    q.baixa = null; savePrices(); setTimeout(() => toast('O material voltou para o estoque.'), 2600);
+  }
   q.status = st;
   if (st === 'rascunho') { q.approvedAt = q.doneAt = q.refusedAt = null; }
   if (st === 'enviado') { q.sentAt = q.sentAt || now; q.approvedAt = q.doneAt = q.refusedAt = null; }
@@ -1214,7 +1336,8 @@ function setStatus(q, st) {
   if (st === 'concluido') {
     q.sentAt = q.sentAt || now; q.approvedAt = q.approvedAt || now; q.refusedAt = null;
     // os dias marcados no orçamento valem como dias de execução se já passaram; senão, conta hoje
-    if (!q.dates.length || q.dates[q.dates.length - 1] > dayTs(now)) { q.dates = [dayTs(now)]; q.days = 1; }
+    if (!q.dates.length || q.dates[q.dates.length - 1] > dayTs(now)) q.dates = [dayTs(now)];
+    q.days = q.dates.length;
     q.doneAt = q.dates[q.dates.length - 1];
   }
   if (st === 'recusado') { q.sentAt = q.sentAt || now; q.refusedAt = now; q.approvedAt = q.doneAt = null; }
@@ -1350,24 +1473,29 @@ function paintSums(root, map) {
 }
 // abrir e fechar seções com movimento suave: a altura cresce ou encolhe e a tela acompanha, sem saltos
 const semMovimento = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
-const FOLD_MS = 280, suave = t => 1 - Math.pow(1 - t, 3);
+// mesma curva no CSS e no código, para a altura das seções e a rolagem andarem juntas
+const FOLD_MS = 340, FOLD_EASE = 'cubic-bezier(.33,1,.68,1)', suave = t => 1 - Math.pow(1 - t, 3);
 function foldSet(d, open) {
   if (!d) return;
   d._want = open; PANEL[d.dataset.panel] = open;
-  const box = $(':scope > .f-in', d);
+  const box = $(':scope > .f-in', d), sm = $(':scope > summary', d);
   if (d._anim) { d._anim.cancel(); d._anim = null; }
   if (d.open === open && !d.classList.contains('anim')) return;
   if (semMovimento() || !box || !d.isConnected || !box.animate) { d.classList.remove('anim', 'fechando'); d.style.overflow = ''; d.open = open; return; }
-  const sh = $(':scope > summary', d).offsetHeight, from = d.offsetHeight;
+  const from = d.offsetHeight, borda = d.offsetHeight - d.clientHeight;
   d.classList.add('anim'); d.classList.toggle('fechando', !open); d.style.overflow = 'hidden';
   d.open = true;
   $$('textarea', box).forEach(autoGrow);
-  const full = sh + box.offsetHeight + (d.offsetHeight - d.clientHeight);
-  const anim = d.animate([{ height: from + 'px' }, { height: (open ? full : sh + (d.offsetHeight - d.clientHeight)) + 'px' }], { duration: FOLD_MS, easing: 'cubic-bezier(.2,.7,.2,1)' });
-  if (open) box.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: FOLD_MS, easing: 'ease-out' });
+  // altura final já com o resumo de uma linha no estado de chegada (escondido ao abrir, visível ao fechar)
+  const shFim = sm.offsetHeight, to = open ? shFim + box.offsetHeight + borda : shFim + borda;
+  const o = { duration: FOLD_MS, easing: FOLD_EASE };
+  const anim = d.animate([{ height: from + 'px' }, { height: to + 'px' }], o);
+  const resumo = !d.classList.contains('multi') && $('.f-t small', sm);
+  if (resumo) resumo.animate(open ? [{ maxHeight: '20px', opacity: 1 }, { maxHeight: '0px', opacity: 0 }] : [{ maxHeight: '0px', opacity: 0 }, { maxHeight: '20px', opacity: 1 }], o);
+  box.animate(open ? [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }] : [{ opacity: 1 }, { opacity: 0 }], { duration: FOLD_MS, easing: open ? FOLD_EASE : 'ease-out' });
   d._anim = anim;
   const end = () => { d.style.overflow = ''; d.classList.remove('anim', 'fechando'); };
-  anim.onfinish = () => { d._anim = null; end(); if (!open) d.open = false; };
+  anim.onfinish = () => { d._anim = null; if (!open) d.open = false; end(); };
   anim.oncancel = end;
 }
 // leva o título da seção até logo abaixo da barra de cima, acompanhando a mudança de altura das outras seções
@@ -1376,10 +1504,15 @@ function foldGlide(d, always) {
   const top0 = d.getBoundingClientRect().top - lim();
   if (!always && top0 >= 0) return;
   if (semMovimento()) { window.scrollTo({ top: window.scrollY + top0 }); return; }
+  // espaço extra no pé da página enquanto as seções mudam de altura: a rolagem não trava esperando a seção crescer
+  const main = d.closest('main');
+  let folga = main && main.querySelector(':scope > .fold-folga');
+  if (main && !folga) { folga = document.createElement('div'); folga.className = 'fold-folga'; folga.setAttribute('aria-hidden', 'true'); main.appendChild(folga); }
+  if (folga) { folga.style.height = innerHeight + 'px'; clearTimeout(folga._t); folga._t = setTimeout(() => folga.remove(), FOLD_MS + 80); }
   const t0 = performance.now();
   const step = now => {
     if (!d.isConnected) return;
-    const t = Math.min(1, (now - t0) / (FOLD_MS + 60));
+    const t = Math.min(1, (now - t0) / FOLD_MS);
     const want = top0 * (1 - suave(t));
     const cur = d.getBoundingClientRect().top - lim();
     window.scrollTo({ top: window.scrollY + cur - want });
@@ -1667,7 +1800,6 @@ VIEWS.home = {
 };
 
 /* ================= tela: editor do orçamento ================= */
-const DEADLINES = ['No mesmo dia', '1 dia', '2 dias úteis', '1 semana'];
 const NOTE_CHIPS = [
   ['Sem alvenaria e pintura', 'Não inclui reparos de alvenaria, gesso ou pintura.'],
   ['Material pode variar', 'Valores de material sujeitos a alteração pelo fornecedor.'],
@@ -1899,7 +2031,7 @@ function quoteSums(q, c) {
     diag: firstLine(q.diag, 'Toque para preencher'), work: firstLine(q.work, 'Toque para preencher'), recs: firstLine(q.recs, 'Toque para preencher'), tests: testsSum(q),
     val: val.length ? capFirst(val.join(' · ')) : 'Adicionais, deslocamento e desconto',
     valR: BRL(c.total),
-    cond: [payShort(q.payment), (!rep && q.dateTbd) ? 'datas a combinar' : q.dates.length ? (q.dates.length > 1 ? `${plural(q.dates.length, 'dia', 'dias')} a partir de ${ds(q.dates[0])}` : `dia ${ds(q.dates[0])}`) + (daysOk(q) ? '' : ' · confira os dias') : '', q.warranty ? `garantia ${q.warranty} dias` : 'sem garantia'].filter(Boolean).join(' · '),
+    cond: [payShort(q.payment), !rep && prazoTxt(q.prazo), (!rep && q.dateTbd) ? 'datas a combinar' : q.dates.length ? (q.dates.length > 1 ? `de ${ds(q.dates[0])} a ${ds(q.dates[q.dates.length - 1])}` : `dia ${ds(q.dates[0])}`) + (daysOk(q) ? '' : ' · confira as datas') : '', q.warranty ? `garantia ${q.warranty} dias` : 'sem garantia'].filter(Boolean).join(' · '),
     notes: firstLine(q.notes, 'Nada anotado'),
   };
 }
@@ -1998,76 +2130,112 @@ function valuesHTML(q, c) {
       <div class="vrow total"><span>Total</span><b data-t="total">${BRL(c.total)}</b></div>
     </div>`;
 }
-/* dias de serviço: quantos dias e quais (podem ser dias não seguidos) */
+/* prazo de execução e dias do serviço, num bloco só: o prazo marca os dias no calendário e o usuário ajusta */
 const calMonth = {};
 function daysBlockHTML(q) {
-  const rep = isReport(q), off = !rep && q.dateTbd;
-  return `<div class="field sched" id="q-days-blk"><span class="lab">${rep ? 'Dias trabalhados' : 'Datas do serviço'}</span>
-    <div class="days-row"><label for="q-days">${rep ? 'Quantos dias de serviço' : 'Dias de serviço'}</label>
-      <div class="stepper"><button data-days="-1" aria-label="Menos um dia" ${q.days <= 1 || off ? 'disabled' : ''}>${I.minus}</button><input id="q-days" type="text" inputmode="numeric" value="${q.days}" aria-label="Dias de serviço" ${off ? 'disabled' : ''}><button data-days="1" aria-label="Mais um dia" ${q.days >= 99 || off ? 'disabled' : ''}>${I.plus}</button></div></div>
-    <div class="cal-wrap" id="cal">${off ? '' : calHTML(q)}</div>
-    <div id="cal-msg" aria-live="polite">${off ? '' : calMsgHTML(q)}</div>
-    ${rep ? '' : `<label class="switch-row" for="q-tbd"><span><b>Combinar na aprovação</b><small>Quando ainda não dá para marcar as datas.</small></span><input type="checkbox" class="sw" id="q-tbd" ${q.dateTbd ? 'checked' : ''}></label>
+  const rep = isReport(q), off = !rep && q.dateTbd, p = q.prazo;
+  const qtd = rep
+    ? `<div class="days-row"><label for="q-days">Quantos dias de serviço</label>
+      <div class="stepper"><button data-days="-1" aria-label="Menos um dia" ${q.days <= 1 ? 'disabled' : ''}>${I.minus}</button><input id="q-days" type="text" inputmode="numeric" value="${q.days}" aria-label="Dias de serviço"><button data-days="1" aria-label="Mais um dia" ${q.days >= 99 ? 'disabled' : ''}>${I.plus}</button></div></div>`
+    : `<div class="prazo-row" role="group" aria-labelledby="q-prazo-l">
+      <div class="stepper"><button data-days="-1" aria-label="Diminuir o prazo" ${p.n <= 1 ? 'disabled' : ''}>${I.minus}</button><input id="q-days" type="text" inputmode="numeric" value="${p.n}" aria-label="Quantidade do prazo"><button data-days="1" aria-label="Aumentar o prazo" ${p.n >= 99 ? 'disabled' : ''}>${I.plus}</button></div>
+      <select id="q-prazo-u" aria-label="Unidade do prazo">${Object.entries(PRAZO_U).map(([k, [pl, sg]]) => `<option value="${k}" ${p.u === k ? 'selected' : ''}>${p.n === 1 ? sg : pl}</option>`).join('')}</select></div>`;
+  return `<div class="field sched" id="q-days-blk"><span class="lab" id="q-prazo-l">${rep ? 'Dias trabalhados' : 'Prazo de execução e datas'}</span>
+    ${qtd}
+    <div id="q-cal-area" ${off ? 'hidden' : ''}>
+      <div class="cal-wrap" id="cal">${calHTML(q)}</div>
+      <div id="cal-msg" aria-live="polite">${calMsgHTML(q)}</div>
+    </div>
+    ${rep ? '' : `<label class="switch-row" for="q-tbd"><span><b>Combinar as datas na aprovação</b><small>O prazo vai na proposta; as datas ficam para depois.</small></span><input type="checkbox" class="sw" id="q-tbd" ${q.dateTbd ? 'checked' : ''}></label>
     <p class="hint" id="q-cdc" ${q.dateTbd || q.dates.length ? 'hidden' : ''}>O Código de Defesa do Consumidor pede as datas de início e término no orçamento.</p>`}
   </div>`;
 }
 function calHTML(q) {
   const base = new Date(calMonth[q.id] || q.dates[0] || Date.now()); base.setDate(1); base.setHours(12, 0, 0, 0);
   const y = base.getFullYear(), m = base.getMonth(), first = base.getDay(), n = new Date(y, m + 1, 0).getDate();
-  const hoje = dayTs(Date.now()), rep = isReport(q), sel = new Set(q.dates);
+  const hoje = hojeTs(), rep = isReport(q), sel = new Set(q.dates);
+  const fim = !rep && q.dates.length ? prazoFim(q.dates[0], q.prazo) : 0;
   const nome = capFirst(base.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }));
+  const mesAtual = new Date(hoje); mesAtual.setDate(1); mesAtual.setHours(12, 0, 0, 0);
+  // orçamento: não volta para meses que já passaram (a não ser para ver um dia marcado lá)
+  const semVoltar = !rep && base.getTime() <= mesAtual.getTime() && !q.dates.some(t => t < base.getTime());
   let cells = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, k) => `<span class="cal-w" aria-hidden="true" title="${['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'][k]}">${d}</span>`).join('');
   cells += '<span></span>'.repeat(first);
   for (let d = 1; d <= n; d++) {
-    const t = new Date(y, m, d, 12).getTime(), on = sel.has(t), fut = rep && t > hoje;
+    const t = new Date(y, m, d, 12).getTime(), on = sel.has(t), fer = feriado(t);
+    // relatório: só dias que já passaram; orçamento: só de hoje em diante (um dia antigo já marcado ainda pode ser desmarcado)
+    const off = rep ? t > hoje : t < hoje && !on;
+    const noPrazo = fim && t >= q.dates[0] && t <= fim && !on;
     const nomeDia = new Date(t).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-    cells += `<button class="cal-d${t === hoje ? ' hoje' : ''}" data-cal="${t}" aria-pressed="${on}" aria-label="${esc(nomeDia)}${t === hoje ? ', hoje' : ''}" ${fut ? 'disabled' : ''}><span>${d}</span></button>`;
+    cells += `<button class="cal-d${t === hoje ? ' hoje' : ''}${fer ? ' fer' : ''}${noPrazo ? ' prazo' : ''}${!rep && t < hoje && on ? ' velho' : ''}" data-cal="${t}" aria-pressed="${on}" aria-label="${esc(nomeDia)}${t === hoje ? ', hoje' : ''}${fer ? ', feriado: ' + esc(fer) : ''}${noPrazo ? ', dentro do prazo' : ''}" ${off ? 'disabled' : ''}${fer ? ` title="${esc(fer)}"` : ''}><span>${d}</span></button>`;
   }
-  return `<div class="cal-h"><button class="icon-btn" data-calm="-1" aria-label="Mês anterior">${I.left}</button><b aria-live="polite">${esc(nome)}</b><button class="icon-btn" data-calm="1" aria-label="Próximo mês">${I.chev}</button></div>
-    <div class="cal-g" role="group" aria-label="Dias de ${esc(nome)}. Toque nos dias de serviço.">${cells}</div>`;
+  return `<div class="cal-h"><button class="icon-btn" data-calm="-1" aria-label="Mês anterior" ${semVoltar ? 'disabled' : ''}>${I.left}</button><b aria-live="polite">${esc(nome)}</b><button class="icon-btn" data-calm="1" aria-label="Próximo mês">${I.chev}</button></div>
+    <div class="cal-g" role="group" aria-label="Dias de ${esc(nome)}. ${rep ? 'Toque nos dias trabalhados.' : q.dates.length ? 'Toque num dia para pôr ou tirar.' : 'Toque no dia de início.'}">${cells}</div>
+    ${fim || Object.keys(feriadosDo(y)).some(k => k.startsWith(`${y}-${String(m + 1).padStart(2, '0')}`)) ? `<p class="cal-leg">${fim ? '<span class="lg-prazo"></span>dentro do prazo' : ''}${Object.keys(feriadosDo(y)).some(k => k.startsWith(`${y}-${String(m + 1).padStart(2, '0')}`)) ? '<span class="lg-fer"></span>feriado' : ''}</p>` : ''}`;
 }
 function calMsgHTML(q) {
-  const n = q.dates.length;
-  if (!n) return `<p class="hint">Toque no calendário para marcar ${q.days > 1 ? `os ${q.days} dias` : 'o dia'} de serviço. Dá para escolher dias que não são seguidos.</p>`;
-  if (!daysOk(q)) return `<div class="cal-msg bad" role="alert">${I.warn}<span><b>Os dias não conferem.</b> ${esc(daysMismatch(q))} <button class="linkish" data-days-fix>Mudar para ${plural(n, 'dia', 'dias')}</button></span></div>`;
-  return `<div class="cal-msg">${I.check}<span><b>${plural(n, 'dia marcado', 'dias marcados')}:</b> ${esc(datesText(q.dates))}${n > 1 && !seguidos(q.dates) ? ' (dias não seguidos)' : ''}</span></div>`;
+  const n = q.dates.length, rep = isReport(q);
+  if (!n) return `<p class="hint">${rep ? 'Toque nos dias em que o serviço foi feito. Dá para escolher dias que não são seguidos.' : `Toque no dia de início: o app marca ${q.prazo.n > 1 || !ehDia(q.prazo) ? `os dias do prazo (${prazoTxt(q.prazo)})` : 'o dia'}${q.prazo.u === 'uteis' || !ehDia(q.prazo) ? ', sem fins de semana e feriados' : ''}. Depois, toque num dia para pôr ou tirar.`}</p>`;
+  const pr = prazoProblema(q);
+  if (pr) {
+    const fix = pr === 'retro' ? '<button class="linkish" data-cal-reset>Escolher outro início</button>'
+      : rep ? `<button class="linkish" data-days-fix>Mudar para ${plural(n, 'dia', 'dias')}</button>`
+      : `<button class="linkish" data-days-fix>Mudar o prazo para ${prazoTxt(prazoQueCobre(q))}</button>`;
+    return `<div class="cal-msg bad" role="alert">${I.warn}<span><b>${pr === 'retro' ? 'Data retroativa.' : 'O prazo e os dias não conferem.'}</b> ${esc(daysMismatch(q))} ${fix}</span></div>`;
+  }
+  const fim = rep ? 0 : prazoFim(q.dates[0], q.prazo);
+  return `<div class="cal-msg">${I.check}<span><b>${rep ? plural(n, 'dia trabalhado', 'dias trabalhados') : `${capFirst(prazoTxt(q.prazo))}`}:</b> ${esc(diasResumo(q.dates))}.${rep ? '' : ` Término em ${fmtDate(ehDia(q.prazo) ? q.dates[n - 1] : fim)}.`}${rep ? '' : ' <button class="linkish" data-cal-reset>Escolher outro início</button>'}</span></div>`;
 }
 function bindDays(v, q) {
   const blk = $('#q-days-blk', v); if (!blk) return;
-  const sync = () => {
+  const rep = isReport(q);
+  const pinta = () => {
     q.dates.sort((a, b) => a - b);
     q.startAt = q.dates[0] || null; q.endAt = q.dates[q.dates.length - 1] || null;
-    if (isReport(q) && q.dates.length) q.doneAt = q.endAt;
+    if (rep && q.dates.length) q.doneAt = q.endAt;
+    if (!rep) q.deadline = prazoTxt(q.prazo); // aparelhos com versões antigas leem o texto
     touch(q);
+    $('#cal', v).innerHTML = calHTML(q);
     $('#cal-msg', v).innerHTML = calMsgHTML(q);
     const dt = $('#q-donetxt', v); if (dt) dt.textContent = execText(q);
-    const cdc = $('#q-cdc', v); if (cdc) cdc.hidden = !!q.dates.length;
-    const di = $('#q-days', v); if (di && document.activeElement !== di) di.value = q.days;
-    $$('[data-days]', v).forEach(b => b.disabled = (+b.dataset.days < 0 && q.days <= 1) || (+b.dataset.days > 0 && q.days >= 99));
+    const cdc = $('#q-cdc', v); if (cdc) cdc.hidden = !!q.dates.length || q.dateTbd;
+    const n = rep ? q.days : q.prazo.n;
+    const di = $('#q-days', v); if (di && document.activeElement !== di) di.value = n;
+    $$('[data-days]', v).forEach(b => b.disabled = (+b.dataset.days < 0 && n <= 1) || (+b.dataset.days > 0 && n >= 99));
+    const sel = $('#q-prazo-u', v);
+    if (sel) [...sel.options].forEach(o => { o.textContent = PRAZO_U[o.value][n === 1 ? 1 : 0]; });
     v.dispatchEvent(new Event('change'));
   };
+  // mudou o prazo com o início já escolhido: o app remarca a partir do mesmo início
+  const remarca = () => { if (!rep && q.dates.length && q.dates[0] >= hojeTs()) q.dates = prazoDias(q.dates[0], q.prazo); };
+  const setN = n => { n = Math.max(1, Math.min(99, n)); if (rep) q.days = n; else { q.prazo.n = n; remarca(); } pinta(); };
   blk.addEventListener('click', e => {
     const d = e.target.closest('[data-cal]');
     if (d) {
       const t = +d.dataset.cal, k = q.dates.indexOf(t);
-      if (k >= 0) q.dates.splice(k, 1); else q.dates.push(t);
-      d.setAttribute('aria-pressed', k < 0);
-      // um dia só: marcar outro troca o dia, sem precisar desmarcar o anterior
-      if (k < 0 && q.days === 1 && q.dates.length === 2) { const old = q.dates.find(x => x !== t); q.dates = [t]; $(`[data-cal="${old}"]`, v)?.setAttribute('aria-pressed', 'false'); }
-      vibrate(); sync(); return;
+      if (!rep && !q.dates.length) q.dates = prazoDias(t, q.prazo);
+      else if (k >= 0) q.dates.splice(k, 1);
+      else if (rep && q.days === 1 && q.dates.length === 1) q.dates = [t]; // um dia só: marcar outro troca o dia
+      else q.dates.push(t);
+      vibrate(); pinta(); $(`[data-cal="${t}"]`, v)?.focus({ preventScroll: true }); return;
     }
     const mo = e.target.closest('[data-calm]');
     if (mo) {
       const b = new Date(calMonth[q.id] || q.dates[0] || Date.now()); b.setDate(1); b.setMonth(b.getMonth() + +mo.dataset.calm); calMonth[q.id] = b.getTime();
-      $('#cal', v).innerHTML = calHTML(q); $(`[data-calm="${mo.dataset.calm}"]`, v)?.focus(); return;
+      $('#cal', v).innerHTML = calHTML(q); $(`[data-calm="${mo.dataset.calm}"]:not([disabled])`, v)?.focus(); return;
     }
     const st = e.target.closest('[data-days]');
-    if (st) { q.days = Math.max(1, Math.min(99, q.days + +st.dataset.days)); sync(); return; }
-    if (e.target.closest('[data-days-fix]')) { q.days = Math.max(1, q.dates.length); sync(); toast(`Dias de serviço: ${q.days}.`); }
+    if (st) return setN((rep ? q.days : q.prazo.n) + +st.dataset.days);
+    if (e.target.closest('[data-cal-reset]')) { q.dates = []; delete calMonth[q.id]; pinta(); toast('Toque no novo dia de início.'); return; }
+    if (e.target.closest('[data-days-fix]')) {
+      if (rep) q.days = Math.max(1, q.dates.length); else q.prazo = prazoQueCobre(q);
+      pinta(); toast(rep ? `Dias de serviço: ${q.days}.` : `Prazo: ${prazoTxt(q.prazo)}.`);
+    }
   });
   const di = $('#q-days', v);
-  di?.addEventListener('input', () => { const n = parseInt(di.value.replace(/\D/g, ''), 10); if (n >= 1) { q.days = Math.min(99, n); sync(); } });
-  di?.addEventListener('change', () => { di.value = q.days; });
+  di?.addEventListener('input', () => { const n = parseInt(di.value.replace(/\D/g, ''), 10); if (n >= 1) setN(n); });
+  di?.addEventListener('change', () => { di.value = rep ? q.days : q.prazo.n; });
+  $('#q-prazo-u', v)?.addEventListener('change', e => { q.prazo.u = e.target.value; remarca(); pinta(); });
 }
 VIEWS.quote = {
   html(r) {
@@ -2101,9 +2269,7 @@ VIEWS.quote = {
           <div class="seg" role="group" aria-label="Forma de pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${q.payment.mode === k}">${l}</button>`).join('')}</div>
         </div>
         ${payBlockHTML(q, c)}
-        ${isReport(q) ? daysBlockHTML(q) : `<div class="field"><label for="q-dead">Prazo de execução</label><input id="q-dead" type="text" placeholder="Ex.: 2 dias úteis" value="${esc(q.deadline)}">
-          <div class="chips">${DEADLINES.map(t => `<button class="chip" data-dl="${esc(t)}" aria-pressed="${q.deadline === t}">${t}</button>`).join('')}</div></div>
-        ${daysBlockHTML(q)}`}
+        ${daysBlockHTML(q)}
         <div class="grid2">
           <div class="field"><label for="q-war">Garantia (dias)</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
           ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade (dias)</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
@@ -2197,16 +2363,13 @@ VIEWS.quote = {
     $$('[data-pm]', v).forEach(b => b.onclick = () => { q.payment.mode = b.dataset.pm; touch(q); rerender(); });
     $$('[data-ep]', v).forEach(b => b.onclick = () => { q.payment.entryPct = +b.dataset.ep; touch(q); rerender(); });
     $$('[data-in]', v).forEach(b => b.onclick = () => { q.payment.installments = Math.max(2, Math.min(12, (q.payment.installments || 3) + +b.dataset.in)); touch(q); rerender(); });
-    const dl = $('#q-dead', v);
-    dl?.addEventListener('input', () => { q.deadline = dl.value; touch(q); $$('[data-dl]', v).forEach(c => c.setAttribute('aria-pressed', c.dataset.dl === dl.value)); });
-    $$('[data-dl]', v).forEach(b => b.onclick = () => { q.deadline = dl.value = b.dataset.dl; touch(q); $$('[data-dl]', v).forEach(c => c.setAttribute('aria-pressed', c === b)); });
     $('#q-war', v).addEventListener('input', e => { q.warranty = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
     $('#q-val', v)?.addEventListener('input', e => { q.validity = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
     // datas do serviço: dias de serviço e calendário
     bindDays(v, q);
-    $('#q-tbd', v)?.addEventListener('change', e => { q.dateTbd = e.target.checked; touch(q); rerender(); });
+    $('#q-tbd', v)?.addEventListener('change', e => { q.dateTbd = e.target.checked; touch(q); $('#q-cal-area', v).hidden = q.dateTbd; const cdc = $('#q-cdc', v); if (cdc) cdc.hidden = q.dateTbd || !!q.dates.length; requestAnimationFrame(() => paintSums(v, quoteSums(q, compute(q)))); });
     // serviço já realizado: vira relatório; desfazer volta para a situação anterior
-    $('#q-done', v)?.addEventListener('change', e => { if (!e.target.checked) return; setStatus(q, 'concluido'); rerender(); window.scrollTo({ top: 0 }); toast('Agora é um Relatório de Serviços Executados.'); });
+    $('#q-done', v)?.addEventListener('change', e => { if (!e.target.checked) return; setStatus(q, 'concluido'); rerender(); window.scrollTo({ top: 0 }); setTimeout(() => baixaSheet(q), 350); toast('Agora é um Relatório de Serviços Executados.'); });
     $('[data-goto-days]', v)?.addEventListener('click', () => { const d = $(`details[data-panel="q:${q.id}:cond"]`, v); foldOpen(d, { always: true }); setTimeout(() => $('#cal', v)?.querySelector('[aria-pressed="true"], button.cal-d:not([disabled])')?.focus({ preventScroll: true }), 320); });
     $('[data-undone]', v)?.addEventListener('click', () => {
       const prev = q.prevStatus && q.prevStatus !== 'concluido' ? q.prevStatus : 'rascunho';
@@ -2243,7 +2406,7 @@ VIEWS.quote = {
     });
 
     // situação
-    $$('[data-st]', v).forEach(b => b.onclick = () => { if (b.dataset.st === 'aprovado') return approveSheet(q); setStatus(q, b.dataset.st); rerender(); toast({ aprovado: 'Boa! Orçamento aprovado.', recusado: 'Marcado como recusado.', concluido: 'Serviço concluído.', rascunho: 'Reaberto como rascunho.' }[b.dataset.st] || 'Situação alterada.'); });
+    $$('[data-st]', v).forEach(b => b.onclick = () => { if (b.dataset.st === 'aprovado') return approveSheet(q); setStatus(q, b.dataset.st); rerender(); if (q.status === 'concluido') setTimeout(() => baixaSheet(q), 350); toast({ aprovado: 'Boa! Orçamento aprovado.', recusado: 'Marcado como recusado.', concluido: 'Serviço concluído.', rascunho: 'Reaberto como rascunho.' }[b.dataset.st] || 'Situação alterada.'); });
     $('[data-pix]', v)?.addEventListener('click', () => { const px = pixOf(q, compute(q)); if (px) pixSheet(px); });
     $('[data-receipt]', v)?.addEventListener('click', () => receiptSheet(q));
   },
@@ -2288,10 +2451,48 @@ function approveSheet(q) {
       };
     } });
 }
+/* baixa no estoque ao concluir: material do orçamento que está no estoque (quando o material é por sua conta) */
+function stockMatch(q) {
+  if (q.materialBy === 'cliente' || q.example) return [];
+  const m = new Map();
+  q.items.filter(i => i.kind === 'mat').forEach(i => {
+    const p = prices.find(x => inStock(x) && norm(x.name) === norm(i.name)); if (!p) return;
+    m.set(p.id, Math.round(((m.get(p.id) || 0) + i.qty) * 100) / 100);
+  });
+  return [...m].map(([id, qty]) => ({ p: prices.find(x => x.id === id), qty }));
+}
+function baixaSheet(q) {
+  if (q.baixa && q.baixa.length) return;
+  const L = stockMatch(q); if (!L.length) return;
+  const row = (x, k) => {
+    const fica = Math.round((x.p.stock - x.qty) * 100) / 100, falta = fica < 0, baixo = !falta && (fica <= 0 || (x.p.min > 0 && fica <= x.p.min));
+    return `<div class="bx-row" data-bx="${k}"><div class="bx-t"><b>${esc(x.p.name)}</b><small>em estoque: ${fmtQty(x.p.stock)} → <b>${fmtQty(Math.max(0, fica))}</b> ${unitTxt(Math.max(0, fica), x.p.unit)}${falta ? `<span class="bx-w">${I.warn}faltam ${fmtQty(-fica)}: fica em 0</span>` : baixo ? `<span class="bx-w">${I.warn}abaixo do mínimo</span>` : ''}</small></div>
+      <div class="stepper"><button data-bq="-1" data-k="${k}" aria-label="Menos ${esc(x.p.name)}" ${x.qty <= 0 ? 'disabled' : ''}>${I.minus}</button><input type="text" inputmode="decimal" data-bi="${k}" value="${fmtQty(x.qty)}" aria-label="Quantidade usada de ${esc(x.p.name)}"><button data-bq="1" data-k="${k}" aria-label="Mais ${esc(x.p.name)}">${I.plus}</button></div></div>`;
+  };
+  openSheet({ title: 'Dar baixa no estoque?',
+    body: `<p class="hint">Material deste serviço que está no seu estoque. Ajuste se usou mais ou menos.</p><div class="bx-list" id="bx-list">${L.map(row).join('')}</div><p class="hint">Se você desfizer a conclusão, o material volta para o estoque.</p>`,
+    foot: `<button class="btn ghost" data-no>Agora não</button><button class="btn primary" data-ok>${I.check}Dar baixa</button>`,
+    onMount: s => {
+      const pinta = k => { const el = $(`[data-bx="${k}"]`, s); const tmp = document.createElement('div'); tmp.innerHTML = row(L[k], k); el.replaceWith(tmp.firstElementChild); };
+      s.addEventListener('click', e => { const b = e.target.closest('[data-bq]'); if (!b) return; const k = +b.dataset.k; L[k].qty = Math.max(0, Math.round((L[k].qty + +b.dataset.bq) * 100) / 100); pinta(k); });
+      s.addEventListener('change', e => { const i = e.target.closest('[data-bi]'); if (!i) return; const k = +i.dataset.bi; L[k].qty = Math.max(0, parseQty(i.value) || 0); pinta(k); });
+      $('[data-no]', s).onclick = () => closeSheet();
+      $('[data-ok]', s).onclick = () => {
+        q.baixa = [];
+        L.forEach(x => { const sai = Math.min(x.p.stock, x.qty); if (sai <= 0) return; x.p.stock = Math.round((x.p.stock - sai) * 100) / 100; q.baixa.push({ id: x.p.id, qty: sai }); });
+        savePrices(); touch(q); closeSheet(true); rerender();
+        const low = L.filter(x => stockLow(x.p)).length;
+        toast(`Baixa feita: ${plural(q.baixa.length, 'material', 'materiais')}.${low ? ` ${plural(low, 'precisa', 'precisam')} de reposição.` : ''}`, { label: 'Desfazer', run: () => {
+          (q.baixa || []).forEach(b => { const p = prices.find(x => x.id === b.id); if (p) p.stock = Math.round((p.stock + b.qty) * 100) / 100; });
+          q.baixa = null; savePrices(); touch(q); rerender();
+        } });
+      };
+    } });
+}
 function statusSheet(q) {
   const help = { rascunho: 'Ainda montando', enviado: 'Proposta com o cliente', aprovado: 'Cliente aceitou; serviço a executar', concluido: 'Serviço feito e entregue', recusado: 'Cliente não aceitou' };
   openSheet({ title: 'Situação do orçamento', body: `<div class="opts">${Object.keys(STATUS).map(k => `<button class="opt" data-s="${k}" aria-pressed="${q.status === k}">${pill(k)}<span><small>${help[k]}</small></span></button>`).join('')}</div>`,
-    onMount: s => $$('[data-s]', s).forEach(b => b.onclick = () => { if (b.dataset.s === 'aprovado' && q.status !== 'aprovado') return approveSheet(q); setStatus(q, b.dataset.s); closeSheet(true); rerender(); toast('Situação: ' + STATUS[q.status] + '.'); }) });
+    onMount: s => $$('[data-s]', s).forEach(b => b.onclick = () => { if (b.dataset.s === 'aprovado' && q.status !== 'aprovado') return approveSheet(q); setStatus(q, b.dataset.s); closeSheet(true); rerender(); if (q.status === 'concluido') setTimeout(() => baixaSheet(q), 350); toast('Situação: ' + STATUS[q.status] + '.'); }) });
 }
 
 /* ================= escolher itens da tabela ================= */
@@ -2317,7 +2518,7 @@ function pickerSheet(q, kind, room) {
     const qf = fold(query);
     const list = prices.filter(p => p.kind === k && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
     const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name) && (!inRoom || roomOf(q, i) === room)).map(i => i.qty));
-    const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st">${p.stock > 0 ? `${fmtQty(p.stock)} em estoque` : 'em falta no estoque'}</small>` : ''}</span><span class="pk-price">${BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
+    const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}</span><span class="pk-price">${BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
     return (rows || KitFacil.ui.vazio({ titulo: `Nada com “${esc(query)}”`, texto: `na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}. Adicione como item fora da tabela.` }))
       + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}${query ? `Adicionar “${esc(query)}”` : `${k === 'svc' ? 'Serviço' : 'Material'} fora da tabela`}</button>`;
   };
@@ -2585,7 +2786,7 @@ function paperHTML(q, c, mode = docMode(q)) {
       ${rep && approvalText(q) ? `<dt>Aprovação</dt><dd>${esc(approvalText(q))}</dd>` : ''}
       <dt>Pagamento</dt><dd>${esc(payText(q, c))}</dd>
       ${!rep && schedText(q) ? `<dt>Execução</dt><dd>${esc(schedText(q))}</dd>` : ''}
-      ${!rep && q.deadline ? `<dt>Prazo</dt><dd>${esc(q.deadline)}</dd>` : ''}
+      ${!rep && prazoDoc(q) ? `<dt>Prazo</dt><dd>${esc(prazoDoc(q))}</dd>` : ''}
       ${q.warranty ? `<dt>Garantia</dt><dd>${esc(warrantyText(q, mode))}</dd>` : ''}
       ${!rep && q.validity ? `<dt>Validade</dt><dd>Proposta válida até ${fmtDate(c.validUntil)}</dd>` : ''}
       ${c.extra ? `<dt>Adicionais</dt><dd>${esc(extrasText(q))}, sobre a mão de obra</dd>` : ''}
@@ -2609,7 +2810,7 @@ VIEWS.preview = {
     if (!settings.name && !settings.company) warn.push('Seu nome e telefone ainda não aparecem no cabeçalho.');
     if (!q.client.name) warn.push('Falta o nome do cliente.');
     if (!q.items.length) warn.push('Nenhum item lançado.');
-    if (!daysOk(q)) warn.push('Os dias marcados não conferem com os dias de serviço.');
+    if (!daysOk(q)) warn.push(prazoProblema(q) === 'retro' ? 'Há datas que já passaram: escolha um novo início.' : 'Os dias marcados não conferem com o prazo.');
     return `<header class="kf-barra appbar"><div class="kf-barra-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
       <div class="ab-title"><span class="ab-eyebrow">${mode === 'report' ? 'Relatório' : 'Proposta'} · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Cliente sem nome')}</span></div>
@@ -2721,7 +2922,7 @@ function quoteMessage(q, c, mode = docMode(q)) {
   if (c.discount) L.push(`Desconto: −${BRL(c.discount)}`);
   L.push(`*Total: ${BRL(c.total)}*`, '', `*Pagamento:* ${payText(q, c)}`);
   if (!rep && schedText(q)) L.push(`*Execução:* ${schedText(q)}`);
-  if (!rep && q.deadline) L.push(`*Prazo:* ${q.deadline}`);
+  if (!rep && prazoDoc(q)) L.push(`*Prazo:* ${prazoDoc(q)}`);
   if (q.warranty) L.push(`*Garantia:* ${rep && q.doneAt ? `${plural(q.warranty, 'dia', 'dias')}, até ${fmtDate(q.doneAt + q.warranty * DAY)}` : plural(q.warranty, 'dia', 'dias')}`);
   if (!rep && q.validity) L.push(`Proposta válida até ${fmtDate(c.validUntil)}.`);
   if (rep && q.recs.trim()) L.push('', '*Recomendações:*', q.recs.trim());
@@ -3021,7 +3222,7 @@ async function buildQuotePDF(q, mode = docMode(q)) {
   y = Math.max(y + 11.5, px && qr ? top + Math.max(totH, 32) : 0) + 7.5;
 
   // condições
-  const conds = [rep && ['Execução', capFirst(execText(q))], rep && approvalText(q) && ['Aprovação', approvalText(q)], ['Pagamento', payText(q, c)], !rep && schedText(q) && ['Execução', schedText(q)], !rep && q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', warrantyText(q, mode)], !rep && q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
+  const conds = [rep && ['Execução', capFirst(execText(q))], rep && approvalText(q) && ['Aprovação', approvalText(q)], ['Pagamento', payText(q, c)], !rep && schedText(q) && ['Execução', schedText(q)], !rep && prazoDoc(q) && ['Prazo de execução', prazoDoc(q)], q.warranty && ['Garantia', warrantyText(q, mode)], !rep && q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
   need(14); label(rep ? 'Informações' : 'Condições', M, y); y += 5.6;
   conds.forEach(([l, v]) => {
     const L = wrap(v, CW - 42, 9.5);
@@ -3216,7 +3417,7 @@ function priceListHTML() {
   const list = prices.filter(p => p.kind === priceKind && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
   if (!list.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum item encontrado', texto: 'Confira o nome do item ou da categoria.' } : { titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo item</b> para cadastrar.' });
   return groupByCat(list).map(([cat, L]) => panel(`pr:${priceKind}:${cat}`, '', esc(cat), qf ? null : L.slice(0, 3).map(p => p.name).join(' · ') + (L.length > 3 ? '…' : ''),
-    `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${inStock(p) ? ` · ${p.stock > 0 ? `${fmtQty(p.stock)} em estoque` : 'em falta no estoque'}` : ''}</small></span><span class="prow-price">${BRL(p.price)}</span></button>`).join('')}</div>`,
+    `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${inStock(p) ? ` · ${stockTxt(p)}` : ''}</small></span><span class="prow-price">${BRL(p.price)}</span></button>`).join('')}</div>`,
     { multi: true, right: `<span class="card-sum">${L.length}</span>`, force: qf ? true : undefined })).join('');
 }
 VIEWS.prices = {
@@ -3316,22 +3517,23 @@ function stockListHTML() {
   if (!all.length) return KitFacil.ui.vazio({ titulo: 'Nenhum material no estoque', texto: 'Toque em <b>Novo material</b> e cadastre o que você tem guardado, com o custo e o preço de repasse para o cliente.', icone: I.box });
   const list = all.filter(p => !qf || fold([p.name, p.brand, p.cat].join(' ')).includes(qf));
   const custo = sum(all.map(p => Math.round((p.cost || 0) * p.stock))), repasse = sum(all.map(p => Math.round(p.price * p.stock)));
-  const falta = all.filter(p => p.stock <= 0).length;
+  const repor = all.filter(stockLow).sort((a, b) => a.stock - b.stock);
   const resumo = `<div class="g-sum" role="group" aria-label="Resumo do estoque">
       <div><b>${all.length}</b><span>${all.length === 1 ? 'material' : 'materiais'}</span></div>
       <div><b>${BRL(custo)}</b><span>pago (custo)</span></div>
       <div><b>${BRL(repasse)}</b><span>no repasse</span></div>
-    </div>${falta ? `<p class="g-alert">${I.warn}<span>${plural(falta, 'material está', 'materiais estão')} em falta (quantidade zero).</span></p>` : ''}`;
+    </div>${repor.length ? `<div class="g-repor" role="group" aria-label="Para repor"><p class="g-alert">${I.warn}<span><b>${plural(repor.length, 'material para repor', 'materiais para repor')}</b></span></p>
+      ${repor.map(p => `<button class="g-rp" data-sid="${p.id}"><span>${esc(p.name)}</span><span class="num">${p.stock <= 0 ? 'em falta' : `${fmtQty(p.stock)}${p.min > 0 ? ` de ${fmtQty(p.min)}` : ''} ${unitTxt(p.min || p.stock, p.unit)}`}</span></button>`).join('')}</div>` : ''}`;
   const busca = all.length > 6 ? `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar material, marca ou categoria" value="${esc(gestaoQuery)}" aria-label="Buscar no estoque"></label>` : '';
   const rows = list.length ? groupByCat(list).map(([cat, L]) => `<div class="g-card"><div class="pk-cat">${esc(cat)}</div><div class="plist">${L.map(p => `<button class="prow" data-sid="${p.id}">
       <span><b>${hl(p.name, qf)}</b><small>${[p.brand && esc(p.brand), p.cost ? `custo ${BRL(p.cost)}` : 'sem custo', `repasse ${BRL(p.price)}`, margemTxt(p)].filter(Boolean).join(' · ')}</small></span>
-      <span class="prow-price${p.stock <= 0 ? ' g-zero' : ''}">${p.stock <= 0 ? `${I.warn}Em falta` : `${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}`}</span></button>`).join('')}</div></div>`).join('')
+      <span class="prow-price${stockLow(p) ? ' g-zero' : ''}">${p.stock <= 0 ? `${I.warn}Em falta` : `${stockLow(p) ? I.warn : ''}${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}`}</span></button>`).join('')}</div></div>`).join('')
     : KitFacil.ui.vazio({ titulo: 'Nenhum material encontrado', texto: 'Confira o nome, a marca ou a categoria.' });
   return resumo + busca + `<div id="g-list" class="g-list">${rows}</div>`;
 }
 function stockSheet(p) {
   const isNew = !p;
-  const it = p ? { ...p } : { kind: 'mat', cat: '', name: '', unit: 'un', price: 0, cost: 0, brand: '', stock: 1 };
+  const it = p ? { ...p } : { kind: 'mat', cat: '', name: '', unit: 'un', price: 0, cost: 0, brand: '', stock: 1, min: 0 };
   let link = p ? p.id : '';
   const cats = () => [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))];
   const margemHTML = (cost, price) => {
@@ -3350,6 +3552,7 @@ function stockSheet(p) {
         <div class="field"><label for="st-cost">Custo de compra (por unidade)</label><input id="st-cost" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${it.cost ? BRL(it.cost) : ''}"></div>
         <div class="field"><label for="st-price">Repasse ao cliente (por unidade)</label><input id="st-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${it.price ? BRL(it.price) : ''}"></div>
       </div>
+      <div class="field"><label for="st-min">Avisar quando chegar a (opcional)</label><input id="st-min" type="text" inputmode="decimal" value="${it.min ? fmtQty(it.min) : ''}" placeholder="Ex.: 10" aria-describedby="st-min-h"><span class="hint" id="st-min-h">Mesma unidade da quantidade. Nesse ponto, o material entra em Para repor.</span></div>
       <p class="g-margin" id="st-margin" aria-live="polite">${margemHTML(it.cost, it.price || null)}</p>
       <div class="field"><label for="st-cat">Categoria</label><input id="st-cat" type="text" value="${esc(it.cat)}" placeholder="Ex.: Proteção" autocomplete="off"></div>
       <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos: mudou aqui, muda lá.</p>`,
@@ -3370,8 +3573,8 @@ function stockSheet(p) {
       $$('[data-sq]', s).forEach(b => b.onclick = () => { const v = parseQty($('#st-qty', s).value) || 0; $('#st-qty', s).value = fmtQty(Math.max(0, Math.round((v + +b.dataset.sq) * 100) / 100)); });
       $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
       $('[data-del]', s)?.addEventListener('click', () => {
-        const before = { stock: p.stock, cost: p.cost, brand: p.brand };
-        delete p.stock; delete p.cost; delete p.brand; savePrices(); closeSheet(true); rerender();
+        const before = { stock: p.stock, cost: p.cost, brand: p.brand, min: p.min };
+        delete p.stock; delete p.cost; delete p.brand; delete p.min; savePrices(); closeSheet(true); rerender();
         toast(`${p.name} saiu do estoque. Continua na tabela de preços.`, { label: 'Desfazer', run: () => { Object.assign(p, before); savePrices(); rerender(); } });
       });
       $('[data-save]', s).onclick = () => {
@@ -3380,7 +3583,8 @@ function stockSheet(p) {
         if (!name) return toast('Escreva o nome do material.');
         if (qty === null || qty < 0) return toast('Informe a quantidade. Use 0 se acabou.');
         if (price === null) return toast('Informe o preço de repasse ao cliente.');
-        const data = { kind: 'mat', name, price, cost, stock: Math.round(qty * 100) / 100, brand: $('#st-brand', s).value.trim().replace(/\s+/g, ' '), unit: $('#st-unit', s).value, cat: $('#st-cat', s).value.trim().replace(/\s+/g, ' ') || 'Outros' };
+        const min = parseQty($('#st-min', s).value) || 0;
+        const data = { kind: 'mat', name, price, cost, min: Math.max(0, Math.round(min * 100) / 100), stock: Math.round(qty * 100) / 100, brand: $('#st-brand', s).value.trim().replace(/\s+/g, ' '), unit: $('#st-unit', s).value, cat: $('#st-cat', s).value.trim().replace(/\s+/g, ' ') || 'Outros' };
         if (!data.brand) delete data.brand;
         let alvo = prices.find(x => x.id === link) || (isNew && prices.find(x => x.kind === 'mat' && norm(x.name) === norm(name)));
         if (alvo && isNew && inStock(alvo)) return toast(`${alvo.name} já está no estoque. Toque nele na lista para alterar.`);
