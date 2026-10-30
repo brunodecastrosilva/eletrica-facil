@@ -247,3 +247,13 @@ export async function guiasAjustes(page) {
   }));
 }
 export const GUIAS_COMUNS = ['Conta e perfil', 'Sincronização e armazenamento', 'Aparência', 'Preferências gerais', 'Notificações', 'Privacidade e segurança', 'Avaliação e feedback', 'Sobre o aplicativo'];
+/* escolhe uma opção na lista de escolha do Kit (a <select> fica escondida, guardando o valor).
+   seletor: o da <select> (ex.: '#aj-me'); valor: o value ou o texto da opção */
+export async function escolher(page, seletor, valor) {
+  const sel = page.locator(seletor);
+  const k = await sel.evaluate((s, v) => [...s.options].findIndex(o => o.value === v || o.textContent.trim() === v), valor);
+  if (k < 0) throw new Error(`opção "${valor}" não existe em ${seletor}`);
+  const w = sel.locator('xpath=following-sibling::div[contains(@class,"kf-esc")][1]');
+  if ((await w.locator('.kf-esc-lista').getAttribute('hidden')) !== null) await w.locator('.kf-esc-btn').click();
+  await w.locator(`.kf-esc-op[data-k="${k}"]`).click();
+}

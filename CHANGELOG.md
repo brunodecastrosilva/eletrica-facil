@@ -2,6 +2,15 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.13.0 · 2026-10-30
+
+- **Data da aprovação:** usa o calendário do próprio app (o mesmo do prazo), sem datas futuras, no lugar do
+  calendário do sistema. Nenhuma tela do app usa mais a lista ou o calendário do sistema.
+- **Comprei:** na caixa de uma ferramenta que está em Quero comprar, o botão Comprei pede marca e modelo (com a
+  quantidade da lista) e passa a ferramenta para Minhas ferramentas, tirando-a da lista de compras.
+- **Kit Fácil 2.5.0:** a lista de escolha e o movimento das seções saíram do app e passaram para o Kit, iguais nos três
+  apps (Leis Globais, lei 10). Para quem usa, nada muda no Elétrica Fácil.
+
 ## 2.12.0 · 2026-10-30
 
 - **Listas de escolha do próprio app:** todas as listas suspensas (unidade, prazo, categoria, material, ferramenta,

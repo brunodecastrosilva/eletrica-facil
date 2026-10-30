@@ -3,7 +3,7 @@
 Regras comuns do **Conta Fácil**, do **Elétrica Fácil** e do **Estudo Fácil** e de qualquer app novo do projeto.
 Este arquivo fica em `comum/PADRAO.md`, igual nos três repositórios, junto com o **Kit Fácil** (o código comum).
 
-Versão do padrão: 2.2 · Kit Fácil 2.4.0 · outubro de 2026.
+Versão do padrão: 2.3 · Kit Fácil 2.5.0 · outubro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -297,6 +297,8 @@ para as do kit, para sucesso, aviso e erro serem iguais na família.
 | Botões | `kf-btn` + `kf-pri` (principal, um por área), `kf-sec` (contorno), `kf-perigo` / `kf-perigo-sec` (destrutivo), `kf-link` | altura mínima 44 px; verbo no rótulo |
 | Campos | `kf-entrada`, `kf-rotulo`, `kf-ajuda`, `kf-opcional`, `kf-check` | rótulo visível; fonte de 16 px; ajuda abaixo |
 | Escolhas | pílulas `kf-opcoes`, segmentos `kf-seg`, estrelas `kf-estrelas`, escolhas grandes `kf-escolha` | teclado e leitor de tela funcionam (rádios de verdade) |
+| Lista de escolha (Kit 2.5) | `<select>` comum; o Kit troca sozinho pela lista do Kit (`kf-esc`) | **nenhum app mostra a lista do sistema**: a do Kit é igual em todo aparelho, abre dentro da tela (nunca cortada numa janela), mostra a opção atual marcada, aceita grupos (`<optgroup>`) e funciona com teclado e leitor de tela. A `<select>` fica escondida guardando o valor: o app lê e muda `.value`, troca as opções e ouve `change` como sempre. Texto de "Escolha…": `<option value="" hidden>`. Exceção só com `data-kf-nativa` e justificativa no README |
+| Seções que abrem e fecham (Kit 2.5) | `<details data-kf-secao>`; `data-kf-secao="grupo"` para abrir uma e fechar as outras; `data-kf-secao-resumo` na linha de resumo do título; `KitFacil.secao.abrir/fechar/alternar(el)`; evento `kf-secao` | o mesmo movimento em toda a família (`KitFacil.movimento`: 560 ms, curva `cubic-bezier(.45,0,.2,1)`): a altura muda devagar, o conteúdo aparece depois e some antes, e no grupo a tela rola no mesmo relógio até o título ficar abaixo da barra de cima, sem passar do fim da página; botões no título não abrem a seção; movimento reduzido respeitado. Nada de botão "Próximo": a pessoa toca na seção que quer |
 | Janelas | `KitFacil.dialogo.abrir({ titulo, sub, corpo, pe, classe, aoMontar, aoFechar })`, `.confirmar` | as únicas janelas dos apps (o app não tem janela própria; `openSheet` do app só traduz para esta); sobe do pé da tela no celular, no centro em telas largas; foco preso; Esc e o X fecham; o foco volta para quem abriu; `sub` é a linha pequena acima do título; `classe`: `kf-alto` (quase a tela toda), `kf-largo` (até 780 px) |
 | Blocos | `kf-bloco` (título `h3`), `kf-dados` (lista de rótulo e valor) | |
 | Estados | carregando `kf-carregando`; sucesso `kf-fim`; aviso `kf-aviso` (`kf-ok`, `kf-alerta`, `kf-ruim`); vazio `KitFacil.ui.vazio` (`kf-vazio`); estado da nuvem `kf-estado` | a mensagem diz o que aconteceu e o que fazer; nunca só pela cor |
@@ -342,6 +344,12 @@ O app é instalável (PWA) e abre sem internet depois da primeira visita.
   privacidade conforme a LGPD (o Elétrica Fácil guarda dados de clientes do usuário: nome, telefone, endereço e CPF/CNPJ).
   Enquanto não existirem, *Sobre o aplicativo* diz "Termos de uso: ainda não publicados". Os rascunhos (em nome do criador,
   contato cas_bruno@outlook.com) ficam no projeto Integrador, à espera de revisão jurídica.
+
+### 7.7 Cadastros (Kit 2.5)
+
+Todo cadastro de item que pertence a uma categoria segue o mesmo caminho: **1. Categoria** (lista de escolha, com
+"Nova categoria…" no fim) e **2. Item** (lista dos itens daquela categoria, com "Outro… desta categoria" no fim); os
+demais campos aparecem depois. Linhas que abrem alguma coisa têm a seta à direita.
 
 ## 10. Como mudar o Kit Fácil
 

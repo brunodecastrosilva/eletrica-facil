@@ -390,14 +390,12 @@ details.fold>summary:focus-visible{outline:2px solid var(--volt-text);outline-of
 .f-t b{font-family:var(--f-display);font-weight:800;font-stretch:106%;font-size:17px;letter-spacing:-.01em}
 .f-t small{display:block;color:var(--muted);font-size:14px;line-height:20px;max-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* seção aberta esconde o resumo de uma linha (ao fechar, a classe fechando o traz de volta já durante a animação) */
-details.fold[open]:not(.fechando):not(.multi)>summary .f-t small{max-height:0;opacity:0}
 .f-r{font-weight:700;font-variant-numeric:tabular-nums;font-size:15px;flex:none}
 .f-ch{flex:none;color:var(--faint);display:grid;place-items:center;width:24px;transition:transform .18s}
 .f-ch svg{width:20px;height:20px}
 details.fold[open]>summary .f-ch{transform:rotate(90deg)}
 .f-in{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px;min-width:0}
-details.fold.anim>.f-in{overflow:hidden}
-details.fold.fechando>summary .f-ch{transform:none}
+details.fold.kf-secao-fechando>summary .f-ch{transform:none}
 .f-ch{transition:transform .56s cubic-bezier(.45,0,.2,1)}
 details.fold.sub{background:var(--surface-2);border:0;border-radius:14px}
 details.fold.sub>summary{min-height:54px;padding:9px 8px 9px 12px}
@@ -519,6 +517,7 @@ details.tech[open] > summary::after{content:"–"}
 .t-tem .i,.t-quero .i{width:16px;height:16px}
 .t-quero{display:inline-flex;color:var(--muted)}
 .tp-corpo{display:flex;flex-direction:column;gap:12px}
+.tp-qq-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 /* linha que abre alguma coisa: seta à direita (Preços, Estoque, Ferramentas) */
 .prow{grid-template-columns:minmax(0,1fr) auto 18px}
 .prow::after{content:'';width:18px;height:18px;background:var(--faint);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat}
@@ -583,22 +582,9 @@ details.tech[open] > summary::after{content:"–"}
 .cal-msg .linkish{margin-left:0}
 .prazo-row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
 .prazo-row .stepper{flex:none}
-.esc{position:relative;min-width:0;width:100%}
-.esc-btn{width:100%;min-height:48px;display:flex;align-items:center;gap:8px;justify-content:space-between;padding:11px 12px 11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:16px;text-align:left;cursor:pointer}
-.esc-btn .esc-v{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.esc-btn.vazio .esc-v{color:var(--faint)}
-.esc-btn .i{flex:none;width:18px;height:18px;color:var(--faint);transform:rotate(90deg);transition:transform .25s}
-.esc.aberta .esc-btn{border-color:var(--volt-text);box-shadow:0 0 0 1px var(--volt-text)}
-.esc.aberta .esc-btn .i{transform:rotate(-90deg)}
-.esc-btn:disabled{opacity:.5;cursor:default}
-.esc-btn:focus-visible,.esc-op:focus-visible{outline:2px solid var(--volt-text);outline-offset:-2px}
-.esc-lista{margin-top:6px;max-height:min(300px,50vh);overflow:auto;overscroll-behavior:contain;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;padding:4px;box-shadow:var(--shadow)}
-.esc-op{width:100%;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border:0;border-radius:10px;background:none;color:var(--ink);font-size:15.5px;text-align:left;cursor:pointer}
-.esc-op:hover{background:var(--surface-2)}
-.esc-op[aria-selected="true"]{background:var(--volt-soft);font-weight:700}
-.esc-op .i{flex:none;width:18px;height:18px;color:var(--volt-text)}
-.esc-op[aria-disabled="true"]{color:var(--faint);cursor:default;background:none}
-.prazo-row .esc{flex:1;min-width:150px;width:auto}
+.cal-wrap.dc-cal{margin:6px 0 0;padding:8px 8px 4px;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;box-shadow:var(--shadow)}
+.dc-btn .i{transform:none!important}
+.prazo-row .kf-esc{flex:1;min-width:150px;width:auto}
 .cal-d.velho span{opacity:.6}
 .cal-d.prazo span{background:var(--volt-soft)}
 .cal-d.fer span{position:relative}
@@ -667,7 +653,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.12.0';
+const VERSAO = '2.13.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -877,7 +863,11 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.12.0', itens: [
+  novidades: [{ versao: '2.13.0', itens: [
+    'A data da aprovação agora usa o calendário do próprio app, sem datas futuras.',
+    'Comprei: abra uma ferramenta da lista de compras, toque em Comprei e diga a marca e o modelo. Ela vai para Minhas ferramentas.',
+    'A lista de escolha e o movimento das seções agora são os mesmos nos três apps da família.',
+  ] }, { versao: '2.12.0', itens: [
     'Ferramentas em três listas: Minhas ferramentas, Quero comprar e Ferramentas cadastradas. Toque numa ferramenta para dizer se é sua, com marca, modelo e quantidade, ou se quer comprar.',
     'Dá para ter várias ferramentas do mesmo tipo, de marcas ou modelos diferentes.',
     'Nova ferramenta, novo material e novo preço seguem o mesmo caminho: primeiro a categoria, depois o item.',
@@ -1490,67 +1480,7 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Enter' || !t.matches || !t.matches('input') || t.form) return;
   e.preventDefault(); t.blur();
 });
-function prepFields(root) { $$('input:not([type=checkbox]):not([type=file])', root).forEach(i => { if (!i.hasAttribute('enterkeyhint')) i.setAttribute('enterkeyhint', i.form ? 'go' : 'done'); }); escolhas(root); }
-/* ================= lista suspensa do app =================
-   Toda <select> do app vira uma lista desenhada pelo próprio app, igual em iPhone, Android e computador.
-   A <select> continua no lugar, escondida, guardando o valor: o código lê e muda .value, troca as opções e ouve
-   "change" como antes, e a lista acompanha. Ela abre dentro da tela (não por cima), então nunca fica cortada
-   numa janela. Teclado: Enter, espaço ou seta para baixo abre; setas andam; Enter escolhe; Esc fecha. */
-const VALOR_SELECT = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
-function escolhas(root) {
-  $$('select:not([data-esc-ok])', root).forEach(sel => {
-    sel.setAttribute('data-esc-ok', ''); sel.hidden = true; sel.tabIndex = -1;
-    const w = document.createElement('div'); w.className = 'esc';
-    const id = (sel.id || 'esc' + uid()) + '-esc';
-    w.innerHTML = `<button type="button" class="esc-btn" id="${id}" aria-haspopup="listbox" aria-expanded="false"><span class="esc-v"></span>${I.chev}</button><div class="esc-lista" role="listbox" hidden></div>`;
-    sel.after(w);
-    const btn = $('.esc-btn', w), lista = $('.esc-lista', w);
-    // o rótulo do campo passa a apontar para o botão
-    if (sel.id) { const lb = document.querySelector(`label[for="${CSS.escape(sel.id)}"]`); if (lb) { lb.htmlFor = id; lb.id = lb.id || id + '-l'; lista.setAttribute('aria-labelledby', lb.id); } }
-    if (!lista.hasAttribute('aria-labelledby') && sel.getAttribute('aria-label')) { btn.setAttribute('aria-label', sel.getAttribute('aria-label')); lista.setAttribute('aria-label', sel.getAttribute('aria-label')); }
-    const pinta = () => {
-      const o = sel.options[sel.selectedIndex];
-      $('.esc-v', btn).textContent = o ? o.textContent : '';
-      btn.classList.toggle('vazio', !o || o.value === '');
-      btn.disabled = sel.disabled;
-      if (!lista.hidden) monta();
-    };
-    const monta = () => {
-      lista.innerHTML = [...sel.options].map((o, k) => o.value === '' ? '' : `<button type="button" role="option" class="esc-op" data-k="${k}" aria-selected="${o.selected}" ${o.disabled ? 'aria-disabled="true"' : ''} tabindex="-1"><span>${esc(o.textContent)}</span>${o.selected ? I.check : ''}</button>`).join('');
-    };
-    const abre = () => {
-      if (sel.disabled) return;
-      $$('.esc-lista:not([hidden])').forEach(x => { if (x !== lista) x.parentNode._fecha(false); });
-      monta(); lista.hidden = false; btn.setAttribute('aria-expanded', 'true'); w.classList.add('aberta');
-      if (lista.animate && !semMovimento()) lista.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2,.7,.2,1)' });
-      const at = $('[aria-selected="true"]', lista) || $('.esc-op:not([aria-disabled])', lista);
-      if (at) { at.focus({ preventScroll: true }); lista.scrollTop = at.offsetTop - lista.clientHeight / 2 + at.offsetHeight / 2; }
-      requestAnimationFrame(() => { const r = lista.getBoundingClientRect(); if (r.bottom > innerHeight - 8) lista.scrollIntoView({ block: 'nearest', behavior: semMovimento() ? 'auto' : 'smooth' }); });
-    };
-    const fecha = foco => { if (lista.hidden) return; lista.hidden = true; btn.setAttribute('aria-expanded', 'false'); w.classList.remove('aberta'); if (foco) btn.focus(); };
-    w._fecha = fecha;
-    const escolhe = k => { const o = sel.options[k]; if (!o || o.disabled) return; fecha(true); if (sel.selectedIndex !== k) { sel.selectedIndex = k; pinta(); sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); } };
-    btn.addEventListener('click', () => lista.hidden ? abre() : fecha(true));
-    btn.addEventListener('keydown', e => { if (['ArrowDown', 'ArrowUp'].includes(e.key)) { e.preventDefault(); abre(); } });
-    lista.addEventListener('click', e => { const b = e.target.closest('.esc-op'); if (b) escolhe(+b.dataset.k); });
-    lista.addEventListener('keydown', e => {
-      const ops = $$('.esc-op:not([aria-disabled])', lista), i = ops.indexOf(document.activeElement);
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = ops[Math.max(0, Math.min(ops.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))]; n && n.focus(); }
-      else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); (e.key === 'Home' ? ops[0] : ops[ops.length - 1])?.focus(); }
-      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fecha(true); }
-      else if (e.key === 'Tab') fecha(false);
-      else if (e.key.length === 1 && /\S/.test(e.key)) { const L = fold(e.key), n = ops.find((b, k) => k > i && fold(b.textContent).startsWith(L)) || ops.find(b => fold(b.textContent).startsWith(L)); n && n.focus(); }
-    });
-    w.addEventListener('focusout', e => { if (!w.contains(e.relatedTarget) && e.relatedTarget) fecha(false); });
-    // mudanças feitas pelo código (valor, opções, desligar) aparecem na lista
-    Object.defineProperty(sel, 'value', { configurable: true, get() { return VALOR_SELECT.get.call(this); }, set(v) { VALOR_SELECT.set.call(this, v); pinta(); } });
-    new MutationObserver(pinta).observe(sel, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['disabled'] });
-    sel.addEventListener('change', pinta);
-    pinta();
-  });
-}
-// tocar fora fecha a lista aberta
-document.addEventListener('pointerdown', e => { $$('.esc.aberta').forEach(w => { if (!w.contains(e.target)) w._fecha(false); }); }, true);
+function prepFields(root) { $$('input:not([type=checkbox]):not([type=file])', root).forEach(i => { if (!i.hasAttribute('enterkeyhint')) i.setAttribute('enterkeyhint', i.form ? 'go' : 'done'); }); KitFacil.escolha.ligar(root); }
 // sugestões ao digitar (a lista do navegador não funciona bem no iPhone)
 const lastPress = { target: null, at: 0 };
 document.addEventListener('pointerdown', e => { lastPress.target = e.target; lastPress.at = Date.now(); }, true);
@@ -1603,7 +1533,7 @@ document.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') a
 document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('details')) $$('textarea', e.target).forEach(autoGrow); }, true);
 // seções recolhíveis: mostram uma linha de resumo e abrem quando precisa
 const PANEL = {};
-const panelOpen = (key, id, title, sum, o = {}) => `<details class="fold${o.sub ? ' sub' : ''}${o.multi ? ' multi' : ''}" data-panel="${esc(key)}"${o.attrs || ''}${(o.force ?? (key in PANEL ? PANEL[key] : !!o.def)) ? ' open' : ''}><summary><span class="f-t"><b>${title}</b>${sum !== null ? `<small${id ? ` data-sum="${id}"` : ''}>${esc(sum)}</small>` : ''}</span>${o.right != null ? `<span class="f-r"${id ? ` data-sumr="${id}"` : ''}>${o.right}</span>` : ''}${o.tool || ''}<span class="f-ch">${I.chev}</span></summary><div class="f-in">`;
+const panelOpen = (key, id, title, sum, o = {}) => `<details class="fold${o.sub ? ' sub' : ''}${o.multi ? ' multi' : ''}" data-kf-secao="${o.sub || o.multi ? '' : 'grupo'}" data-panel="${esc(key)}"${o.attrs || ''}${(o.force ?? (key in PANEL ? PANEL[key] : !!o.def)) ? ' open' : ''}><summary><span class="f-t"><b>${title}</b>${sum !== null ? `<small${id ? ` data-sum="${id}"` : ''}${o.multi ? '' : ' data-kf-secao-resumo'}>${esc(sum)}</small>` : ''}</span>${o.right != null ? `<span class="f-r"${id ? ` data-sumr="${id}"` : ''}>${o.right}</span>` : ''}${o.tool || ''}<span class="f-ch">${I.chev}</span></summary><div class="f-in">`;
 const panelClose = '</div></details>';
 const panel = (key, id, title, sum, body, o) => panelOpen(key, id, title, sum, o) + body + panelClose;
 function paintSums(root, map) {
@@ -1612,102 +1542,13 @@ function paintSums(root, map) {
     else { const e = $(`[data-sum="${k}"]`, root); if (e) e.textContent = map[k]; }
   }
 }
-// abrir e fechar seções com movimento suave: a altura cresce ou encolhe e a tela acompanha, sem saltos
-const semMovimento = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
-// mesma curva no CSS e no código, para a altura das seções e a rolagem andarem juntas: começa macio, desliza e pousa devagar
-const FOLD_MS = 560, FOLD_BZ = [.45, 0, .2, 1], FOLD_EASE = `cubic-bezier(${FOLD_BZ.join(',')})`;
-const suave = (() => {
-  const [x1, y1, x2, y2] = FOLD_BZ, B = (u, a, b) => 3 * (1 - u) * (1 - u) * u * a + 3 * (1 - u) * u * u * b + u * u * u;
-  return t => {
-    if (t <= 0) return 0; if (t >= 1) return 1;
-    let lo = 0, hi = 1, u = t;
-    for (let i = 0; i < 24; i++) { const x = B(u, x1, x2); if (Math.abs(x - t) < 1e-5) break; if (x < t) lo = u; else hi = u; u = (lo + hi) / 2; }
-    return B(u, y1, y2);
-  };
-})();
-// abre ou fecha uma seção e devolve quanto a altura dela vai mudar
-function foldSet(d, open) {
-  if (!d) return 0;
-  d._want = open; PANEL[d.dataset.panel] = open;
-  const box = $(':scope > .f-in', d), sm = $(':scope > summary', d);
-  if (d._anim) { d._anim.cancel(); d._anim = null; }
-  if (d.open === open && !d.classList.contains('anim')) return 0;
-  const from = d.offsetHeight, borda = d.offsetHeight - d.clientHeight;
-  if (semMovimento() || !box || !d.isConnected || !box.animate) { d.classList.remove('anim', 'fechando'); d.style.overflow = ''; d.open = open; return d.offsetHeight - from; }
-  d.classList.add('anim'); d.classList.toggle('fechando', !open); d.style.overflow = 'hidden';
-  d.open = true;
-  $$('textarea', box).forEach(autoGrow);
-  // altura final já com o resumo de uma linha no estado de chegada (escondido ao abrir, visível ao fechar)
-  const shFim = sm.offsetHeight, to = open ? shFim + box.offsetHeight + borda : shFim + borda;
-  const o = { duration: FOLD_MS, easing: FOLD_EASE };
-  const anim = d.animate([{ height: from + 'px' }, { height: to + 'px' }], o);
-  const resumo = !d.classList.contains('multi') && $('.f-t small', sm);
-  if (resumo) resumo.animate(open ? [{ maxHeight: '20px', opacity: 1 }, { maxHeight: '0px', opacity: 0, offset: .45 }, { maxHeight: '0px', opacity: 0 }] : [{ maxHeight: '0px', opacity: 0 }, { maxHeight: '20px', opacity: 0, offset: .5 }, { maxHeight: '20px', opacity: 1 }], o);
-  // o conteúdo aparece um pouco depois de a seção começar a abrir, e some antes de ela fechar
-  box.animate(open ? [{ opacity: 0, transform: 'translateY(-10px)' }, { opacity: 0, transform: 'translateY(-10px)', offset: .15 }, { opacity: 1, transform: 'none' }] : [{ opacity: 1 }, { opacity: 0, offset: .6 }, { opacity: 0 }], o);
-  d._anim = anim;
-  const end = () => { d.style.overflow = ''; d.classList.remove('anim', 'fechando'); };
-  anim.onfinish = () => { d._anim = null; if (!open) d.open = false; end(); };
-  anim.oncancel = end;
-  return to - from;
-}
-// rola a tela, na mesma curva das seções, até o título da seção aberta ficar logo abaixo da barra de cima;
-// a rolagem final é calculada antes, com a altura que a página terá no fim: se tudo couber na tela (tablet,
-// computador), a tela não sobe além do possível e não dá o tranco do fim
-function foldGlide(d, fimTopo, fimAltura) {
-  const ab = $('.appbar'), lim = (ab && ab.isConnected ? ab.getBoundingClientRect().bottom : 0) + 8;
-  const s0 = window.scrollY, max = Math.max(0, fimAltura - innerHeight);
-  const alvo = Math.min(max, Math.max(0, fimTopo - lim));
-  if (Math.abs(alvo - s0) < 2) return;
-  if (semMovimento()) { window.scrollTo({ top: alvo }); return; }
-  const t0 = performance.now(), id = (foldGlide._id = (foldGlide._id || 0) + 1);
-  // enquanto a seção cresce, a página ainda não tem altura para rolar até o fim: reserva só o que falta, e só durante o movimento
-  $$('.fold-folga').forEach(x => x.remove());
-  const falta = alvo + innerHeight - document.documentElement.scrollHeight, main = d.closest('main');
-  let folga = null;
-  if (falta > 0 && main) { folga = document.createElement('div'); folga.className = 'fold-folga'; folga.setAttribute('aria-hidden', 'true'); folga.style.height = falta + 'px'; main.appendChild(folga); }
-  const fim = () => { window.scrollTo({ top: alvo }); if (folga) folga.remove(); };
-  const step = now => {
-    if (!d.isConnected || id !== foldGlide._id) { if (folga) folga.remove(); return; }
-    // usa o relógio da própria animação da seção, para a rolagem e a altura andarem no mesmo quadro
-    const ct = d._anim && d._anim.currentTime;
-    const t = Math.min(1, typeof ct === 'number' ? ct / FOLD_MS : (now - t0) / FOLD_MS);
-    window.scrollTo({ top: s0 + (alvo - s0) * suave(t) });
-    if (t >= 1 || (!d._anim && now - t0 >= FOLD_MS)) return fim();
-    requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
-}
-// abrir uma seção fecha as outras do mesmo nível
-function foldOpen(d) {
-  if (!d) return;
-  const solo = !d.classList.contains('sub') && !d.classList.contains('multi');
-  const topo = el => el.getBoundingClientRect().top + window.scrollY;
-  const dTopo = topo(d), altura = document.documentElement.scrollHeight;
-  let acima = 0, total = 0;
-  if (solo) $$(':scope > details.fold[open]:not(.sub):not(.multi)', d.parentNode).forEach(x => {
-    if (x === d) return;
-    const antes = topo(x) < dTopo, dh = foldSet(x, false);
-    total += dh; if (antes) acima += dh;
-  });
-  total += foldSet(d, true);
-  if (solo) foldGlide(d, dTopo + acima, altura + total);
-}
+// seções: abrir e fechar é do Kit (KitFacil.secao, o mesmo movimento nos três apps); aqui só se guarda qual está aberta
+const semMovimento = () => KitFacil.movimento.reduzido();
+document.addEventListener('kf-secao', e => { const d = e.target; if (d.matches && d.matches('details.fold')) PANEL[d.dataset.panel] = e.detail.aberta; });
 document.addEventListener('toggle', e => {
-  const d = e.target; if (!d.matches || !d.matches('details.fold') || d.classList.contains('anim') || d._anim) return;
-  PANEL[d.dataset.panel] = d.open; d._want = d.open;
-  if (!d.open || d.classList.contains('sub') || d.classList.contains('multi')) return;
-  // aberta pelo código (sem animação): fecha as outras do mesmo nível e mostra o título
-  $$(':scope > details.fold[open]:not(.sub):not(.multi)', d.parentNode).forEach(x => { if (x !== d && !x._anim) { x.open = false; x._want = false; } });
-  requestAnimationFrame(() => { const ab = $('.appbar'), lim = (ab ? ab.getBoundingClientRect().bottom : 0) + 8, top = d.getBoundingClientRect().top; if (top < lim) window.scrollTo({ top: window.scrollY + top - lim }); });
+  const d = e.target; if (!d.matches || !d.matches('details.fold') || d.classList.contains('kf-secao-anim')) return;
+  PANEL[d.dataset.panel] = d.open;
 }, true);
-// toque no título: anima em vez de abrir ou fechar de uma vez
-document.addEventListener('click', e => {
-  const sm = e.target.closest('details.fold > summary'); if (!sm || e.target.closest('summary button')) return;
-  e.preventDefault();
-  const d = sm.parentNode, aberta = d._want ?? d.open;
-  if (aberta) foldSet(d, false); else foldOpen(d);
-});
 // botões dentro do título da seção não abrem nem fecham a seção
 document.addEventListener('click', e => { if (e.target.closest('summary button')) e.preventDefault(); }, true);
 const vibrate = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
@@ -2518,7 +2359,7 @@ VIEWS.quote = {
     $('#q-tbd', v)?.addEventListener('change', e => { q.dateTbd = e.target.checked; touch(q); $('#q-cal-area', v).hidden = q.dateTbd; const cdc = $('#q-cdc', v); if (cdc) cdc.hidden = q.dateTbd || !!q.dates.length; requestAnimationFrame(() => paintSums(v, quoteSums(q, compute(q)))); });
     // serviço já realizado: vira relatório; desfazer volta para a situação anterior
     $('#q-done', v)?.addEventListener('change', e => { if (!e.target.checked) return; setStatus(q, 'concluido'); rerender(); window.scrollTo({ top: 0 }); setTimeout(() => baixaSheet(q), 350); toast('Agora é um Relatório de Serviços Executados.'); });
-    $('[data-goto-days]', v)?.addEventListener('click', () => { const d = $(`details[data-panel="q:${q.id}:cond"]`, v); foldOpen(d); setTimeout(() => $('#cal', v)?.querySelector('[aria-pressed="true"], button.cal-d:not([disabled])')?.focus({ preventScroll: true }), FOLD_MS + 40); });
+    $('[data-goto-days]', v)?.addEventListener('click', () => { const d = $(`details[data-panel="q:${q.id}:cond"]`, v); KitFacil.secao.abrir(d); setTimeout(() => $('#cal', v)?.querySelector('[aria-pressed="true"], button.cal-d:not([disabled])')?.focus({ preventScroll: true }), KitFacil.movimento.ms + 40); });
     $('[data-undone]', v)?.addEventListener('click', () => {
       const prev = q.prevStatus && q.prevStatus !== 'concluido' ? q.prevStatus : 'rascunho';
       setStatus(q, prev); rerender(); toast(`Voltou para ${STATUS[prev].toLowerCase()}. O documento é orçamento de novo.`);
@@ -2581,6 +2422,38 @@ function quoteMenu(q) {
       if (o === 'del') deleteQuote(q);
     }) });
 }
+/* campo de data com o calendário do próprio app (o mesmo do prazo), no lugar do calendário do sistema */
+function dataCampoHTML(id, ts) {
+  return `<div class="dc" id="${id}" data-v="${ts || ''}"><button type="button" class="kf-esc-btn dc-btn" id="${id}-btn" aria-expanded="false" aria-controls="${id}-cal"><span class="kf-esc-v"></span>${I.cal}</button><div class="cal-wrap dc-cal" id="${id}-cal" hidden></div></div>`;
+}
+function dataCampo(el, { max = null, min = null } = {}) {
+  const btn = $('.dc-btn', el), cal = $('.dc-cal', el);
+  let mes = +el.dataset.v || hojeTs();
+  const valor = () => +el.dataset.v || null;
+  const pinta = () => { const v = valor(); $('.kf-esc-v', btn).textContent = v ? `${fmtDate(v)}${v === hojeTs() ? ' (hoje)' : ''}` : 'Escolha a data'; };
+  const grade = () => {
+    const b = new Date(mes); b.setDate(1); b.setHours(12, 0, 0, 0);
+    const y = b.getFullYear(), m = b.getMonth(), n = new Date(y, m + 1, 0).getDate(), hoje = hojeTs(), v = valor();
+    const nome = capFirst(b.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }));
+    let c = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => `<span class="cal-w" aria-hidden="true">${d}</span>`).join('') + '<span></span>'.repeat(b.getDay());
+    for (let d = 1; d <= n; d++) {
+      const t = new Date(y, m, d, 12).getTime(), off = (max && t > max) || (min && t < min);
+      c += `<button type="button" class="cal-d${t === hoje ? ' hoje' : ''}" data-dc="${t}" aria-pressed="${t === v}" aria-label="${esc(new Date(t).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }))}" ${off ? 'disabled' : ''}><span>${d}</span></button>`;
+    }
+    const ultimo = new Date(y, m + 1, 0, 12).getTime(), primeiro = new Date(y, m, 1, 12).getTime();
+    cal.innerHTML = `<div class="cal-h"><button type="button" class="icon-btn" data-dcm="-1" aria-label="Mês anterior" ${min && primeiro <= min ? 'disabled' : ''}>${I.left}</button><b>${esc(nome)}</b><button type="button" class="icon-btn" data-dcm="1" aria-label="Próximo mês" ${max && ultimo >= max ? 'disabled' : ''}>${I.chev}</button></div><div class="cal-g" role="group" aria-label="Dias de ${esc(nome)}">${c}</div>`;
+  };
+  const abre = () => { grade(); cal.hidden = false; btn.setAttribute('aria-expanded', 'true'); if (cal.animate && !semMovimento()) cal.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: KitFacil.movimento.css }); $('[aria-pressed="true"]', cal)?.focus({ preventScroll: true }); requestAnimationFrame(() => cal.scrollIntoView({ block: 'nearest', behavior: semMovimento() ? 'auto' : 'smooth' })); };
+  const fecha = () => { cal.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+  btn.onclick = () => cal.hidden ? abre() : fecha();
+  cal.addEventListener('click', e => {
+    const d = e.target.closest('[data-dc]'); if (d) { el.dataset.v = d.dataset.dc; pinta(); fecha(); btn.focus(); return; }
+    const mo = e.target.closest('[data-dcm]'); if (mo) { const b = new Date(mes); b.setDate(1); b.setMonth(b.getMonth() + +mo.dataset.dcm); mes = b.getTime(); grade(); $(`[data-dcm="${mo.dataset.dcm}"]:not([disabled])`, cal)?.focus(); }
+  });
+  cal.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fecha(); btn.focus(); } });
+  pinta();
+  return { valor };
+}
 function approveSheet(q) {
   let via = q.approvedVia || 'msg';
   const OPTS = [['msg', 'Por mensagem', 'WhatsApp ou e-mail. Vale como aprovação por escrito.'], ['sign', 'Assinou a proposta', 'No papel ou em PDF assinado.'], ['verbal', 'Pessoalmente', 'Sem registro escrito.']];
@@ -2588,13 +2461,14 @@ function approveSheet(q) {
       <p class="hint">Como o cliente aprovou? Fica registrado no orçamento e no relatório.</p>
       <div class="opts">${OPTS.map(([k, l, h]) => `<button class="opt" data-via="${k}" aria-pressed="${via === k}"><span>${l}<small>${h}</small></span></button>`).join('')}</div>
       <div class="banner b-tip" id="ap-warn"${via === 'verbal' ? '' : ' hidden'}><p><b>Peça uma confirmação por escrito.</b> Um “De acordo” do cliente no WhatsApp protege você se houver discordância depois.</p></div>
-      <div class="field"><label for="ap-date">Data da aprovação</label><input id="ap-date" type="date" value="${dateInput(Date.now())}" max="${dateInput(Date.now())}"></div>`,
+      <div class="field"><label for="ap-date-btn">Data da aprovação</label>${dataCampoHTML('ap-date', hojeTs())}</div>`,
     foot: `<button class="btn ok" data-ok>${I.check}Registrar aprovação</button>`,
     onMount: s => {
+      const data = dataCampo($('#ap-date', s), { max: hojeTs() });
       $$('[data-via]', s).forEach(b => b.onclick = () => { via = b.dataset.via; $$('[data-via]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#ap-warn', s).hidden = via !== 'verbal'; });
       $('[data-ok]', s).onclick = () => {
         setStatus(q, 'aprovado');
-        q.approvedVia = via; q.approvedAt = Math.min(parseDay($('#ap-date', s).value) || Date.now(), Date.now()); touch(q);
+        q.approvedVia = via; q.approvedAt = Math.min(data.valor() || Date.now(), Date.now()); touch(q);
         closeSheet(true); rerender(); toast('Boa! Aprovação registrada.');
       };
     } });
@@ -3593,7 +3467,7 @@ function priceSheet(p) {
   const it = p ? { ...p } : { kind: priceKind, cat: '', name: '', unit: 'un', price: 0 };
   // mesmo padrão do estoque e das ferramentas: 1. categoria, 2. o item
   const cats = k => { const o = catOrder(k); return [...new Set(prices.filter(x => x.kind === k).map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = o.indexOf(a), ib = o.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); }); };
-  const catOpts = k => `${isNew ? '<option value="">Escolha a categoria</option>' : ''}${cats(k).map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option>`;
+  const catOpts = k => `${isNew ? '<option value="" hidden>Escolha a categoria</option>' : ''}${cats(k).map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option>`;
   openSheet({ title: isNew ? 'Novo item' : 'Alterar preço', body: `
       <div class="seg" role="group" aria-label="Tipo"><button data-ik="svc" aria-pressed="${it.kind === 'svc'}">Mão de obra</button><button data-ik="mat" aria-pressed="${it.kind === 'mat'}">Material</button></div>
       <div class="field"><label for="pp-cat-sel">${isNew ? '1. Categoria' : 'Categoria'}</label><select id="pp-cat-sel">${catOpts(it.kind)}</select>
@@ -3694,16 +3568,16 @@ function stockSheet(p) {
   const ordem = catOrder('mat');
   const cats = [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = ordem.indexOf(a), ib = ordem.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); });
   const matsDe = c => prices.filter(x => x.kind === 'mat' && (x.cat || 'Outros') === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-  const matOpts = c => `<option value="">Escolha o material</option>${matsDe(c).map(x => `<option value="${x.id}" ${inStock(x) ? 'disabled' : ''}>${esc(x.name)} · ${BRL(x.price)}/${unitTxt(1, x.unit)}${inStock(x) ? ' (já no estoque)' : ''}</option>`).join('')}<option value="__novo">Outro material desta categoria…</option>`;
+  const matOpts = c => `<option value="" hidden>Escolha o material</option>${matsDe(c).map(x => `<option value="${x.id}" ${inStock(x) ? 'disabled' : ''}>${esc(x.name)} · ${BRL(x.price)}/${unitTxt(1, x.unit)}${inStock(x) ? ' (já no estoque)' : ''}</option>`).join('')}<option value="__novo">Outro material desta categoria…</option>`;
   const margemHTML = (cost, price) => {
     if (!cost || price === null) return '<span class="hint">Com o custo e o repasse, o app mostra a sua margem.</span>';
     const m = Math.round((price - cost) / cost * 100);
     return m >= 0 ? `${I.check}<span>Margem de <b>${m}%</b>: ${BRL(price - cost)} por unidade.</span>` : `${I.warn}<span><b>Repasse abaixo do custo.</b> Você perde ${BRL(cost - price)} por unidade.</span>`;
   };
   openSheet({ title: isNew ? 'Novo material no estoque' : 'Material no estoque', body: `
-      <div class="field"><label for="st-cat-sel">${isNew ? '1. Categoria' : 'Categoria'}</label><select id="st-cat-sel">${isNew ? '<option value="">Escolha a categoria</option>' : ''}${cats.map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+      <div class="field"><label for="st-cat-sel">${isNew ? '1. Categoria' : 'Categoria'}</label><select id="st-cat-sel">${isNew ? '<option value="" hidden>Escolha a categoria</option>' : ''}${cats.map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
         <input id="st-cat" type="text" value="" placeholder="Nome da nova categoria" autocomplete="off" aria-label="Nome da nova categoria" hidden></div>
-      ${isNew ? `<div class="field"><label for="st-mat">2. Material</label><select id="st-mat" disabled><option value="">Escolha antes a categoria</option></select><span class="hint">Os materiais da sua tabela de Preços nesta categoria.</span></div>` : ''}
+      ${isNew ? `<div class="field"><label for="st-mat">2. Material</label><select id="st-mat" disabled><option value="" hidden>Escolha antes a categoria</option></select><span class="hint">Os materiais da sua tabela de Preços nesta categoria.</span></div>` : ''}
       <div class="field" id="st-name-f" ${isNew ? 'hidden' : ''}><label for="st-name">${isNew ? 'Nome do material novo' : 'Material'}</label><input id="st-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Disjuntor 20 A" autocomplete="off"><span class="hint" ${isNew ? '' : 'hidden'}>Ele entra também na tabela de Preços, nesta categoria.</span></div>
       <div class="st-resto" id="st-resto" ${isNew ? 'hidden' : ''}>
       <div class="field"><label for="st-brand">Marca (opcional)</label><input id="st-brand" type="text" value="${esc(it.brand || '')}" placeholder="Ex.: Steck" autocomplete="off"></div>
@@ -3732,7 +3606,7 @@ function stockSheet(p) {
         mostra(catNova, nova); if (nova) catNova.focus();
         if (!matSel) return;
         link = ''; matSel.disabled = !catSel.value;
-        matSel.innerHTML = nova ? '<option value="__novo">Material novo</option>' : catSel.value ? matOpts(catSel.value) : '<option value="">Escolha antes a categoria</option>';
+        matSel.innerHTML = nova ? '<option value="__novo">Material novo</option>' : catSel.value ? matOpts(catSel.value) : '<option value="" hidden>Escolha antes a categoria</option>';
         if (nova) matSel.dispatchEvent(new Event('change')); else { mostra($('#st-name-f', s), false); mostra($('#st-resto', s), false); }
       });
       // 2. material: um da tabela (preço e unidade vêm de lá) ou um novo, que entra também em Preços
@@ -3810,7 +3684,7 @@ function typeSheet(t) {
       ${its.length ? `<div class="plist">${its.map(it => `<button class="prow" data-item="${it.id}"><span><b>${esc(itemTxt(it) || 'Sem marca e modelo')}</b></span><span class="prow-price">${it.qty} un.</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem esta ferramenta cadastrada como sua.</p>'}
       <button class="add-btn" data-novo-item>${I.plus}${its.length ? 'Adicionar outra marca ou modelo' : 'Tenho esta ferramenta'}</button>
       <label class="switch-row" for="tp-quero"><span><b>Quero comprar</b><small>Entra na lista de compras.</small></span><input type="checkbox" class="sw" id="tp-quero" ${t.quero ? 'checked' : ''}></label>
-      <div class="field" id="tp-qq-f" ${t.quero ? '' : 'hidden'}><label for="tp-qq">Quantas quer comprar</label><div class="stepper"><button data-qq="-1" aria-label="Menos">${I.minus}</button><input id="tp-qq" type="text" inputmode="numeric" value="${t.queroQtd}"><button data-qq="1" aria-label="Mais">${I.plus}</button></div></div>`;
+      <div class="field" id="tp-qq-f" ${t.quero ? '' : 'hidden'}><label for="tp-qq">Quantas quer comprar</label><div class="tp-qq-row"><div class="stepper"><button data-qq="-1" aria-label="Menos">${I.minus}</button><input id="tp-qq" type="text" inputmode="numeric" value="${t.queroQtd}"><button data-qq="1" aria-label="Mais">${I.plus}</button></div><button class="btn ok" data-comprei>${I.check}Comprei</button></div></div>`;
   };
   openSheet({ title: t.name, body: `<div id="tp-corpo" class="tp-corpo">${corpo()}</div>`,
     foot: `${t.seed ? '' : `<button class="btn danger-text" data-del>${I.trash}Excluir</button>`}<button class="btn primary${t.seed ? ' block' : ''}" data-ok>Pronto</button>`,
@@ -3819,6 +3693,7 @@ function typeSheet(t) {
       s.addEventListener('click', e => {
         const it = e.target.closest('[data-item]'); if (it) return itemSheet(tools.find(x => x.id === it.dataset.item), t);
         if (e.target.closest('[data-novo-item]')) return itemSheet(null, t);
+        if (e.target.closest('[data-comprei]')) return itemSheet(null, t, false, true);
         const qq = e.target.closest('[data-qq]'); if (qq) { t.queroQtd = Math.max(1, Math.min(999, t.queroQtd + +qq.dataset.qq)); $('#tp-qq', s).value = t.queroQtd; saveTools(); }
       });
       s.addEventListener('change', e => {
@@ -3833,19 +3708,20 @@ function typeSheet(t) {
     } });
 }
 // uma ferramenta sua: marca, modelo e quantidade
-function itemSheet(it, tipo, daLista) {
+// comprei = veio do botão Comprei: já traz a quantidade da lista de compras e, ao salvar, tira a ferramenta de lá
+function itemSheet(it, tipo, daLista, comprei) {
   const isNew = !it;
-  const x = it ? { ...it } : { brand: '', model: '', qty: 1 };
   tipo = tipo || tipoDe(it);
+  const x = it ? { ...it } : { brand: '', model: '', qty: comprei ? tipo.queroQtd : 1 };
   const volta = () => daLista ? (closeSheet(true), rerender()) : typeSheet(tipo);
-  openSheet({ title: isNew ? 'Tenho esta ferramenta' : 'Minha ferramenta', body: `
-      <p class="hint"><b>${esc(tipo.name)}</b> · ${esc(tipo.cat)}</p>
+  openSheet({ title: comprei ? 'Comprei' : isNew ? 'Tenho esta ferramenta' : 'Minha ferramenta', body: `
+      <p class="hint"><b>${esc(tipo.name)}</b> · ${esc(tipo.cat)}${comprei ? '. Diga a marca e o modelo: ela vai para Minhas ferramentas e sai da lista de compras.' : ''}</p>
       <div class="grid2">
         <div class="field"><label for="it-brand">Marca (opcional)</label><input id="it-brand" type="text" value="${esc(x.brand)}" placeholder="Ex.: Bosch" autocomplete="off"></div>
         <div class="field"><label for="it-model">Modelo (opcional)</label><input id="it-model" type="text" value="${esc(x.model)}" placeholder="Ex.: GSB 13 RE" autocomplete="off"></div>
       </div>
       <div class="field"><label for="it-qty">Quantidade</label><div class="stepper"><button data-iq2="-1" aria-label="Menos">${I.minus}</button><input id="it-qty" type="text" inputmode="numeric" value="${x.qty}"><button data-iq2="1" aria-label="Mais">${I.plus}</button></div></div>`,
-    foot: isNew ? `<button class="btn ghost" data-cancel>Voltar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Não tenho mais</button><button class="btn primary" data-save>Salvar</button>`,
+    foot: isNew ? `<button class="btn ghost" data-cancel>Voltar</button><button class="btn primary" data-save>${comprei ? I.check + 'Confirmar compra' : I.plus + 'Adicionar'}</button>` : `<button class="btn danger-text" data-del>${I.trash}Não tenho mais</button><button class="btn primary" data-save>Salvar</button>`,
     onClose: () => rerender(),
     onMount: s => {
       if (!isTouch) $('#it-brand', s).focus();
@@ -3862,18 +3738,19 @@ function itemSheet(it, tipo, daLista) {
         const igual = tools.find(y => y.k === 'item' && y.tipo === tipo.id && y.id !== (it && it.id) && norm(y.brand) === norm(data.brand) && norm(y.model) === norm(data.model));
         if (igual) { igual.qty = Math.min(999, igual.qty + data.qty); if (it) tools = tools.filter(y => y.id !== it.id); }
         else if (isNew) tools.push(fixItem({ id: uid(), tipo: tipo.id, ...data })); else Object.assign(tools.find(y => y.id === it.id), data);
-        saveTools(); toast(igual ? `Somado à sua ${tipo.name}${itemTxt(igual) ? ' ' + itemTxt(igual) : ''}.` : isNew ? `${tipo.name} nas suas ferramentas.` : 'Ferramenta salva.'); volta();
+        if (comprei) tipo.quero = false;
+        saveTools(); toast(comprei ? `${tipo.name} nas suas ferramentas e fora da lista de compras.` : igual ? `Somado à sua ${tipo.name}${itemTxt(igual) ? ' ' + itemTxt(igual) : ''}.` : isNew ? `${tipo.name} nas suas ferramentas.` : 'Ferramenta salva.'); volta();
       };
     } });
 }
 // nova ferramenta: 1. categoria, 2. ferramenta do catálogo (ou uma nova), depois se é sua ou se quer comprar
 function newToolSheet() {
   let modo = 'minha';
-  const opts = c => `<option value="">Escolha a ferramenta</option>${tiposTool().filter(t => t.cat === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => `<option value="${t.id}">${esc(t.name)}${temTool(t) ? ' (já tem)' : ''}</option>`).join('')}<option value="__novo">Outra ferramenta desta categoria…</option>`;
+  const opts = c => `<option value="" hidden>Escolha a ferramenta</option>${tiposTool().filter(t => t.cat === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => `<option value="${t.id}">${esc(t.name)}${temTool(t) ? ' (já tem)' : ''}</option>`).join('')}<option value="__novo">Outra ferramenta desta categoria…</option>`;
   openSheet({ title: 'Nova ferramenta', body: `
-      <div class="field"><label for="nt-cat">1. Categoria</label><select id="nt-cat"><option value="">Escolha a categoria</option>${toolCats().map(c => `<option>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+      <div class="field"><label for="nt-cat">1. Categoria</label><select id="nt-cat"><option value="" hidden>Escolha a categoria</option>${toolCats().map(c => `<option>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
         <input id="nt-cat-nova" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
-      <div class="field"><label for="nt-tipo">2. Ferramenta</label><select id="nt-tipo" disabled><option value="">Escolha antes a categoria</option></select></div>
+      <div class="field"><label for="nt-tipo">2. Ferramenta</label><select id="nt-tipo" disabled><option value="" hidden>Escolha antes a categoria</option></select></div>
       <div class="field" id="nt-nome-f" hidden><label for="nt-nome">Nome da ferramenta nova</label><input id="nt-nome" type="text" placeholder="Ex.: Detector de metais" autocomplete="off"><span class="hint">Ela entra também em Ferramentas cadastradas.</span></div>
       <div class="st-resto" id="nt-resto" hidden>
         <div class="seg" role="group" aria-label="Situação"><button data-modo="minha" aria-pressed="true">É minha</button><button data-modo="quero" aria-pressed="false">Quero comprar</button></div>
@@ -3890,7 +3767,7 @@ function newToolSheet() {
         const nv = cat.value === '__nova';
         nova.hidden = !nv; if (nv) nova.focus();
         tipo.disabled = !cat.value;
-        tipo.innerHTML = nv ? '<option value="__novo">Ferramenta nova</option>' : cat.value ? opts(cat.value) : '<option value="">Escolha antes a categoria</option>';
+        tipo.innerHTML = nv ? '<option value="__novo">Ferramenta nova</option>' : cat.value ? opts(cat.value) : '<option value="" hidden>Escolha antes a categoria</option>';
         if (nv) tipo.dispatchEvent(new Event('change')); else { $('#nt-nome-f', s).hidden = true; $('#nt-resto', s).hidden = true; }
       });
       tipo.addEventListener('change', () => {

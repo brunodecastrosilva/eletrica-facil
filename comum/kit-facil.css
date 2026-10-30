@@ -364,4 +364,29 @@ body:has(.kf-nav[hidden]) .kf-toast{bottom:calc(24px + env(safe-area-inset-botto
 @media (min-width:1024px){.kf-toast,body:has(.kf-criar) .kf-toast{bottom:24px;left:calc(50% + var(--kf-trilho-w) / 2)}}
 .kf-toast-acao{border:0;background:none;color:inherit;font:700 15px/1 var(--kf-font);text-decoration:underline;text-underline-offset:3px;min-height:44px;padding:0 4px;margin:-12px -4px;cursor:pointer}
 
+/* ================= Kit 2.5: lista de escolha ================= */
+.kf-esc{position:relative;min-width:0;width:100%}
+.kf-esc-btn{width:100%;min-height:48px;display:flex;align-items:center;gap:8px;justify-content:space-between;padding:11px 12px 11px 14px;border-radius:var(--kf-r-campo);border:1px solid var(--kf-line);background:var(--kf-surface-2);color:var(--kf-ink);font:400 16px/1.3 var(--kf-font);text-align:left;cursor:pointer}
+.kf-esc-btn .kf-esc-v{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kf-esc-btn.kf-esc-vazio .kf-esc-v{color:var(--kf-muted)}
+.kf-esc-btn .kf-i{flex:none;width:18px;height:18px;color:var(--kf-muted);transform:rotate(90deg);transition:transform .3s cubic-bezier(.45,0,.2,1)}
+.kf-esc.kf-aberta .kf-esc-btn{border-color:var(--kf-accent-texto);box-shadow:0 0 0 1px var(--kf-accent-texto)}
+.kf-esc.kf-aberta .kf-esc-btn .kf-i{transform:rotate(-90deg)}
+.kf-esc-btn:disabled{opacity:.5;cursor:default}
+.kf-esc-btn:focus-visible,.kf-esc-op:focus-visible{outline:2px solid var(--kf-focus,var(--kf-accent-texto));outline-offset:-2px}
+.kf-esc-lista{margin-top:6px;max-height:min(300px,50vh);overflow:auto;overscroll-behavior:contain;background:var(--kf-surface);border:1px solid var(--kf-line-2);border-radius:var(--kf-r-md);padding:4px;box-shadow:var(--kf-shadow)}
+.kf-esc-op{width:100%;min-height:var(--kf-alvo);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border:0;border-radius:10px;background:none;color:var(--kf-ink);font:400 15.5px/1.3 var(--kf-font);text-align:left;cursor:pointer}
+.kf-esc-op:hover{background:var(--kf-surface-2)}
+.kf-esc-op[aria-selected="true"]{background:var(--kf-accent-soft);font-weight:700}
+.kf-esc-op .kf-i{flex:none;width:18px;height:18px;color:var(--kf-accent-texto)}
+.kf-esc-op[aria-disabled="true"]{color:var(--kf-muted);cursor:default;background:none;opacity:.6}
+.kf-esc-grupo{padding:10px 12px 4px;font:700 12.5px/1.2 var(--kf-font);letter-spacing:.06em;text-transform:uppercase;color:var(--kf-muted)}
+
+/* ================= Kit 2.5: seções que abrem e fecham ================= */
+[data-kf-secao-resumo]{display:block;overflow:hidden}
+details[data-kf-secao][open]:not(.kf-secao-fechando)>summary [data-kf-secao-resumo]{max-height:0;opacity:0}
+details[data-kf-secao]>summary{cursor:pointer}
+details.kf-secao-anim{overflow:hidden}
+@media (prefers-reduced-motion:reduce){.kf-esc-btn .kf-i{transition:none}}
+
 @media (forced-colors:active){.kf-opcao input:checked + span{forced-color-adjust:none;background:Highlight;color:HighlightText}.kf-estrelas label.kf-on{color:Highlight}.kf-nav-it[aria-current="page"],.kf-trilho-it[aria-current="page"],.kf-aj-item[aria-current="true"]{outline:2px solid Highlight}}

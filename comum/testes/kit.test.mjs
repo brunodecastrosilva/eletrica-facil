@@ -636,3 +636,76 @@ test('tela principal: cabeçalho com título, estado vazio e botão de criar flu
     await a.fechar();
   }
 });
+
+/* ---------------- Kit 2.5: lista de escolha e seções ---------------- */
+test('lista de escolha: toda <select> vira a lista do Kit, que guarda o valor, avisa o app e funciona no teclado', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => {
+    document.getElementById('main').insertAdjacentHTML('beforeend', `<label for="t-fruta">Fruta</label>
+      <select id="t-fruta"><option value="" hidden>Escolha a fruta</option><option value="m">Maçã</option><option value="b">Banana</option><option value="u" disabled>Uva</option>
+      <optgroup label="Cítricas"><option value="l">Laranja</option></optgroup></select>
+      <label class="x">Cor <select id="t-cor"><option>Azul</option><option>Verde</option></select></label>`);
+    window.mudou = 0; document.getElementById('t-fruta').addEventListener('change', () => window.mudou++);
+  });
+  await p.locator('#t-fruta-esc').waitFor();
+  assert.equal(await p.locator('select:visible').count(), 0, 'a lista do sistema não aparece');
+  assert.equal(await p.textContent('#t-fruta-esc'), 'Escolha a fruta');
+  assert.equal(await p.getAttribute('label[for="t-fruta-esc"]', 'for'), 't-fruta-esc', 'o rótulo aponta para o botão');
+  assert.equal(await p.getAttribute('#t-cor-esc', 'aria-label'), 'Cor');
+  await p.click('#t-fruta-esc');
+  assert.equal(await p.getAttribute('#t-fruta-esc', 'aria-expanded'), 'true');
+  const ops = await p.locator('#t-fruta-esc ~ .kf-esc-lista .kf-esc-op').allTextContents();
+  assert.deepEqual(ops, ['Maçã', 'Banana', 'Uva', 'Laranja'], 'a opção escondida (Escolha…) não aparece na lista');
+  assert.match(await p.textContent('#t-fruta-esc ~ .kf-esc-lista'), /Cítricas/);
+  // teclado: seta para baixo e Enter
+  await p.keyboard.press('ArrowDown'); await p.keyboard.press('Enter');
+  assert.equal(await p.evaluate(() => [document.getElementById('t-fruta').value, window.mudou]).then(x => x.join()), 'b,1');
+  assert.equal(await p.textContent('#t-fruta-esc'), 'Banana');
+  // opção desligada não é escolhida; o código do app muda o valor e a lista acompanha
+  await p.click('#t-fruta-esc');
+  await p.click('#t-fruta-esc ~ .kf-esc-lista [data-k="3"]', { force: true });
+  assert.equal(await p.evaluate(() => document.getElementById('t-fruta').value), 'b');
+  await p.keyboard.press('Escape');
+  await p.evaluate(() => { document.getElementById('t-fruta').value = 'l'; });
+  assert.equal(await p.textContent('#t-fruta-esc'), 'Laranja');
+  await p.evaluate(() => { document.getElementById('t-fruta').innerHTML = '<option value="z">Nova</option>'; });
+  await p.waitForFunction(() => document.getElementById('t-fruta-esc').textContent === 'Nova');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('seções: abrem e fecham com movimento, fecham as outras do grupo e não passam do fim da página', async () => {
+  for (const viewport of [CELULAR, { width: 820, height: 1180 }]) {
+    const a = await aparelho(amb, { viewport, caminho: pagina() });
+    const p = a.page;
+    await p.evaluate(() => {
+      const sec = (n, h) => `<details data-kf-secao="grupo" id="s${n}"><summary>Seção ${n}<small data-kf-secao-resumo>resumo ${n}</small> <button id="b${n}">ação</button></summary><div style="height:${h}px">conteúdo ${n}</div></details>`;
+      document.getElementById('main').insertAdjacentHTML('beforeend', sec(1, 600) + sec(2, 300) + sec(3, 200) + '<details data-kf-secao id="solta"><summary>Solta</summary><p>texto</p></details>');
+      window.ev = []; document.addEventListener('kf-secao', e => window.ev.push(e.target.id + ':' + e.detail.aberta));
+    });
+    await p.click('#s1 > summary');
+    assert.equal(await p.evaluate(() => document.getElementById('s1').classList.contains('kf-secao-anim')), true, 'abre com animação');
+    await p.waitForFunction(() => !document.querySelector('.kf-secao-anim'));
+    await p.click('#s3 > summary');
+    await p.waitForFunction(() => !document.querySelector('.kf-secao-anim'));
+    await p.waitForTimeout(80);
+    assert.deepEqual(await p.evaluate(() => ['s1', 's2', 's3'].map(id => document.getElementById(id).open)), [false, false, true], 'abrir uma fecha as outras do grupo');
+    const pos = await p.evaluate(() => [scrollY, document.documentElement.scrollHeight - innerHeight]);
+    assert.ok(pos[0] <= pos[1] + 1, `rolou além do fim (${pos})`);
+    assert.equal(await p.locator('.kf-secao-folga').count(), 0);
+    // botão dentro do título não abre a seção; a seção sem grupo não fecha as outras
+    await p.click('#b2');
+    assert.equal(await p.evaluate(() => document.getElementById('s2').open), false);
+    await p.click('#solta > summary');
+    await p.waitForFunction(() => !document.querySelector('.kf-secao-anim'));
+    assert.deepEqual(await p.evaluate(() => [document.getElementById('solta').open, document.getElementById('s3').open]), [true, true]);
+    assert.ok((await p.evaluate(() => window.ev)).includes('s1:false'), 'o evento kf-secao avisa o app');
+    // movimento reduzido: troca direta
+    await p.emulateMedia({ reducedMotion: 'reduce' });
+    await p.click('#solta > summary');
+    assert.equal(await p.evaluate(() => [document.getElementById('solta').open, !!document.querySelector('.kf-secao-anim')].join()), 'false,false');
+    assert.deepEqual(a.erros, []);
+    await a.fechar();
+  }
+});

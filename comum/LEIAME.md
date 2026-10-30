@@ -68,6 +68,27 @@ KitFacil.dialogo.abrir({ titulo: 'Novo item', sub: 'Tabela de preços', corpo: '
   aoMontar: el => { /* liga os campos */ }, aoFechar: () => {} });
 ```
 
+### Lista de escolha e seções (Kit 2.5)
+
+```js
+// toda <select> vira a lista do Kit sozinha (inclusive as que entram depois na página); para ligar na hora:
+KitFacil.escolha.ligar(raiz);
+// <select id="unid"><option value="" hidden>Escolha a unidade</option><option value="m">Metro</option>…</select>
+// o app continua usando sel.value, sel.innerHTML e o evento change
+```
+
+```html
+<details data-kf-secao="grupo"><summary>Valores <small data-kf-secao-resumo>R$ 450,00</small></summary>…</details>
+```
+
+```js
+KitFacil.secao.abrir(el); KitFacil.secao.fechar(el); KitFacil.secao.alternar(el); KitFacil.secao.aberta(el);
+document.addEventListener('kf-secao', e => guardarEstado(e.target, e.detail.aberta));
+KitFacil.movimento; // { ms: 560, curva(t), css: 'cubic-bezier(.45,0,.2,1)', reduzido() }: o mesmo ritmo para movimentos do app
+```
+
+Nos testes, `escolher(page, '#unid', 'm')` (de `testes/ambiente.mjs`) escolhe uma opção pela lista do Kit.
+
 ### Tela de Ajustes
 
 ```js

@@ -12,10 +12,11 @@
    - tela de Ajustes em guias: as guias comuns, sempre na mesma ordem, e as guias próprias de cada app
    - tema claro, escuro ou automático; instalar; cópia de segurança; armazenamento; apagar dados do aparelho
    - sincronização entre aparelhos por um gist secreto e criptografado na conta GitHub do usuário
-   - janelas (diálogos) acessíveis e avisos */
+   - janelas (diálogos) acessíveis e avisos
+   - lista de escolha do Kit no lugar da lista do sistema (toda <select>) e seções que abrem e fecham com movimento suave */
 (function (global) {
   'use strict';
-  const VERSAO = '2.4.0';
+  const VERSAO = '2.5.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -1305,6 +1306,198 @@
   }
   document.addEventListener('change', e => { const i = e.target; if (i && i.matches && i.matches('[data-kf-copia-arquivo]')) aoEscolherCopia(e); });
 
+  /* ================= Kit 2.5: movimento comum ================= */
+  const semMovimento = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
+  // uma curva só para tudo o que abre, fecha e rola: começa macio, desliza e pousa devagar (a mesma no CSS e no código)
+  const MOV = { ms: 560, bz: [.45, 0, .2, 1] };
+  MOV.css = `cubic-bezier(${MOV.bz.join(',')})`;
+  MOV.curva = (() => {
+    const [x1, y1, x2, y2] = MOV.bz, B = (u, a, b) => 3 * (1 - u) * (1 - u) * u * a + 3 * (1 - u) * u * u * b + u * u * u;
+    return t => {
+      if (t <= 0) return 0; if (t >= 1) return 1;
+      let lo = 0, hi = 1, u = t;
+      for (let i = 0; i < 24; i++) { const x = B(u, x1, x2); if (Math.abs(x - t) < 1e-5) break; if (x < t) lo = u; else hi = u; u = (lo + hi) / 2; }
+      return B(u, y1, y2);
+    };
+  })();
+
+  /* ================= Kit 2.5: lista de escolha =================
+     Toda <select> dos apps vira a lista do Kit, igual em iPhone, Android e computador (a do sistema muda de um
+     aparelho para outro). A <select> continua no lugar, escondida, guardando o valor: o app lê e muda .value, troca as
+     opções e ouve "change" como antes, e a lista acompanha. Ela abre dentro da tela (não por cima), então nunca fica
+     cortada numa janela. Teclado: Enter, espaço ou seta abre; setas, Home, End e a primeira letra andam; Enter escolhe;
+     Esc fecha. Grupos (<optgroup>) aparecem como títulos. Para manter a do sistema: data-kf-nativa na <select>.
+     Opção com hidden (<option value="" hidden>Escolha…</option>) é só o texto do botão: não aparece na lista. */
+  const VALOR_SELECT = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+  const INDICE_SELECT = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'selectedIndex');
+  const SETA = '<svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+  function escolhaLigar(raiz) {
+    $$('select:not([data-kf-esc]):not([data-kf-nativa]):not([multiple])', raiz || document).forEach(sel => {
+      sel.setAttribute('data-kf-esc', ''); sel.hidden = true; sel.tabIndex = -1;
+      const w = document.createElement('div'); w.className = 'kf-esc';
+      const id = (sel.id || 'kf-esc-' + novoId()) + '-esc';
+      w.innerHTML = `<button type="button" class="kf-esc-btn" id="${id}" aria-haspopup="listbox" aria-expanded="false"><span class="kf-esc-v"></span>${SETA}</button><div class="kf-esc-lista" role="listbox" hidden></div>`;
+      sel.after(w);
+      const btn = $('.kf-esc-btn', w), lista = $('.kf-esc-lista', w);
+      // nome acessível: o rótulo do campo passa a apontar para o botão
+      const lb = sel.id && document.querySelector(`label[for="${CSS.escape(sel.id)}"]`);
+      if (lb) { lb.htmlFor = id; lb.id = lb.id || id + '-l'; lista.setAttribute('aria-labelledby', lb.id); }
+      else {
+        const pai = sel.closest('label'), cp = pai && pai.cloneNode(true);
+        if (cp) $$('select, .kf-esc', cp).forEach(x => x.remove());
+        const nome = sel.getAttribute('aria-label') || (cp && cp.textContent.trim().replace(/\s+/g, ' ')) || '';
+        if (nome) { btn.setAttribute('aria-label', nome); lista.setAttribute('aria-label', nome); }
+      }
+      const opcoes = () => [...sel.options];
+      const pinta = () => {
+        const o = sel.options[INDICE_SELECT.get.call(sel)];
+        $('.kf-esc-v', btn).textContent = o ? o.textContent : '';
+        btn.classList.toggle('kf-esc-vazio', !o || o.hidden);
+        btn.disabled = sel.disabled;
+        if (!lista.hidden) monta();
+      };
+      const monta = () => {
+        let grupo = null;
+        lista.innerHTML = opcoes().map((o, k) => {
+          let h = '';
+          const g = o.parentElement && o.parentElement.tagName === 'OPTGROUP' ? o.parentElement : null;
+          if (g !== grupo) { grupo = g; if (g) h += `<div class="kf-esc-grupo" role="presentation">${esc(g.label)}</div>`; }
+          if (o.hidden || !o.textContent.trim()) return h;
+          return h + `<button type="button" role="option" class="kf-esc-op" data-k="${k}" aria-selected="${o.selected}" ${o.disabled || (g && g.disabled) ? 'aria-disabled="true"' : ''} tabindex="-1"><span>${esc(o.textContent)}</span>${o.selected ? IC.check : ''}</button>`;
+        }).join('');
+      };
+      const abre = () => {
+        if (sel.disabled) return;
+        $$('.kf-esc.kf-aberta').forEach(x => { if (x !== w && x._fecha) x._fecha(false); });
+        monta(); lista.hidden = false; btn.setAttribute('aria-expanded', 'true'); w.classList.add('kf-aberta');
+        if (lista.animate && !semMovimento()) lista.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: MOV.css });
+        const at = $('[aria-selected="true"]:not([aria-disabled])', lista) || $('.kf-esc-op:not([aria-disabled])', lista);
+        if (at) { at.focus({ preventScroll: true }); lista.scrollTop = at.offsetTop - lista.clientHeight / 2 + at.offsetHeight / 2; }
+        requestAnimationFrame(() => { const r = lista.getBoundingClientRect(); if (r.bottom > innerHeight - 8) lista.scrollIntoView({ block: 'nearest', behavior: semMovimento() ? 'auto' : 'smooth' }); });
+      };
+      const fecha = foco => { if (lista.hidden) return; lista.hidden = true; btn.setAttribute('aria-expanded', 'false'); w.classList.remove('kf-aberta'); if (foco) btn.focus(); };
+      w._fecha = fecha;
+      const escolhe = k => {
+        const o = sel.options[k]; if (!o || o.disabled) return;
+        fecha(true);
+        if (INDICE_SELECT.get.call(sel) !== k) { INDICE_SELECT.set.call(sel, k); pinta(); sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); }
+      };
+      btn.addEventListener('click', e => { e.preventDefault(); lista.hidden ? abre() : fecha(true); });
+      btn.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); abre(); } });
+      lista.addEventListener('click', e => { e.preventDefault(); const b = e.target.closest('.kf-esc-op'); if (b) escolhe(+b.dataset.k); });
+      lista.addEventListener('keydown', e => {
+        const ops = $$('.kf-esc-op:not([aria-disabled])', lista), i = ops.indexOf(document.activeElement);
+        const ir = b => { if (b) b.focus(); };
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); ir(ops[Math.max(0, Math.min(ops.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))]); }
+        else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); ir(e.key === 'Home' ? ops[0] : ops[ops.length - 1]); }
+        else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fecha(true); }
+        else if (e.key === 'Tab') fecha(false);
+        else if (e.key.length === 1 && /\S/.test(e.key)) {
+          const tira = x => x.textContent.trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[̀-ͯ]/g, '');
+          const L = tira({ textContent: e.key });
+          ir(ops.find((b, k) => k > i && tira(b).startsWith(L)) || ops.find(b => tira(b).startsWith(L)));
+        }
+      });
+      w.addEventListener('focusout', e => { if (e.relatedTarget && !w.contains(e.relatedTarget)) fecha(false); });
+      // mudanças feitas pelo app (valor, opções, desligar) aparecem na lista
+      Object.defineProperty(sel, 'value', { configurable: true, get() { return VALOR_SELECT.get.call(this); }, set(v) { VALOR_SELECT.set.call(this, v); pinta(); } });
+      Object.defineProperty(sel, 'selectedIndex', { configurable: true, get() { return INDICE_SELECT.get.call(this); }, set(v) { INDICE_SELECT.set.call(this, v); pinta(); } });
+      new MutationObserver(pinta).observe(sel, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['disabled', 'selected'] });
+      sel.addEventListener('change', pinta);
+      pinta();
+    });
+  }
+  // tocar fora fecha a lista aberta
+  document.addEventListener('pointerdown', e => { $$('.kf-esc.kf-aberta').forEach(w => { if (!w.contains(e.target) && w._fecha) w._fecha(false); }); }, true);
+  // toda <select> que entra na página vira a lista do Kit, sem o app precisar chamar nada
+  const vigiarEscolhas = () => {
+    escolhaLigar(document);
+    new MutationObserver(ms => { if (ms.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && (n.tagName === 'SELECT' || n.querySelector && n.querySelector('select'))))) escolhaLigar(document); })
+      .observe(document.body, { childList: true, subtree: true });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vigiarEscolhas); else vigiarEscolhas();
+
+  /* ================= Kit 2.5: seções que abrem e fecham =================
+     <details data-kf-secao> abre e fecha com movimento suave: a altura cresce ou encolhe na mesma curva de toda a
+     família, o conteúdo aparece um pouco depois e some antes. Opções:
+       data-kf-secao="grupo"  abrir uma fecha as outras irmãs do grupo, e a tela rola, na mesma curva, até o título
+                              ficar logo abaixo da barra de cima — sem passar do fim da página (no tablet, quando tudo
+                              cabe na tela, ela não sobe além do possível e não dá tranco no fim);
+       data-kf-secao-resumo   (num elemento dentro do <summary>) a linha de resumo que aparece fechada e some aberta.
+     Botões e links dentro do <summary> não abrem nem fecham a seção. Quem pede movimento reduzido vê a troca direta.
+     Evento "kf-secao" (detail.aberta) avisa o app no começo de cada abrir ou fechar. */
+  const secaoAnim = new WeakMap();
+  function secaoSet(d, abrir) {
+    if (!d) return 0;
+    d._kfQuer = abrir;
+    const ant = secaoAnim.get(d); if (ant) { ant.cancel(); secaoAnim.delete(d); }
+    if (d.open === abrir && !d.classList.contains('kf-secao-anim')) return 0;
+    d.dispatchEvent(new CustomEvent('kf-secao', { bubbles: true, detail: { aberta: abrir } }));
+    const sm = $(':scope > summary', d), corpo = [...d.children].filter(x => x !== sm);
+    const de = d.offsetHeight, borda = d.offsetHeight - d.clientHeight;
+    if (semMovimento() || !d.isConnected || !d.animate || !sm) { d.classList.remove('kf-secao-anim', 'kf-secao-fechando'); d.style.overflow = ''; d.open = abrir; return d.offsetHeight - de; }
+    d.classList.add('kf-secao-anim'); d.classList.toggle('kf-secao-fechando', !abrir); d.style.overflow = 'hidden';
+    d.open = true;
+    // altura final, já com a linha de resumo no estado de chegada (escondida ao abrir, visível ao fechar)
+    const para = abrir ? d.offsetHeight : sm.offsetHeight + borda;
+    const o = { duration: MOV.ms, easing: MOV.css };
+    const anim = d.animate([{ height: de + 'px' }, { height: para + 'px' }], o);
+    const resumo = $('[data-kf-secao-resumo]', sm);
+    if (resumo) { const h = resumo.scrollHeight + 'px'; resumo.animate(abrir ? [{ maxHeight: h, opacity: 1 }, { maxHeight: '0px', opacity: 0, offset: .45 }, { maxHeight: '0px', opacity: 0 }] : [{ maxHeight: '0px', opacity: 0 }, { maxHeight: h, opacity: 0, offset: .5 }, { maxHeight: h, opacity: 1 }], o); }
+    corpo.forEach(x => x.animate && x.animate(abrir ? [{ opacity: 0, transform: 'translateY(-10px)' }, { opacity: 0, transform: 'translateY(-10px)', offset: .15 }, { opacity: 1, transform: 'none' }] : [{ opacity: 1 }, { opacity: 0, offset: .6 }, { opacity: 0 }], o));
+    secaoAnim.set(d, anim);
+    const fim = () => { d.style.overflow = ''; d.classList.remove('kf-secao-anim', 'kf-secao-fechando'); };
+    anim.onfinish = () => { secaoAnim.delete(d); if (!abrir) d.open = false; fim(); };
+    anim.oncancel = fim;
+    return para - de;
+  }
+  // rola a tela na mesma curva e no mesmo relógio da seção; a posição final é calculada antes, com a altura que a página terá
+  function secaoRolar(d, fimTopo, fimAltura) {
+    const barra = $$('.kf-barra').find(b => b.getClientRects().length && b.getBoundingClientRect().bottom > 0);
+    const lim = (barra ? barra.getBoundingClientRect().bottom : 0) + 8;
+    const s0 = global.scrollY, alvo = Math.min(Math.max(0, fimAltura - innerHeight), Math.max(0, fimTopo - lim));
+    if (Math.abs(alvo - s0) < 2) return;
+    if (semMovimento()) { global.scrollTo({ top: alvo }); return; }
+    const t0 = performance.now(), id = (secaoRolar.id = (secaoRolar.id || 0) + 1);
+    // enquanto a seção cresce a página ainda não tem altura para rolar até o fim: reserva só o que falta, durante o movimento
+    $$('.kf-secao-folga').forEach(x => x.remove());
+    const falta = alvo + innerHeight - document.documentElement.scrollHeight;
+    let folga = null;
+    if (falta > 0) { folga = document.createElement('div'); folga.className = 'kf-secao-folga'; folga.setAttribute('aria-hidden', 'true'); folga.style.height = falta + 'px'; (d.closest('main') || document.body).appendChild(folga); }
+    const acaba = () => { global.scrollTo({ top: alvo }); if (folga) folga.remove(); };
+    const passo = agora => {
+      if (!d.isConnected || id !== secaoRolar.id) { if (folga) folga.remove(); return; }
+      const a = secaoAnim.get(d), ct = a && a.currentTime;
+      const t = Math.min(1, typeof ct === 'number' ? ct / MOV.ms : (agora - t0) / MOV.ms);
+      global.scrollTo({ top: s0 + (alvo - s0) * MOV.curva(t) });
+      if (t >= 1 || (!a && agora - t0 >= MOV.ms)) return acaba();
+      requestAnimationFrame(passo);
+    };
+    requestAnimationFrame(passo);
+  }
+  function secaoAbrir(d) {
+    if (!d) return;
+    const grupo = d.getAttribute('data-kf-secao') === 'grupo';
+    const topo = el => el.getBoundingClientRect().top + global.scrollY;
+    const dTopo = topo(d), altura = document.documentElement.scrollHeight;
+    let acima = 0, total = 0;
+    if (grupo) [...d.parentNode.children].filter(x => x !== d && x.matches('details[data-kf-secao="grupo"]') && (x.open || x._kfQuer)).forEach(x => {
+      const antes = topo(x) < dTopo, dh = secaoSet(x, false);
+      total += dh; if (antes) acima += dh;
+    });
+    total += secaoSet(d, true);
+    if (grupo) secaoRolar(d, dTopo + acima, altura + total);
+  }
+  const secaoFechar = d => { secaoSet(d, false); };
+  const secaoAberta = d => d._kfQuer ?? d.open;
+  const secaoAlternar = d => secaoAberta(d) ? secaoFechar(d) : secaoAbrir(d);
+  document.addEventListener('click', e => {
+    const sm = e.target.closest && e.target.closest('details[data-kf-secao] > summary');
+    if (!sm || e.target.closest('summary button, summary a, summary input, summary select')) return;
+    e.preventDefault();
+    secaoAlternar(sm.parentNode);
+  });
+
   global.KitFacil = Object.freeze({
     VERSAO, FAMILIA, IC, iniciar, avisar, esc, canon, novoId, haQuanto,
     dialogo: { abrir: abrirDialogo, fechar: fecharDialogo, aberto: dialogoAberto, confirmar },
@@ -1314,6 +1507,9 @@
     topo: { html: topoHTML, atualizar: atualizarTopo, estado: estadoNuvem, ESTADOS },
     nav: { ajustes: navAjustesHTML, organizar: organizarNav, MAX: NAV_MAX },
     ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML },
+    escolha: { ligar: escolhaLigar },
+    secao: { abrir: secaoAbrir, fechar: secaoFechar, alternar: secaoAlternar, aberta: secaoAberta },
+    movimento: { ms: MOV.ms, curva: MOV.curva, css: MOV.css, reduzido: semMovimento },
     apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix },
     novidades: { abrir: abrirNovidades, daVersao: novidadesDaVersao },
     boasVindas: { abrir: abrirBoasVindas },

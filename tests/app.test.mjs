@@ -4,7 +4,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { writeFile } from 'node:fs/promises';
-import { preparar, aparelho, githubFalso, firestoreFalso, semRolagemLateral, conferirTopo, conferirNavAjustes, abrirAjustesPelaNav, irPelaNav, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ } from '../comum/testes/ambiente.mjs';
+import { preparar, aparelho, githubFalso, firestoreFalso, semRolagemLateral, conferirTopo, conferirNavAjustes, abrirAjustesPelaNav, irPelaNav, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ, escolher as escolherKit } from '../comum/testes/ambiente.mjs';
 
 let amb, versao;
 before(async () => { amb = await preparar(); versao = JSON.parse(await readFile(RAIZ + '/package.json', 'utf8')).version; });
@@ -17,12 +17,7 @@ const abrirPainel = async (p, chave) => { const d = p.locator(`details[data-pane
 /* abre uma guia dos Ajustes (no celular, a lista vira a guia aberta) */
 const guia = async (p, id) => { if (!(await p.locator('[data-kf-aj]').count())) await abrirAjustesPelaNav(p); await p.click(`.kf-aj-lista [data-kf-aj-ir="${id}"]`); await p.locator(`#kf-aj-${id}.kf-aberta, [data-kf-aj][data-ativa="${id}"]`).first().waitFor(); };
 
-/* escolhe uma opção na lista suspensa do app (a <select> fica escondida, guardando o valor) */
-const escolher = async (p, id, valor) => {
-  await p.click(`#${id}-esc`);
-  const k = await p.evaluate(([id, v]) => [...document.getElementById(id).options].findIndex(o => o.value === v || o.textContent === v), [id, valor]);
-  await p.click(`#${id}-esc ~ .esc-lista [data-k="${k}"]`);
-};
+const escolher = (p, id, valor) => escolherKit(p, '#' + id, valor);
 /* cria um orçamento usando as próprias funções do app */
 const criarOrcamento = (p, cliente, servico) => p.evaluate(([cliente, servico]) => {
   const q = blankQuote(); q.num = ++settings.seq; q.client.name = cliente;
@@ -291,13 +286,13 @@ test('orçamento: tocar numa seção abre essa e fecha a outra, com animação, 
     await abrirPainel(p, `q:${id}:cli`);
     await p.waitForTimeout(700);
     await p.click(`details[data-panel="q:${id}:val"] > summary`);
-    assert.equal(await p.evaluate(id => document.querySelector(`details[data-panel="q:${id}:val"]`).classList.contains('anim'), id), true, 'a seção deveria abrir com animação');
-    assert.ok(await esperar(() => p.evaluate(id => { const n = document.querySelector(`details[data-panel="q:${id}:val"]`), c = document.querySelector(`details[data-panel="q:${id}:cli"]`); return n.open && !c.open && !n.classList.contains('anim'); }, id)), 'não trocou de seção');
+    assert.equal(await p.evaluate(id => document.querySelector(`details[data-panel="q:${id}:val"]`).classList.contains('kf-secao-anim'), id), true, 'a seção deveria abrir com animação');
+    assert.ok(await esperar(() => p.evaluate(id => { const n = document.querySelector(`details[data-panel="q:${id}:val"]`), c = document.querySelector(`details[data-panel="q:${id}:cli"]`); return n.open && !c.open && !n.classList.contains('kf-secao-anim'); }, id)), 'não trocou de seção');
     await p.waitForTimeout(150);
     // a rolagem termina onde a página permite: nada de tranco depois da animação
     const pos = await p.evaluate(() => [scrollY, document.documentElement.scrollHeight - innerHeight]);
     assert.ok(pos[0] <= pos[1] + 1, `rolou além do fim da página (${pos})`);
-    assert.equal(await p.locator('.fold-folga').count(), 0, 'o espaço provisório deveria sair no fim');
+    assert.equal(await p.locator('.kf-secao-folga').count(), 0, 'o espaço provisório deveria sair no fim');
     assert.match(await p.textContent('#ab-saved'), /Salvo/);
     assert.deepEqual(a.erros, []);
     await a.fechar();
@@ -483,6 +478,36 @@ test('baixa no estoque ao concluir, devolução ao desfazer e aviso de estoque b
   await p.evaluate(id => { setStatus(getQ(id), 'aprovado'); }, id);
   assert.equal(await p.evaluate(() => prices.find(x => x.kind === 'mat').stock), 12);
   assert.equal(await p.evaluate(id => getQ(id).baixa, id), null);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('aprovação com o calendário do app (sem datas futuras) e Comprei na caixa da ferramenta', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  const id = await criarOrcamento(p, 'Cliente Aprovação', 'Troca de tomada');
+  await p.evaluate(id => { setStatus(getQ(id), 'enviado'); go('/q/' + id); }, id);
+  await p.click('.banner [data-st="aprovado"]');
+  assert.equal(await p.locator('.kf-dlg input[type="date"]').count(), 0, 'sem o calendário do sistema');
+  assert.match(await p.textContent('#ap-date-btn'), /\(hoje\)/);
+  await p.click('#ap-date-btn');
+  const amanha = await p.evaluate(() => maisDias(hojeTs(), 1));
+  if (await p.locator(`[data-dc="${amanha}"]`).count()) assert.equal(await p.locator(`[data-dc="${amanha}"]`).isDisabled(), true, 'aprovação não pode ser no futuro');
+  const ontem = await p.evaluate(() => maisDias(hojeTs(), -1));
+  if (!(await p.locator(`[data-dc="${ontem}"]`).count())) await p.click('[data-dcm="-1"]');
+  await p.click(`[data-dc="${ontem}"]`);
+  await p.click('.kf-dlg [data-ok]');
+  assert.equal(await p.evaluate(([id, t]) => getQ(id).approvedAt === t, [id, ontem]), true);
+  // Comprei: a ferramenta da lista de compras vai para Minhas ferramentas
+  await p.evaluate(() => { const t = tools.find(x => x.id === 'ft-furadeira-de-impacto'); t.quero = true; t.queroQtd = 2; saveTools(); go('/gestao'); });
+  await p.click('[data-aba="ferramentas"]');
+  await p.click('[data-tf="quero"]');
+  await p.click('[data-tipo="ft-furadeira-de-impacto"]');
+  await p.click('.kf-dlg [data-comprei]');
+  assert.equal(await p.inputValue('#it-qty'), '2', 'traz a quantidade da lista de compras');
+  await p.fill('#it-brand', 'Bosch'); await p.fill('#it-model', 'GSB 13 RE');
+  await p.click('.kf-dlg [data-save]');
+  assert.deepEqual(await p.evaluate(() => [tools.find(x => x.id === 'ft-furadeira-de-impacto').quero, itensDe('ft-furadeira-de-impacto').map(i => [i.brand, i.model, i.qty])]), [false, [['Bosch', 'GSB 13 RE', 2]]]);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
