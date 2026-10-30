@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.8.1 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 2.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -11,10 +11,12 @@ Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fá
 
 - Monte o orçamento escolhendo serviços e materiais da sua tabela de preços
 - Separe por ambiente (sala, cozinha, quartos…) e confira o total de cada item, também em PDF
+- Marque os dias de serviço no calendário, inclusive dias não seguidos; o app confere se a quantidade de dias fecha
 - Calcule o deslocamento pela distância, consumo do veículo e preço do combustível
 - Aplique adicionais de urgência, período noturno e fim de semana sobre a mão de obra
 - Envie a proposta em PDF (folha A4) ou pelo WhatsApp, com QR code do Pix da entrada
 - Acompanhe o que está aguardando resposta, aprovado e concluído; gere relatório técnico e recibo no fim do serviço
+- **Gestão:** estoque de material (marca, quantidade, unidade, custo, repasse e margem), ferramentas que tem e que quer comprar, e checklist fixo para conferir na ida e na volta da obra. O material do estoque é o mesmo da tabela de Preços
 - **Use em vários aparelhos (opcional):** orçamentos, preços e ajustes sincronizados, criptografados, num gist secreto da sua conta GitHub
 - **Avalie o app e relate problemas** pelo balão no alto da tela (ou em Ajustes → Avaliação e feedback)
 - **Nuvem no alto da tela:** mostra se os dados estão sincronizados, sincronizando, pendentes, com erro ou sem internet
@@ -37,7 +39,7 @@ Sem a sincronização, os dados ficam só no aparelho; toque na **nuvem** no alt
 
 | Dado | Onde fica |
 |---|---|
-| Orçamentos, dados dos clientes, tabela de preços e ajustes | neste aparelho (armazenamento do navegador, chaves `eletricafacil.*`) |
+| Orçamentos, dados dos clientes, tabela de preços (com o estoque), ferramentas, checklist e ajustes | neste aparelho (armazenamento do navegador, chaves `eletricafacil.*`) |
 | Os mesmos dados, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
 | Propostas, relatórios e recibos em PDF | gerados no aparelho; só saem quando o usuário compartilha |
 | Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback`; apagados depois de 2 anos |
@@ -67,7 +69,7 @@ Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
 
 - **Alto da tela, à direita:** Ajustes, nuvem da sincronização e balão de avaliação, nessa ordem. No orçamento e na
   proposta, só a nuvem e o balão (o Voltar e o menu do orçamento ficam à esquerda deles)
-- **Navegação:** Orçamentos e Preços na barra de baixo (celular e tablet) ou no menu lateral (computador, a partir de 1024 px)
+- **Navegação:** Orçamentos, Preços e Gestão na barra de baixo (celular e tablet) ou no menu lateral (computador, a partir de 1024 px), com Ajustes por último
 - **Ajustes:** as oito guias comuns e as guias próprias **Pix**, **Veículo e deslocamento**, **Adicionais**,
   **Orçamento novo** e **Textos dos documentos**. "Seus dados na proposta" (nome, contato, CPF ou CNPJ e logotipo) fica em Conta e perfil.
 

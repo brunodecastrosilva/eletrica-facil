@@ -78,6 +78,15 @@ svg.bolt{fill:currentColor;stroke:currentColor;stroke-width:.8}
 .ab-eyebrow{font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ab-main{font-family:var(--f-display);font-weight:800;font-stretch:108%;font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
 .ab-main.big{font-size:24px}
+.ab-row{display:flex;align-items:center;gap:8px;min-width:0}
+.ab-row .ab-eyebrow{min-width:0}
+@media (max-width:420px){.ab-tipo{display:none}}
+.ab-saved{flex:none;display:inline-flex;align-items:center;gap:2px;font-size:12.5px;font-weight:700;color:var(--ok);white-space:nowrap}
+.ab-saved .i{width:14px;height:14px;stroke-width:2.6}
+.ab-saved.agora{animation:salvo .6s ease-out}
+.ab-saved.falhou{color:var(--bad)}
+@keyframes salvo{0%{opacity:.35;transform:scale(.92)}100%{opacity:1;transform:none}}
+.concluir{margin-top:6px}
 .marca-eletrica{background:var(--volt);color:var(--volt-ink)}
 /* título da tela, no corpo da página (a barra de cima mostra a marca) */
 .icon-btn{width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;border-radius:12px;color:var(--ink);flex:none;padding:0}
@@ -231,6 +240,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .stepper button{width:48px;height:46px;border:0;background:none;display:grid;place-items:center;padding:0}
 .stepper button:disabled{opacity:.3}
 .stepper input{border:0!important;background:none!important;box-shadow:none!important;width:72px;text-align:center;padding:0;min-height:0;font-weight:700}
+.stepper input{min-width:0}
+.stepper button{flex:none}
 
 /* avisos de situação */
 .banner{border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px;font-size:15.5px}
@@ -262,7 +273,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .bb-total{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.1}
 .bb-total small{font-size:13px;color:var(--muted);font-weight:600}
 .bb-total b{font-family:var(--f-display);font-weight:850;font-stretch:108%;font-size:23px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bbar .acts{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;width:100%}
+.bbar .acts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;width:100%}
+.bbar .acts .btn{min-width:0;padding-left:10px;padding-right:10px}
+@media (max-width:380px){.bbar .acts .btn{gap:6px;font-size:15px}}
 
 /* navegação: barra de baixo (kf-nav) no celular e no tablet; trilho lateral (kf-trilho) no computador */
 
@@ -282,6 +295,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .pk-row{display:grid;grid-template-columns:minmax(0,1fr) auto 30px;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface);border-radius:13px;padding:11px 12px 11px 14px;border:1px solid var(--line);color:var(--ink)}
 .pk-row.on{border-color:var(--volt);box-shadow:inset 0 0 0 1px var(--volt)}
 .pk-name{font-weight:600;font-size:15.5px}
+.pk-st{display:block;font-weight:500;font-size:13px;color:var(--muted)}
 .pk-price{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px;white-space:nowrap}
 .pk-n{background:var(--volt);color:var(--volt-ink);border-radius:99px;min-width:30px;height:30px;padding:0 6px;display:grid;place-items:center;font-weight:800;font-size:13.5px;font-variant-numeric:tabular-nums}
 .pk-plus{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--ink)}
@@ -380,6 +394,11 @@ details.fold[open]>summary .f-t small{display:none}
 .f-ch svg{width:20px;height:20px}
 details.fold[open]>summary .f-ch{transform:rotate(90deg)}
 .f-in{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px;min-width:0}
+details.fold.anim>.f-in{overflow:hidden}
+details.fold.fechando>summary .f-ch{transform:none}
+details.fold>summary.chegou{animation:chegou .9s ease-out}
+@keyframes chegou{0%{background:color-mix(in srgb,var(--volt) 30%,transparent)}100%{background:transparent}}
+.f-ch{transition:transform .26s cubic-bezier(.2,.7,.2,1)}
 details.fold.sub{background:var(--surface-2);border:0;border-radius:14px}
 details.fold.sub>summary{min-height:54px;padding:9px 8px 9px 12px}
 details.fold.sub .f-t b{font-family:var(--f-body);font-weight:700;font-size:15.5px;font-stretch:100%;letter-spacing:0}
@@ -487,6 +506,56 @@ details.tech[open] > summary::after{content:"–"}
 .p-checks{grid-template-columns:1fr !important}
 .p-accept{margin:6px 0 -6px}
 .sched{display:flex;flex-direction:column;gap:10px}
+.g-body{display:flex;flex-direction:column;gap:12px}
+.g-list{display:flex;flex-direction:column;gap:12px}
+.g-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px 16px 8px}
+.g-card>.pk-cat{padding:12px 0 6px}
+.g-card>.hint{padding:0 0 8px;margin:0}
+.g-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px}
+.g-sum div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.g-sum b{font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-sum span{font-size:13px;color:var(--muted)}
+.g-alert{display:flex;gap:8px;align-items:center;margin:0;padding:10px 12px;border-radius:12px;background:var(--bad-soft);font-size:14.5px}
+.g-alert .i,.g-zero .i{width:18px;height:18px;flex:none;color:var(--bad)}
+.g-zero{display:inline-flex;align-items:center;gap:4px;color:var(--bad)}
+.g-row{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line)}
+.g-row .prow{border-top:0;flex:1;min-width:0}
+.g-card .plist .g-row:first-child{border-top:0}
+.g-row .btn{flex:none}
+.g-margin{display:flex;gap:8px;align-items:flex-start;margin:0;font-size:14.5px}
+.g-margin .i{width:18px;height:18px;flex:none;margin-top:1px}
+.g-prog{display:flex;flex-direction:column;gap:6px}
+.g-prog-t{font-size:15px}
+.g-bar{height:10px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.g-bar span{display:block;height:100%;background:var(--volt);transition:width .3s ease-out}
+.ck-list{display:flex;flex-direction:column}
+.ck-row{display:flex;align-items:center;gap:6px;border-top:1px solid var(--line)}
+.ck-row:first-child{border-top:0}
+.ck-row label{flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:52px;cursor:pointer;font-size:16px}
+.ck-row input[type=checkbox]{width:24px;height:24px;flex:none;accent-color:var(--volt-text);margin:0}
+.ck-row input:checked+span{color:var(--muted);text-decoration:line-through}
+.ck-row small{display:block;font-size:13px;color:var(--muted)}
+.g-acts{display:flex;flex-wrap:wrap;gap:8px}
+.cal-wrap{display:flex;flex-direction:column;gap:8px;margin:0 -8px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px}
+.cal-h b{font-size:16px}
+.cal-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));row-gap:2px}
+.cal-w{font-size:12.5px;font-weight:700;color:var(--muted);text-align:center;padding:2px 0}
+.cal-d{min-height:44px;min-width:0;display:grid;place-items:center;border:0;background:none;color:var(--ink);font:inherit;font-size:15.5px;font-variant-numeric:tabular-nums;cursor:pointer;border-radius:12px;padding:0}
+.cal-d span{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;transition:background .15s}
+.cal-d:hover span{background:var(--surface-2)}
+.cal-d.hoje span{box-shadow:inset 0 0 0 1.5px var(--faint)}
+.cal-d[aria-pressed="true"] span{background:var(--volt);color:var(--volt-ink);font-weight:800;box-shadow:inset 0 0 0 2px var(--volt-ink)}
+.cal-d[disabled]{color:var(--faint);cursor:default;opacity:.55}
+.cal-d:focus-visible{outline:2px solid var(--volt-text);outline-offset:-2px}
+.cal-msg{display:flex;gap:8px;align-items:flex-start;font-size:14.5px;padding:10px 12px;border-radius:12px;background:var(--surface-2)}
+.cal-msg .i{flex:none;width:20px;height:20px;margin-top:1px}
+.cal-msg .i{color:var(--ok)}
+.cal-msg.bad{background:var(--bad-soft)}
+.cal-msg.bad .i,.cal-msg.bad b{color:var(--bad)}
+.cal-msg .linkish{margin-left:0}
+.days-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.days-row .stepper{width:auto}
 input[type=date]:disabled{opacity:.45}
 @media (max-width:380px){
   .hero-stats b{font-size:19px}
@@ -527,6 +596,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <aside class="kf-trilho" id="trilho" aria-label="Seções"><div class="kf-marca"><span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span></div>
   <button class="kf-trilho-it" data-nav="/" id="trilho-home"><span class="kf-nav-ic-t"></span>Orçamentos</button>
   <button class="kf-trilho-it" data-nav="/precos" id="trilho-prices"><span class="kf-nav-ic-t"></span>Preços</button>
+  <button class="kf-trilho-it" data-nav="/gestao" id="trilho-gestao"><span class="kf-nav-ic-t"></span>Gestão</button>
   <span id="trilho-ajustes"></span>
 </aside>
 <div id="app"></div>
@@ -534,6 +604,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
   <div class="kf-nav-in">
     <button class="kf-nav-it" data-nav="/" id="nav-home"><span class="kf-nav-ic"></span><span class="kf-nav-l">Orçamentos</span></button>
     <button class="kf-nav-it" data-nav="/precos" id="nav-prices"><span class="kf-nav-ic"></span><span class="kf-nav-l">Preços</span></button>
+    <button class="kf-nav-it" data-nav="/gestao" id="nav-gestao"><span class="kf-nav-ic"></span><span class="kf-nav-l">Gestão</span></button>
     <span id="nav-ajustes"></span>
   </div>
 </nav>
@@ -541,7 +612,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.8.1';
+const VERSAO = '2.9.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -554,6 +625,8 @@ const fold = s => norm(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
 const sum = a => a.reduce((x, y) => x + y, 0);
 const clone = v => JSON.parse(JSON.stringify(v));
 const DAY = 864e5;
+// um dia guardado sempre ao meio-dia, para não mudar de data com o fuso ou o horário de verão
+const dayTs = ts => { if (!ts) return null; const d = new Date(ts); d.setHours(12, 0, 0, 0); return d.getTime(); };
 const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
 function parseMoney(s) {
   s = String(s ?? '').replace(/[^\d,.]/g, '');
@@ -625,11 +698,19 @@ const I = {
   car: ic('<path d="M5 16v-5l2-5h10l2 5v5"/><path d="M3 16h18v3H3zM7.5 19v1.5M16.5 19v1.5"/>'),
   phone: ic('<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/>'),
   cloud: ic('<path d="M7 19a4.5 4.5 0 0 1-.7-8.95A6 6 0 0 1 17.8 8.6 4.6 4.6 0 0 1 17.5 19z"/>'),
+  cal: ic('<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
+  warn: ic('<path d="M12 3 2 20h20z"/><path d="M12 10v4.5M12 17.5h.01"/>'),
+  box: ic('<path d="m3 7.5 9-4.5 9 4.5-9 4.5z"/><path d="M3 7.5V17l9 4.5 9-4.5V7.5M12 12v9.5"/>'),
+  tool: ic('<path d="M14.5 6.5a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8 .5-.5a4 4 0 0 0-5-5L15 3z"/><path d="m3 21 6-6"/>'),
+  checklist: ic('<path d="M10 6h10M10 12h10M10 18h10"/><path d="m3.5 6 1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 11M3.5 18l1.5 1.5 2.5-2.5"/>'),
+  left: ic('<path d="m15 6-6 6 6 6"/>'),
 };
 
 /* ================= tabela inicial de preços (referência para ajustar) ================= */
-const UNITS = [['un', 'Unidade'], ['ponto', 'Ponto'], ['m', 'Metro'], ['m²', 'Metro quadrado'], ['h', 'Hora'], ['vb', 'Verba']];
-const unitTxt = (q, u) => ({ un: 'un.', ponto: q === 1 ? 'ponto' : 'pontos', m: 'm', 'm²': 'm²', h: 'h', vb: q === 1 ? 'verba' : 'verbas' }[u] || u || 'un.');
+const UNITS = [['un', 'Unidade'], ['ponto', 'Ponto'], ['m', 'Metro'], ['m²', 'Metro quadrado'], ['h', 'Hora'], ['vb', 'Verba'],
+  ['pç', 'Peça'], ['par', 'Par'], ['rolo', 'Rolo'], ['cx', 'Caixa'], ['pct', 'Pacote'], ['barra', 'Barra'], ['kg', 'Quilo'], ['l', 'Litro']];
+const unitTxt = (q, u) => ({ un: 'un.', ponto: q === 1 ? 'ponto' : 'pontos', m: 'm', 'm²': 'm²', h: 'h', vb: q === 1 ? 'verba' : 'verbas',
+  'pç': q === 1 ? 'peça' : 'peças', par: q === 1 ? 'par' : 'pares', rolo: q === 1 ? 'rolo' : 'rolos', cx: q === 1 ? 'caixa' : 'caixas', pct: q === 1 ? 'pacote' : 'pacotes', barra: q === 1 ? 'barra' : 'barras', kg: 'kg', l: 'L' }[u] || u || 'un.');
 const unitName = u => (UNITS.find(x => x[0] === u) || UNITS[0])[1].toLowerCase();
 const SEED = [
   ['svc', 'Tomadas e interruptores', 'Instalação de tomada ou interruptor', 'un', 4500],
@@ -714,6 +795,10 @@ const STATUS = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado',
 let settings = { ...DEF, ...LS.get('settings', {}) };
 let prices = LS.get('prices', null);
 let quotes = LS.get('quotes', null);
+// gestão: ferramentas (as que tem e as que quer comprar) e checklist fixo de ida e volta da obra
+// o estoque de material fica na própria tabela de preços (campos stock, cost e brand dos materiais)
+let tools = LS.get('tools', []);
+let checks = LS.get('checks', []);
 // primeiro uso: nada guardado ainda neste aparelho (nem da versão antiga)
 const PRIMEIRO_USO = quotes === null && !LS.get('catalog', null);
 // sincronização entre aparelhos: motor comum do Kit Fácil (a regra de junção dos dados fica mais abaixo)
@@ -723,7 +808,15 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.8.0', itens: ['O botão Novo orçamento (e Novo item, na tabela de preços) não cobre mais o fim da lista. No computador, ele fica no topo da lista.', 'Listas vazias explicam o que aparece ali e o que fazer, no mesmo formato nos três apps.', 'Janelas e avisos iguais aos dos outros apps.', 'Boas-vindas uma vez só: a tela inicial já mostra os passos e o orçamento de exemplo.', 'Botões, filtros e links maiores, mais fáceis de tocar (no mínimo 44 px).'] }, { versao: '2.7.3', itens: ['No alto da tela, a nova ordem é nuvem, chopp e balão, com o chopp na mesma cor dos outros ícones.', 'A janela do chopp ficou mais simples: um só botão, Copiar código Pix.'] }, { versao: '2.7.2', itens: ['Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança.'] }, { versao: '2.7.1', itens: [
+  novidades: [{ versao: '2.9.0', itens: [
+    'Nova guia Gestão, na barra de baixo: estoque de material (com custo, repasse e margem), suas ferramentas e as que quer comprar, e um checklist para conferir tudo na ida e na volta da obra.',
+    'O material do estoque é o mesmo da tabela de Preços: o repasse é o preço que vai no orçamento, e a lista de material mostra quanto você tem guardado.',
+    'Serviço em dias não seguidos: informe quantos dias são e marque cada um no calendário. O app avisa se a conta não fechar.',
+    'Ao ver a proposta, o botão Concluir volta para a lista e confirma que o orçamento foi salvo. No alto do orçamento, "Salvo" mostra que tudo ficou guardado.',
+    'O botão Próximo abre a seção seguinte com uma animação suave, sem pular a tela.',
+    'A lista de orçamentos abre em Todos.',
+    'Correção: a seta Voltar às vezes precisava de vários toques para sair de um orçamento.',
+  ] }, { versao: '2.8.0', itens: ['O botão Novo orçamento (e Novo item, na tabela de preços) não cobre mais o fim da lista. No computador, ele fica no topo da lista.', 'Listas vazias explicam o que aparece ali e o que fazer, no mesmo formato nos três apps.', 'Janelas e avisos iguais aos dos outros apps.', 'Boas-vindas uma vez só: a tela inicial já mostra os passos e o orçamento de exemplo.', 'Botões, filtros e links maiores, mais fáceis de tocar (no mínimo 44 px).'] }, { versao: '2.7.3', itens: ['No alto da tela, a nova ordem é nuvem, chopp e balão, com o chopp na mesma cor dos outros ícones.', 'A janela do chopp ficou mais simples: um só botão, Copiar código Pix.'] }, { versao: '2.7.2', itens: ['Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança.'] }, { versao: '2.7.1', itens: [
     'O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.',
     'Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).',
     'No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps.',
@@ -733,17 +826,17 @@ KitFacil.iniciar({
   ] }],
   // a boas-vindas é a própria tela inicial do app (com os passos e o exemplo); o Kit só usa "novo" para não mostrar novidades a quem acabou de chegar
   boasVindas: { novo: () => PRIMEIRO_USO && !(quotes || []).some(q => !q.example) },
-  copia: { descricao: 'Baixe um arquivo com os orçamentos, a tabela de preços e os ajustes.', baixar: () => baixarCopiaEletrica(), restaurar: f => restaurarCopiaEletrica(f) },
+  copia: { descricao: 'Baixe um arquivo com os orçamentos, a tabela de preços, o estoque, as ferramentas e os ajustes.', baixar: () => baixarCopiaEletrica(), restaurar: f => restaurarCopiaEletrica(f) },
   privacidade: [
-    'Os orçamentos, a tabela de preços, os ajustes e os dados dos clientes que você cadastra (nome, telefone, endereço, CPF ou CNPJ) ficam guardados neste aparelho. Você é responsável por eles perante os seus clientes.',
+    'Os orçamentos, a tabela de preços, o estoque, as ferramentas, os ajustes e os dados dos clientes que você cadastra (nome, telefone, endereço, CPF ou CNPJ) ficam guardados neste aparelho. Você é responsável por eles perante os seus clientes.',
     'Propostas, relatórios e recibos em PDF são feitos aqui no aparelho. Eles só saem quando você compartilha (WhatsApp, e-mail ou outro app).',
   ],
 });
 KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#EFEEE9', escuro: '#0E0D0A' } });
 const SY = KitFacil.sync.criar({
-  app: 'eletrica-facil', nome: 'Elétrica Fácil', chave: 'eletricafacil.sync', dados: 'os mesmos orçamentos, preços e ajustes',
+  app: 'eletrica-facil', nome: 'Elétrica Fácil', chave: 'eletricafacil.sync', dados: 'os mesmos orçamentos, preços, estoque, ferramentas e ajustes',
   aplicar: R => applyRemote(R), pacote: () => syncPayload(),
-  mesmo: (out, remote) => canon(out) === canon({ settings: remote.settings, prices: remote.prices, quotes: remote.quotes, st: remote.st, del: remote.del }),
+  mesmo: (out, remote) => canon(out) === canon({ settings: remote.settings, prices: remote.prices, quotes: remote.quotes, tools: remote.tools || [], checks: remote.checks || [], st: remote.st, del: remote.del }),
   redesenhar: () => rerender(),
   ocupado: () => KitFacil.dialogo.aberto() || !!(document.activeElement && document.activeElement.matches('input,textarea,select')),
   textoLigada: () => `Sincronização ligada. ${plural(quotes.filter(q => !q.example).length, 'orçamento', 'orçamentos')} neste aparelho.`,
@@ -753,12 +846,22 @@ const saveSync = () => SY.salvar();
 let SNAP = null;
 const saveSettings = () => { stamp('settings'); return LS.set('settings', settings); };
 const savePrices = () => { stamp('prices'); return LS.set('prices', prices); };
-const saveQuotes = () => { stamp('quotes'); if (!LS.set('quotes', quotes)) toast('Não foi possível salvar: o armazenamento do aparelho está cheio.'); };
+const saveTools = () => { stamp('tools'); if (!LS.set('tools', tools)) toast('Não foi possível salvar: o armazenamento do aparelho está cheio.'); };
+const saveChecks = () => { stamp('checks'); if (!LS.set('checks', checks)) toast('Não foi possível salvar: o armazenamento do aparelho está cheio.'); };
+const saveQuotes = () => { stamp('quotes'); const ok = LS.set('quotes', quotes); if (!ok) toast('Não foi possível salvar: o armazenamento do aparelho está cheio. Apague orçamentos antigos ou ligue a sincronização.'); marcaSalvo(ok); };
+// "Salvo" no alto do orçamento: confirma, a cada mudança, que o que foi digitado ficou guardado no aparelho
+function marcaSalvo(ok) {
+  const el = document.getElementById('ab-saved'); if (!el) return;
+  el.classList.toggle('falhou', !ok);
+  el.innerHTML = ok ? `${I.check}<span>Salvo</span>` : `${I.warn}<span>Não salvo</span>`;
+  el.setAttribute('aria-label', ok ? 'Alterações salvas neste aparelho' : 'Não foi possível salvar');
+  el.classList.remove('agora'); void el.offsetWidth; el.classList.add('agora');
+}
 
 function blankQuote() {
   return { id: uid(), num: 0, createdAt: Date.now(), updatedAt: Date.now(),
     client: { name: '', phone: '', address: '', doc: '' }, title: '', items: [], materialBy: 'eu',
-    startAt: null, endAt: null, dateTbd: false, approvedVia: '',
+    startAt: null, endAt: null, dateTbd: false, approvedVia: '', days: 1, dates: [],
     travel: 0, discount: { mode: 'value', value: 0, pct: 0 },
     payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments },
     validity: settings.validity, deadline: '', warranty: settings.warranty, notes: settings.notes,
@@ -782,9 +885,21 @@ function fixQuote(q) {
   ['diag', 'work', 'recs'].forEach(k => { q[k] = String(q[k] || ''); });
   q.tests = Array.isArray(q.tests) ? q.tests.map(t => TESTS_V1[t] || String(t)).filter(Boolean) : [];
   if (!STATUS[q.status]) q.status = 'rascunho';
+  // dias de serviço: lista de dias marcados (podem não ser seguidos); versões antigas só tinham início e término
+  q.dates = [...new Set((Array.isArray(q.dates) ? q.dates : []).map(dayTs).filter(Boolean))].sort((a, b) => a - b);
+  if (!q.dates.length && q.startAt) {
+    const a = dayTs(q.startAt), b = dayTs(q.endAt || q.startAt);
+    if (a && b && b >= a && (b - a) / DAY < 62) for (let t = a; t <= b + DAY / 2; t = dayTs(t + DAY)) q.dates.push(t);
+  }
+  if (!q.dates.length && q.status === 'concluido' && q.doneAt) q.dates = [dayTs(q.doneAt)];
+  q.days = Math.max(1, Math.min(99, parseInt(q.days, 10) || q.dates.length || 1));
   ['isExample', 'active', 'savedAt', 'closedAt', 'total', 'statusAt'].forEach(k => delete q[k]);
   return q;
 }
+const fixTool = t => ({ id: String(t.id || uid()), name: String(t.name || '').trim(), brand: String(t.brand || '').trim(), qty: Math.max(1, Math.min(999, Math.round(+t.qty || 1))), wish: !!t.wish });
+const fixCheck = c => ({ id: String(c.id || uid()), name: String(c.name || '').trim(), back: c.back !== false, ida: !!c.ida, volta: !!c.volta, toolId: c.toolId ? String(c.toolId) : '' });
+// material do estoque: quantidade, custo e marca ficam no próprio item da tabela de preços
+const inStock = p => p.kind === 'mat' && typeof p.stock === 'number';
 // dados da primeira versão do app (mesmo aparelho ou cópia de segurança antiga)
 function fromV1(cat, bills, draft) {
   const out = { settings: {}, prices: seedPrices(), quotes: [] };
@@ -818,6 +933,7 @@ if (!prices || !quotes) {
   saveSettings(); savePrices(); saveQuotes();
 }
 quotes = quotes.map(fixQuote);
+tools = (Array.isArray(tools) ? tools : []).map(fixTool); checks = (Array.isArray(checks) ? checks : []).map(fixCheck);
 settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
 if ((settings.seedV || 0) < 2) {
   prices.forEach(p => { if (p.name === 'Interruptor paralelo com placa') p.name = 'Interruptor paralelo (three-way) com placa'; });
@@ -840,7 +956,9 @@ const scheduleSync = ms => SY.agendar(ms);
 const syncNow = opts => SY.agora(opts);
 const canon = KitFacil.canon;
 function snapAll() {
-  SNAP = { s: {}, p: {}, q: {} };
+  SNAP = { s: {}, p: {}, q: {}, t: {}, c: {} };
+  tools.forEach(t => { SNAP.t[t.id] = JSON.stringify(t); });
+  checks.forEach(c => { SNAP.c[c.id] = JSON.stringify(c); });
   for (const k in settings) SNAP.s[k] = JSON.stringify(settings[k]);
   prices.forEach(p => { SNAP.p[p.id] = JSON.stringify(p); });
   quotes.forEach(q => { if (!q.example) SNAP.q[q.id] = { j: JSON.stringify(q), u: q.updatedAt }; });
@@ -850,10 +968,11 @@ function stamp(kind) {
   const now = Date.now(); let ch = false;
   if (kind === 'settings') {
     for (const k in settings) { const j = JSON.stringify(settings[k]); if (SNAP.s[k] !== j) { SNAP.s[k] = j; sync.st['s:' + k] = now; ch = true; } }
-  } else if (kind === 'prices') {
-    const seen = {};
-    prices.forEach(p => { seen[p.id] = 1; const j = JSON.stringify(p); if (SNAP.p[p.id] !== j) { SNAP.p[p.id] = j; sync.st['p:' + p.id] = now; delete sync.del[p.id]; ch = true; } });
-    for (const id in SNAP.p) if (!seen[id]) { delete SNAP.p[id]; delete sync.st['p:' + id]; sync.del[id] = now; ch = true; }
+  } else if (kind === 'prices' || kind === 'tools' || kind === 'checks') {
+    // listas simples: cada registro guarda quando mudou (p: preços, t: ferramentas, c: checklist)
+    const k = kind[0], L = kind === 'prices' ? prices : kind === 'tools' ? tools : checks, seen = {};
+    L.forEach(p => { seen[p.id] = 1; const j = JSON.stringify(p); if (SNAP[k][p.id] !== j) { SNAP[k][p.id] = j; sync.st[k + ':' + p.id] = now; delete sync.del[p.id]; ch = true; } });
+    for (const id in SNAP[k]) if (!seen[id]) { delete SNAP[k][id]; delete sync.st[k + ':' + id]; sync.del[id] = now; ch = true; }
   } else {
     const seen = {};
     quotes.forEach(q => {
@@ -891,7 +1010,7 @@ function applyRemote(R) {
   for (const k in (R.del || {})) del[k] = Math.max(del[k] || 0, R.del[k]);
   const cut = Date.now() - 400 * DAY;
   for (const k in del) if (del[k] < cut) delete del[k];
-  const before = canon([settings, prices, quotes]);
+  const before = canon([settings, prices, quotes, tools, checks]);
   // ajustes: campo a campo (na primeira conexão, vale o que já está na nuvem)
   const S = { ...settings }, RS = R.settings || {};
   for (const k of Object.keys(RS)) {
@@ -918,15 +1037,18 @@ function applyRemote(R) {
     if (used.has(q.num)) { q.num = ++S.seq; q.updatedAt = Date.now(); }
     used.add(q.num);
   });
+  // ferramentas e checklist: registro a registro (aparelhos com versões antigas não mandam essas listas)
+  const juntar = (L, R, k) => Array.isArray(R) ? mergeList(L, R, x => st[k + ':' + x.id] || 0, x => rs[k + ':' + x.id] || 0, del, x => { if (rs[k + ':' + x.id]) st[k + ':' + x.id] = rs[k + ':' + x.id]; }) : L;
+  tools = juntar(tools, R.tools, 't').map(fixTool); checks = juntar(checks, R.checks, 'c').map(fixCheck);
   settings = { ...DEF, ...S }; prices = P;
-  const vivos = new Set(P.map(p => p.id));
-  Object.keys(st).forEach(k => { if (k.startsWith('p:') && !vivos.has(k.slice(2))) delete st[k]; });
+  const vivos = new Set([...P, ...tools, ...checks].map(p => p.id));
+  Object.keys(st).forEach(k => { if (/^[ptc]:/.test(k) && !vivos.has(k.slice(2))) delete st[k]; });
   sync.st = st; sync.del = del;
-  LS.set('settings', settings); LS.set('prices', prices); LS.set('quotes', quotes);
+  LS.set('settings', settings); LS.set('prices', prices); LS.set('quotes', quotes); LS.set('tools', tools); LS.set('checks', checks);
   snapAll(); saveSync();
-  return before !== canon([settings, prices, quotes]);
+  return before !== canon([settings, prices, quotes, tools, checks]);
 }
-const syncPayload = () => ({ settings, prices, quotes: quotes.filter(q => !q.example && !isEmptyQuote(q)), st: sync.st, del: sync.del });
+const syncPayload = () => ({ settings, prices, quotes: quotes.filter(q => !q.example && !isEmptyQuote(q)), tools, checks, st: sync.st, del: sync.del });
 snapAll();
 const lineTotal = i => Math.round(i.qty * i.price);
 function compute(q) {
@@ -1036,9 +1158,42 @@ function cnpjValid(d) {
   return dv(12) === +d[12] && dv(13) === +d[13];
 }
 const parseDay = v => v ? new Date(v + 'T12:00').getTime() : null;
+const sameDay = (a, b) => dateInput(a) === dateInput(b);
+// dias seguidos (sem buraco no calendário)?
+const seguidos = L => L.every((t, k) => !k || Math.round((t - L[k - 1]) / DAY) === 1);
+// "3, 5 e 15/11/2026" (mesmo mês) ou "28/10, 30/10 e 03/11/2026"
+function datesText(L) {
+  if (!L.length) return '';
+  if (L.length === 1) return fmtDate(L[0]);
+  const last = new Date(L[L.length - 1]), y = last.getFullYear();
+  const mesmoAno = L.every(t => new Date(t).getFullYear() === y);
+  if (mesmoAno && L.every(t => new Date(t).getMonth() === last.getMonth())) return joinPt(L.map(t => String(new Date(t).getDate()))) + '/' + String(last.getMonth() + 1).padStart(2, '0') + '/' + y;
+  if (mesmoAno) return joinPt(L.map(fmtShort)) + '/' + y;
+  return joinPt(L.map(fmtDate));
+}
+// dias de serviço que o usuário informou e dias marcados no calendário conferem?
+const daysOk = q => q.dateTbd || !q.dates.length || q.dates.length === q.days;
+function daysMismatch(q) {
+  if (daysOk(q)) return '';
+  const n = q.dates.length, d = q.days, falta = d - n;
+  return `Você informou ${plural(d, 'dia', 'dias')} e marcou ${n}. ${falta > 0 ? `Marque mais ${plural(falta, 'dia', 'dias')}` : `Desmarque ${plural(-falta, 'dia', 'dias')}`} ou mude para ${plural(n, 'dia', 'dias')}.`;
+}
+// cabeçalho do relatório: um dia ou o período
+const execHead = q => q.dates.length > 1 ? `Executado entre ${fmtShort(q.dates[0])} e ${fmtDate(q.dates[q.dates.length - 1])}` : `Executado em ${fmtDate(q.doneAt || q.dates[0])}`;
+// texto da execução nos documentos
+function execText(q) {
+  const L = q.dates;
+  if (!L.length) return q.doneAt ? fmtDate(q.doneAt) : '';
+  if (L.length > 1 && seguidos(L)) return `de ${fmtDate(L[0])} a ${fmtDate(L[L.length - 1])} (${L.length} dias)`;
+  return L.length > 1 ? `${datesText(L)} (${L.length} dias)` : fmtDate(L[0]);
+}
 // datas de início e término (o CDC pede no orçamento prévio)
 function schedText(q) {
   if (q.dateTbd) return 'Datas de início e término a combinar na aprovação do orçamento.';
+  const L = q.dates;
+  if (L.length > 1 && !seguidos(L)) return `Em ${L.length} dias, não seguidos: ${datesText(L)}. Início em ${fmtDate(L[0])} e término em ${fmtDate(L[L.length - 1])}.`;
+  if (L.length > 1) return `Início em ${fmtDate(L[0])} e término em ${fmtDate(L[L.length - 1])} (${L.length} dias).`;
+  if (L.length === 1) return `Início e término em ${fmtDate(L[0])}.`;
   if (!q.startAt && !q.endAt) return '';
   if (q.startAt && q.endAt && dateInput(q.startAt) !== dateInput(q.endAt)) return `Início em ${fmtDate(q.startAt)} e término em ${fmtDate(q.endAt)}.`;
   return `Início e término em ${fmtDate(q.startAt || q.endAt)}.`;
@@ -1056,7 +1211,12 @@ function setStatus(q, st) {
   if (st === 'rascunho') { q.approvedAt = q.doneAt = q.refusedAt = null; }
   if (st === 'enviado') { q.sentAt = q.sentAt || now; q.approvedAt = q.doneAt = q.refusedAt = null; }
   if (st === 'aprovado') { q.sentAt = q.sentAt || now; q.approvedAt = now; q.doneAt = q.refusedAt = null; }
-  if (st === 'concluido') { q.sentAt = q.sentAt || now; q.approvedAt = q.approvedAt || now; q.doneAt = now; q.refusedAt = null; }
+  if (st === 'concluido') {
+    q.sentAt = q.sentAt || now; q.approvedAt = q.approvedAt || now; q.refusedAt = null;
+    // os dias marcados no orçamento valem como dias de execução se já passaram; senão, conta hoje
+    if (!q.dates.length || q.dates[q.dates.length - 1] > dayTs(now)) { q.dates = [dayTs(now)]; q.days = 1; }
+    q.doneAt = q.dates[q.dates.length - 1];
+  }
   if (st === 'recusado') { q.sentAt = q.sentAt || now; q.refusedAt = now; q.approvedAt = q.doneAt = null; }
   touch(q);
 }
@@ -1188,17 +1348,68 @@ function paintSums(root, map) {
     else { const e = $(`[data-sum="${k}"]`, root); if (e) e.textContent = map[k]; }
   }
 }
+// abrir e fechar seções com movimento suave: a altura cresce ou encolhe e a tela acompanha, sem saltos
+const semMovimento = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
+const FOLD_MS = 280, suave = t => 1 - Math.pow(1 - t, 3);
+function foldSet(d, open) {
+  if (!d) return;
+  d._want = open; PANEL[d.dataset.panel] = open;
+  const box = $(':scope > .f-in', d);
+  if (d._anim) { d._anim.cancel(); d._anim = null; }
+  if (d.open === open && !d.classList.contains('anim')) return;
+  if (semMovimento() || !box || !d.isConnected || !box.animate) { d.classList.remove('anim', 'fechando'); d.style.overflow = ''; d.open = open; return; }
+  const sh = $(':scope > summary', d).offsetHeight, from = d.offsetHeight;
+  d.classList.add('anim'); d.classList.toggle('fechando', !open); d.style.overflow = 'hidden';
+  d.open = true;
+  $$('textarea', box).forEach(autoGrow);
+  const full = sh + box.offsetHeight + (d.offsetHeight - d.clientHeight);
+  const anim = d.animate([{ height: from + 'px' }, { height: (open ? full : sh + (d.offsetHeight - d.clientHeight)) + 'px' }], { duration: FOLD_MS, easing: 'cubic-bezier(.2,.7,.2,1)' });
+  if (open) box.animate([{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: FOLD_MS, easing: 'ease-out' });
+  d._anim = anim;
+  const end = () => { d.style.overflow = ''; d.classList.remove('anim', 'fechando'); };
+  anim.onfinish = () => { d._anim = null; end(); if (!open) d.open = false; };
+  anim.oncancel = end;
+}
+// leva o título da seção até logo abaixo da barra de cima, acompanhando a mudança de altura das outras seções
+function foldGlide(d, always) {
+  const ab = $('.appbar'), lim = () => (ab && ab.isConnected ? ab.getBoundingClientRect().bottom : 0) + 6;
+  const top0 = d.getBoundingClientRect().top - lim();
+  if (!always && top0 >= 0) return;
+  if (semMovimento()) { window.scrollTo({ top: window.scrollY + top0 }); return; }
+  const t0 = performance.now();
+  const step = now => {
+    if (!d.isConnected) return;
+    const t = Math.min(1, (now - t0) / (FOLD_MS + 60));
+    const want = top0 * (1 - suave(t));
+    const cur = d.getBoundingClientRect().top - lim();
+    window.scrollTo({ top: window.scrollY + cur - want });
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+// abrir uma seção fecha as outras do mesmo nível
+function foldOpen(d, opts = {}) {
+  if (!d) return;
+  const solo = !d.classList.contains('sub') && !d.classList.contains('multi');
+  if (solo) $$(':scope > details.fold[open]:not(.sub):not(.multi)', d.parentNode).forEach(x => { if (x !== d) foldSet(x, false); });
+  foldSet(d, true);
+  if (solo || opts.always) foldGlide(d, !!opts.always);
+}
 document.addEventListener('toggle', e => {
-  const d = e.target; if (!d.matches || !d.matches('details.fold')) return;
-  PANEL[d.dataset.panel] = d.open;
+  const d = e.target; if (!d.matches || !d.matches('details.fold') || d.classList.contains('anim') || d._anim) return;
+  PANEL[d.dataset.panel] = d.open; d._want = d.open;
   if (!d.open || d.classList.contains('sub') || d.classList.contains('multi')) return;
-  // abrir uma seção fecha as outras do mesmo nível
-  $$(':scope > details.fold[open]:not(.sub):not(.multi)', d.parentNode).forEach(x => { if (x !== d) x.open = false; });
-  requestAnimationFrame(() => {
-    const ab = $('.appbar'), top = d.getBoundingClientRect().top, lim = ab ? ab.getBoundingClientRect().bottom + 6 : 6;
-    if (top < lim) window.scrollTo({ top: window.scrollY + top - lim });
-  });
+  // aberta pelo código (sem animação): fecha as outras do mesmo nível e mostra o título
+  $$(':scope > details.fold[open]:not(.sub):not(.multi)', d.parentNode).forEach(x => { if (x !== d && !x._anim) { x.open = false; x._want = false; } });
+  requestAnimationFrame(() => foldGlide(d, false));
 }, true);
+// toque no título: anima em vez de abrir ou fechar de uma vez
+document.addEventListener('click', e => {
+  const sm = e.target.closest('details.fold > summary'); if (!sm || e.target.closest('summary button')) return;
+  e.preventDefault();
+  const d = sm.parentNode, aberta = d._want ?? d.open;
+  if (aberta) foldSet(d, false); else foldOpen(d);
+});
 // botões dentro do título da seção não abrem nem fecham a seção
 document.addEventListener('click', e => { if (e.target.closest('summary button')) e.preventDefault(); }, true);
 const vibrate = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
@@ -1210,6 +1421,7 @@ function route() {
   if ((m = h.match(/^\/q\/([\w-]+)\/proposta$/))) return { name: 'preview', id: m[1], key: h };
   if ((m = h.match(/^\/q\/([\w-]+)$/))) return { name: 'quote', id: m[1], key: h };
   if (h === '/precos') return { name: 'prices', key: h };
+  if (h === '/gestao') return { name: 'gestao', key: h };
   if (h === '/ajustes') return { name: 'settings', key: h };
   return { name: 'home', key: '/' };
 }
@@ -1243,11 +1455,14 @@ function render(opts = {}) {
   if ((r.name === 'quote' || r.name === 'preview') && !getQ(r.id)) { history.replaceState({ d: 0 }, '', '#/'); return render(); }
   openQuoteId = r.id || null;
   const V = VIEWS[r.name];
-  $('#app').innerHTML = V.html(r);
-  const top = ['home', 'prices', 'settings'].includes(r.name);
+  // a área da tela é trocada por uma nova a cada desenho: assim os toques ligados pela tela anterior não se acumulam
+  const velho = $('#app'), app = velho.cloneNode(false);
+  app.innerHTML = V.html(r);
+  velho.replaceWith(app);
+  const top = ['home', 'prices', 'gestao', 'settings'].includes(r.name);
   $('#nav').hidden = !top;
   $$('[data-nav]').forEach(b => {
-    const on = (b.dataset.nav === '/' && (r.name === 'home' || r.name === 'quote' || r.name === 'preview')) || (b.dataset.nav === '/precos' && r.name === 'prices');
+    const on = (b.dataset.nav === '/' && (r.name === 'home' || r.name === 'quote' || r.name === 'preview')) || (b.dataset.nav === '/precos' && r.name === 'prices') || (b.dataset.nav === '/gestao' && r.name === 'gestao');
     b.setAttribute('aria-current', on ? 'page' : 'false');
   });
   KitFacil.topo.atualizar();
@@ -1266,8 +1481,8 @@ function rerender() {
 }
 function onScroll() { const ab = $('.appbar'); if (ab) ab.classList.toggle('scrolled', window.scrollY > 4); }
 window.addEventListener('scroll', onScroll, { passive: true });
-$('#nav-home .kf-nav-ic').innerHTML = I.doc; $('#nav-prices .kf-nav-ic').innerHTML = I.tag;
-$('#trilho-home .kf-nav-ic-t').outerHTML = I.doc; $('#trilho-prices .kf-nav-ic-t').outerHTML = I.tag;
+$('#nav-home .kf-nav-ic').innerHTML = I.doc; $('#nav-prices .kf-nav-ic').innerHTML = I.tag; $('#nav-gestao .kf-nav-ic').innerHTML = I.box;
+$('#trilho-home .kf-nav-ic-t').outerHTML = I.doc; $('#trilho-prices .kf-nav-ic-t').outerHTML = I.tag; $('#trilho-gestao .kf-nav-ic-t').outerHTML = I.box;
 // Ajustes é o último item da navegação (barra de baixo no celular, pé do trilho no computador)
 $('#nav-ajustes').outerHTML = KitFacil.nav.ajustes('nav', { id: 'nav-ajustes' });
 $('#trilho-ajustes').outerHTML = KitFacil.nav.ajustes('trilho', { id: 'trilho-ajustes' });
@@ -1342,7 +1557,7 @@ function createExample() {
   go('/q/' + q.id);
 }
 function duplicateQuote(q) {
-  const d = fixQuote({ ...clone(q), id: uid(), createdAt: Date.now(), updatedAt: Date.now(), status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false, approvedVia: '', startAt: null, endAt: null, dateTbd: false, prevStatus: '' });
+  const d = fixQuote({ ...clone(q), id: uid(), createdAt: Date.now(), updatedAt: Date.now(), status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false, approvedVia: '', startAt: null, endAt: null, dateTbd: false, dates: [], days: 1, prevStatus: '' });
   d.items = d.items.map(i => ({ ...i, id: uid() }));
   settings.seq = (settings.seq || 0) + 1; d.num = settings.seq; saveSettings();
   quotes.unshift(d); saveQuotes();
@@ -1359,7 +1574,7 @@ function deleteQuote(q) {
 }
 
 /* ================= tela: orçamentos ================= */
-let homeFilter = 'aberto', homeQuery = '';
+let homeFilter = 'todos', homeQuery = '';
 const pill = st => `<span class="pill st-${st}">${STATUS[st]}</span>`;
 function quoteCard(q) {
   const c = compute(q);
@@ -1424,7 +1639,7 @@ VIEWS.home = {
       ${needMe ? `<div class="banner b-tip"><p><b>Seu nome ainda não sai na proposta.</b> Preencha seus dados e chave Pix em Ajustes.</p><div class="banner-act"><button class="btn sm dark" data-aj="conta">Preencher meus dados</button></div></div>` : ''}
       <div class="toolbar">
         ${quotes.length > 4 ? `<label class="search">${I.search}<input type="search" id="h-q" placeholder="Buscar cliente, serviço ou número" value="${esc(homeQuery)}" aria-label="Buscar orçamento"></label>` : ''}
-        <div class="chips scroll" role="group" aria-label="Filtrar">${[['aberto', 'Em aberto'], ['concluido', 'Concluídos'], ['recusado', 'Recusados'], ['todos', 'Todos']].map(([k, l]) => `<button class="chip" data-filter="${k}" aria-pressed="${homeFilter === k}">${l} <span class="n">${cnt(k)}</span></button>`).join('')}</div>
+        <div class="chips scroll" role="group" aria-label="Filtrar">${[['todos', 'Todos'], ['aberto', 'Em aberto'], ['concluido', 'Concluídos'], ['recusado', 'Recusados']].map(([k, l]) => `<button class="chip" data-filter="${k}" aria-pressed="${homeFilter === k}">${l} <span class="n">${cnt(k)}</span></button>`).join('')}</div>
         ${KitFacil.ui.criar({ rotulo: 'Novo orçamento', attrs: 'data-new' })}
       </div>
       <div class="qlist" id="q-list">${homeListHTML()}</div>
@@ -1669,7 +1884,7 @@ const payShort = p => ({ avista: 'À vista', entrada: `Entrada de ${p.entryPct}%
 function nextBtn(q, from) {
   const order = isReport(q) ? ['cli', 'tech', 'items', 'val', 'cond', 'notes'] : ['cli', 'items', 'val', 'cond', 'notes'];
   const k = order[order.indexOf(from) + 1]; if (!k) return '';
-  const T = { tech: 'relatório técnico', items: q.useRooms ? 'ambientes e itens' : 'serviços e material', val: 'valores', cond: isReport(q) ? 'pagamento e garantia' : 'pagamento, datas e garantia', notes: 'observações' };
+  const T = { tech: 'relatório técnico', items: q.useRooms ? 'ambientes e itens' : 'serviços e material', val: 'valores', cond: isReport(q) ? 'datas, pagamento e garantia' : 'pagamento, datas e garantia', notes: 'observações' };
   return `<button class="btn ghost next-btn" data-next="q:${q.id}:${k}">Próximo: ${T[k]}${I.arrow}</button>`;
 }
 function quoteSums(q, c) {
@@ -1684,7 +1899,7 @@ function quoteSums(q, c) {
     diag: firstLine(q.diag, 'Toque para preencher'), work: firstLine(q.work, 'Toque para preencher'), recs: firstLine(q.recs, 'Toque para preencher'), tests: testsSum(q),
     val: val.length ? capFirst(val.join(' · ')) : 'Adicionais, deslocamento e desconto',
     valR: BRL(c.total),
-    cond: [payShort(q.payment), !rep && (q.dateTbd ? 'datas a combinar' : q.startAt ? `início ${ds(q.startAt)}` : ''), q.warranty ? `garantia ${q.warranty} dias` : 'sem garantia'].filter(Boolean).join(' · '),
+    cond: [payShort(q.payment), (!rep && q.dateTbd) ? 'datas a combinar' : q.dates.length ? (q.dates.length > 1 ? `${plural(q.dates.length, 'dia', 'dias')} a partir de ${ds(q.dates[0])}` : `dia ${ds(q.dates[0])}`) + (daysOk(q) ? '' : ' · confira os dias') : '', q.warranty ? `garantia ${q.warranty} dias` : 'sem garantia'].filter(Boolean).join(' · '),
     notes: firstLine(q.notes, 'Nada anotado'),
   };
 }
@@ -1702,7 +1917,7 @@ function statusBanner(q, c) {
   if (q.status === 'concluido') {
     const pr = pixOf(q, c, 'report');
     return `<div class="banner b-done">
-    <div class="done-row"><label for="q-donedate"><b>Executado em</b></label><input id="q-donedate" type="date" value="${dateInput(q.doneAt)}" max="${dateInput(Date.now())}"></div>
+    <div class="done-row"><p><b>Executado em</b> <span id="q-donetxt">${esc(execText(q))}</span></p><button class="btn sm ghost" data-goto-days>${I.cal}Alterar datas</button></div>
     <div class="banner-act"><button class="btn sm dark" data-receipt>${I.receipt}Gerar recibo</button>${pr ? `<button class="btn sm ghost" data-pix-rest>${I.pix}Pix d${pr.what}</button>` : ''}</div>
     <button class="linkish" data-undone style="color:var(--muted);font-size:14px">${q.prevStatus && q.prevStatus !== 'rascunho' ? 'Desfazer conclusão' : 'Transformar em orçamento'}</button>
   </div>`;
@@ -1783,12 +1998,83 @@ function valuesHTML(q, c) {
       <div class="vrow total"><span>Total</span><b data-t="total">${BRL(c.total)}</b></div>
     </div>`;
 }
+/* dias de serviço: quantos dias e quais (podem ser dias não seguidos) */
+const calMonth = {};
+function daysBlockHTML(q) {
+  const rep = isReport(q), off = !rep && q.dateTbd;
+  return `<div class="field sched" id="q-days-blk"><span class="lab">${rep ? 'Dias trabalhados' : 'Datas do serviço'}</span>
+    <div class="days-row"><label for="q-days">${rep ? 'Quantos dias de serviço' : 'Dias de serviço'}</label>
+      <div class="stepper"><button data-days="-1" aria-label="Menos um dia" ${q.days <= 1 || off ? 'disabled' : ''}>${I.minus}</button><input id="q-days" type="text" inputmode="numeric" value="${q.days}" aria-label="Dias de serviço" ${off ? 'disabled' : ''}><button data-days="1" aria-label="Mais um dia" ${q.days >= 99 || off ? 'disabled' : ''}>${I.plus}</button></div></div>
+    <div class="cal-wrap" id="cal">${off ? '' : calHTML(q)}</div>
+    <div id="cal-msg" aria-live="polite">${off ? '' : calMsgHTML(q)}</div>
+    ${rep ? '' : `<label class="switch-row" for="q-tbd"><span><b>Combinar na aprovação</b><small>Quando ainda não dá para marcar as datas.</small></span><input type="checkbox" class="sw" id="q-tbd" ${q.dateTbd ? 'checked' : ''}></label>
+    <p class="hint" id="q-cdc" ${q.dateTbd || q.dates.length ? 'hidden' : ''}>O Código de Defesa do Consumidor pede as datas de início e término no orçamento.</p>`}
+  </div>`;
+}
+function calHTML(q) {
+  const base = new Date(calMonth[q.id] || q.dates[0] || Date.now()); base.setDate(1); base.setHours(12, 0, 0, 0);
+  const y = base.getFullYear(), m = base.getMonth(), first = base.getDay(), n = new Date(y, m + 1, 0).getDate();
+  const hoje = dayTs(Date.now()), rep = isReport(q), sel = new Set(q.dates);
+  const nome = capFirst(base.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }));
+  let cells = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, k) => `<span class="cal-w" aria-hidden="true" title="${['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'][k]}">${d}</span>`).join('');
+  cells += '<span></span>'.repeat(first);
+  for (let d = 1; d <= n; d++) {
+    const t = new Date(y, m, d, 12).getTime(), on = sel.has(t), fut = rep && t > hoje;
+    const nomeDia = new Date(t).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    cells += `<button class="cal-d${t === hoje ? ' hoje' : ''}" data-cal="${t}" aria-pressed="${on}" aria-label="${esc(nomeDia)}${t === hoje ? ', hoje' : ''}" ${fut ? 'disabled' : ''}><span>${d}</span></button>`;
+  }
+  return `<div class="cal-h"><button class="icon-btn" data-calm="-1" aria-label="Mês anterior">${I.left}</button><b aria-live="polite">${esc(nome)}</b><button class="icon-btn" data-calm="1" aria-label="Próximo mês">${I.chev}</button></div>
+    <div class="cal-g" role="group" aria-label="Dias de ${esc(nome)}. Toque nos dias de serviço.">${cells}</div>`;
+}
+function calMsgHTML(q) {
+  const n = q.dates.length;
+  if (!n) return `<p class="hint">Toque no calendário para marcar ${q.days > 1 ? `os ${q.days} dias` : 'o dia'} de serviço. Dá para escolher dias que não são seguidos.</p>`;
+  if (!daysOk(q)) return `<div class="cal-msg bad" role="alert">${I.warn}<span><b>Os dias não conferem.</b> ${esc(daysMismatch(q))} <button class="linkish" data-days-fix>Mudar para ${plural(n, 'dia', 'dias')}</button></span></div>`;
+  return `<div class="cal-msg">${I.check}<span><b>${plural(n, 'dia marcado', 'dias marcados')}:</b> ${esc(datesText(q.dates))}${n > 1 && !seguidos(q.dates) ? ' (dias não seguidos)' : ''}</span></div>`;
+}
+function bindDays(v, q) {
+  const blk = $('#q-days-blk', v); if (!blk) return;
+  const sync = () => {
+    q.dates.sort((a, b) => a - b);
+    q.startAt = q.dates[0] || null; q.endAt = q.dates[q.dates.length - 1] || null;
+    if (isReport(q) && q.dates.length) q.doneAt = q.endAt;
+    touch(q);
+    $('#cal-msg', v).innerHTML = calMsgHTML(q);
+    const dt = $('#q-donetxt', v); if (dt) dt.textContent = execText(q);
+    const cdc = $('#q-cdc', v); if (cdc) cdc.hidden = !!q.dates.length;
+    const di = $('#q-days', v); if (di && document.activeElement !== di) di.value = q.days;
+    $$('[data-days]', v).forEach(b => b.disabled = (+b.dataset.days < 0 && q.days <= 1) || (+b.dataset.days > 0 && q.days >= 99));
+    v.dispatchEvent(new Event('change'));
+  };
+  blk.addEventListener('click', e => {
+    const d = e.target.closest('[data-cal]');
+    if (d) {
+      const t = +d.dataset.cal, k = q.dates.indexOf(t);
+      if (k >= 0) q.dates.splice(k, 1); else q.dates.push(t);
+      d.setAttribute('aria-pressed', k < 0);
+      // um dia só: marcar outro troca o dia, sem precisar desmarcar o anterior
+      if (k < 0 && q.days === 1 && q.dates.length === 2) { const old = q.dates.find(x => x !== t); q.dates = [t]; $(`[data-cal="${old}"]`, v)?.setAttribute('aria-pressed', 'false'); }
+      vibrate(); sync(); return;
+    }
+    const mo = e.target.closest('[data-calm]');
+    if (mo) {
+      const b = new Date(calMonth[q.id] || q.dates[0] || Date.now()); b.setDate(1); b.setMonth(b.getMonth() + +mo.dataset.calm); calMonth[q.id] = b.getTime();
+      $('#cal', v).innerHTML = calHTML(q); $(`[data-calm="${mo.dataset.calm}"]`, v)?.focus(); return;
+    }
+    const st = e.target.closest('[data-days]');
+    if (st) { q.days = Math.max(1, Math.min(99, q.days + +st.dataset.days)); sync(); return; }
+    if (e.target.closest('[data-days-fix]')) { q.days = Math.max(1, q.dates.length); sync(); toast(`Dias de serviço: ${q.days}.`); }
+  });
+  const di = $('#q-days', v);
+  di?.addEventListener('input', () => { const n = parseInt(di.value.replace(/\D/g, ''), 10); if (n >= 1) { q.days = Math.min(99, n); sync(); } });
+  di?.addEventListener('change', () => { di.value = q.days; });
+}
 VIEWS.quote = {
   html(r) {
     const q = getQ(r.id), c = compute(q), S = quoteSums(q, c);
     return `<header class="kf-barra appbar"><div class="kf-barra-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
-      <div class="ab-title"><span class="ab-eyebrow">${q.example ? 'Exemplo' : (isReport(q) ? 'Relatório ' : 'Orçamento ') + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-main" id="ab-name">${esc(q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'))}</span></div>
+      <div class="ab-title"><span class="ab-row"><span class="ab-eyebrow">${q.example ? 'Exemplo' : `<span class="ab-tipo">${isReport(q) ? 'Relatório' : 'Orçamento'} </span>` + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-saved" id="ab-saved" role="status" aria-label="Alterações salvas neste aparelho">${I.check}<span>Salvo</span></span></span><span class="ab-main" id="ab-name">${esc(q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'))}</span></div>
       <button class="icon-btn" data-menu aria-label="Mais opções">${I.more}</button>
       ${KitFacil.topo.html({ principal: false })}
     </div></header>
@@ -1810,21 +2096,14 @@ VIEWS.quote = {
       ${panel(`q:${q.id}:items`, 'items', q.useRooms ? 'Ambientes e itens' : 'Serviços e material', S.items, roomToggleHTML(q) + (q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)) + nextBtn(q, 'items'), { def: !!q.client.name && !q.items.length, right: S.itemsR })}
       ${panel(`q:${q.id}:val`, 'val', 'Valores', S.val, valuesHTML(q, c) + nextBtn(q, 'val'), { right: S.valR })}
 
-      ${panelOpen(`q:${q.id}:cond`, 'cond', isReport(q) ? 'Pagamento e garantia' : 'Pagamento, datas e garantia', S.cond, { attrs: ' id="h-cond"' })}
+      ${panelOpen(`q:${q.id}:cond`, 'cond', isReport(q) ? 'Datas, pagamento e garantia' : 'Pagamento, datas e garantia', S.cond, { attrs: ' id="h-cond"' })}
         <div class="field"><span class="lab">Pagamento</span>
           <div class="seg" role="group" aria-label="Forma de pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${q.payment.mode === k}">${l}</button>`).join('')}</div>
         </div>
         ${payBlockHTML(q, c)}
-        ${isReport(q) ? '' : `<div class="field"><label for="q-dead">Prazo de execução</label><input id="q-dead" type="text" placeholder="Ex.: 2 dias úteis" value="${esc(q.deadline)}">
+        ${isReport(q) ? daysBlockHTML(q) : `<div class="field"><label for="q-dead">Prazo de execução</label><input id="q-dead" type="text" placeholder="Ex.: 2 dias úteis" value="${esc(q.deadline)}">
           <div class="chips">${DEADLINES.map(t => `<button class="chip" data-dl="${esc(t)}" aria-pressed="${q.deadline === t}">${t}</button>`).join('')}</div></div>
-        <div class="field sched"><span class="lab">Datas do serviço</span>
-          <div class="grid2">
-            <div class="field"><label for="q-start">Início</label><input id="q-start" type="date" value="${q.startAt ? dateInput(q.startAt) : ''}" ${q.dateTbd ? 'disabled' : ''}></div>
-            <div class="field"><label for="q-end">Término</label><input id="q-end" type="date" value="${q.endAt ? dateInput(q.endAt) : ''}" ${q.dateTbd ? 'disabled' : ''}></div>
-          </div>
-          <label class="switch-row" for="q-tbd"><span><b>Combinar na aprovação</b><small>Quando ainda não dá para marcar as datas.</small></span><input type="checkbox" class="sw" id="q-tbd" ${q.dateTbd ? 'checked' : ''}></label>
-          ${!q.dateTbd && !q.startAt ? '<p class="hint">O Código de Defesa do Consumidor pede as datas de início e término no orçamento.</p>' : ''}
-        </div>`}
+        ${daysBlockHTML(q)}`}
         <div class="grid2">
           <div class="field"><label for="q-war">Garantia (dias)</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
           ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade (dias)</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
@@ -1852,7 +2131,14 @@ VIEWS.quote = {
       paintSums(v, quoteSums(q, c));
     };
     ['input', 'change'].forEach(ev => v.addEventListener(ev, () => requestAnimationFrame(paint)));
-    v.addEventListener('click', e => { const b = e.target.closest('[data-next]'); if (!b) return; const d = $(`details[data-panel="${b.dataset.next}"]`, v); if (d) d.open = true; });
+    v.addEventListener('click', e => {
+      const b = e.target.closest('[data-next]'); if (!b) return;
+      const d = $(`details[data-panel="${b.dataset.next}"]`, v); if (!d) return;
+      foldOpen(d, { always: true });
+      const sm = $(':scope > summary', d);
+      sm.focus({ preventScroll: true });
+      if (!semMovimento()) { sm.classList.remove('chegou'); void sm.offsetWidth; sm.classList.add('chegou'); setTimeout(() => sm.classList.remove('chegou'), 1000); }
+    });
     $('[data-back]', v).onclick = () => back('/');
     $('[data-menu]', v).onclick = () => quoteMenu(q);
     $('[data-preview]', v).onclick = () => go('/q/' + q.id + '/proposta');
@@ -1916,20 +2202,12 @@ VIEWS.quote = {
     $$('[data-dl]', v).forEach(b => b.onclick = () => { q.deadline = dl.value = b.dataset.dl; touch(q); $$('[data-dl]', v).forEach(c => c.setAttribute('aria-pressed', c === b)); });
     $('#q-war', v).addEventListener('input', e => { q.warranty = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
     $('#q-val', v)?.addEventListener('input', e => { q.validity = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
-    // datas do serviço
-    $('#q-start', v)?.addEventListener('change', e => {
-      q.startAt = parseDay(e.target.value);
-      if (q.startAt && (!q.endAt || q.endAt < q.startAt)) { q.endAt = q.startAt; $('#q-end', v).value = e.target.value; }
-      touch(q); if (q.startAt) rerender();
-    });
-    $('#q-end', v)?.addEventListener('change', e => {
-      q.endAt = parseDay(e.target.value); touch(q);
-      if (q.endAt && q.startAt && q.endAt < q.startAt) toast('O término está antes do início. Confira as datas.');
-    });
+    // datas do serviço: dias de serviço e calendário
+    bindDays(v, q);
     $('#q-tbd', v)?.addEventListener('change', e => { q.dateTbd = e.target.checked; touch(q); rerender(); });
     // serviço já realizado: vira relatório; desfazer volta para a situação anterior
     $('#q-done', v)?.addEventListener('change', e => { if (!e.target.checked) return; setStatus(q, 'concluido'); rerender(); window.scrollTo({ top: 0 }); toast('Agora é um Relatório de Serviços Executados.'); });
-    $('#q-donedate', v)?.addEventListener('change', e => { if (!e.target.value) return; q.doneAt = new Date(e.target.value + 'T12:00').getTime(); touch(q); toast('Data de execução salva.'); });
+    $('[data-goto-days]', v)?.addEventListener('click', () => { const d = $(`details[data-panel="q:${q.id}:cond"]`, v); foldOpen(d, { always: true }); setTimeout(() => $('#cal', v)?.querySelector('[aria-pressed="true"], button.cal-d:not([disabled])')?.focus({ preventScroll: true }), 320); });
     $('[data-undone]', v)?.addEventListener('click', () => {
       const prev = q.prevStatus && q.prevStatus !== 'concluido' ? q.prevStatus : 'rascunho';
       setStatus(q, prev); rerender(); toast(`Voltou para ${STATUS[prev].toLowerCase()}. O documento é orçamento de novo.`);
@@ -2039,7 +2317,7 @@ function pickerSheet(q, kind, room) {
     const qf = fold(query);
     const list = prices.filter(p => p.kind === k && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
     const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name) && (!inRoom || roomOf(q, i) === room)).map(i => i.qty));
-    const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}</span><span class="pk-price">${BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
+    const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st">${p.stock > 0 ? `${fmtQty(p.stock)} em estoque` : 'em falta no estoque'}</small>` : ''}</span><span class="pk-price">${BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
     return (rows || KitFacil.ui.vazio({ titulo: `Nada com “${esc(query)}”`, texto: `na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}. Adicione como item fora da tabela.` }))
       + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}${query ? `Adicionar “${esc(query)}”` : `${k === 'svc' ? 'Serviço' : 'Material'} fora da tabela`}</button>`;
   };
@@ -2279,7 +2557,7 @@ function paperHTML(q, c, mode = docMode(q)) {
   return `<article class="paper" aria-label="Prévia do documento">
     <header class="p-head${rep ? ' long' : ''}">
       <div class="p-brand"><div class="p-mark">${s.logo ? `<img src="${s.logo}" alt="">` : APP_MARK}</div><div class="p-who"><b>${esc(biz || 'Seu nome ou empresa')}</b>${sub.map(x => `<span>${esc(x)}</span>`).join('')}</div></div>
-      <div class="p-num"><span>${DOC[mode].title}</span><b>${esc(numLabel(q))}</b><small>${rep ? 'Executado em ' + fmtDate(q.doneAt) : fmtDate(q.createdAt)}</small></div>
+      <div class="p-num"><span>${DOC[mode].title}</span><b>${esc(numLabel(q))}</b><small>${rep ? execHead(q) : fmtDate(q.createdAt)}</small></div>
     </header>
     <div class="p-rule"></div>
     <div class="p-parties">
@@ -2303,7 +2581,7 @@ function paperHTML(q, c, mode = docMode(q)) {
       <div class="p-grand"><span>TOTAL</span><span>${BRL(c.total)}</span></div>
     </div>
     <dl class="p-cond">
-      ${rep ? `<dt>Execução</dt><dd>${fmtDate(q.doneAt)}</dd>` : ''}
+      ${rep ? `<dt>Execução</dt><dd>${esc(capFirst(execText(q)))}</dd>` : ''}
       ${rep && approvalText(q) ? `<dt>Aprovação</dt><dd>${esc(approvalText(q))}</dd>` : ''}
       <dt>Pagamento</dt><dd>${esc(payText(q, c))}</dd>
       ${!rep && schedText(q) ? `<dt>Execução</dt><dd>${esc(schedText(q))}</dd>` : ''}
@@ -2331,6 +2609,7 @@ VIEWS.preview = {
     if (!settings.name && !settings.company) warn.push('Seu nome e telefone ainda não aparecem no cabeçalho.');
     if (!q.client.name) warn.push('Falta o nome do cliente.');
     if (!q.items.length) warn.push('Nenhum item lançado.');
+    if (!daysOk(q)) warn.push('Os dias marcados não conferem com os dias de serviço.');
     return `<header class="kf-barra appbar"><div class="kf-barra-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
       <div class="ab-title"><span class="ab-eyebrow">${mode === 'report' ? 'Relatório' : 'Proposta'} · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Cliente sem nome')}</span></div>
@@ -2342,6 +2621,8 @@ VIEWS.preview = {
       ${isReport(q) ? `<div class="seg doc-seg" role="group" aria-label="Documento"><button data-doc="report" aria-pressed="${mode === 'report'}">Relatório de serviços</button><button data-doc="quote" aria-pressed="${mode === 'quote'}">Orçamento original</button></div>` : ''}
       ${paperHTML(q, c, mode)}
       <p class="foot-note">O PDF sai em folha A4, com este mesmo conteúdo.</p>
+      <button class="btn dark block concluir" data-concluir>${I.check}Concluir e voltar à lista</button>
+      <p class="foot-note">Tudo o que você preencheu já está salvo neste aparelho.</p>
     </main>
     <div class="bbar"><div class="bbar-in acts">
       <button class="btn primary" data-pdf>${I.share}Enviar PDF</button>
@@ -2355,6 +2636,13 @@ VIEWS.preview = {
     fitMark(v);
     $('[data-back]', v).onclick = () => back('/q/' + q.id);
     $('[data-edit]', v).onclick = () => back('/q/' + q.id);
+    $('[data-concluir]', v).onclick = () => {
+      saveQuotes();
+      const msg = isEmptyQuote(q) ? 'Nada preenchido: o documento vazio foi descartado.' : `${isReport(q) ? 'Relatório' : 'Orçamento'} salvo${syncOn() ? '' : ' neste aparelho'}.`;
+      const d = (history.state && history.state.d) || 0;
+      if (d >= 2) history.go(-2); else go('/', true);
+      setTimeout(() => toast(msg), 60);
+    };
     $('[data-me]', v)?.addEventListener('click', () => KitFacil.ajustes.ir('conta'));
     const cv = $('canvas[data-qr]', v);
     $$('[data-doc]', v).forEach(b => b.onclick = () => { previewDoc[q.id] = b.dataset.doc; rerender(); });
@@ -2408,7 +2696,7 @@ const signature = () => [settings.name, settings.company && settings.company !==
 function quoteMessage(q, c, mode = docMode(q)) {
   const L = [], fn = firstName(q.client.name), rep = mode === 'report';
   const line = (i, tag) => `• ${i.name}${tag && i.kind === 'mat' ? ' (material)' : ''}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)} = ${BRL(lineTotal(i))}`;
-  L.push(rep ? `Olá${fn ? ', ' + fn : ''}! Segue o relatório dos serviços executados${q.doneAt ? ' em ' + fmtDate(q.doneAt) : ''} (${numLabel(q)}${q.title ? ' – ' + q.title : ''}).`
+  L.push(rep ? `Olá${fn ? ', ' + fn : ''}! Segue o relatório dos serviços executados${q.dates.length > 1 ? ' ' + (seguidos(q.dates) ? '' : 'em ') + execText(q) : q.doneAt ? ' em ' + fmtDate(q.doneAt) : ''} (${numLabel(q)}${q.title ? ' – ' + q.title : ''}).`
     : `Olá${fn ? ', ' + fn : ''}! Segue o orçamento ${numLabel(q)}${q.title ? ' – ' + q.title : ''}.`);
   if (rep && q.diag.trim()) L.push('', '*Diagnóstico:*', q.diag.trim());
   if (rep && q.work.trim()) L.push('', '*Serviços realizados:*', q.work.trim());
@@ -2611,7 +2899,7 @@ async function buildQuotePDF(q, mode = docMode(q)) {
   const c = compute(q), px = pixOf(q, c, mode);
   let qr = null; if (px) { try { qr = await qrMatrix(pixPayload(px)); } catch {} }
   const K = pdfKit(JsPDF), { doc, H, M, CW, txt, wrap, lh, label } = K;
-  let y = pdfHeader(K, DOC[mode].title, numLabel(q), [rep ? `Executado em ${fmtDate(q.doneAt)}` : fmtDate(q.createdAt)]);
+  let y = pdfHeader(K, DOC[mode].title, numLabel(q), [rep ? execHead(q) : fmtDate(q.createdAt)]);
   const bottom = H - 19;
   const need = h => { if (y + h > bottom) { doc.addPage(); y = M + 2; return true; } return false; };
 
@@ -2733,7 +3021,7 @@ async function buildQuotePDF(q, mode = docMode(q)) {
   y = Math.max(y + 11.5, px && qr ? top + Math.max(totH, 32) : 0) + 7.5;
 
   // condições
-  const conds = [rep && ['Execução', fmtDate(q.doneAt)], rep && approvalText(q) && ['Aprovação', approvalText(q)], ['Pagamento', payText(q, c)], !rep && schedText(q) && ['Execução', schedText(q)], !rep && q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', warrantyText(q, mode)], !rep && q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
+  const conds = [rep && ['Execução', capFirst(execText(q))], rep && approvalText(q) && ['Aprovação', approvalText(q)], ['Pagamento', payText(q, c)], !rep && schedText(q) && ['Execução', schedText(q)], !rep && q.deadline && ['Prazo de execução', q.deadline], q.warranty && ['Garantia', warrantyText(q, mode)], !rep && q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
   need(14); label(rep ? 'Informações' : 'Condições', M, y); y += 5.6;
   conds.forEach(([l, v]) => {
     const L = wrap(v, CW - 42, 9.5);
@@ -2928,7 +3216,7 @@ function priceListHTML() {
   const list = prices.filter(p => p.kind === priceKind && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
   if (!list.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum item encontrado', texto: 'Confira o nome do item ou da categoria.' } : { titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo item</b> para cadastrar.' });
   return groupByCat(list).map(([cat, L]) => panel(`pr:${priceKind}:${cat}`, '', esc(cat), qf ? null : L.slice(0, 3).map(p => p.name).join(' · ') + (L.length > 3 ? '…' : ''),
-    `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}</small></span><span class="prow-price">${BRL(p.price)}</span></button>`).join('')}</div>`,
+    `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${inStock(p) ? ` · ${p.stock > 0 ? `${fmtQty(p.stock)} em estoque` : 'em falta no estoque'}` : ''}</small></span><span class="prow-price">${BRL(p.price)}</span></button>`).join('')}</div>`,
     { multi: true, right: `<span class="card-sum">${L.length}</span>`, force: qf ? true : undefined })).join('');
 }
 VIEWS.prices = {
@@ -2962,7 +3250,8 @@ function priceSheet(p) {
         <div class="field"><label for="pp-price">Preço</label><input id="pp-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${it.price ? BRL(it.price) : ''}"></div>
         <div class="field"><label for="pp-unit">Cobrado por</label><select id="pp-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === it.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       </div>
-      <div class="field"><label for="pp-cat">Categoria</label><input id="pp-cat" type="text" value="${esc(it.cat)}" placeholder="Ex.: Iluminação" autocomplete="off"></div>`,
+      <div class="field"><label for="pp-cat">Categoria</label><input id="pp-cat" type="text" value="${esc(it.cat)}" placeholder="Ex.: Iluminação" autocomplete="off"></div>
+      ${p && inStock(p) ? `<p class="hint">No estoque: ${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}${p.cost ? `, custo ${BRL(p.cost)}` : ''}. O preço daqui é o repasse ao cliente. Altere a quantidade e o custo em Gestão.</p>` : ''}`,
     foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
     onMount: s => {
       if (!isTouch) $(isNew ? '#pp-name' : '#pp-price', s).focus();
@@ -3012,6 +3301,215 @@ function adjustSheet() {
     } });
 }
 
+/* ================= tela: gestão (estoque, ferramentas e checklist) ================= */
+// estoque = materiais da tabela de preços com quantidade guardada; o preço de repasse é o próprio preço da tabela
+let gestaoAba = 'estoque', gestaoQuery = '', checkLado = 'ida';
+const GESTAO = {
+  estoque: { nome: 'Estoque', criar: 'Novo material', sub: 'O material que você tem guardado, com custo e preço de repasse.' },
+  ferramentas: { nome: 'Ferramentas', criar: 'Nova ferramenta', sub: 'As ferramentas que você tem e as que quer comprar.' },
+  checklist: { nome: 'Checklist', criar: 'Novo item', sub: 'Confira o que levar antes de ir e o que trazer antes de voltar da obra.' },
+};
+const margem = p => p.cost > 0 ? Math.round((p.price - p.cost) / p.cost * 100) : null;
+const margemTxt = p => { const m = margem(p); return m === null ? '' : m >= 0 ? `margem +${m}%` : `abaixo do custo (${m}%)`; };
+function stockListHTML() {
+  const qf = fold(gestaoQuery), all = prices.filter(inStock);
+  if (!all.length) return KitFacil.ui.vazio({ titulo: 'Nenhum material no estoque', texto: 'Toque em <b>Novo material</b> e cadastre o que você tem guardado, com o custo e o preço de repasse para o cliente.', icone: I.box });
+  const list = all.filter(p => !qf || fold([p.name, p.brand, p.cat].join(' ')).includes(qf));
+  const custo = sum(all.map(p => Math.round((p.cost || 0) * p.stock))), repasse = sum(all.map(p => Math.round(p.price * p.stock)));
+  const falta = all.filter(p => p.stock <= 0).length;
+  const resumo = `<div class="g-sum" role="group" aria-label="Resumo do estoque">
+      <div><b>${all.length}</b><span>${all.length === 1 ? 'material' : 'materiais'}</span></div>
+      <div><b>${BRL(custo)}</b><span>pago (custo)</span></div>
+      <div><b>${BRL(repasse)}</b><span>no repasse</span></div>
+    </div>${falta ? `<p class="g-alert">${I.warn}<span>${plural(falta, 'material está', 'materiais estão')} em falta (quantidade zero).</span></p>` : ''}`;
+  const busca = all.length > 6 ? `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar material, marca ou categoria" value="${esc(gestaoQuery)}" aria-label="Buscar no estoque"></label>` : '';
+  const rows = list.length ? groupByCat(list).map(([cat, L]) => `<div class="g-card"><div class="pk-cat">${esc(cat)}</div><div class="plist">${L.map(p => `<button class="prow" data-sid="${p.id}">
+      <span><b>${hl(p.name, qf)}</b><small>${[p.brand && esc(p.brand), p.cost ? `custo ${BRL(p.cost)}` : 'sem custo', `repasse ${BRL(p.price)}`, margemTxt(p)].filter(Boolean).join(' · ')}</small></span>
+      <span class="prow-price${p.stock <= 0 ? ' g-zero' : ''}">${p.stock <= 0 ? `${I.warn}Em falta` : `${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}`}</span></button>`).join('')}</div></div>`).join('')
+    : KitFacil.ui.vazio({ titulo: 'Nenhum material encontrado', texto: 'Confira o nome, a marca ou a categoria.' });
+  return resumo + busca + `<div id="g-list" class="g-list">${rows}</div>`;
+}
+function stockSheet(p) {
+  const isNew = !p;
+  const it = p ? { ...p } : { kind: 'mat', cat: '', name: '', unit: 'un', price: 0, cost: 0, brand: '', stock: 1 };
+  let link = p ? p.id : '';
+  const cats = () => [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))];
+  const margemHTML = (cost, price) => {
+    if (!cost || price === null) return '<span class="hint">Com o custo e o repasse, o app mostra a sua margem.</span>';
+    const m = Math.round((price - cost) / cost * 100);
+    return m >= 0 ? `${I.check}<span>Margem de <b>${m}%</b>: ${BRL(price - cost)} por unidade.</span>` : `${I.warn}<span><b>Repasse abaixo do custo.</b> Você perde ${BRL(cost - price)} por unidade.</span>`;
+  };
+  openSheet({ title: isNew ? 'Novo material no estoque' : 'Material no estoque', body: `
+      <div class="field"><label for="st-name">Material</label><input id="st-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Disjuntor 20 A" autocomplete="off"></div>
+      <div class="field"><label for="st-brand">Marca (opcional)</label><input id="st-brand" type="text" value="${esc(it.brand || '')}" placeholder="Ex.: Steck" autocomplete="off"></div>
+      <div class="grid2">
+        <div class="field"><label for="st-qty">Quantidade</label><div class="stepper" style="width:100%"><button data-sq="-1" aria-label="Menos">${I.minus}</button><input id="st-qty" type="text" inputmode="decimal" value="${fmtQty(it.stock)}" style="flex:1;width:auto"><button data-sq="1" aria-label="Mais">${I.plus}</button></div></div>
+        <div class="field"><label for="st-unit">Unidade</label><select id="st-unit">${UNITS.filter(([u]) => !['ponto', 'h', 'vb'].includes(u)).map(([u, l]) => `<option value="${esc(u)}" ${u === it.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="st-cost">Custo de compra (por unidade)</label><input id="st-cost" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${it.cost ? BRL(it.cost) : ''}"></div>
+        <div class="field"><label for="st-price">Repasse ao cliente (por unidade)</label><input id="st-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${it.price ? BRL(it.price) : ''}"></div>
+      </div>
+      <p class="g-margin" id="st-margin" aria-live="polite">${margemHTML(it.cost, it.price || null)}</p>
+      <div class="field"><label for="st-cat">Categoria</label><input id="st-cat" type="text" value="${esc(it.cat)}" placeholder="Ex.: Proteção" autocomplete="off"></div>
+      <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos: mudou aqui, muda lá.</p>`,
+    foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Tirar do estoque</button><button class="btn primary" data-save>Salvar</button>`,
+    onMount: s => {
+      if (!isTouch) $('#st-name', s).focus();
+      const paintM = () => { $('#st-margin', s).innerHTML = margemHTML(parseMoney($('#st-cost', s).value) || 0, parseMoney($('#st-price', s).value)); };
+      ['#st-cost', '#st-price'].forEach(sel => $(sel, s).addEventListener('input', paintM));
+      // material que já está na tabela de preços: liga ao mesmo item
+      attachSuggest($('#st-name', s), () => prices.filter(x => x.kind === 'mat' && (!inStock(x) || x.id === link)).map(x => ({ label: x.name, right: `${BRL(x.price)}/${unitTxt(1, x.unit)}`, x })), o => {
+        link = o.x.id; $('#st-price', s).value = BRL(o.x.price); $('#st-cat', s).value = o.x.cat || '';
+        if ($(`#st-unit option[value="${CSS.escape(o.x.unit)}"]`, s)) $('#st-unit', s).value = o.x.unit;
+        paintM(); toast('Ligado ao item da sua tabela de preços.');
+      });
+      $('#st-name', s).addEventListener('input', () => { if (!p) link = ''; });
+      attachSuggest($('#st-cat', s), () => cats().map(c => ({ label: c })));
+      attachSuggest($('#st-brand', s), () => [...new Set(prices.filter(x => x.brand).map(x => x.brand))].map(b => ({ label: b })));
+      $$('[data-sq]', s).forEach(b => b.onclick = () => { const v = parseQty($('#st-qty', s).value) || 0; $('#st-qty', s).value = fmtQty(Math.max(0, Math.round((v + +b.dataset.sq) * 100) / 100)); });
+      $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const before = { stock: p.stock, cost: p.cost, brand: p.brand };
+        delete p.stock; delete p.cost; delete p.brand; savePrices(); closeSheet(true); rerender();
+        toast(`${p.name} saiu do estoque. Continua na tabela de preços.`, { label: 'Desfazer', run: () => { Object.assign(p, before); savePrices(); rerender(); } });
+      });
+      $('[data-save]', s).onclick = () => {
+        const name = $('#st-name', s).value.trim().replace(/\s+/g, ' '), price = parseMoney($('#st-price', s).value), cost = parseMoney($('#st-cost', s).value) || 0;
+        const qty = parseQty($('#st-qty', s).value);
+        if (!name) return toast('Escreva o nome do material.');
+        if (qty === null || qty < 0) return toast('Informe a quantidade. Use 0 se acabou.');
+        if (price === null) return toast('Informe o preço de repasse ao cliente.');
+        const data = { kind: 'mat', name, price, cost, stock: Math.round(qty * 100) / 100, brand: $('#st-brand', s).value.trim().replace(/\s+/g, ' '), unit: $('#st-unit', s).value, cat: $('#st-cat', s).value.trim().replace(/\s+/g, ' ') || 'Outros' };
+        if (!data.brand) delete data.brand;
+        let alvo = prices.find(x => x.id === link) || (isNew && prices.find(x => x.kind === 'mat' && norm(x.name) === norm(name)));
+        if (alvo && isNew && inStock(alvo)) return toast(`${alvo.name} já está no estoque. Toque nele na lista para alterar.`);
+        if (alvo) { if (!data.brand) delete alvo.brand; Object.assign(alvo, data); } else prices.push({ id: uid(), ...data });
+        savePrices(); closeSheet(true); rerender(); toast(isNew ? `${name} no estoque.` : 'Estoque salvo.');
+      };
+    } });
+}
+function toolsListHTML() {
+  if (!tools.length) return KitFacil.ui.vazio({ titulo: 'Nenhuma ferramenta cadastrada', texto: 'Toque em <b>Nova ferramenta</b> e cadastre as que você tem e as que pretende comprar.', icone: I.tool });
+  const row = t => `<div class="g-row"><button class="prow" data-tid="${t.id}"><span><b>${esc(t.name)}</b>${t.brand ? `<small>${esc(t.brand)}</small>` : ''}</span><span class="prow-price">${t.qty > 1 ? `${t.qty} un.` : '1 un.'}</span></button>${t.wish ? `<button class="btn sm ghost" data-comprei="${t.id}" aria-label="Já comprei ${esc(t.name)}">${I.check}Comprei</button>` : ''}</div>`;
+  const tenho = tools.filter(t => !t.wish).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')), quero = tools.filter(t => t.wish).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  return `<div class="g-card"><div class="pk-cat">Tenho · ${tenho.length}</div>${tenho.length ? `<div class="plist">${tenho.map(row).join('')}</div>` : '<p class="hint">Nenhuma ainda. Ao comprar uma da lista abaixo, toque em Comprei.</p>'}</div>
+    <div class="g-card"><div class="pk-cat">Quero comprar · ${quero.length}</div>${quero.length ? `<div class="plist">${quero.map(row).join('')}</div>` : '<p class="hint">Nada na lista. Ao cadastrar, ligue "Ainda vou comprar".</p>'}</div>`;
+}
+function toolSheet(t, wish) {
+  const isNew = !t;
+  const it = t ? { ...t } : { name: '', brand: '', qty: 1, wish: !!wish };
+  openSheet({ title: isNew ? 'Nova ferramenta' : 'Ferramenta', body: `
+      <div class="field"><label for="tl-name">Ferramenta</label><input id="tl-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Alicate amperímetro" autocomplete="off"></div>
+      <div class="field"><label for="tl-brand">Marca (opcional)</label><input id="tl-brand" type="text" value="${esc(it.brand)}" placeholder="Ex.: Minipa" autocomplete="off"></div>
+      <div class="field"><label for="tl-qty">Quantidade</label><div class="stepper"><button data-tq="-1" aria-label="Menos">${I.minus}</button><input id="tl-qty" type="text" inputmode="numeric" value="${it.qty}"><button data-tq="1" aria-label="Mais">${I.plus}</button></div></div>
+      <label class="switch-row" for="tl-wish"><span><b>Ainda vou comprar</b><small>Fica na lista "Quero comprar" até você marcar Comprei.</small></span><input type="checkbox" class="sw" id="tl-wish" ${it.wish ? 'checked' : ''}></label>`,
+    foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
+    onMount: s => {
+      if (!isTouch) $('#tl-name', s).focus();
+      attachSuggest($('#tl-brand', s), () => [...new Set(tools.filter(x => x.brand).map(x => x.brand))].map(b => ({ label: b })));
+      $$('[data-tq]', s).forEach(b => b.onclick = () => { const v = parseInt($('#tl-qty', s).value, 10) || 1; $('#tl-qty', s).value = Math.max(1, Math.min(999, v + +b.dataset.tq)); });
+      $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const idx = tools.findIndex(x => x.id === t.id); if (idx < 0) return;
+        const [gone] = tools.splice(idx, 1); saveTools(); closeSheet(true); rerender();
+        toast(`${gone.name} excluída.`, { label: 'Desfazer', run: () => { tools.splice(idx, 0, gone); saveTools(); rerender(); } });
+      });
+      $('[data-save]', s).onclick = () => {
+        const name = $('#tl-name', s).value.trim().replace(/\s+/g, ' ');
+        if (!name) return toast('Escreva o nome da ferramenta.');
+        const data = { name, brand: $('#tl-brand', s).value.trim().replace(/\s+/g, ' '), qty: Math.max(1, Math.min(999, parseInt($('#tl-qty', s).value, 10) || 1)), wish: $('#tl-wish', s).checked };
+        if (isNew) tools.push(fixTool({ id: uid(), ...data })); else Object.assign(tools.find(x => x.id === t.id) || {}, data);
+        saveTools(); closeSheet(true); rerender(); toast(isNew ? `${name} adicionada${data.wish ? ' à lista de compras' : ''}.` : 'Ferramenta salva.');
+      };
+    } });
+}
+const checkNome = c => { const t = c.toolId && tools.find(x => x.id === c.toolId); return t ? t.name : c.name; };
+function checklistHTML() {
+  const faltam = tools.filter(t => !t.wish && !checks.some(c => c.toolId === t.id));
+  const addTools = faltam.length ? `<button class="btn sm ghost" data-ck-tools>${I.plus}${checks.length ? `Adicionar ferramentas que faltam (${faltam.length})` : `Adicionar minhas ${plural(faltam.length, 'ferramenta', 'ferramentas')}`}</button>` : '';
+  if (!checks.length) return KitFacil.ui.vazio({ titulo: 'Checklist vazio', texto: 'Monte uma vez a lista do que sempre vai para a obra. Toque em <b>Novo item</b>' + (faltam.length ? ' ou adicione as suas ferramentas de uma vez.' : '.'), icone: I.checklist, acao: addTools });
+  const lista = checks.filter(c => checkLado === 'ida' || c.back);
+  const k = checkLado, feitos = lista.filter(c => c[k]).length, tot = lista.length, pct = tot ? Math.round(feitos / tot * 100) : 0;
+  return `<div class="seg" role="group" aria-label="Quando conferir"><button data-lado="ida" aria-pressed="${k === 'ida'}">Ida para a obra</button><button data-lado="volta" aria-pressed="${k === 'volta'}">Volta da obra</button></div>
+    <p class="hint">${k === 'ida' ? 'Antes de sair: marque o que já está no carro.' : 'Antes de ir embora: marque o que já recolheu. Só aparecem os itens que voltam.'}</p>
+    <div class="g-prog"><div class="g-prog-t"><b>${feitos} de ${tot}</b> conferidos</div><div class="g-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${feitos}" aria-label="Itens conferidos"><span style="width:${pct}%"></span></div></div>
+    ${tot && feitos === tot ? `<div class="cal-msg" role="status">${I.check}<span><b>Tudo conferido.</b> ${k === 'ida' ? 'Bom serviço!' : 'Nada ficou para trás.'}</span></div>` : ''}
+    <div class="g-card">${tot ? `<div class="ck-list">${lista.map(c => `<div class="ck-row"><label><input type="checkbox" data-ck="${c.id}" ${c[k] ? 'checked' : ''}><span>${esc(checkNome(c))}${checkLado === 'ida' && !c.back ? '<small>fica na obra</small>' : ''}</span></label><button class="icon-btn sm" data-ck-edit="${c.id}" aria-label="Alterar ${esc(checkNome(c))}">${I.more}</button></div>`).join('')}</div>` : '<p class="hint">Nenhum item volta da obra. Ao alterar um item, ligue "Conferir também na volta".</p>'}</div>
+    <div class="g-acts">${feitos ? `<button class="btn sm ghost" data-ck-reset>Desmarcar tudo</button>` : ''}${addTools}</div>`;
+}
+function checkSheet(c) {
+  const isNew = !c;
+  const it = c ? { ...c, name: checkNome(c) } : { name: '', back: true };
+  openSheet({ title: isNew ? 'Novo item no checklist' : 'Item do checklist', body: `
+      <div class="field"><label for="ck-name">Item</label><input id="ck-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Escada, fita isolante, multímetro" autocomplete="off" ${c && c.toolId && tools.some(t => t.id === c.toolId) ? 'readonly aria-describedby="ck-tool"' : ''}></div>
+      ${c && c.toolId && tools.some(t => t.id === c.toolId) ? '<p class="hint" id="ck-tool">O nome vem da sua lista de ferramentas.</p>' : ''}
+      <label class="switch-row" for="ck-back"><span><b>Conferir também na volta</b><small>Desligue para o que fica na obra, como material usado.</small></span><input type="checkbox" class="sw" id="ck-back" ${it.back ? 'checked' : ''}></label>`,
+    foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
+    onMount: s => {
+      if (!isTouch && isNew) $('#ck-name', s).focus();
+      if (isNew) attachSuggest($('#ck-name', s), () => [...tools.filter(t => !t.wish).map(t => t.name), ...prices.filter(inStock).map(p => p.name)].filter(n => !checks.some(x => norm(checkNome(x)) === norm(n))).map(n => ({ label: n })));
+      $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const idx = checks.findIndex(x => x.id === c.id); if (idx < 0) return;
+        const [gone] = checks.splice(idx, 1); saveChecks(); closeSheet(true); rerender();
+        toast(`${checkNome(gone)} saiu do checklist.`, { label: 'Desfazer', run: () => { checks.splice(idx, 0, gone); saveChecks(); rerender(); } });
+      });
+      $('[data-save]', s).onclick = () => {
+        const name = $('#ck-name', s).value.trim().replace(/\s+/g, ' ');
+        if (!name) return toast('Escreva o que conferir.');
+        const back = $('#ck-back', s).checked;
+        if (isNew) {
+          if (checks.some(x => norm(checkNome(x)) === norm(name))) return toast(`${name} já está no checklist.`);
+          const t = tools.find(x => !x.wish && norm(x.name) === norm(name));
+          checks.push(fixCheck({ id: uid(), name, back, toolId: t ? t.id : '' }));
+        } else Object.assign(checks.find(x => x.id === c.id) || {}, { name, back });
+        saveChecks(); closeSheet(true); rerender(); toast(isNew ? `${name} no checklist.` : 'Item salvo.');
+      };
+    } });
+}
+VIEWS.gestao = {
+  html() {
+    const G = GESTAO[gestaoAba];
+    const corpo = gestaoAba === 'estoque' ? stockListHTML() : gestaoAba === 'ferramentas' ? toolsListHTML() : checklistHTML();
+    return `${barraTopo()}
+    <main class="page">
+      ${KitFacil.ui.cabecalho({ titulo: 'Gestão', sub: esc(G.sub), criar: { rotulo: G.criar, attrs: 'data-g-new' } })}
+      <div class="seg" role="group" aria-label="Parte da gestão">${Object.entries(GESTAO).map(([k, x]) => `<button data-aba="${k}" aria-pressed="${gestaoAba === k}">${x.nome}</button>`).join('')}</div>
+      <div class="g-body" id="g-body">${corpo}</div>
+    </main>`;
+  },
+  bind(v) {
+    $$('[data-aba]', v).forEach(b => b.onclick = () => { if (gestaoAba === b.dataset.aba) return; gestaoAba = b.dataset.aba; gestaoQuery = ''; rerender(); });
+    $('[data-g-new]', v).onclick = () => gestaoAba === 'estoque' ? stockSheet(null) : gestaoAba === 'ferramentas' ? toolSheet(null) : checkSheet(null);
+    const sq = $('#g-q', v);
+    if (sq) sq.addEventListener('input', () => { gestaoQuery = sq.value; const tmp = document.createElement('div'); tmp.innerHTML = stockListHTML(); $('#g-list', v).replaceWith($('#g-list', tmp)); });
+    v.addEventListener('click', e => {
+      const sb = e.target.closest('[data-sid]'); if (sb) return stockSheet(prices.find(p => p.id === sb.dataset.sid));
+      const cb = e.target.closest('[data-comprei]');
+      if (cb) { const t = tools.find(x => x.id === cb.dataset.comprei); if (!t) return; t.wish = false; saveTools(); rerender(); return toast(`${t.name} agora está em Tenho.`, { label: 'Desfazer', run: () => { t.wish = true; saveTools(); rerender(); } }); }
+      const tb = e.target.closest('[data-tid]'); if (tb) return toolSheet(tools.find(t => t.id === tb.dataset.tid));
+      const ld = e.target.closest('[data-lado]'); if (ld) { checkLado = ld.dataset.lado; return rerender(); }
+      const ce = e.target.closest('[data-ck-edit]'); if (ce) return checkSheet(checks.find(c => c.id === ce.dataset.ckEdit));
+      if (e.target.closest('[data-ck-tools]')) {
+        const novos = tools.filter(t => !t.wish && !checks.some(c => c.toolId === t.id));
+        novos.forEach(t => checks.push(fixCheck({ id: uid(), name: t.name, toolId: t.id, back: true })));
+        saveChecks(); rerender(); return toast(`${plural(novos.length, 'ferramenta entrou', 'ferramentas entraram')} no checklist.`, { label: 'Desfazer', run: () => { checks = checks.filter(c => !novos.some(t => t.id === c.toolId)); saveChecks(); rerender(); } });
+      }
+      if (e.target.closest('[data-ck-reset]')) {
+        const k = checkLado, antes = checks.filter(c => c[k]).map(c => c.id);
+        checks.forEach(c => { c[k] = false; }); saveChecks(); rerender();
+        toast(`Checklist de ${k === 'ida' ? 'ida' : 'volta'} desmarcado.`, { label: 'Desfazer', run: () => { checks.forEach(c => { if (antes.includes(c.id)) c[k] = true; }); saveChecks(); rerender(); } });
+      }
+    });
+    v.addEventListener('change', e => {
+      const ck = e.target.closest('[data-ck]'); if (!ck) return;
+      const c = checks.find(x => x.id === ck.dataset.ck); if (!c) return;
+      c[checkLado] = ck.checked; vibrate(); saveChecks(); rerender();
+    });
+  },
+};
+
 /* ================= tela: ajustes ================= */
 function readLogo(file) {
   return new Promise((res, rej) => {
@@ -3045,19 +3543,21 @@ function pintarResumos() { const S = settingsSums(); for (const k in S) KitFacil
 /* cópia de segurança no formato comum da família (as cópias antigas, { app: 'eletrica-facil', v: 1 ou 2 }, continuam valendo) */
 // no celular abre o menu de compartilhar (WhatsApp, Drive, e-mail…), como antes; no computador, baixa o arquivo
 function baixarCopiaEletrica() {
-  const env = KitFacil.copia.envelope({ settings, prices, quotes: quotes.filter(q => !q.example) }, 2);
+  const env = KitFacil.copia.envelope({ settings, prices, quotes: quotes.filter(q => !q.example), tools, checks }, 2);
   saveFile(`eletrica-facil-copia-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(env, null, 1)], { type: 'application/json' }));
 }
 async function restaurarCopiaEletrica(file) {
   const j = await KitFacil.copia.ler(file, { antigos: true });
   let data = null;
   try {
-    if (j && j.dados) data = { settings: j.dados.settings || {}, prices: j.dados.prices || seedPrices(), quotes: (j.dados.quotes || []).map(fixQuote) };
+    if (j && j.dados) data = { settings: j.dados.settings || {}, prices: j.dados.prices || seedPrices(), quotes: (j.dados.quotes || []).map(fixQuote), tools: Array.isArray(j.dados.tools) ? j.dados.tools : null, checks: Array.isArray(j.dados.checks) ? j.dados.checks : null };
     else if (j && j.antigo && j.antigo.app === 'eletrica-facil') { const o = j.antigo; data = o.v >= 2 ? { settings: o.settings || {}, prices: o.prices || seedPrices(), quotes: (o.quotes || []).map(fixQuote) } : fromV1(o.catalog, o.bills, o.draft); }
   } catch { data = null; }
   if (!data || !Array.isArray(data.quotes) || !Array.isArray(data.prices)) { toast('Esse arquivo não é uma cópia do Elétrica Fácil.'); return; }
   confirmSheet('Restaurar a cópia?', `O arquivo tem ${plural(data.quotes.length, 'orçamento', 'orçamentos')} e ${plural(data.prices.length, 'preço', 'preços')}. Os dados deste aparelho${syncOn() ? ' e dos outros aparelhos conectados' : ''} serão substituídos.`, 'Restaurar', () => {
     settings = { ...DEF, ...data.settings }; prices = data.prices; quotes = data.quotes.map(fixQuote);
+    if (data.tools) { tools = data.tools.map(fixTool); saveTools(); }
+    if (data.checks) { checks = data.checks.map(fixCheck); saveChecks(); }
     settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
     saveSettings(); savePrices(); saveQuotes(); rerender(); toast('Cópia restaurada.');
   });

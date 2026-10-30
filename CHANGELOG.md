@@ -2,6 +2,31 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.9.0 · 2026-10-30
+
+- **Gestão (nova guia na barra de baixo, entre Preços e Ajustes):**
+  - **Estoque:** o material que você tem guardado, com marca (opcional), quantidade, unidade, custo de compra e preço de
+    repasse, com a margem calculada. O material do estoque é o mesmo item da tabela de Preços: o repasse é o preço que
+    vai para o orçamento, e a lista de material do orçamento mostra quanto há em estoque.
+  - **Ferramentas:** as que você tem (com quantidade e marca opcional) e as que quer comprar; o botão Comprei passa uma
+    ferramenta da lista de compras para Tenho.
+  - **Checklist:** uma lista fixa para conferir antes de ir para a obra e antes de voltar. Os itens que ficam na obra
+    (material usado) só aparecem na ida. Dá para adicionar todas as ferramentas de uma vez e desmarcar tudo no fim.
+  - Estoque, ferramentas e checklist entram na sincronização e na cópia de segurança.
+- **Dias de serviço:** o orçamento e o relatório têm o campo de dias de serviço e um calendário para marcar cada dia,
+  inclusive dias não seguidos. Se a quantidade não conferir com os dias marcados, o app avisa e oferece a correção.
+  A proposta, o relatório, o PDF e a mensagem do WhatsApp mostram os dias marcados.
+- **Proposta:** novo botão Concluir e voltar à lista, que confirma que o orçamento foi salvo. No alto do orçamento,
+  "Salvo" confirma cada alteração guardada no aparelho.
+- **Botão Próximo:** a seção seguinte abre com uma animação suave e a tela acompanha, sem saltos. Abrir e fechar
+  qualquer seção também ficou suave. Quem pede movimento reduzido no aparelho vê a troca sem animação.
+- **Tela inicial:** os filtros ficam na ordem Todos, Em aberto, Concluídos e Recusados, e a lista abre em Todos.
+- **Unidades novas:** peça, par, rolo, caixa, pacote, barra, quilo e litro.
+- **Correção:** depois de mexer num orçamento, um toque podia abrir a mesma tela várias vezes, e a seta Voltar
+  precisava de vários toques para sair.
+- **Correção:** os botões de mais e menos não cabiam nos campos de quantidade em telas pequenas.
+- **Correção:** no celular pequeno, o botão ⋯ da barra da proposta passava da borda da tela.
+
 ## 2.8.1 · 2026-10-30
 
 - Ajustes internos do Kit Fácil, sem mudança para quem usa.

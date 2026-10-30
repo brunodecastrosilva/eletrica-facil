@@ -197,6 +197,15 @@ test('sincronização: orçamentos e preços passam de um aparelho para o outro,
   await B.page.evaluate(() => SY.agora({ quiet: true }));
   assert.equal(await B.page.evaluate(n => prices.some(p => p.name === n), preco), false);
   assert.deepEqual(await B.page.evaluate(() => quotes.map(q => q.client.name)), ['Cliente do A']);
+  // gestão: ferramentas, checklist e estoque também passam de um aparelho para o outro
+  await A.page.evaluate(() => { tools.push(fixTool({ id: uid(), name: 'Alicate do A' })); saveTools(); checks.push(fixCheck({ id: uid(), name: 'Escada' })); saveChecks(); prices[0].stock = 7; savePrices(); });
+  await A.page.evaluate(() => SY.agora({ quiet: true }));
+  await B.page.evaluate(() => SY.agora({ quiet: true }));
+  assert.deepEqual(await B.page.evaluate(() => [tools.map(t => t.name), checks.map(c => c.name), prices[0].stock]), [['Alicate do A'], ['Escada'], 7]);
+  await B.page.evaluate(() => { checks[0].ida = true; saveChecks(); });
+  await B.page.evaluate(() => SY.agora({ quiet: true }));
+  await A.page.evaluate(() => SY.agora({ quiet: true }));
+  assert.equal(await A.page.evaluate(() => checks[0].ida), true);
   // sem mudanças, nenhum aparelho regrava o gist
   await A.page.evaluate(() => SY.agora({ quiet: true }));
   const antes = gh.estado.chamadas.filter(c => c.startsWith('PATCH')).length;
@@ -234,6 +243,136 @@ test('orçamento de exemplo e cópia de segurança (formato novo e antigo) conti
   await p.setInputFiles('[data-kf-copia-arquivo]', antigo);
   await p.click('.kf-dlg [data-ok]');
   assert.ok(await esperar(() => p.evaluate(() => quotes.length === 0 && settings.name === 'Antigo')), 'não restaurou a cópia antiga');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+/* ================= 2.9.0 ================= */
+test('tela inicial: filtros na ordem Todos, Em aberto, Concluídos e Recusados, com Todos marcado', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  await criarOrcamento(p, 'Cliente Filtro', 'Troca de tomada');
+  const chips = await p.locator('[data-filter]').evaluateAll(L => L.map(b => [b.dataset.filter, b.getAttribute('aria-pressed')]));
+  assert.deepEqual(chips.map(c => c[0]), ['todos', 'aberto', 'concluido', 'recusado']);
+  assert.equal(chips[0][1], 'true');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('um toque abre um orçamento uma vez só, mesmo depois de a tela ser redesenhada', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  await criarOrcamento(p, 'Cliente Histórico', 'Troca de tomada');
+  for (let i = 0; i < 4; i++) await p.evaluate(() => rerender());
+  const antes = await p.evaluate(() => history.length);
+  await p.click('[data-open]');
+  await p.locator('[data-menu]').waitFor();
+  assert.equal(await p.evaluate(() => history.length), antes + 1, 'o toque empilhou mais de uma tela no histórico');
+  await p.goBack();
+  assert.ok(await esperar(() => p.evaluate(() => route().name === 'home')), 'um Voltar deveria levar à lista');
+  await a.fechar();
+});
+
+test('orçamento: Próximo abre a seção seguinte e fecha a anterior, com animação e sem perder o lugar', async () => {
+  const a = await aparelho(amb, { viewport: { width: 390, height: 844 } });
+  const p = a.page;
+  const id = await criarOrcamento(p, 'Cliente Próximo', 'Troca de tomada');
+  await p.evaluate(id => go('/q/' + id), id);
+  await abrirPainel(p, `q:${id}:cli`);
+  await p.click(`details[data-panel="q:${id}:cli"] [data-next]`);
+  assert.equal(await p.evaluate(id => document.querySelector(`details[data-panel="q:${id}:items"]`).classList.contains('anim'), id), true, 'a seção deveria abrir com animação');
+  assert.ok(await esperar(() => p.evaluate(id => { const n = document.querySelector(`details[data-panel="q:${id}:items"]`), c = document.querySelector(`details[data-panel="q:${id}:cli"]`); return n.open && !c.open && !n.classList.contains('anim'); }, id)), 'Próximo não trocou de seção');
+  const topo = await p.evaluate(id => document.querySelector(`details[data-panel="q:${id}:items"]`).getBoundingClientRect().top - document.querySelector('.appbar').getBoundingClientRect().bottom, id);
+  assert.ok(topo >= 0 && topo < 40, `a seção aberta deveria ficar logo abaixo da barra de cima (${topo})`);
+  assert.match(await p.textContent('#ab-saved'), /Salvo/);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('dias de serviço: vários dias não seguidos, com conferência da quantidade', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  const id = await criarOrcamento(p, 'Cliente Dias', 'Reforma');
+  await p.evaluate(id => go('/q/' + id), id);
+  await abrirPainel(p, `q:${id}:cond`);
+  await p.click('[data-days="1"]'); await p.click('[data-days="1"]');
+  assert.equal(await p.inputValue('#q-days'), '3');
+  const dias = p.locator('.cal-d:not([disabled])');
+  await dias.nth(2).click(); await dias.nth(4).click();
+  assert.match(await p.textContent('#cal-msg'), /Você informou 3 dias e marcou 2/);
+  await dias.nth(9).click();
+  assert.match(await p.textContent('#cal-msg'), /3 dias marcados/);
+  assert.match(await p.textContent('#cal-msg'), /não seguidos/);
+  const txt = await p.evaluate(id => schedText(getQ(id)), id);
+  assert.match(txt, /Em 3 dias, não seguidos/);
+  // desmarca um: a conferência acusa e o atalho corrige
+  await dias.nth(9).click();
+  await p.click('[data-days-fix]');
+  assert.equal(await p.evaluate(id => getQ(id).days, id), 2);
+  assert.equal(await p.evaluate(id => daysOk(getQ(id)), id), true);
+  // relatório: os dias valem como execução
+  await p.evaluate(id => { const q = getQ(id); q.dates = [dayTs(Date.now() - 3 * DAY), dayTs(Date.now() - DAY)]; setStatus(q, 'concluido'); }, id);
+  assert.match(await p.evaluate(id => execText(getQ(id)), id), /\(2 dias\)/);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('proposta: Concluir volta para a lista e confirma que foi salvo', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  await criarOrcamento(p, 'Cliente Concluir', 'Troca de tomada');
+  await p.click('[data-open]');
+  await p.click('.bbar [data-preview]');
+  await p.locator('[data-concluir]').click();
+  assert.ok(await esperar(() => p.evaluate(() => route().name === 'home')), 'Concluir não voltou para a lista');
+  assert.ok(await esperar(async () => /Orçamento salvo/.test(await p.textContent('body'))), 'faltou o aviso de salvo');
+  assert.equal(await p.evaluate(() => history.state && history.state.d), 0, 'o histórico deveria voltar ao começo');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('gestão: estoque ligado aos preços, ferramentas e checklist de ida e volta', async () => {
+  const a = await aparelho(amb, { viewport: { width: 360, height: 740 } });
+  const p = a.page;
+  await criarOrcamento(p, 'Cliente Gestão', 'Troca de tomada');
+  await irPelaNav(p, 'Gestão');
+  assert.equal(await p.evaluate(() => route().name), 'gestao');
+  assert.ok(await semRolagemLateral(p));
+  // estoque: material novo vira item da tabela de preços, com o repasse como preço
+  await p.click('[data-g-new]');
+  await p.fill('#st-name', 'Disjuntor DR 40 A');
+  await p.fill('#st-brand', 'Steck');
+  await p.fill('#st-qty', '5');
+  await p.fill('#st-cost', '9000');
+  await p.fill('#st-price', '14000');
+  assert.match(await p.textContent('#st-margin'), /56%/);
+  await p.click('.kf-dlg [data-save]');
+  const item = await p.evaluate(() => prices.find(x => x.name === 'Disjuntor DR 40 A'));
+  assert.deepEqual([item.kind, item.stock, item.cost, item.price, item.brand], ['mat', 5, 9000, 14000, 'Steck']);
+  assert.match(await p.textContent('#g-body'), /Disjuntor DR 40 A/);
+  // ferramentas: uma que tem e uma para comprar
+  await p.click('[data-aba="ferramentas"]');
+  for (const [nome, quero] of [['Multímetro', false], ['Furadeira', true]]) {
+    await p.click('[data-g-new]'); await p.fill('#tl-name', nome);
+    if (quero) await p.check('#tl-wish');
+    await p.click('.kf-dlg [data-save]');
+  }
+  assert.match(await p.textContent('#g-body'), /Quero comprar · 1/);
+  await p.click('[data-comprei]');
+  assert.match(await p.textContent('#g-body'), /Tenho · 2/);
+  // checklist fixo: ida e volta
+  await p.click('[data-aba="checklist"]');
+  await p.click('[data-ck-tools]');
+  assert.equal(await p.locator('[data-ck]').count(), 2);
+  await p.click('[data-g-new]'); await p.fill('#ck-name', 'Fita isolante'); await p.uncheck('#ck-back'); await p.click('.kf-dlg [data-save]');
+  await p.locator('[data-ck]').first().check();
+  assert.match(await p.textContent('.g-prog'), /1 de 3/);
+  await p.click('[data-lado="volta"]');
+  assert.equal(await p.locator('[data-ck]').count(), 2, 'o que fica na obra não aparece na volta');
+  assert.ok(await semRolagemLateral(p));
+  // tudo isso vai na sincronização e na cópia de segurança
+  const pac = await p.evaluate(() => syncPayload());
+  assert.equal(pac.tools.length, 2); assert.equal(pac.checks.length, 3);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
