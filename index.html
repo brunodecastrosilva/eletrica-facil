@@ -80,8 +80,6 @@ svg.bolt{fill:currentColor;stroke:currentColor;stroke-width:.8}
 .ab-main.big{font-size:24px}
 .marca-eletrica{background:var(--volt);color:var(--volt-ink)}
 /* título da tela, no corpo da página (a barra de cima mostra a marca) */
-.tela-h{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:6px}
-.tela-h h1{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1.1;letter-spacing:-.02em;margin:0}
 .icon-btn{width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;border-radius:12px;color:var(--ink);flex:none;padding:0}
 @media (hover:hover){.icon-btn:hover{background:var(--surface-2)}}
 .icon-btn.boxed{box-shadow:inset 0 0 0 1.5px var(--line-2);width:48px;height:48px;border-radius:14px}
@@ -267,21 +265,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .bbar .acts{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;width:100%}
 
 /* navegação: barra de baixo (kf-nav) no celular e no tablet; trilho lateral (kf-trilho) no computador */
-.fab{position:fixed;z-index:24;right:max(16px,calc(50vw - var(--col) / 2 + 16px));bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 16px);height:58px;padding:0 22px 0 18px;border-radius:18px;border:0;background:var(--volt);color:var(--volt-ink);font-weight:700;font-size:16.5px;box-shadow:var(--shadow-lg);display:flex;gap:8px;align-items:center}
-.fab svg{width:24px;height:24px}
 
 /* janelas que sobem do pé da tela */
-.ov{position:fixed;inset:0;z-index:50;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;animation:fade .15s ease-out}
-@media (min-width:720px){.ov{align-items:center;padding:24px}}
-.sheet{background:var(--bg);width:100%;max-width:var(--col);max-height:92vh;max-height:92dvh;border-radius:22px 22px 0 0;display:flex;flex-direction:column;animation:up .24s cubic-bezier(.2,.8,.2,1);padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:var(--shadow-lg)}
-@media (min-width:720px){.sheet{border-radius:22px;max-height:86dvh;padding-bottom:0}}
-.sheet.tall{height:92vh;height:92dvh}
-@media (min-width:720px){.sheet.tall{height:86dvh}}
-.sh-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 10px 6px 18px}
-.sh-head h3{font-family:var(--f-display);font-size:20px;font-weight:850;font-stretch:106%;margin:0;letter-spacing:-.01em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sh-body{overflow-y:auto;padding:4px 18px 18px;display:flex;flex-direction:column;gap:14px;overscroll-behavior:contain;flex:1;-webkit-overflow-scrolling:touch}
-.sh-foot{padding:10px 18px 14px;border-top:1px solid var(--line);display:flex;gap:8px;background:var(--bg);border-radius:0 0 22px 22px}
-.sh-foot .btn{flex:1}
 @keyframes up{from{transform:translateY(30px);opacity:.3}to{transform:none;opacity:1}}
 @keyframes fade{from{opacity:0}}
 .opts{display:flex;flex-direction:column;gap:8px}
@@ -377,9 +362,6 @@ mark{background:var(--volt-soft);color:inherit;border-radius:3px;padding:0 1px}
 .sg-item small{font-weight:500;color:var(--muted);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%}
 .sg-item.on,.sg-item:hover{background:var(--surface-2)}
 
-.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:12px;font-weight:600;font-size:15px;z-index:70;width:max-content;max-width:calc(100% - 32px);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:14px;animation:up .2s ease-out}
-.toast.low{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
-.toast button{border:0;background:none;color:var(--volt);font-weight:700;font-size:15px;padding:4px 2px}
 .empty{border:1.5px dashed var(--line-2);border-radius:16px;padding:22px 16px;text-align:center;color:var(--muted);font-size:15px}
 .tag-ex{font-size:12px;font-weight:700;color:var(--volt-text);background:var(--volt-soft);border-radius:6px;padding:1px 6px}
 
@@ -487,7 +469,7 @@ details.tech[open] > summary::after{content:"–"}
 .tech-chips{margin-bottom:2px}
 .lab-opt{font-weight:500;color:var(--faint);font-size:13px;margin-left:4px}
 .chip.sm{min-height:34px;padding:0 12px;font-size:14px}
-.sh-foot:has(.tb-prev){flex-wrap:wrap}
+.kf-dlg-pe:has(.tb-prev){flex-wrap:wrap}
 .tb-prev{flex:1 1 100%;display:flex;flex-direction:column;gap:4px}
 .tb-prev label{font-size:13px;font-weight:600;color:var(--muted)}
 .tb-prev textarea{background:var(--volt-soft);font-weight:600;min-height:0;font-size:15px;padding:8px 10px;resize:none}
@@ -521,17 +503,24 @@ input[type=date]:disabled{opacity:.45}
   --kf-focus:var(--volt-text); --kf-scrim:var(--scrim); --kf-shadow:var(--shadow-lg);
   --kf-col-nav:var(--col);
 }
-.toast{z-index:95}
+.kf-dlg-pe .btn{flex:1 1 140px}
+/* no editor a barra de baixo some e dá lugar à barra do total: o aviso fica acima dela */
+body:has(#nav[hidden]) .kf-toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .page.largo{max-width:1040px}
 .kf-barra .ab-title{padding-left:2px}
 /* no computador, o conteúdo fixo começa depois do trilho lateral */
 @media (min-width:1024px){
   .page{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
   .bbar{left:var(--kf-trilho-w)}
-  .fab{bottom:24px;right:max(24px,calc((100vw - var(--kf-trilho-w)) / 2 - var(--col) / 2 + 16px))}
-  .toast{left:calc(50% + var(--kf-trilho-w) / 2);bottom:24px}
-  .toast.low{bottom:96px}
 }
+/* lei 7: alvos de toque de pelo menos 44 px (revisão de 29/10) */
+.chip{min-height:44px}
+.grp-h{min-height:44px}
+.icon-btn.sm{width:44px;height:44px}
+.qty button,.qty .rm{min-width:44px;min-height:44px}
+.seg button,.vrow .disc .seg button{min-height:44px;min-width:44px}
+.vrow .disc .seg{width:auto}
+a.link{display:inline-flex;align-items:center;min-height:44px}
 </style>
 </head>
 <body class="kf-casca">
@@ -548,12 +537,11 @@ input[type=date]:disabled{opacity:.45}
     <span id="nav-ajustes"></span>
   </div>
 </nav>
-<div id="sheet-root"></div>
 
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.7.4';
+const VERSAO = '2.8.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -732,10 +720,10 @@ const PRIMEIRO_USO = quotes === null && !LS.get('catalog', null);
 KitFacil.iniciar({
   app: 'eletrica-facil', nome: 'Elétrica Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
   resumo: 'Orçamentos de elétrica prontos em minutos: serviços e materiais da sua tabela, deslocamento, adicionais, proposta em PDF ou WhatsApp com Pix, relatório e recibo.',
-  tela: () => route().name, toast: m => toast(m), exemploDados: 'os orçamentos e os dados dos seus clientes',
+  tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.7.3', itens: ['No alto da tela, a nova ordem é nuvem, chopp e balão, com o chopp na mesma cor dos outros ícones.', 'A janela do chopp ficou mais simples: um só botão, Copiar código Pix.'] }, { versao: '2.7.2', itens: ['Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança.'] }, { versao: '2.7.1', itens: [
+  novidades: [{ versao: '2.8.0', itens: ['O botão Novo orçamento (e Novo item, na tabela de preços) não cobre mais o fim da lista. No computador, ele fica no topo da lista.', 'Listas vazias explicam o que aparece ali e o que fazer, no mesmo formato nos três apps.', 'Janelas e avisos iguais aos dos outros apps.', 'Boas-vindas uma vez só: a tela inicial já mostra os passos e o orçamento de exemplo.', 'Botões, filtros e links maiores, mais fáceis de tocar (no mínimo 44 px).'] }, { versao: '2.7.3', itens: ['No alto da tela, a nova ordem é nuvem, chopp e balão, com o chopp na mesma cor dos outros ícones.', 'A janela do chopp ficou mais simples: um só botão, Copiar código Pix.'] }, { versao: '2.7.2', itens: ['Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança.'] }, { versao: '2.7.1', itens: [
     'O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.',
     'Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).',
     'No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps.',
@@ -743,11 +731,8 @@ KitFacil.iniciar({
     'Depois de cada atualização, o app mostra uma vez o que mudou. A lista também fica em Ajustes, Sobre o aplicativo.',
     'Correção: o Elétrica Fácil agora tem identidade própria na instalação e não se confunde mais com os outros apps no mesmo aparelho.',
   ] }],
-  boasVindas: {
-    novo: () => PRIMEIRO_USO && !(quotes || []).some(q => !q.example),
-    passos: [['Preencha seus dados', 'Em Ajustes, Conta e perfil: nome, contato e logotipo saem na proposta.'], ['Confira a tabela de preços', 'Na aba Preços, ajuste os valores de serviços e materiais.'], ['Crie o primeiro orçamento', 'Toque no + e escolha orçamento (antes do serviço) ou relatório (depois).']],
-    exemplo: () => createExample(), rotuloExemplo: 'Ver orçamento de exemplo',
-  },
+  // a boas-vindas é a própria tela inicial do app (com os passos e o exemplo); o Kit só usa "novo" para não mostrar novidades a quem acabou de chegar
+  boasVindas: { novo: () => PRIMEIRO_USO && !(quotes || []).some(q => !q.example) },
   copia: { descricao: 'Baixe um arquivo com os orçamentos, a tabela de preços e os ajustes.', baixar: () => baixarCopiaEletrica(), restaurar: f => restaurarCopiaEletrica(f) },
   privacidade: [
     'Os orçamentos, a tabela de preços, os ajustes e os dados dos clientes que você cadastra (nome, telefone, endereço, CPF ou CNPJ) ficam guardados neste aparelho. Você é responsável por eles perante os seus clientes.',
@@ -760,7 +745,7 @@ const SY = KitFacil.sync.criar({
   aplicar: R => applyRemote(R), pacote: () => syncPayload(),
   mesmo: (out, remote) => canon(out) === canon({ settings: remote.settings, prices: remote.prices, quotes: remote.quotes, st: remote.st, del: remote.del }),
   redesenhar: () => rerender(),
-  ocupado: () => !!$('#sheet-root').innerHTML || !!(document.activeElement && document.activeElement.matches('input,textarea,select')),
+  ocupado: () => KitFacil.dialogo.aberto() || !!(document.activeElement && document.activeElement.matches('input,textarea,select')),
   textoLigada: () => `Sincronização ligada. ${plural(quotes.filter(q => !q.example).length, 'orçamento', 'orçamentos')} neste aparelho.`,
 });
 const sync = SY.estado;
@@ -1101,41 +1086,13 @@ function stats() {
 }
 
 /* ================= avisos, janelas e campos ================= */
-let toastTimer;
-function toast(msg, action) {
-  $('.toast')?.remove(); clearTimeout(toastTimer);
-  const el = document.createElement('div'); el.className = 'toast' + ($('#nav').hidden ? ' low' : ''); el.setAttribute('role', 'status');
-  el.textContent = msg;
-  if (action) { const b = document.createElement('button'); b.textContent = action.label; b.onclick = () => { el.remove(); action.run(); }; el.appendChild(b); }
-  document.body.appendChild(el);
-  toastTimer = setTimeout(() => el.remove(), action ? 6000 : 2800);
+/* avisos e janelas são os do Kit Fácil (iguais nos três apps); estas funções só traduzem os nomes usados no app */
+function toast(msg, action) { KitFacil.avisar(msg, action); }
+function openSheet({ title, body, foot = '', tall = false, wide = false, sub = '', onMount, onClose }) {
+  return KitFacil.dialogo.abrir({ titulo: title, sub, corpo: body, pe: foot, classe: [tall && 'kf-alto', wide && 'kf-largo'].filter(Boolean).join(' '),
+    aoFechar: onClose, aoMontar: sh => { prepFields(sh); onMount && onMount(sh); } });
 }
-let lockedY = null;
-function lockScroll() { if (lockedY !== null) return; lockedY = window.scrollY; Object.assign(document.body.style, { position: 'fixed', top: -lockedY + 'px', left: '0', right: '0' }); }
-function unlockScroll() { if (lockedY === null) return; const y = lockedY; lockedY = null; Object.assign(document.body.style, { position: '', top: '', left: '', right: '' }); window.scrollTo(0, y); }
-let sheetOnClose = null;
-function openSheet({ title, body, foot = '', tall = false, onMount, onClose }) {
-  closeSheet(true);
-  const root = $('#sheet-root');
-  root.innerHTML = `<div class="ov" id="ov"><div class="sheet${tall ? ' tall' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
-    <div class="sh-head"><h3>${esc(title)}</h3><button class="icon-btn" data-close aria-label="Fechar">${I.x}</button></div>
-    <div class="sh-body">${body}</div>${foot ? `<div class="sh-foot">${foot}</div>` : ''}</div></div>`;
-  lockScroll();
-  const ov = $('#ov'), sh = $('.sheet', ov);
-  ov.addEventListener('click', e => { if (e.target === ov) closeSheet(); });
-  $('[data-close]', sh).onclick = () => closeSheet();
-  sheetOnClose = onClose || null;
-  prepFields(sh);
-  onMount && onMount(sh);
-  return sh;
-}
-function closeSheet(silent) {
-  const root = $('#sheet-root'); if (!root.innerHTML) return;
-  root.innerHTML = ''; unlockScroll();
-  const f = sheetOnClose; sheetOnClose = null;
-  if (!silent && f) f();
-}
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+function closeSheet(silent) { KitFacil.dialogo.fechar(silent); }
 function confirmSheet(title, text, okLabel, onOk, danger = true) {
   openSheet({ title, body: `<p class="hint" style="font-size:16px">${esc(text)}</p>`,
     foot: `<button class="btn ghost" data-no>Cancelar</button><button class="btn ${danger ? 'danger' : 'primary'}" data-ok>${esc(okLabel)}</button>`,
@@ -1428,10 +1385,11 @@ function homeListHTML() {
       const open = qf || (('home:' + s) in PANEL ? PANEL['home:' + s] : s !== 'rascunho' || L.length <= 3);
       return `<button class="grp-h" id="grp-${s}" data-grp-t="${s}" aria-expanded="${!!open}"><span class="gc">${I.chev}${l}</span><span>${L.length}</span></button>${open ? L.map(quoteCard).join('') : ''}`;
     }).join('');
-    return html || `<div class="empty">${qf ? 'Nenhum orçamento encontrado.' : 'Nenhum orçamento em aberto.<br>Toque em <b>Novo orçamento</b> para começar.'}</div>`;
+    return html || (qf ? KitFacil.ui.vazio({ titulo: 'Nenhum orçamento encontrado', texto: 'Confira o nome do cliente, o serviço ou o número.' })
+      : KitFacil.ui.vazio({ titulo: 'Nenhum orçamento em aberto', texto: 'Toque em <b>Novo orçamento</b> para começar.' }));
   }
   const L = quotes.filter(q => (homeFilter === 'todos' || q.status === homeFilter) && match(q)).sort(byDate);
-  return L.length ? L.map(quoteCard).join('') : `<div class="empty">${qf ? 'Nenhum orçamento encontrado.' : 'Nada por aqui ainda.'}</div>`;
+  return L.length ? L.map(quoteCard).join('') : KitFacil.ui.vazio(qf ? { titulo: 'Nenhum orçamento encontrado', texto: 'Confira o nome do cliente, o serviço ou o número.' } : { titulo: 'Nada por aqui ainda', texto: 'Os orçamentos com esta situação aparecem aqui.' });
 }
 VIEWS.home = {
   html() {
@@ -1467,10 +1425,10 @@ VIEWS.home = {
       <div class="toolbar">
         ${quotes.length > 4 ? `<label class="search">${I.search}<input type="search" id="h-q" placeholder="Buscar cliente, serviço ou número" value="${esc(homeQuery)}" aria-label="Buscar orçamento"></label>` : ''}
         <div class="chips scroll" role="group" aria-label="Filtrar">${[['aberto', 'Em aberto'], ['concluido', 'Concluídos'], ['recusado', 'Recusados'], ['todos', 'Todos']].map(([k, l]) => `<button class="chip" data-filter="${k}" aria-pressed="${homeFilter === k}">${l} <span class="n">${cnt(k)}</span></button>`).join('')}</div>
+        ${KitFacil.ui.criar({ rotulo: 'Novo orçamento', attrs: 'data-new' })}
       </div>
       <div class="qlist" id="q-list">${homeListHTML()}</div>
-    </main>
-    <button class="fab" data-new>${I.plus}Novo orçamento</button>`;
+    </main>`;
   },
   bind(v) {
     $$('[data-new]', v).forEach(b => b.onclick = () => createQuote());
@@ -1632,7 +1590,7 @@ const TECH_TITLE = { diag: 'Diagnóstico', work: 'Serviço realizado', tests: 'T
 // etapa 2: escolhe falha, lugar, ambiente e resultado; a frase aparece pronta e pode ser ajustada
 function techSheet(q, key, idx, onAdd) {
   const it = TECH[key][idx], rooms = techRooms(q), sel = { o: [], w: [], r: [], v: '' };
-  $('.toast')?.remove();
+  const av = $('.kf-toast'); if (av) av.hidden = true;
   const chips = (grp, list, one) => `<div class="chips" data-grp="${grp}"${one ? ' data-one' : ''}>${list.map((x, i) => `<button class="chip" data-i="${i}" aria-pressed="false">${esc(x)}</button>`).join('')}</div>`;
   const body = it.free
     ? `<div class="field"><label for="tb-out">Descreva o teste e o resultado</label><textarea id="tb-out" placeholder="Ex.: Medição da corrente de fuga do chuveiro: dentro do limite."></textarea></div>`
@@ -2082,14 +2040,14 @@ function pickerSheet(q, kind, room) {
     const list = prices.filter(p => p.kind === k && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
     const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name) && (!inRoom || roomOf(q, i) === room)).map(i => i.qty));
     const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}</span><span class="pk-price">${BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
-    return (rows || `<div class="empty">Nada com “${esc(query)}” na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}.</div>`)
+    return (rows || KitFacil.ui.vazio({ titulo: `Nada com “${esc(query)}”`, texto: `na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}. Adicione como item fora da tabela.` }))
       + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}${query ? `Adicionar “${esc(query)}”` : `${k === 'svc' ? 'Serviço' : 'Material'} fora da tabela`}</button>`;
   };
   openSheet({ title: inRoom ? `Adicionar em ${roomName(q, room)}` : 'Adicionar ao orçamento', tall: true,
     body: `<div class="pk-list" id="pk-list">${listHTML()}</div>`, foot: footHTML(),
     onClose: () => rerender(),
     onMount: s => {
-      const body = $('.sh-body', s);
+      const body = $('.kf-dlg-corpo', s);
       body.insertAdjacentHTML('beforebegin', `<div class="pk-tools">
         <div class="seg" role="group" aria-label="Tipo"><button data-k="svc" aria-pressed="${k === 'svc'}">Mão de obra</button><button data-k="mat" aria-pressed="${k === 'mat'}">Material</button></div>
         <label class="search">${I.search}<input type="search" id="pk-q" placeholder="Buscar na sua tabela de preços" aria-label="Buscar"></label>
@@ -2101,7 +2059,7 @@ function pickerSheet(q, kind, room) {
       $$('[data-k]', s).forEach(b => b.onclick = () => { k = b.dataset.k; if (inRoom) lastRoomKind = k; $$('[data-k]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); paintList(); body.scrollTop = 0; });
       body.addEventListener('click', e => {
         const row = e.target.closest('[data-pid]');
-        if (row) { const p = prices.find(x => x.id === row.dataset.pid); if (!p) return; addFromPrice(q, p, room); added++; paintList(); $('.sh-foot', s).innerHTML = footHTML(); bindDone(); return; }
+        if (row) { const p = prices.find(x => x.id === row.dataset.pid); if (!p) return; addFromPrice(q, p, room); added++; paintList(); $('.kf-dlg-pe', s).innerHTML = footHTML(); bindDone(); return; }
         if (e.target.closest('[data-custom]')) customItemSheet(q, k, query, room);
       });
       const bindDone = () => { $('[data-done]', s).onclick = () => closeSheet(); };
@@ -2968,7 +2926,7 @@ let priceKind = 'svc', priceQuery = '';
 function priceListHTML() {
   const qf = fold(priceQuery);
   const list = prices.filter(p => p.kind === priceKind && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
-  if (!list.length) return `<div class="empty">${qf ? 'Nenhum item encontrado.' : 'Nenhum item nesta tabela.'}</div>`;
+  if (!list.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum item encontrado', texto: 'Confira o nome do item ou da categoria.' } : { titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo item</b> para cadastrar.' });
   return groupByCat(list).map(([cat, L]) => panel(`pr:${priceKind}:${cat}`, '', esc(cat), qf ? null : L.slice(0, 3).map(p => p.name).join(' · ') + (L.length > 3 ? '…' : ''),
     `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}</small></span><span class="prow-price">${BRL(p.price)}</span></button>`).join('')}</div>`,
     { multi: true, right: `<span class="card-sum">${L.length}</span>`, force: qf ? true : undefined })).join('');
@@ -2978,13 +2936,12 @@ VIEWS.prices = {
     const n = k => prices.filter(p => p.kind === k).length;
     return `${barraTopo()}
     <main class="page">
-      <div class="tela-h"><h1>Tabela de preços</h1><button class="btn sm ghost" data-adjust>${I.percent}Reajustar</button></div>
+      ${KitFacil.ui.cabecalho({ titulo: 'Tabela de preços', acoes: `<button class="btn sm ghost" data-adjust>${I.percent}Reajustar</button>`, criar: { rotulo: 'Novo item', attrs: 'data-new-price' } })}
       <div class="seg" role="group" aria-label="Tipo"><button data-k="svc" aria-pressed="${priceKind === 'svc'}">Mão de obra · ${n('svc')}</button><button data-k="mat" aria-pressed="${priceKind === 'mat'}">Material · ${n('mat')}</button></div>
       <label class="search">${I.search}<input type="search" id="pr-q" placeholder="Buscar item ou categoria" value="${esc(priceQuery)}" aria-label="Buscar na tabela"></label>
       <div id="pr-list" style="display:flex;flex-direction:column;gap:10px">${priceListHTML()}</div>
       <p class="foot-note">Os preços que vêm com o app são só uma referência. Toque em um item para colocar o seu valor.</p>
-    </main>
-    <button class="fab" data-new-price>${I.plus}Novo item</button>`;
+    </main>`;
   },
   bind(v) {
     $$('[data-k]', v).forEach(b => b.onclick = () => { priceKind = b.dataset.k; rerender(); });

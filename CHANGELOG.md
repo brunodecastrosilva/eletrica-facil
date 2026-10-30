@@ -2,6 +2,15 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.8.0 · 2026-10-29
+
+- O botão Novo orçamento (e Novo item, na tabela de preços) não cobre mais o fim da lista. No computador, ele fica no topo da lista.
+- Listas vazias explicam o que aparece ali e o que fazer, no mesmo formato nos três apps.
+- Janelas e avisos iguais aos dos outros apps.
+- Boas-vindas uma vez só: a tela inicial já mostra os passos e o orçamento de exemplo.
+- Botões, filtros e links maiores, mais fáceis de tocar (no mínimo 44 px).
+- Kit Fácil 2.3.0: cabeçalho de tela, botão de criar, estado vazio, aviso com ação e janela com subtítulo, altura e largura, comuns aos três apps.
+
 ## 2.7.4 · 2026-10-29
 
 - Kit Fácil 2.2.0 (regra nova da barra de baixo; neste app, com 3 itens, nada muda na tela).

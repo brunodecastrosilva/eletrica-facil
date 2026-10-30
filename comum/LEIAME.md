@@ -38,7 +38,6 @@ KitFacil.iniciar({
   resumo: 'Orçamentos de elétrica prontos em minutos.',
   icone: 'icons/icon-192.png',
   tela: () => route().name,                    // vai junto da avaliação
-  toast: msg => toast(msg),                    // usa o aviso do próprio app
   exemploDados: 'os orçamentos e os dados dos clientes',
   privacidade: ['Os orçamentos, a tabela de preços e os dados dos clientes ficam neste aparelho.'],
   abrirAjustes: secao => { /* abre (ou, sem secao e já aberto, fecha) a tela de Ajustes do app */ },
@@ -51,6 +50,22 @@ KitFacil.iniciar({
 KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#EFEEE9', escuro: '#0E0D0A' } });
 document.getElementById('topo').outerHTML = KitFacil.topo.html({ principal: true });
 // Ajustes é o último item da navegação: KitFacil.nav.ajustes('nav') na barra de baixo e KitFacil.nav.ajustes('trilho') no trilho
+```
+
+### Telas, avisos e janelas (Kit 2.3)
+
+```js
+// tela principal (menos a inicial): título, linha de apoio, ações e o botão de criar
+main.innerHTML = KitFacil.ui.cabecalho({ titulo: 'Tabela de preços', sub: 'Seus valores de serviço e material.',
+    acoes: '<button class="btn" data-reajustar>Reajustar</button>', criar: { rotulo: 'Novo item', attrs: 'data-novo' } })
+  + (itens.length ? lista : KitFacil.ui.vazio({ titulo: 'Nenhum item ainda', texto: 'Toque em <b>Novo item</b> para cadastrar.' }));
+// botão de criar fora do cabeçalho (por exemplo, no topo da lista da tela inicial)
+KitFacil.ui.criar({ rotulo: 'Novo orçamento', attrs: 'data-novo' });
+// aviso rápido, com ação opcional
+KitFacil.avisar('Comanda excluída.', { label: 'Desfazer', run: () => restaurar() });
+// janela: o app não tem janela própria
+KitFacil.dialogo.abrir({ titulo: 'Novo item', sub: 'Tabela de preços', corpo: '…', pe: '…botões…', classe: 'kf-alto',
+  aoMontar: el => { /* liga os campos */ }, aoFechar: () => {} });
 ```
 
 ### Tela de Ajustes

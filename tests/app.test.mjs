@@ -226,13 +226,13 @@ test('orçamento de exemplo e cópia de segurança (formato novo e antigo) conti
   // restaura a cópia nova
   await p.evaluate(() => { quotes = []; saveQuotes(); });
   await p.setInputFiles('[data-kf-copia-arquivo]', caminho);
-  await p.click('#sheet-root [data-ok]');
+  await p.click('.kf-dlg [data-ok]');
   assert.ok(await esperar(() => p.evaluate(() => quotes.length === 1)), 'não restaurou a cópia nova');
   // e a cópia no formato antigo (versão 2.5 e anteriores)
   const antigo = caminho + '-antigo.json';
   await writeFile(antigo, JSON.stringify({ app: 'eletrica-facil', v: 2, at: Date.now(), settings: { name: 'Antigo' }, prices: copia.dados.prices, quotes: [] }));
   await p.setInputFiles('[data-kf-copia-arquivo]', antigo);
-  await p.click('#sheet-root [data-ok]');
+  await p.click('.kf-dlg [data-ok]');
   assert.ok(await esperar(() => p.evaluate(() => quotes.length === 0 && settings.name === 'Antigo')), 'não restaurou a cópia antiga');
   assert.deepEqual(a.erros, []);
   await a.fechar();

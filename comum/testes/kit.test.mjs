@@ -596,3 +596,44 @@ test('barra de baixo: com até 5 itens mostra todos; com 10 seções mostra 4 + 
     await muitos.fechar();
   }
 });
+
+test('tela principal: cabeçalho com título, estado vazio e botão de criar flutuante no celular (sem cobrir a lista) e no cabeçalho no computador', async () => {
+  for (const viewport of [{ width: 360, height: 740 }, { width: 820, height: 1180 }, COMPUTADOR]) {
+    const vazio = await aparelho(amb, { viewport, caminho: pagina() });
+    const p0 = vazio.page;
+    await p0.evaluate(() => T.ir('notas'));
+    await p0.locator('.kf-cab .kf-titulo').waitFor();
+    assert.equal(await p0.textContent('.kf-cab .kf-titulo'), 'Notas');
+    assert.equal(await p0.locator('.kf-vazio b').textContent(), 'Nenhuma nota ainda');
+    assert.equal(await p0.locator('.kf-vazio [data-nova-nota]').count(), 1);
+    await vazio.fechar();
+
+    const a = await aparelho(amb, { viewport, caminho: pagina() + '&lista=30' });
+    const p = a.page;
+    await p.evaluate(() => T.ir('notas'));
+    const b = p.locator('.kf-criar');
+    await b.waitFor();
+    assert.match(await b.textContent(), /Nova nota/);
+    const r = await b.boundingBox();
+    assert.ok(r.height >= 44 && r.width >= 44, 'botão de criar menor que 44 px');
+    const pos = await b.evaluate(el => getComputedStyle(el).position);
+    if (viewport.width < 1024) {
+      assert.equal(pos, 'fixed', `largura ${viewport.width}: botão de criar deveria flutuar`);
+      const nav = await p.locator('.kf-nav').boundingBox();
+      assert.ok(r.y + r.height <= nav.y, 'o botão de criar fica por cima da barra de baixo');
+      // no fim da página, o último item da lista fica todo acima do botão
+      await p.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await p.waitForTimeout(100);
+      const ult = await p.locator('#notas li').last().boundingBox();
+      const r2 = await b.boundingBox();
+      assert.ok(ult.y + ult.height <= r2.y + 1, `largura ${viewport.width}: o botão de criar cobre o último item da lista`);
+    } else {
+      assert.notEqual(pos, 'fixed', 'no computador o botão de criar fica no cabeçalho');
+      const cab = await p.locator('.kf-cab').boundingBox();
+      assert.ok(r.y >= cab.y && r.y + r.height <= cab.y + cab.height + 1, 'botão de criar fora do cabeçalho');
+    }
+    assert.ok(await semRolagemLateral(p));
+    assert.deepEqual(a.erros, []);
+    await a.fechar();
+  }
+});

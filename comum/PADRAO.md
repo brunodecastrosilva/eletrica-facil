@@ -3,7 +3,7 @@
 Regras comuns do **Conta Fácil**, do **Elétrica Fácil** e do **Estudo Fácil** e de qualquer app novo do projeto.
 Este arquivo fica em `comum/PADRAO.md`, igual nos três repositórios, junto com o **Kit Fácil** (o código comum).
 
-Versão do padrão: 2.1 · Kit Fácil 2.2.0 · outubro de 2026.
+Versão do padrão: 2.2 · Kit Fácil 2.3.0 · outubro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -211,10 +211,20 @@ exclusão automática (TTL), então a limpeza é **manual, uma vez por mês**; p
   Ajustes por último; o "Mais" fica destacado quando a tela atual está dentro dele. O app marca as seções secundárias
   com o atributo `data-kf-mais`; o Kit faz o resto sozinho. No computador, o trilho mostra todas as seções.
 - A página usa `body.kf-casca`; no computador o conteúdo começa depois do trilho e fica centralizado no espaço que sobra.
-- Barras e botões fixos do app (barra de total, botão flutuante, avisos) sobem acima da navegação de baixo e,
+- Barras e botões fixos do app (barra de total, botão de criar, avisos) sobem acima da navegação de baixo e,
   no computador, começam depois do trilho.
-- Quando o app precisa de uma ação própria na barra de cima (o Estudo Fácil tem *Desempenho*), ela fica à esquerda da
-  área superior; abaixo de 400 px a marca mostra só o ícone (`kf-marca-compacta`), com o nome mantido para leitores de tela.
+- A barra de cima não recebe ações próprias do app: elas ficam na tela (no cabeçalho da tela ou no conteúdo).
+
+### 7.1A Telas principais (Kit 2.3)
+
+- **Título de tela:** toda tela principal, menos a inicial, abre com `KitFacil.ui.cabecalho({ titulo, sub, acoes, criar })`:
+  título grande (o mesmo nome da navegação), uma linha dizendo para que a tela serve e, à direita, as ações da tela.
+  Telas internas (um orçamento, um edital) mantêm o seu cabeçalho com Voltar.
+- **Botão de criar** (`KitFacil.ui.criar({ rotulo, attrs })`, "Novo orçamento", "Nova disciplina"): um por tela, com verbo
+  ou "Novo/Nova". No celular e no tablet flutua no canto de baixo, acima da navegação, e o Kit reserva espaço no pé da
+  página para ele nunca cobrir o último item da lista. No computador fica no cabeçalho, ao lado do título, ou no topo da lista.
+- **Estado vazio** (`KitFacil.ui.vazio({ titulo, texto, acao })`): toda lista vazia diz o que aparece ali e o que fazer
+  para começar; na busca sem resultado, diz o que conferir. Texto curto; botão só quando ajuda.
 
 ### 7.2 Área superior direita
 
@@ -287,14 +297,16 @@ para as do kit, para sucesso, aviso e erro serem iguais na família.
 | Botões | `kf-btn` + `kf-pri` (principal, um por área), `kf-sec` (contorno), `kf-perigo` / `kf-perigo-sec` (destrutivo), `kf-link` | altura mínima 44 px; verbo no rótulo |
 | Campos | `kf-entrada`, `kf-rotulo`, `kf-ajuda`, `kf-opcional`, `kf-check` | rótulo visível; fonte de 16 px; ajuda abaixo |
 | Escolhas | pílulas `kf-opcoes`, segmentos `kf-seg`, estrelas `kf-estrelas`, escolhas grandes `kf-escolha` | teclado e leitor de tela funcionam (rádios de verdade) |
-| Janelas | `KitFacil.dialogo.abrir`, `.confirmar` | sobe do pé da tela no celular, no centro em telas largas; foco preso; Esc fecha; o foco volta para quem abriu |
+| Janelas | `KitFacil.dialogo.abrir({ titulo, sub, corpo, pe, classe, aoMontar, aoFechar })`, `.confirmar` | as únicas janelas dos apps (o app não tem janela própria; `openSheet` do app só traduz para esta); sobe do pé da tela no celular, no centro em telas largas; foco preso; Esc e o X fecham; o foco volta para quem abriu; `sub` é a linha pequena acima do título; `classe`: `kf-alto` (quase a tela toda), `kf-largo` (até 780 px) |
 | Blocos | `kf-bloco` (título `h3`), `kf-dados` (lista de rótulo e valor) | |
-| Estados | carregando `kf-carregando`; sucesso `kf-fim`; aviso `kf-aviso` (`kf-ok`, `kf-alerta`, `kf-ruim`); vazio `kf-vazio`; estado da nuvem `kf-estado` | a mensagem diz o que aconteceu e o que fazer; nunca só pela cor |
-| Aviso rápido | o `toast` do app | some sozinho; ação opcional ("Desfazer") |
+| Estados | carregando `kf-carregando`; sucesso `kf-fim`; aviso `kf-aviso` (`kf-ok`, `kf-alerta`, `kf-ruim`); vazio `KitFacil.ui.vazio` (`kf-vazio`); estado da nuvem `kf-estado` | a mensagem diz o que aconteceu e o que fazer; nunca só pela cor |
+| Cabeçalho de tela | `KitFacil.ui.cabecalho` (`kf-cab`, `kf-titulo`, `kf-cab-sub`, `kf-cab-acoes`) | ver 7.1A |
+| Botão de criar | `KitFacil.ui.criar` (`kf-criar`) | ver 7.1A |
+| Aviso rápido | `KitFacil.avisar(msg, { label, run })` (`kf-toast`) | o único aviso dos apps; some sozinho (3,2 s; 6 s com ação); ação opcional ("Desfazer"); fica acima da navegação e do botão de criar |
 | Ícones | traço de 2 px, cantos arredondados, 24 × 24 (`kf-i`) | mesmo ícone para a mesma ideia nos três apps (controles deslizantes = Ajustes, caneca = chopp, nuvem = sincronização, balão = avaliação) |
 
-**Camadas (z-index):** 20 barra de cima e trilho · 25–30 navegação e barras fixas · 45–80 janelas do app ·
-85 janelas do Kit Fácil · 95 avisos rápidos (toast).
+**Camadas (z-index):** 20 barra de cima e trilho · 25–30 navegação, barras fixas e botão de criar (29) ·
+85 janelas · 95 avisos rápidos.
 
 ### 7.5 Textos
 

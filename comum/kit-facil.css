@@ -129,6 +129,11 @@
 .kf-dlg-corpo{overflow-y:auto;padding:4px 20px 20px;display:flex;flex-direction:column;gap:16px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;flex:1;min-height:0}
 .kf-dlg-pe{display:flex;gap:8px;flex-wrap:wrap;padding:12px 20px 14px;border-top:1px solid var(--kf-line,#DDDCD6)}
 .kf-dlg-pe .kf-btn{flex:1 1 140px}
+.kf-dlg-tt{min-width:0;display:flex;flex-direction:column;gap:2px}
+.kf-dlg-sub{margin:0;font-size:14.5px;color:var(--kf-muted)}
+.kf-dlg.kf-alto{height:92vh;height:92dvh}
+.kf-dlg.kf-largo{max-width:780px}
+@media (min-width:720px){.kf-dlg.kf-alto{height:86dvh}}
 @keyframes kf-sobe{from{transform:translateY(28px);opacity:.3}to{transform:none;opacity:1}}
 @keyframes kf-fade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.kf-ov,.kf-dlg{animation:none}.kf-nuvem .kf-selo svg{animation:none!important}}
@@ -231,8 +236,12 @@ textarea.kf-entrada{min-height:110px;resize:vertical}
 .kf-aviso.kf-ruim > .kf-i{color:var(--kf-bad)}
 .kf-carregando{display:flex;align-items:center;gap:10px;color:var(--kf-muted);font-size:var(--kf-t-apoio)}
 .kf-carregando::before{content:"";width:18px;height:18px;border-radius:50%;border:2.5px solid var(--kf-line);border-top-color:var(--kf-accent-texto,var(--kf-accent));animation:kf-gira .8s linear infinite;flex:none}
-.kf-vazio{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:28px 16px;border:1.5px dashed var(--kf-line-2,var(--kf-line));border-radius:var(--kf-r-md);color:var(--kf-muted);font-size:15px}
+.kf-vazio{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:28px 16px;border:1.5px dashed var(--kf-line-2,var(--kf-line));border-radius:var(--kf-r-md);color:var(--kf-muted);font-size:15px;line-height:1.45}
 .kf-vazio b{color:var(--kf-ink);font-size:var(--kf-t-cartao)}
+.kf-vazio p{margin:0;max-width:44ch}
+.kf-vazio-ic{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--kf-surface-2);color:var(--kf-accent-texto,var(--kf-accent))}
+.kf-vazio-ic svg,.kf-vazio-ic .kf-i{width:24px;height:24px}
+.kf-vazio-acao{margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 @media (prefers-reduced-motion:reduce){.kf-carregando::before{animation-duration:3s}}
 
 /* resultado do envio */
@@ -331,8 +340,30 @@ textarea.kf-entrada{min-height:110px;resize:vertical}
 .kf-qr .kf-carregando,.kf-qr .kf-ajuda{color:#5E5C54;text-align:center;padding:12px}
 .kf-novidades li{line-height:1.4}
 
+/* ================= Kit Fácil 2.3: cabeçalho de tela e botão de criar ================= */
+.kf-cab{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 16px;padding:6px 0 4px;margin:0 0 14px}
+.kf-cab-tx{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.kf-titulo{margin:0;font:800 30px/1.1 var(--kf-font);letter-spacing:-.025em;color:var(--kf-ink)}
+.kf-cab-sub{margin:0;color:var(--kf-muted);font-size:15.5px;line-height:1.45}
+.kf-cab-acoes{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media (max-width:420px){.kf-titulo{font-size:27px}}
+.kf-criar{gap:8px;font-weight:700;align-self:flex-start}
+.kf-criar > .kf-i{width:22px;height:22px}
+/* celular e tablet: flutua acima da barra de baixo, sem cobrir o fim da lista */
+@media (max-width:1023px){
+  .kf-criar{position:fixed;z-index:29;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--kf-nav-h) + 16px + env(safe-area-inset-bottom,0px));min-height:54px;padding:0 22px 0 18px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.2),0 1px 3px rgba(0,0,0,.12)}
+  body:has(.kf-nav[hidden]) .kf-criar{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+  body:has(.kf-criar){padding-bottom:84px}
+}
+
 /* ================= aviso rápido (quando o app não tem o seu) ================= */
 .kf-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:95;max-width:calc(100% - 32px);background:var(--kf-ink,#15140F);color:var(--kf-bg,#F5F5F2);padding:11px 16px;border-radius:12px;font:600 15px/1.35 var(--kf-font);box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .kf-toast[hidden]{display:none}
+/* Kit 2.3: o aviso fica acima da barra de baixo (e do botão de criar) e pode ter uma ação, como Desfazer */
+.kf-toast{display:flex;align-items:center;gap:14px;width:max-content;bottom:calc(var(--kf-nav-h) + 16px + env(safe-area-inset-bottom,0px))}
+body:has(.kf-criar) .kf-toast{bottom:calc(var(--kf-nav-h) + 86px + env(safe-area-inset-bottom,0px))}
+body:has(.kf-nav[hidden]) .kf-toast{bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+@media (min-width:1024px){.kf-toast,body:has(.kf-criar) .kf-toast{bottom:24px;left:calc(50% + var(--kf-trilho-w) / 2)}}
+.kf-toast-acao{border:0;background:none;color:inherit;font:700 15px/1 var(--kf-font);text-decoration:underline;text-underline-offset:3px;min-height:44px;padding:0 4px;margin:-12px -4px;cursor:pointer}
 
 @media (forced-colors:active){.kf-opcao input:checked + span{forced-color-adjust:none;background:Highlight;color:HighlightText}.kf-estrelas label.kf-on{color:Highlight}.kf-nav-it[aria-current="page"],.kf-trilho-it[aria-current="page"],.kf-aj-item[aria-current="true"]{outline:2px solid Highlight}}

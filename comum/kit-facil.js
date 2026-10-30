@@ -15,7 +15,7 @@
    - janelas (diálogos) acessíveis e avisos */
 (function (global) {
   'use strict';
-  const VERSAO = '2.2.0';
+  const VERSAO = '2.3.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -136,12 +136,19 @@
 
   /* ================= avisos (toast) ================= */
   let toastT;
-  function avisar(msg) {
-    if (typeof C.toast === 'function') { try { C.toast(msg); return; } catch {} }
+  /* avisar(msg, acao): aviso rápido, igual nos três apps, acima da barra de baixo.
+     acao = { label: 'Desfazer', run() {...} } mostra um botão e deixa o aviso mais tempo na tela (6 s). */
+  function avisar(msg, acao) {
+    if (typeof C.toast === 'function') { try { C.toast(msg, acao); return; } catch {} }
     let el = $('.kf-toast');
     if (!el) { el = document.createElement('div'); el.className = 'kf-toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
     el.textContent = msg; el.hidden = false; clearTimeout(toastT);
-    toastT = setTimeout(() => { el.hidden = true; }, 3200);
+    if (acao && acao.label) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'kf-toast-acao'; b.textContent = acao.label;
+      b.onclick = () => { el.hidden = true; clearTimeout(toastT); try { acao.run(); } catch (e) { console.error(e); } };
+      el.appendChild(b);
+    }
+    toastT = setTimeout(() => { el.hidden = true; }, acao ? 6000 : 3200);
   }
 
   /* ================= janelas (diálogos) ================= */
@@ -175,14 +182,15 @@
     else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
   }
   /* abre uma janela: no celular sobe do pé da tela; em telas largas fica no centro */
-  function abrirDialogo({ titulo, corpo, pe = '', aoMontar, aoFechar, classe = '', nome = '' }) {
+  /* sub: linha pequena acima do título; classe 'kf-alto' (altura quase toda da tela) e 'kf-largo' (até 780 px) */
+  function abrirDialogo({ titulo, sub = '', corpo, pe = '', aoMontar, aoFechar, classe = '', nome = '' }) {
     const origem = atual ? atual.origem : document.activeElement;
     fecharDialogo(true);
     const idT = 'kf-t-' + Math.random().toString(36).slice(2, 8);
     const wrap = document.createElement('div');
     wrap.className = 'kf-ov';
     wrap.innerHTML = `<div class="kf-dlg ${esc(classe)}" role="dialog" aria-modal="true" aria-labelledby="${idT}" tabindex="-1"${nome ? ` data-kf-dialogo="${esc(nome)}"` : ''}>
-      <div class="kf-dlg-cab"><h2 id="${idT}">${esc(titulo)}</h2><button type="button" class="kf-fechar" data-kf-fechar aria-label="Fechar">${IC.x}</button></div>
+      <div class="kf-dlg-cab">${sub ? `<div class="kf-dlg-tt"><p class="kf-dlg-sub">${esc(sub)}</p><h2 id="${idT}">${esc(titulo)}</h2></div>` : `<h2 id="${idT}">${esc(titulo)}</h2>`}<button type="button" class="kf-fechar" data-kf-fechar aria-label="Fechar">${IC.x}</button></div>
       <div class="kf-dlg-corpo">${corpo}</div>${pe ? `<div class="kf-dlg-pe">${pe}</div>` : ''}</div>`;
     raiz().appendChild(wrap);
     travar();
@@ -690,6 +698,23 @@
     return tipo === 'trilho'
       ? `<button type="button" class="kf-trilho-it kf-trilho-ajustes" data-kf="ajustes"${id}${role} aria-current="${em ? 'page' : 'false'}">${IC.ajustes}<span>Ajustes</span></button>`
       : `<button type="button" class="kf-nav-it" data-kf="ajustes"${id}${role} aria-current="${em ? 'page' : 'false'}"><span class="kf-nav-ic">${IC.ajustes}</span><span class="kf-nav-l">Ajustes</span></button>`;
+  }
+
+  /* ================= componentes de tela: cabeçalho, botão de criar e estado vazio ================= */
+  /* Iguais nos três apps (lei 6). Devolvem HTML; o app põe onde quiser e liga os cliques como sempre (pelos atributos).
+     cabecalho({ titulo, sub, acoes, criar }): título grande de tela principal (a tela inicial não tem); sub é HTML.
+     criar({ rotulo, attrs }): botão de criar. No celular e no tablet flutua acima da barra de baixo (o Kit reserva
+       espaço no pé da página para ele não cobrir a lista); no computador fica no cabeçalho, ao lado do título.
+     vazio({ titulo, texto, acao }): estado vazio com explicação curta e, se houver, um botão de ação (HTML). */
+  function criarHTML({ rotulo, attrs = '' } = {}) {
+    return `<button type="button" class="kf-btn kf-pri kf-criar" ${attrs}>${svg('<path d="M12 5v14M5 12h14"/>')}<span>${esc(rotulo)}</span></button>`;
+  }
+  function cabecalhoHTML({ titulo, sub = '', acoes = '', criar = null, classe = '' } = {}) {
+    const lado = `${acoes || ''}${criar ? criarHTML(criar) : ''}`;
+    return `<header class="kf-cab ${esc(classe)}"><div class="kf-cab-tx"><h1 class="kf-titulo">${esc(titulo)}</h1>${sub ? `<p class="kf-cab-sub">${sub}</p>` : ''}</div>${lado ? `<div class="kf-cab-acoes">${lado}</div>` : ''}</header>`;
+  }
+  function vazioHTML({ titulo, texto = '', acao = '', icone = '' } = {}) {
+    return `<div class="kf-vazio" role="status">${icone ? `<span class="kf-vazio-ic">${icone}</span>` : ''}<b>${esc(titulo)}</b>${texto ? `<p>${texto}</p>` : ''}${acao ? `<div class="kf-vazio-acao">${acao}</div>` : ''}</div>`;
   }
 
   /* ================= barra de baixo: no máximo 5 posições, com "Mais" ================= */
@@ -1291,6 +1316,7 @@
     ajudaHTML,
     topo: { html: topoHTML, atualizar: atualizarTopo, estado: estadoNuvem, ESTADOS },
     nav: { ajustes: navAjustesHTML, organizar: organizarNav, MAX: NAV_MAX },
+    ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML },
     apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix },
     novidades: { abrir: abrirNovidades, daVersao: novidadesDaVersao },
     boasVindas: { abrir: abrirBoasVindas },

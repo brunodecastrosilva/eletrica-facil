@@ -83,7 +83,14 @@ function desenhar() {
       produto: [{ id: 'notas', titulo: 'Notas', icone: '<path d="M6 4h12v16H6z"/>', resumo: `${notas.length} notas`, html: '<div class="kf-bloco"><h3>Preferências das notas</h3><label class="kf-check"><input type="checkbox" id="prod-opcao"><span>Opção do produto</span></label></div>' }],
     });
     KitFacil.ajustes.ligar(m);
-  } else m.innerHTML = `<h1>${tela === 'inicio' ? 'Início' : tela === 'notas' ? 'Notas' : tela}</h1><ul id="notas">${notas.map(n => `<li data-id="${KitFacil.esc(n.id)}">${KitFacil.esc(n.t)}</li>`).join('')}</ul>`;
+  } else if (tela === 'notas') {
+    // tela principal com os componentes comuns: cabeçalho, botão de criar e estado vazio
+    const muitas = +(Q.get('lista') || 0);
+    const itens = [...notas.map(n => n.t), ...Array.from({ length: muitas }, (_, i) => 'Item ' + (i + 1))];
+    m.innerHTML = KitFacil.ui.cabecalho({ titulo: 'Notas', sub: 'Tudo o que você anotou.', criar: { rotulo: 'Nova nota', attrs: 'data-nova-nota' } })
+      + (itens.length ? `<ul id="notas">${itens.map(t => `<li style="min-height:56px">${KitFacil.esc(t)}</li>`).join('')}</ul>`
+        : KitFacil.ui.vazio({ titulo: 'Nenhuma nota ainda', texto: 'Suas notas aparecem aqui.', acao: '<button class="kf-btn kf-sec" data-nova-nota>Criar a primeira nota</button>' }));
+  } else m.innerHTML = `<h1>${tela === 'inicio' ? 'Início' : tela}</h1><ul id="notas">${notas.map(n => `<li data-id="${KitFacil.esc(n.id)}">${KitFacil.esc(n.t)}</li>`).join('')}</ul>`;
   KitFacil.topo.atualizar();
 }
 const SY = KitFacil.sync.criar({ app: fam.app, nome: fam.nome, chave: CH + 'sync', dados: 'as notas de teste',
