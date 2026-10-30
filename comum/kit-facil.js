@@ -16,7 +16,7 @@
    - lista de escolha do Kit no lugar da lista do sistema (toda <select>) e seções que abrem e fecham com movimento suave */
 (function (global) {
   'use strict';
-  const VERSAO = '2.6.0';
+  const VERSAO = '2.7.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -1585,6 +1585,84 @@
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vigiarDatas); else vigiarDatas();
 
+  /* ================= Kit 2.7: campo de hora do Kit =================
+     Todo <input type="time"> vira o campo do Kit: um botão com a hora ("14:30") que abre, dentro da tela, duas colunas
+     (hora e minuto) iguais em todo aparelho. O <input> continua escondido guardando o valor (HH:MM): o app lê e muda
+     .value e ouve "change" como antes. step (em segundos) define o passo dos minutos (padrão: 5 em 5); min e max valem.
+     Para manter o do sistema: data-kf-nativa no <input>. */
+  const RELOGIO_IC = '<svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
+  const p2 = n => String(n).padStart(2, '0');
+  function horaLigar(raiz) {
+    $$('input[type="time"]:not([data-kf-hora]):not([data-kf-nativa])', raiz || document).forEach(inp => {
+      inp.setAttribute('data-kf-hora', ''); inp.hidden = true; inp.tabIndex = -1;
+      const w = document.createElement('div'); w.className = 'kf-esc kf-data kf-hora';
+      const id = (inp.id || 'kf-hora-' + novoId()) + '-hora';
+      w.innerHTML = `<button type="button" class="kf-esc-btn kf-data-btn" id="${id}" aria-expanded="false" aria-controls="${id}-cal"><span class="kf-esc-v"></span>${RELOGIO_IC}</button><div class="kf-cal kf-relogio" id="${id}-cal" role="group" hidden></div>`;
+      inp.after(w);
+      const btn = $('.kf-data-btn', w), cx = $('.kf-relogio', w);
+      const lb = inp.id && document.querySelector(`label[for="${CSS.escape(inp.id)}"]`);
+      if (lb) { lb.htmlFor = id; lb.id = lb.id || id + '-l'; cx.setAttribute('aria-labelledby', lb.id); }
+      else {
+        const pai = inp.closest('label'), cp = pai && pai.cloneNode(true);
+        if (cp) $$('input, .kf-esc', cp).forEach(x => x.remove());
+        const nome = inp.getAttribute('aria-label') || (cp && cp.textContent.trim().replace(/\s+/g, ' ')) || 'Hora';
+        btn.setAttribute('aria-label', nome); cx.setAttribute('aria-label', nome);
+        if (pai) pai.addEventListener('click', e => { if (!w.contains(e.target)) e.preventDefault(); });
+      }
+      const valor = () => { const m = /^(\d{2}):(\d{2})/.exec(VALOR_INPUT.get.call(inp) || ''); return m ? [+m[1], +m[2]] : null; };
+      const passo = () => { const s = +inp.getAttribute('step'); return s >= 60 ? Math.max(1, Math.round(s / 60)) : 5; };
+      const fora = (h, m) => { const t = `${p2(h)}:${p2(m)}`, mn = inp.getAttribute('min'), mx = inp.getAttribute('max'); return (mn && t < mn) || (mx && t > mx); };
+      const pinta = () => { const v = valor(); $('.kf-esc-v', btn).textContent = v ? `${p2(v[0])}:${p2(v[1])}` : (inp.getAttribute('placeholder') || 'Escolha a hora'); btn.classList.toggle('kf-esc-vazio', !v); btn.disabled = inp.disabled; if (!cx.hidden) monta(); };
+      const define = v => { if (VALOR_INPUT.get.call(inp) === v) return; VALOR_INPUT.set.call(inp, v); pinta(); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); };
+      let hEsc = null;
+      const monta = () => {
+        const v = valor(), h = hEsc != null ? hEsc : v ? v[0] : null, st = passo();
+        const mins = []; for (let m = 0; m < 60; m += st) mins.push(m);
+        if (v && !mins.includes(v[1])) { mins.push(v[1]); mins.sort((a, b) => a - b); }
+        cx.innerHTML = `<div class="kf-rel-cols"><div class="kf-rel-col" role="listbox" aria-label="Hora">${Array.from({ length: 24 }, (_, k) => `<button type="button" role="option" class="kf-rel-op" data-kf-h="${k}" aria-selected="${h === k}" ${fora(k, 59) && fora(k, 0) ? 'disabled' : ''}>${p2(k)}</button>`).join('')}</div>`
+          + `<div class="kf-rel-col" role="listbox" aria-label="Minuto">${mins.map(m => `<button type="button" role="option" class="kf-rel-op" data-kf-m="${m}" aria-selected="${!!v && hEsc == null && v[1] === m}" ${h != null && fora(h, m) ? 'disabled' : ''}>${p2(m)}</button>`).join('')}</div></div>`
+          + `<div class="kf-cal-pe"><button type="button" class="kf-btn kf-link" data-kf-agora>Agora</button>${inp.required ? '' : '<button type="button" class="kf-btn kf-link" data-kf-limpar>Limpar</button>'}</div>`;
+        $$('.kf-rel-col', cx).forEach(col => { const s = $('[aria-selected="true"]', col); if (s) col.scrollTop = s.offsetTop - col.clientHeight / 2 + s.offsetHeight / 2; });
+      };
+      const abre = () => {
+        if (inp.disabled) return;
+        $$('.kf-esc.kf-aberta').forEach(x => { if (x !== w && x._fecha) x._fecha(false); });
+        hEsc = null; monta(); cx.hidden = false; btn.setAttribute('aria-expanded', 'true'); w.classList.add('kf-aberta');
+        $$('.kf-rel-col', cx).forEach(col => { const s = $('[aria-selected="true"]', col); if (s) col.scrollTop = s.offsetTop - col.clientHeight / 2 + s.offsetHeight / 2; });
+        entrar(cx, { de: 'cima' });
+        const f = $('[data-kf-h][aria-selected="true"]', cx) || $('[data-kf-h="' + new Date().getHours() + '"]', cx); if (f) f.focus({ preventScroll: true });
+        requestAnimationFrame(() => { const r = cx.getBoundingClientRect(); if (r.bottom > innerHeight - 8) cx.scrollIntoView({ block: 'nearest', behavior: semMovimento() ? 'auto' : 'smooth' }); });
+      };
+      const fecha = foco => { if (cx.hidden) return; sairLista(cx, { 'kf-cal': 'kf-cal-x' }); cx.hidden = true; btn.setAttribute('aria-expanded', 'false'); w.classList.remove('kf-aberta'); if (foco) btn.focus(); };
+      w._fecha = fecha;
+      btn.addEventListener('click', e => { e.preventDefault(); cx.hidden ? abre() : fecha(true); });
+      cx.addEventListener('click', e => {
+        e.preventDefault();
+        const hb = e.target.closest('[data-kf-h]'); if (hb && !hb.disabled) { hEsc = +hb.dataset.kfH; const v = valor(); define(`${p2(hEsc)}:${p2(v ? v[1] : 0)}`); hEsc = +hb.dataset.kfH; monta(); $('[data-kf-m][aria-selected="true"], [data-kf-m]:not([disabled])', cx)?.focus({ preventScroll: true }); return; }
+        const mb = e.target.closest('[data-kf-m]'); if (mb && !mb.disabled) { const v = valor(), h = hEsc != null ? hEsc : v ? v[0] : new Date().getHours(); define(`${p2(h)}:${p2(+mb.dataset.kfM)}`); fecha(true); return; }
+        if (e.target.closest('[data-kf-agora]')) { const d = new Date(), st = passo(); define(`${p2(d.getHours())}:${p2(Math.floor(d.getMinutes() / st) * st)}`); fecha(true); return; }
+        if (e.target.closest('[data-kf-limpar]')) { define(''); fecha(true); }
+      });
+      cx.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); fecha(true); return; }
+        const b = e.target.closest && e.target.closest('.kf-rel-op'); if (!b || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
+        e.preventDefault(); const ops = $$('.kf-rel-op:not([disabled])', b.parentNode), i = ops.indexOf(b);
+        const n = ops[Math.max(0, Math.min(ops.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))]; if (n) n.focus();
+      });
+      w.addEventListener('focusout', e => { if (e.relatedTarget && !w.contains(e.relatedTarget)) fecha(false); });
+      Object.defineProperty(inp, 'value', { configurable: true, get() { return VALOR_INPUT.get.call(this); }, set(v) { VALOR_INPUT.set.call(this, v); pinta(); } });
+      new MutationObserver(pinta).observe(inp, { attributes: true, attributeFilter: ['disabled', 'min', 'max', 'required', 'step', 'value'] });
+      inp.addEventListener('change', pinta);
+      pinta();
+    });
+  }
+  const vigiarHoras = () => {
+    horaLigar(document);
+    new MutationObserver(ms => { if (ms.some(m => [...m.addedNodes].some(n => n.nodeType === 1 && (n.matches && n.matches('input[type="time"]') || n.querySelector && n.querySelector('input[type="time"]'))))) horaLigar(document); })
+      .observe(document.body, { childList: true, subtree: true });
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vigiarHoras); else vigiarHoras();
+
   /* ================= Kit 2.5: seções que abrem e fecham =================
      <details data-kf-secao> abre e fecha com movimento suave: a altura cresce ou encolhe na mesma curva de toda a
      família, o conteúdo aparece um pouco depois e some antes. Opções:
@@ -1677,6 +1755,7 @@
     ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML },
     escolha: { ligar: escolhaLigar },
     data: { ligar: dataLigar },
+    hora: { ligar: horaLigar },
     secao: { abrir: secaoAbrir, fechar: secaoFechar, alternar: secaoAlternar, aberta: secaoAberta },
     movimento: { ms: MOV.ms, curto: MOV.curto, curva: MOV.curva, css: MOV.css, reduzido: semMovimento, entrar },
     apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix },

@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.14.1 · 2026-10-30
+
+- Ajustes internos do Kit Fácil, sem mudança para quem usa.
+- Kit Fácil 2.7.0: campo de hora do Kit (`KitFacil.hora`) no lugar do relógio do sistema; Guitarra Fácil na família.
+
 ## 2.14.0 · 2026-10-30
 
 - Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas.

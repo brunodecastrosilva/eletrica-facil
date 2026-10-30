@@ -421,3 +421,14 @@ details.kf-secao-anim{overflow:hidden}
 .kf-cal-pe .kf-btn{min-height:44px;align-self:center}
 .kf-cal-pe{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--kf-line);padding-top:4px}
 @media (prefers-reduced-motion:reduce){.kf-nav-ic,.kf-trilho-it,.kf-nav-it,.kf-cal-d span{transition:none}.kf-toast:not([hidden]){animation:none}}
+
+/* ================= Kit 2.7: campo de hora ================= */
+.kf-relogio{max-width:260px}
+.kf-rel-cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kf-rel-col{max-height:220px;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:2px;scrollbar-width:thin}
+.kf-rel-op{min-height:44px;border:0;border-radius:10px;background:none;color:var(--kf-ink);font:400 17px/1 var(--kf-font);font-variant-numeric:tabular-nums;cursor:pointer;flex:none;transition:background-color .28s cubic-bezier(.45,0,.2,1)}
+.kf-rel-op:hover{background:var(--kf-surface-2)}
+.kf-rel-op[aria-selected="true"]{background:var(--kf-accent);color:var(--kf-accent-ink);font-weight:700}
+.kf-rel-op[disabled]{opacity:.4;cursor:default;background:none}
+.kf-rel-op:focus-visible{outline:2px solid var(--kf-focus,var(--kf-accent-texto));outline-offset:-2px}
+@media (prefers-reduced-motion:reduce){.kf-rel-op{transition:none}}

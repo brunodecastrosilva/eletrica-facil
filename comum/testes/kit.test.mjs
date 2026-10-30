@@ -749,3 +749,28 @@ test('Kit 2.6: campo de data com o calendário do Kit (o <input> guarda o valor)
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
+
+test('Kit 2.7: campo de hora com as colunas do Kit (o <input> guarda o valor)', async () => {
+  const a = await aparelho(amb, { viewport: CELULAR, caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => {
+    document.getElementById('main').insertAdjacentHTML('beforeend', '<label for="h1">Horário</label><input type="time" id="h1" value="09:30" step="900">');
+    window.MUDOU = 0; document.getElementById('h1').addEventListener('change', () => MUDOU++);
+  });
+  const btn = p.locator('#h1-hora');
+  await btn.waitFor();
+  assert.equal(await p.locator('#h1').isVisible(), false, 'o relógio do sistema não aparece');
+  assert.equal((await btn.textContent()).trim(), '09:30');
+  await btn.click();
+  assert.equal(await p.locator('#h1-hora-cal [data-kf-m]').count(), 4, 'step de 15 minutos: 00, 15, 30, 45');
+  await p.click('#h1-hora-cal [data-kf-h="14"]');
+  assert.equal(await p.inputValue('#h1'), '14:30');
+  await p.click('#h1-hora-cal [data-kf-m="45"]');
+  assert.equal(await p.inputValue('#h1'), '14:45');
+  assert.equal(await p.locator('#h1-hora-cal').isVisible(), false);
+  assert.ok(await p.evaluate(() => MUDOU) >= 1);
+  await p.evaluate(() => { document.getElementById('h1').value = '07:00'; });
+  assert.equal((await btn.textContent()).trim(), '07:00');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
