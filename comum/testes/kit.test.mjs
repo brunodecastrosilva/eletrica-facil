@@ -4,7 +4,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { preparar, aparelho, githubFalso, firestoreFalso, TOKEN_TESTE, conferirTopo, conferirNavAjustes, abrirAjustesPelaNav, guiasAjustes, GUIAS_COMUNS, semRolagemLateral } from './ambiente.mjs';
+import { preparar, aparelho, githubFalso, firestoreFalso, TOKEN_TESTE, conferirTopo, conferirNavAjustes, abrirAjustesPelaNav, irPelaNav, guiasAjustes, GUIAS_COMUNS, semRolagemLateral } from './ambiente.mjs';
 
 let amb;
 before(async () => { amb = await preparar(); });
@@ -564,4 +564,35 @@ test('Ajustes na navegação: abre os Ajustes, fica marcado e tocar de novo volt
   assert.ok(await esperar(() => p.evaluate(() => !document.querySelector('[data-kf-aj]'))));
   assert.equal(await p.locator('.kf-nav [data-kf="ajustes"]').getAttribute('aria-current'), 'false');
   await a.fechar();
+});
+
+test('barra de baixo: com até 5 itens mostra todos; com 10 seções mostra 4 + "Mais", sem cortar nomes, e o "Mais" leva a qualquer seção', async () => {
+  for (const viewport of [{ width: 360, height: 740 }, { width: 820, height: 1180 }]) {
+    const poucos = await aparelho(amb, { viewport, caminho: pagina() });
+    assert.equal(await poucos.page.locator('.kf-nav [data-kf-nav-mais]').count(), 0, 'com 3 itens não deveria haver "Mais"');
+    assert.deepEqual((await conferirNavAjustes(poucos.page)).erros, []);
+    await poucos.fechar();
+    const muitos = await aparelho(amb, { viewport, caminho: pagina() + '&secoes=8' });
+    const p = muitos.page;
+    const n = await conferirNavAjustes(p);
+    assert.deepEqual(n.erros, [], `largura ${viewport.width}: ${n.erros.join('; ')}`);
+    assert.equal(n.onde, 'mais');
+    assert.equal(await p.locator('.kf-nav .kf-nav-it:visible').count(), 5);
+    // principais: Início, Notas e as seções ímpares (as pares foram marcadas com data-kf-mais)
+    assert.deepEqual(await p.locator('.kf-nav .kf-nav-it:visible .kf-nav-l').allTextContents(), ['Início', 'Notas', 'Seção 1', 'Seção 3', 'Mais']);
+    await irPelaNav(p, 'Seção 8');
+    assert.ok(await esperar(() => p.evaluate(() => document.querySelector('#main h1').textContent === 'extra8')));
+    // a seção atual está no "Mais": o "Mais" fica marcado
+    assert.equal(await p.getAttribute('.kf-nav [data-kf-nav-mais]', 'aria-current'), 'page');
+    await p.click('.kf-nav [data-kf-nav-mais]');
+    assert.equal(await p.locator('[data-kf-dialogo="mais"] .kf-aj-item').last().textContent().then(t => t.trim()), 'Ajustes');
+    assert.equal(await p.locator('[data-kf-dialogo="mais"] [aria-current="true"]').textContent().then(t => t.trim()), 'Seção 8');
+    await p.keyboard.press('Escape');
+    await abrirAjustesPelaNav(p);
+    await p.locator('[data-kf-aj]').waitFor();
+    assert.equal(await p.getAttribute('.kf-nav [data-kf-nav-mais]', 'aria-current'), 'page');
+    assert.ok(await semRolagemLateral(p));
+    assert.deepEqual(muitos.erros, []);
+    await muitos.fechar();
+  }
 });

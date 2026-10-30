@@ -15,7 +15,7 @@
    - janelas (diálogos) acessíveis e avisos */
 (function (global) {
   'use strict';
-  const VERSAO = '2.1.3';
+  const VERSAO = '2.2.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -74,6 +74,7 @@
     escudo: '<path d="M12 3 5 6v5.5c0 4.3 3 7.6 7 9.5 4-1.9 7-5.2 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.1"/>',
     chopp: '<path d="M5.5 8.5h10v11a1.5 1.5 0 0 1-1.5 1.5H7a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M15.5 11h1.6a2.4 2.4 0 0 1 2.4 2.4v1.7a2.4 2.4 0 0 1-2.4 2.4h-1.6"/><path d="M5.5 8.5A2.4 2.4 0 0 1 7.6 4.7a3 3 0 0 1 5.3-.4 2.4 2.4 0 0 1 2.6 4.2"/><path d="M9 12.5v5M12 12.5v5"/>',
+    mais: '<circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/>',
     estrelaNova: '<path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3M6 6l2.1 2.1M15.9 15.9 18 18M18 6l-2.1 2.1M8.1 15.9 6 18"/><circle cx="12" cy="12" r="2.2"/>',
   };
   const IC = {
@@ -691,6 +692,69 @@
       : `<button type="button" class="kf-nav-it" data-kf="ajustes"${id}${role} aria-current="${em ? 'page' : 'false'}"><span class="kf-nav-ic">${IC.ajustes}</span><span class="kf-nav-l">Ajustes</span></button>`;
   }
 
+  /* ================= barra de baixo: no máximo 5 posições, com "Mais" ================= */
+  /* Regra do Kit (lei 6): a barra de baixo nunca encolhe os nomes. Com até 5 itens, mostra todos. Com mais, mostra as
+     4 seções principais e um 5º item, "Mais", que abre a lista do resto, com Ajustes por último.
+     O app só marca as seções secundárias com o atributo data-kf-mais; Ajustes vai para o "Mais" sozinho.
+     Os itens escondidos continuam no lugar (com a classe kf-nav-oculto): tocar no "Mais" e escolher um deles
+     dispara o clique do próprio item, então a navegação do app não muda. No computador o trilho mostra tudo. */
+  const NAV_MAX = 5;
+  const itensNav = nav => [...nav.children].filter(el => el.classList.contains('kf-nav-it') && !el.hasAttribute('data-kf-nav-mais'));
+  const ativoNav = el => el.getAttribute('aria-current') === 'page' || el.getAttribute('aria-selected') === 'true';
+  const rotuloNav = el => ((el.querySelector('.kf-nav-l') || el).textContent || '').trim();
+  function ocultosNav(nav) {
+    const itens = itensNav(nav);
+    if (itens.length <= NAV_MAX) return [];
+    const ajustes = itens.filter(el => el.dataset.kf === 'ajustes');
+    const marcados = itens.filter(el => el.hasAttribute('data-kf-mais') && !ajustes.includes(el));
+    const principais = itens.filter(el => !marcados.includes(el) && !ajustes.includes(el)).slice(0, NAV_MAX - 1);
+    return [...itens.filter(el => !principais.includes(el) && !ajustes.includes(el)), ...ajustes];
+  }
+  const mudar = (el, attr, v) => { if (el.getAttribute(attr) !== v) el.setAttribute(attr, v); };
+  function organizarNav(nav) {
+    const ocultos = ocultosNav(nav);
+    itensNav(nav).forEach(el => el.classList.toggle('kf-nav-oculto', ocultos.includes(el)));
+    let mais = nav.querySelector(':scope > [data-kf-nav-mais]');
+    if (!ocultos.length) { if (mais) mais.remove(); return; }
+    if (!mais) {
+      mais = document.createElement('button');
+      mais.type = 'button'; mais.className = 'kf-nav-it'; mais.setAttribute('data-kf-nav-mais', ''); mais.setAttribute('aria-haspopup', 'dialog');
+      mais.innerHTML = `<span class="kf-nav-ic">${svg(P.mais)}</span><span class="kf-nav-l">Mais</span>`;
+      if (nav.getAttribute('role') === 'tablist') mais.setAttribute('role', 'tab');
+    }
+    if (nav.lastElementChild !== mais) nav.appendChild(mais);
+    const ativo = ocultos.find(ativoNav);
+    mudar(mais, 'aria-current', ativo ? 'page' : 'false');
+    if (mais.getAttribute('role') === 'tab') mudar(mais, 'aria-selected', String(!!ativo));
+    mudar(mais, 'aria-label', ativo ? `Mais seções. Você está em ${rotuloNav(ativo)}` : 'Mais seções');
+  }
+  function abrirMaisNav(nav) {
+    const ocultos = ocultosNav(nav);
+    abrirDialogo({ titulo: 'Mais', classe: 'kf-curto kf-mais', nome: 'mais',
+      corpo: `<ul class="kf-mais-lista">${ocultos.map((el, i) => `<li><button type="button" class="kf-aj-item" data-kf-mais-i="${i}"${ativoNav(el) ? ' aria-current="true"' : ''}${el.getAttribute('aria-disabled') === 'true' ? ' aria-disabled="true"' : ''}>
+          <span class="kf-aj-ic">${(el.querySelector('.kf-nav-ic') || {}).innerHTML || ''}</span><span class="kf-aj-tx"><b>${esc(rotuloNav(el))}</b></span>${IC.chev}</button></li>`).join('')}</ul>`,
+      pe: `<button type="button" class="kf-btn kf-sec" data-kf-fechar>Fechar</button>`,
+      aoMontar: d => d.addEventListener('click', e => {
+        const b = e.target.closest('[data-kf-mais-i]'); if (!b) return;
+        const alvo = ocultos[+b.dataset.kfMaisI];
+        fecharDialogo(true);
+        if (alvo && document.contains(alvo)) alvo.click();
+      }) });
+  }
+  /* liga o "Mais" em todas as barras de baixo da página, inclusive as que o app redesenha depois */
+  function vigiarNav() {
+    const ligar = nav => {
+      if (nav._kfNav) return; nav._kfNav = true;
+      const obs = new MutationObserver(() => { obs.disconnect(); try { organizarNav(nav); } finally { obs.observe(nav, opc); } });
+      const opc = { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-current', 'aria-selected', 'data-kf-mais'] };
+      organizarNav(nav); obs.observe(nav, opc);
+      nav.addEventListener('click', e => { if (e.target.closest('[data-kf-nav-mais]')) { e.preventDefault(); abrirMaisNav(nav); } });
+    };
+    $$('.kf-nav-in').forEach(ligar);
+    new MutationObserver(() => $$('.kf-nav-in').forEach(ligar)).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vigiarNav); else vigiarNav();
+
   /* ================= apoio ao criador: "Pague um chopp para o criador!" ================= */
   const apoioAtivo = () => !!(C.apoio && String(C.apoio.chave || '').trim());
   const botaoApoio = () => `<button type="button" class="kf-topo-btn kf-chopp" data-kf="apoio" aria-label="Pague um chopp para o criador" title="Pague um chopp para o criador">${IC.chopp}</button>`;
@@ -1226,7 +1290,7 @@
     sobre: { abrir: abrirSobre },
     ajudaHTML,
     topo: { html: topoHTML, atualizar: atualizarTopo, estado: estadoNuvem, ESTADOS },
-    nav: { ajustes: navAjustesHTML },
+    nav: { ajustes: navAjustesHTML, organizar: organizarNav, MAX: NAV_MAX },
     apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix },
     novidades: { abrir: abrirNovidades, daVersao: novidadesDaVersao },
     boasVindas: { abrir: abrirBoasVindas },

@@ -196,7 +196,8 @@ export async function conferirTopo(page, o = {}) {
     return { erros, estado, nuvem: n, balao: b, chopp: c };
   }, chopp);
 }
-/* Ajustes na navegação: último item da barra de baixo (até 1023 px) ou do trilho (computador), com nome visível */
+/* barra de baixo (Kit Fácil 2.2): no máximo 5 posições e nenhum nome cortado. Com até 5 itens, Ajustes é o último;
+   com mais, o 5º item é "Mais" e Ajustes é o último lá dentro. No computador (trilho), Ajustes é o último item. */
 export async function conferirNavAjustes(page) {
   return page.evaluate(() => {
     const vis = el => el && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && getComputedStyle(el).display !== 'none';
@@ -204,19 +205,39 @@ export async function conferirNavAjustes(page) {
     const cont = document.querySelector(largo ? '.kf-trilho' : '.kf-nav');
     const erros = [];
     if (!vis(cont)) return { erros: [`${largo ? 'trilho' : 'barra de baixo'} não está visível`] };
-    const itens = [...cont.querySelectorAll(largo ? '.kf-trilho-it' : '.kf-nav-it')].filter(vis);
-    const aj = itens.filter(b => b.dataset.kf === 'ajustes');
-    if (aj.length !== 1) return { erros: [`itens Ajustes na ${largo ? 'trilho' : 'barra de baixo'}: ${aj.length}`] };
-    if (itens[itens.length - 1] !== aj[0]) erros.push('Ajustes não é o último item da navegação');
-    if (!/Ajustes/.test(aj[0].textContent)) erros.push('item Ajustes sem o nome visível');
-    const r = aj[0].getBoundingClientRect();
-    if (r.height < 44) erros.push(`item Ajustes com menos de 44 px de altura (${Math.round(r.height)})`);
-    return { erros, onde: largo ? 'trilho' : 'barra de baixo' };
+    const todos = [...cont.querySelectorAll(largo ? '.kf-trilho-it' : '.kf-nav-it')];
+    const itens = todos.filter(vis);
+    const aj = todos.filter(b => b.dataset.kf === 'ajustes');
+    if (aj.length !== 1) return { erros: [`itens Ajustes: ${aj.length}`] };
+    if (largo) {
+      if (itens[itens.length - 1] !== aj[0]) erros.push('Ajustes não é o último item do trilho');
+      return { erros, onde: 'trilho' };
+    }
+    if (itens.length > 5) erros.push(`barra de baixo com ${itens.length} itens (máximo 5)`);
+    itens.forEach(b => { const l = b.querySelector('.kf-nav-l'); if (l && l.scrollWidth > l.clientWidth + 1) erros.push(`nome cortado: ${l.textContent.trim()}`); if (b.getBoundingClientRect().height < 44) erros.push(`item com menos de 44 px: ${l && l.textContent.trim()}`); });
+    const mais = itens.find(b => b.hasAttribute('data-kf-nav-mais'));
+    if (mais) {
+      if (itens[itens.length - 1] !== mais) erros.push('"Mais" não é o último item da barra');
+      if (vis(aj[0])) erros.push('com "Mais", Ajustes deveria estar dentro dele');
+      const ocultos = todos.filter(b => b.classList.contains('kf-nav-oculto'));
+      if (ocultos[ocultos.length - 1] !== aj[0]) erros.push('Ajustes não é o último item do "Mais"');
+    } else if (itens[itens.length - 1] !== aj[0]) erros.push('Ajustes não é o último item da barra de baixo');
+    return { erros, onde: mais ? 'mais' : 'barra de baixo' };
   });
 }
-/* abre os Ajustes pelo item da navegação que estiver visível (barra de baixo ou trilho) */
+/* abre os Ajustes pela navegação: item visível (barra ou trilho) ou, se estiver no "Mais", pelo "Mais" */
 export async function abrirAjustesPelaNav(page) {
-  await page.locator('.kf-nav [data-kf="ajustes"], .kf-trilho [data-kf="ajustes"]').locator('visible=true').first().click();
+  const direto = page.locator('.kf-nav [data-kf="ajustes"], .kf-trilho [data-kf="ajustes"]').locator('visible=true');
+  if (await direto.count()) return direto.first().click();
+  await page.locator('.kf-nav [data-kf-nav-mais]').locator('visible=true').first().click();
+  await page.locator('[data-kf-dialogo="mais"] .kf-aj-item', { hasText: 'Ajustes' }).click();
+}
+/* vai para uma seção da barra de baixo pelo nome, passando pelo "Mais" se ela estiver lá */
+export async function irPelaNav(page, nome) {
+  const item = page.locator('.kf-nav .kf-nav-it', { hasText: nome }).locator('visible=true');
+  if (await item.count()) return item.first().click();
+  await page.locator('.kf-nav [data-kf-nav-mais]').locator('visible=true').first().click();
+  await page.locator('[data-kf-dialogo="mais"] .kf-aj-item', { hasText: nome }).click();
 }
 /* nomes das guias da tela de Ajustes, na ordem em que aparecem */
 export async function guiasAjustes(page) {

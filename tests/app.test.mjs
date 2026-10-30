@@ -4,7 +4,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { writeFile } from 'node:fs/promises';
-import { preparar, aparelho, githubFalso, firestoreFalso, semRolagemLateral, conferirTopo, conferirNavAjustes, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ } from '../comum/testes/ambiente.mjs';
+import { preparar, aparelho, githubFalso, firestoreFalso, semRolagemLateral, conferirTopo, conferirNavAjustes, abrirAjustesPelaNav, irPelaNav, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ } from '../comum/testes/ambiente.mjs';
 
 let amb, versao;
 before(async () => { amb = await preparar(); versao = JSON.parse(await readFile(RAIZ + '/package.json', 'utf8')).version; });
@@ -15,7 +15,7 @@ const TELAS = [[{ width: 360, height: 740 }, 'celular pequeno'], [{ width: 390, 
 const AJ = '.kf-nav [data-kf="ajustes"]:visible, .kf-trilho [data-kf="ajustes"]:visible';
 const abrirPainel = async (p, chave) => { const d = p.locator(`details[data-panel="${chave}"]`); if (!(await d.getAttribute('open') !== null)) await d.locator('summary').first().click(); };
 /* abre uma guia dos Ajustes (no celular, a lista vira a guia aberta) */
-const guia = async (p, id) => { if (!(await p.locator('[data-kf-aj]').count())) await p.click(AJ); await p.click(`.kf-aj-lista [data-kf-aj-ir="${id}"]`); await p.locator(`#kf-aj-${id}.kf-aberta, [data-kf-aj][data-ativa="${id}"]`).first().waitFor(); };
+const guia = async (p, id) => { if (!(await p.locator('[data-kf-aj]').count())) await abrirAjustesPelaNav(p); await p.click(`.kf-aj-lista [data-kf-aj-ir="${id}"]`); await p.locator(`#kf-aj-${id}.kf-aberta, [data-kf-aj][data-ativa="${id}"]`).first().waitFor(); };
 
 /* cria um orçamento usando as próprias funções do app */
 const criarOrcamento = (p, cliente, servico) => p.evaluate(([cliente, servico]) => {
@@ -38,7 +38,7 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral; topo 
     assert.deepEqual(navs, [viewport.width >= 1024 ? '.kf-trilho' : '.kf-nav'], `navegação no ${nome}`);
     const navAj = await conferirNavAjustes(p);
     assert.deepEqual(navAj.erros, [], `Ajustes na navegação no ${nome}`);
-    await p.click(AJ);
+    await abrirAjustesPelaNav(p);
     await p.locator('.kf-aj-h').waitFor();
     assert.ok(await semRolagemLateral(p), `rolagem lateral nos Ajustes no ${nome}`);
     await guia(p, 'padrao');
@@ -65,10 +65,10 @@ test('Ajustes: guias comuns na ordem do padrão, guias do Elétrica Fácil, Volt
   const a = await aparelho(amb);
   const p = a.page;
   await p.click('#nav-prices');
-  await p.click(AJ);
+  await abrirAjustesPelaNav(p);
   assert.deepEqual(await guiasAjustes(p), { comuns: GUIAS_COMUNS, produto: ['Pix', 'Veículo e deslocamento', 'Adicionais', 'Orçamento novo', 'Textos dos documentos'] });
   assert.ok((await p.textContent('#app')).includes(`Elétrica Fácil ${versao}`), 'falta a versão');
-  assert.equal(await p.getAttribute(AJ, 'aria-current'), 'page');
+  assert.equal(await p.locator('.kf-nav [data-kf=\"ajustes\"]').getAttribute('aria-current'), 'page');
   await guia(p, 'sobre');
   assert.equal(await p.locator('#kf-aj-sobre .kf-sobre, #kf-aj-sobre').count() > 0, true);
   await p.goBack();
@@ -76,7 +76,7 @@ test('Ajustes: guias comuns na ordem do padrão, guias do Elétrica Fácil, Volt
   await p.goBack();
   assert.ok(await esperar(() => p.evaluate(() => route().name === 'prices')), 'o Voltar não saiu dos Ajustes');
   // trocar de tela pela barra de baixo estando numa guia: a guia sai do histórico
-  await p.click(AJ);
+  await abrirAjustesPelaNav(p);
   await guia(p, 'pix');
   await p.click('#nav-home');
   assert.ok(await esperar(() => p.evaluate(() => route().name === 'home')));
@@ -111,7 +111,7 @@ test('Ajustes: seus dados (Conta e perfil) e guias do app salvam e atualizam o r
 test('computador: Ajustes em duas colunas e barra inferior do orçamento depois do trilho', async () => {
   const a = await aparelho(amb, { viewport: { width: 1440, height: 900 } });
   const p = a.page;
-  await p.click(AJ);
+  await abrirAjustesPelaNav(p);
   const lado = await p.evaluate(() => { const l = document.querySelector('.kf-aj-lista').getBoundingClientRect(), s = document.querySelector('.kf-aj-sec.kf-aberta, .kf-aj-sec:first-child').getBoundingClientRect(); return l.right <= s.left && Math.abs(l.top - s.top) < 60; });
   assert.ok(lado, 'lista e guia não estão lado a lado');
   const id = await criarOrcamento(p, 'Cliente Largo', 'Troca de disjuntor');

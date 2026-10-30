@@ -3,7 +3,7 @@
 Regras comuns do **Conta Fácil**, do **Elétrica Fácil** e do **Estudo Fácil** e de qualquer app novo do projeto.
 Este arquivo fica em `comum/PADRAO.md`, igual nos três repositórios, junto com o **Kit Fácil** (o código comum).
 
-Versão do padrão: 2.1 · Kit Fácil 2.1.3 · outubro de 2026.
+Versão do padrão: 2.1 · Kit Fácil 2.2.0 · outubro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -200,12 +200,16 @@ exclusão automática (TTL), então a limpeza é **manual, uma vez por mês**; p
 | | Celular e tablet (até 1023 px) | Computador (1024 px ou mais) |
 |---|---|---|
 | Barra de cima (`kf-barra`) | marca à esquerda; à direita, a área superior (7.2) | só a área superior, à direita (a marca vai para o trilho) |
-| Navegação | barra fixa embaixo (`kf-nav`), ícone + nome, item atual destacado com a cor do app; **Ajustes é o último item** | trilho lateral fixo de 240 px (`kf-trilho`), com a marca e as seções; **Ajustes fica no pé do trilho** |
+| Navegação | barra fixa embaixo (`kf-nav`), ícone + nome, item atual destacado com a cor do app; **no máximo 5 posições**: com mais seções, as 4 principais + "Mais"; **Ajustes é sempre o último** (da barra ou do "Mais") | trilho lateral fixo de 240 px (`kf-trilho`), com a marca e as seções; **Ajustes fica no pé do trilho** |
 | Telas internas (um orçamento, uma proposta) | Voltar + título à esquerda; ações da tela; nuvem e balão à direita; a navegação de baixo pode sumir para dar lugar à barra de ações da tela | o trilho continua visível |
 
-- **Ajustes fica na navegação**, em todos os apps: último item da barra de baixo e, no computador, no pé do trilho
-  (`KitFacil.nav.ajustes('nav')` e `KitFacil.nav.ajustes('trilho')`). O item fica destacado enquanto os Ajustes estão
-  abertos; tocar nele de novo volta para a lista de guias.
+- **Ajustes fica na navegação**, em todos os apps: último item da barra de baixo (ou do "Mais") e, no computador, no
+  pé do trilho (`KitFacil.nav.ajustes('nav')` e `KitFacil.nav.ajustes('trilho')`). O item fica destacado enquanto os
+  Ajustes estão abertos; tocar nele de novo volta para a lista de guias.
+- **Barra de baixo com no máximo 5 posições** (Kit 2.2): os nomes nunca são encolhidos nem cortados. Com até 5 itens,
+  aparecem todos. Com mais, aparecem as 4 seções principais e o 5º item, **"Mais"**, que abre a lista do resto, com
+  Ajustes por último; o "Mais" fica destacado quando a tela atual está dentro dele. O app marca as seções secundárias
+  com o atributo `data-kf-mais`; o Kit faz o resto sozinho. No computador, o trilho mostra todas as seções.
 - A página usa `body.kf-casca`; no computador o conteúdo começa depois do trilho e fica centralizado no espaço que sobra.
 - Barras e botões fixos do app (barra de total, botão flutuante, avisos) sobem acima da navegação de baixo e,
   no computador, começam depois do trilho.

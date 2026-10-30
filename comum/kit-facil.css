@@ -318,9 +318,10 @@ textarea.kf-entrada{min-height:110px;resize:vertical}
 
 /* ================= Kit Fácil 2.1: chopp, item Ajustes na navegação, QR do Pix, novidades ================= */
 /* chopp: entre a nuvem e o balão, só nas telas principais (lei 13); mesma cor e traço dos outros ícones do topo */
-/* barra de baixo com até seis itens (seções do app + Ajustes): em telas estreitas, nome menor para caber sem cortar */
-@media (max-width:420px){.kf-nav-in{padding-inline:0}.kf-nav-it{padding-inline:0;letter-spacing:-.01em}.kf-nav-ic{width:48px}}
-@media (max-width:380px){.kf-nav-it{font-size:11px}.kf-nav-ic{width:44px}}
+/* barra de baixo: no máximo 5 posições (4 seções + "Mais"); os itens que foram para o "Mais" ficam escondidos */
+.kf-nav-it.kf-nav-oculto{display:none}
+.kf-mais-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.kf-mais-lista .kf-aj-item[aria-disabled="true"]{opacity:.45}
 /* Ajustes é o último item do trilho, separado das seções do app */
 @media (min-width:1024px){.kf-trilho-it.kf-trilho-ajustes{margin-top:auto}}
 /* QR code do Pix: sempre preto no branco, também no modo escuro (para a câmera do banco ler) */

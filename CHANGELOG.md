@@ -2,6 +2,10 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.7.4 · 2026-10-29
+
+- Kit Fácil 2.2.0 (regra nova da barra de baixo; neste app, com 3 itens, nada muda na tela).
+
 ## 2.7.3 · 2026-10-29
 
 - No alto da tela, a nova ordem é nuvem, chopp e balão, com o chopp na mesma cor dos outros ícones.

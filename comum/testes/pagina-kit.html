@@ -23,7 +23,7 @@ main{max-width:900px;margin:0 auto;padding:8px 16px calc(var(--kf-nav-h) + 40px)
 <main id="main"></main>
 <nav class="kf-nav" aria-label="Seções"><div class="kf-nav-in">
   <button class="kf-nav-it" data-ir="inicio"><span class="kf-nav-ic"></span><span class="kf-nav-l">Início</span></button>
-  <button class="kf-nav-it" data-ir="notas"><span class="kf-nav-ic"></span><span class="kf-nav-l">Notas</span></button><span id="nav-ajustes" hidden></span></div></nav>
+  <button class="kf-nav-it" data-ir="notas"><span class="kf-nav-ic"></span><span class="kf-nav-l">Notas</span></button><span id="nav-extras"></span><span id="nav-ajustes" hidden></span></div></nav>
 <script src="../kit-facil.js"></script>
 <script>
 'use strict';
@@ -83,7 +83,7 @@ function desenhar() {
       produto: [{ id: 'notas', titulo: 'Notas', icone: '<path d="M6 4h12v16H6z"/>', resumo: `${notas.length} notas`, html: '<div class="kf-bloco"><h3>Preferências das notas</h3><label class="kf-check"><input type="checkbox" id="prod-opcao"><span>Opção do produto</span></label></div>' }],
     });
     KitFacil.ajustes.ligar(m);
-  } else m.innerHTML = `<h1>${tela === 'inicio' ? 'Início' : 'Notas'}</h1><ul id="notas">${notas.map(n => `<li data-id="${KitFacil.esc(n.id)}">${KitFacil.esc(n.t)}</li>`).join('')}</ul>`;
+  } else m.innerHTML = `<h1>${tela === 'inicio' ? 'Início' : tela === 'notas' ? 'Notas' : tela}</h1><ul id="notas">${notas.map(n => `<li data-id="${KitFacil.esc(n.id)}">${KitFacil.esc(n.t)}</li>`).join('')}</ul>`;
   KitFacil.topo.atualizar();
 }
 const SY = KitFacil.sync.criar({ app: fam.app, nome: fam.nome, chave: CH + 'sync', dados: 'as notas de teste',
@@ -99,6 +99,9 @@ window.T = {
   remover(t) { notas = notas.filter(x => x.t !== t); guardar(); carimbar(); SY.agendar(50); desenhar(); },
 };
 document.getElementById('topo').innerHTML = KitFacil.topo.html({ principal: true });
+// ?secoes=N cria N seções a mais na barra de baixo (testa o "Mais"); as de número par são marcadas como secundárias
+const extras = +(Q.get('secoes') || 0);
+document.getElementById('nav-extras').outerHTML = Array.from({ length: extras }, (_, i) => `<button class="kf-nav-it" data-ir="extra${i + 1}"${i % 2 ? ' data-kf-mais' : ''}><span class="kf-nav-ic"></span><span class="kf-nav-l">Seção ${i + 1}</span></button>`).join('');
 document.getElementById('nav-ajustes').outerHTML = KitFacil.nav.ajustes('nav');
 document.getElementById('trilho-ajustes').outerHTML = KitFacil.nav.ajustes('trilho');
 history.replaceState({ tela: 'inicio' }, '');

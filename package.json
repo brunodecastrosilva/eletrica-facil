@@ -1,6 +1,6 @@
 {
   "name": "eletrica-facil",
-  "version": "2.7.3",
+  "version": "2.7.4",
   "description": "Elétrica Fácil: orçamentos de elétrica prontos em minutos. App web instalável (PWA) do Projeto Integrador.",
   "private": true,
   "type": "module",
