@@ -2,6 +2,24 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.11.0 · 2026-10-30
+
+- **Seções do orçamento:** o botão Próximo saiu; basta tocar na seção que você quer abrir. A animação ficou mais
+  lenta e suave (abre e pousa devagar), e a rolagem segue o mesmo relógio da seção.
+- **Correção no tablet e no computador:** quando todas as seções cabem na tela, a seção aberta não sobe além do
+  possível e a tela não dá mais o tranco no fim da animação.
+- **Ferramentas pré-cadastradas:** mais de 50 ferramentas de eletricista em 8 categorias (medição e teste, alicates,
+  chaves, furação e corte, passagem de fios, instalação e acabamento, acesso, EPI). Cada uma fica como Não tenho,
+  Tenho (com quantidade) ou Quero comprar; o toque no estado troca. Filtros Tenho, Quero comprar e Todas, e busca.
+- **Estoque integrado aos Preços:** o material novo no estoque começa pela categoria e depois pelo material da tabela
+  de Preços dessa categoria (com o preço e a unidade de lá). Material ou categoria nova entra também em Preços.
+- **Lista de compras:** botão na Gestão com o material que chegou ao mínimo (com quantidade sugerida) e as
+  ferramentas marcadas como Quero comprar; marque o que vai, ajuste as quantidades e copie ou mande pelo WhatsApp.
+- **Prazo padrão:** em Ajustes, Orçamento novo, o prazo (quantidade e unidade) com que todo orçamento começa.
+- **Correção:** a 2.10 trocava por 1 dia útil o prazo em texto dos orçamentos antigos (ex.: "2 dias úteis"); o prazo
+  original volta sozinho.
+- **Correção:** no estoque, a quantidade 0 (material que acabou) era recusada.
+
 ## 2.10.0 · 2026-10-30
 
 - **Prazo de execução integrado às datas:** o prazo tem quantidade e unidade (dias úteis, dias corridos, semanas ou

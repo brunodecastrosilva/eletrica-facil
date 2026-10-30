@@ -398,17 +398,13 @@ details.fold[open]>summary .f-ch{transform:rotate(90deg)}
 .f-in{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px;min-width:0}
 details.fold.anim>.f-in{overflow:hidden}
 details.fold.fechando>summary .f-ch{transform:none}
-details.fold>summary.chegou{animation:chegou .9s ease-out}
-@keyframes chegou{0%{background:color-mix(in srgb,var(--volt) 30%,transparent)}100%{background:transparent}}
-.f-ch{transition:transform .34s cubic-bezier(.33,1,.68,1)}
+.f-ch{transition:transform .56s cubic-bezier(.45,0,.2,1)}
 details.fold.sub{background:var(--surface-2);border:0;border-radius:14px}
 details.fold.sub>summary{min-height:54px;padding:9px 8px 9px 12px}
 details.fold.sub .f-t b{font-family:var(--f-body);font-weight:700;font-size:15.5px;font-stretch:100%;letter-spacing:0}
 details.fold.sub .f-t small{font-size:13.5px}
 details.fold.sub>.f-in{padding:0 12px 12px}
 details.fold.sub .switch-row{background:var(--surface)}
-.next-btn{align-self:flex-end;min-height:44px;font-size:15px}
-.next-btn svg{width:18px;height:18px}
 .blk{display:flex;flex-direction:column;gap:10px}
 .blk+.blk{border-top:1px solid var(--line);padding-top:14px}
 .blk-h{margin:0;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -519,6 +515,20 @@ details.tech[open] > summary::after{content:"–"}
 .g-repor .g-alert{background:none;padding:8px 0 4px}
 .g-rp{display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:44px;border:0;border-top:1px solid color-mix(in srgb,var(--bad) 18%,transparent);background:none;color:var(--ink);font:inherit;font-size:15px;text-align:left;padding:6px 0}
 .g-rp .num{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--bad)}
+.tst{flex:none;display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:0 12px;border-radius:12px;border:0;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.tst .i{width:16px;height:16px}
+.tst.st-nao{background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1.5px var(--line-2)}
+.tst.st-tenho{background:var(--volt);color:var(--volt-ink)}
+.tst.st-quero{background:var(--surface-2);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--volt-text)}
+.st-resto{display:flex;flex-direction:column;gap:14px}
+.st-resto[hidden]{display:none}
+.cp-row{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.cp-chk{flex:1;min-width:150px;display:flex;align-items:center;gap:12px;min-height:44px;cursor:pointer}
+.cp-chk input{width:22px;height:22px;flex:none;accent-color:var(--volt-text);margin:0}
+.cp-chk small{display:block;color:var(--muted);font-size:13px}
+.cp-row .stepper input{width:56px}
+.cp-un{flex:none;min-width:40px;font-size:14px;color:var(--muted)}
+.cp-n{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--bad);color:#fff;font-size:12.5px;font-weight:800;margin-left:2px}
 .g-body{display:flex;flex-direction:column;gap:12px}
 .g-list{display:flex;flex-direction:column;gap:12px}
 .g-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px 16px 8px}
@@ -638,7 +648,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.10.0';
+const VERSAO = '2.11.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -743,6 +753,7 @@ const I = {
   tool: ic('<path d="M14.5 6.5a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8 .5-.5a4 4 0 0 0-5-5L15 3z"/><path d="m3 21 6-6"/>'),
   checklist: ic('<path d="M10 6h10M10 12h10M10 18h10"/><path d="m3.5 6 1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 11M3.5 18l1.5 1.5 2.5-2.5"/>'),
   left: ic('<path d="m15 6-6 6 6 6"/>'),
+  cart: ic('<circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2.5l2.2 11h10.6l2-8H6.4"/>'),
 };
 
 /* ================= tabela inicial de preços (referência para ajustar) ================= */
@@ -822,8 +833,8 @@ const LS = {
 };
 const ACCEPT_DEFAULT = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita (WhatsApp ou e-mail).';
 const WARRANTY_DEFAULT = 'A garantia cobre falhas no serviço executado. Não cobre: mau uso; alterações feitas por terceiros; sobrecarga causada por equipamentos ligados depois do serviço; surtos de tensão, descargas atmosféricas e falhas da rede da concessionária; e materiais fornecidos pelo cliente, que seguem a garantia do fabricante. Esta garantia não exclui os direitos previstos no Código de Defesa do Consumidor.';
-const DEF = { name: '', company: '', phone: '', email: '', doc: '', city: '', pix: '', logo: '', logoRatio: 1,
-  validity: 15, warranty: 90, payMode: 'entrada', entryPct: 50, installments: 3, notes: '', seq: 0,
+const DEF = { toolSeedV: 0, name: '', company: '', phone: '', email: '', doc: '', city: '', pix: '', logo: '', logoRatio: 1,
+  validity: 15, warranty: 90, prazoN: 1, prazoU: 'uteis', payMode: 'entrada', entryPct: 50, installments: 3, notes: '', seq: 0,
   kmPerL: 0, fuelPrice: 0, wearPerKm: 0, hourRate: 0, minVisit: 0, roundTrip: true,
   surUrgent: 50, surNight: 30, surWeekend: 50, seedV: 0,
   acceptText: ACCEPT_DEFAULT, warrantyTerms: WARRANTY_DEFAULT };
@@ -847,7 +858,13 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.10.0', itens: [
+  novidades: [{ versao: '2.11.0', itens: [
+    'Seções do orçamento: o botão Próximo saiu. Toque na seção que quer abrir. A animação ficou mais lenta e suave, e no tablet a tela não dá mais o tranco no fim.',
+    'Ferramentas: o app já traz mais de 50 ferramentas de eletricista, por categoria. Toque no estado para marcar Não tenho, Tenho ou Quero comprar.',
+    'Estoque e Preços juntos: ao adicionar material no estoque, escolha a categoria e depois o material da sua tabela de Preços.',
+    'Lista de compras: o material que chegou ao mínimo e as ferramentas que você quer comprar, para copiar ou mandar pelo WhatsApp.',
+    'Prazo padrão: em Ajustes, Orçamento novo, escolha o prazo com que todo orçamento começa.',
+  ] }, { versao: '2.10.0', itens: [
     'Prazo de execução e datas num lugar só: escolha a quantidade e a unidade (dias úteis, dias corridos, semanas ou meses) e toque no dia de início. O app marca os dias, pulando fins de semana e feriados nacionais nos dias úteis, e você ajusta.',
     'O orçamento não aceita datas que já passaram.',
     'Ao concluir um serviço, o app oferece dar baixa no estoque do material usado. Desfazer a conclusão devolve o material.',
@@ -909,14 +926,14 @@ function blankQuote() {
     startAt: null, endAt: null, dateTbd: false, approvedVia: '', days: 1, dates: [],
     travel: 0, discount: { mode: 'value', value: 0, pct: 0 },
     payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments },
-    validity: settings.validity, deadline: '', prazo: { n: 1, u: 'uteis' }, warranty: settings.warranty, notes: settings.notes,
+    validity: settings.validity, deadline: '', prazo: { n: Math.max(1, Math.min(99, settings.prazoN || 1)), u: PRAZO_U[settings.prazoU] ? settings.prazoU : 'uteis' }, warranty: settings.warranty, notes: settings.notes,
     status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false,
     trip: null, extras: { urgent: 0, night: 0, weekend: 0 }, useRooms: false, rooms: [],
     diag: '', work: '', tests: [], recs: '' };
 }
 function fixQuote(q) {
-  const d = blankQuote();
-  q = { ...d, ...(q || {}) };
+  const d = blankQuote(), src = q || {};
+  q = { ...d, ...src };
   q.client = { ...d.client, ...(q.client || {}) };
   q.payment = { ...d.payment, ...(q.payment || {}) };
   if (typeof q.travel !== 'number') q.travel = q.travel && q.travel.enabled ? (q.travel.value || 0) : 0;
@@ -939,12 +956,31 @@ function fixQuote(q) {
   if (!q.dates.length && q.status === 'concluido' && q.doneAt) q.dates = [dayTs(q.doneAt)];
   q.days = Math.max(1, Math.min(99, parseInt(q.days, 10) || q.dates.length || 1));
   // prazo de execução: quantidade e unidade (versões antigas tinham só o texto livre ou a quantidade de dias)
-  const pz = q.prazo && typeof q.prazo === 'object' ? q.prazo : prazoDeTexto(q.deadline) || (q.dates.length > 1 || q.days > 1 ? { n: q.days, u: 'corridos' } : null) || { n: 1, u: 'uteis' };
+  // (a 2.10 gravou 1 dia útil por engano em orçamentos que tinham o prazo em texto: o texto, se diferente, vale)
+  const doTexto = prazoDeTexto(src.deadline), salvo = src.prazo && typeof src.prazo === 'object' ? src.prazo : null;
+  const engano = salvo && salvo.n === 1 && salvo.u === 'uteis' && doTexto && src.deadline !== prazoTxt(salvo);
+  const pz = (!engano && salvo) || doTexto || (q.dates.length > 1 || q.days > 1 ? { n: q.days, u: 'corridos' } : null) || d.prazo;
   q.prazo = { n: Math.max(1, Math.min(99, parseInt(pz.n, 10) || 1)), u: PRAZO_U[pz.u] ? pz.u : 'uteis' };
   ['isExample', 'active', 'savedAt', 'closedAt', 'total', 'statusAt'].forEach(k => delete q[k]);
   return q;
 }
-const fixTool = t => ({ id: String(t.id || uid()), name: String(t.name || '').trim(), brand: String(t.brand || '').trim(), qty: Math.max(1, Math.min(999, Math.round(+t.qty || 1))), wish: !!t.wish });
+// ferramenta: st = 'tenho', 'quero' (quer comprar) ou 'nao' (não tem); wish fica para aparelhos com versões antigas
+const fixTool = t => { const st = ['tenho', 'quero', 'nao'].includes(t.st) ? t.st : t.wish ? 'quero' : 'tenho';
+  return { id: String(t.id || uid()), name: String(t.name || '').trim(), brand: String(t.brand || '').trim(), qty: Math.max(1, Math.min(999, Math.round(+t.qty || 1))), st, wish: st === 'quero', cat: String(t.cat || 'Outras').trim() || 'Outras', seed: !!t.seed }; };
+const temTool = t => t.st === 'tenho';
+// ferramentas que já vêm no app (ids fixos: o mesmo item em todos os aparelhos sincronizados)
+const TOOL_SEED = [
+  ['Medição e teste', ['Multímetro digital', 'Alicate amperímetro', 'Caneta detectora de tensão', 'Testador de tomadas', 'Megôhmetro', 'Terrômetro', 'Sequencímetro de fase', 'Detector de tensão por aproximação']],
+  ['Alicates', ['Alicate universal', 'Alicate de corte diagonal', 'Alicate de bico', 'Alicate desencapador', 'Alicate crimpador de terminais', 'Alicate para terminal tubular', 'Alicate de pressão']],
+  ['Chaves', ['Jogo de chaves de fenda isoladas', 'Jogo de chaves Phillips isoladas', 'Chave de teste', 'Jogo de chaves Allen', 'Jogo de chaves combinadas', 'Chave inglesa', 'Jogo de chaves Torx']],
+  ['Furação e corte', ['Furadeira de impacto', 'Parafusadeira a bateria', 'Martelete rompedor', 'Jogo de brocas', 'Jogo de serras copo', 'Serra tico-tico', 'Esmerilhadeira', 'Arco de serra', 'Estilete']],
+  ['Passagem de fios', ['Passa-fio de aço', 'Passa-fio de nylon', 'Puxador de cabos']],
+  ['Instalação e acabamento', ['Trena', 'Nível', 'Esquadro', 'Martelo', 'Talhadeira', 'Ponteiro', 'Ferro de solda', 'Soprador térmico', 'Lanterna de cabeça', 'Caixa de ferramentas']],
+  ['Acesso', ['Escada de 6 degraus', 'Escada extensível', 'Andaime']],
+  ['Segurança (EPI)', ['Luvas isolantes', 'Óculos de proteção', 'Capacete com jugular', 'Botina de segurança sem metal', 'Cinto de segurança com talabarte', 'Protetor auricular', 'Kit de bloqueio e etiquetagem']],
+];
+const TOOL_CATS = TOOL_SEED.map(x => x[0]);
+const seedTools = () => TOOL_SEED.flatMap(([cat, L]) => L.map(name => fixTool({ id: 'ft-' + fold(name).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), name, cat, st: 'nao', seed: true })));
 const fixCheck = c => ({ id: String(c.id || uid()), name: String(c.name || '').trim(), back: c.back !== false, ida: !!c.ida, volta: !!c.volta, toolId: c.toolId ? String(c.toolId) : '' });
 // material do estoque: quantidade, custo e marca ficam no próprio item da tabela de preços
 const inStock = p => p.kind === 'mat' && typeof p.stock === 'number';
@@ -985,6 +1021,11 @@ if (!prices || !quotes) {
 }
 quotes = quotes.map(fixQuote);
 tools = (Array.isArray(tools) ? tools : []).map(fixTool); checks = (Array.isArray(checks) ? checks : []).map(fixCheck);
+// ferramentas pré-cadastradas: entram uma vez, como "não tenho" (quem já tinha uma com o mesmo nome fica com a sua)
+if ((settings.toolSeedV || 0) < 1) {
+  seedTools().forEach(t => { const ja = tools.find(x => x.id === t.id || norm(x.name) === norm(t.name)); if (!ja) tools.push(t); else if (ja.cat === 'Outras') ja.cat = t.cat; });
+  settings.toolSeedV = 1; LS.set('tools', tools); saveSettings();
+}
 settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
 if ((settings.seedV || 0) < 2) {
   prices.forEach(p => { if (p.name === 'Interruptor paralelo com placa') p.name = 'Interruptor paralelo (three-way) com placa'; });
@@ -1473,16 +1514,26 @@ function paintSums(root, map) {
 }
 // abrir e fechar seções com movimento suave: a altura cresce ou encolhe e a tela acompanha, sem saltos
 const semMovimento = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
-// mesma curva no CSS e no código, para a altura das seções e a rolagem andarem juntas
-const FOLD_MS = 340, FOLD_EASE = 'cubic-bezier(.33,1,.68,1)', suave = t => 1 - Math.pow(1 - t, 3);
+// mesma curva no CSS e no código, para a altura das seções e a rolagem andarem juntas: começa macio, desliza e pousa devagar
+const FOLD_MS = 560, FOLD_BZ = [.45, 0, .2, 1], FOLD_EASE = `cubic-bezier(${FOLD_BZ.join(',')})`;
+const suave = (() => {
+  const [x1, y1, x2, y2] = FOLD_BZ, B = (u, a, b) => 3 * (1 - u) * (1 - u) * u * a + 3 * (1 - u) * u * u * b + u * u * u;
+  return t => {
+    if (t <= 0) return 0; if (t >= 1) return 1;
+    let lo = 0, hi = 1, u = t;
+    for (let i = 0; i < 24; i++) { const x = B(u, x1, x2); if (Math.abs(x - t) < 1e-5) break; if (x < t) lo = u; else hi = u; u = (lo + hi) / 2; }
+    return B(u, y1, y2);
+  };
+})();
+// abre ou fecha uma seção e devolve quanto a altura dela vai mudar
 function foldSet(d, open) {
-  if (!d) return;
+  if (!d) return 0;
   d._want = open; PANEL[d.dataset.panel] = open;
   const box = $(':scope > .f-in', d), sm = $(':scope > summary', d);
   if (d._anim) { d._anim.cancel(); d._anim = null; }
-  if (d.open === open && !d.classList.contains('anim')) return;
-  if (semMovimento() || !box || !d.isConnected || !box.animate) { d.classList.remove('anim', 'fechando'); d.style.overflow = ''; d.open = open; return; }
+  if (d.open === open && !d.classList.contains('anim')) return 0;
   const from = d.offsetHeight, borda = d.offsetHeight - d.clientHeight;
+  if (semMovimento() || !box || !d.isConnected || !box.animate) { d.classList.remove('anim', 'fechando'); d.style.overflow = ''; d.open = open; return d.offsetHeight - from; }
   d.classList.add('anim'); d.classList.toggle('fechando', !open); d.style.overflow = 'hidden';
   d.open = true;
   $$('textarea', box).forEach(autoGrow);
@@ -1491,42 +1542,56 @@ function foldSet(d, open) {
   const o = { duration: FOLD_MS, easing: FOLD_EASE };
   const anim = d.animate([{ height: from + 'px' }, { height: to + 'px' }], o);
   const resumo = !d.classList.contains('multi') && $('.f-t small', sm);
-  if (resumo) resumo.animate(open ? [{ maxHeight: '20px', opacity: 1 }, { maxHeight: '0px', opacity: 0 }] : [{ maxHeight: '0px', opacity: 0 }, { maxHeight: '20px', opacity: 1 }], o);
-  box.animate(open ? [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }] : [{ opacity: 1 }, { opacity: 0 }], { duration: FOLD_MS, easing: open ? FOLD_EASE : 'ease-out' });
+  if (resumo) resumo.animate(open ? [{ maxHeight: '20px', opacity: 1 }, { maxHeight: '0px', opacity: 0, offset: .45 }, { maxHeight: '0px', opacity: 0 }] : [{ maxHeight: '0px', opacity: 0 }, { maxHeight: '20px', opacity: 0, offset: .5 }, { maxHeight: '20px', opacity: 1 }], o);
+  // o conteúdo aparece um pouco depois de a seção começar a abrir, e some antes de ela fechar
+  box.animate(open ? [{ opacity: 0, transform: 'translateY(-10px)' }, { opacity: 0, transform: 'translateY(-10px)', offset: .15 }, { opacity: 1, transform: 'none' }] : [{ opacity: 1 }, { opacity: 0, offset: .6 }, { opacity: 0 }], o);
   d._anim = anim;
   const end = () => { d.style.overflow = ''; d.classList.remove('anim', 'fechando'); };
   anim.onfinish = () => { d._anim = null; if (!open) d.open = false; end(); };
   anim.oncancel = end;
+  return to - from;
 }
-// leva o título da seção até logo abaixo da barra de cima, acompanhando a mudança de altura das outras seções
-function foldGlide(d, always) {
-  const ab = $('.appbar'), lim = () => (ab && ab.isConnected ? ab.getBoundingClientRect().bottom : 0) + 6;
-  const top0 = d.getBoundingClientRect().top - lim();
-  if (!always && top0 >= 0) return;
-  if (semMovimento()) { window.scrollTo({ top: window.scrollY + top0 }); return; }
-  // espaço extra no pé da página enquanto as seções mudam de altura: a rolagem não trava esperando a seção crescer
-  const main = d.closest('main');
-  let folga = main && main.querySelector(':scope > .fold-folga');
-  if (main && !folga) { folga = document.createElement('div'); folga.className = 'fold-folga'; folga.setAttribute('aria-hidden', 'true'); main.appendChild(folga); }
-  if (folga) { folga.style.height = innerHeight + 'px'; clearTimeout(folga._t); folga._t = setTimeout(() => folga.remove(), FOLD_MS + 80); }
-  const t0 = performance.now();
+// rola a tela, na mesma curva das seções, até o título da seção aberta ficar logo abaixo da barra de cima;
+// a rolagem final é calculada antes, com a altura que a página terá no fim: se tudo couber na tela (tablet,
+// computador), a tela não sobe além do possível e não dá o tranco do fim
+function foldGlide(d, fimTopo, fimAltura) {
+  const ab = $('.appbar'), lim = (ab && ab.isConnected ? ab.getBoundingClientRect().bottom : 0) + 8;
+  const s0 = window.scrollY, max = Math.max(0, fimAltura - innerHeight);
+  const alvo = Math.min(max, Math.max(0, fimTopo - lim));
+  if (Math.abs(alvo - s0) < 2) return;
+  if (semMovimento()) { window.scrollTo({ top: alvo }); return; }
+  const t0 = performance.now(), id = (foldGlide._id = (foldGlide._id || 0) + 1);
+  // enquanto a seção cresce, a página ainda não tem altura para rolar até o fim: reserva só o que falta, e só durante o movimento
+  $$('.fold-folga').forEach(x => x.remove());
+  const falta = alvo + innerHeight - document.documentElement.scrollHeight, main = d.closest('main');
+  let folga = null;
+  if (falta > 0 && main) { folga = document.createElement('div'); folga.className = 'fold-folga'; folga.setAttribute('aria-hidden', 'true'); folga.style.height = falta + 'px'; main.appendChild(folga); }
+  const fim = () => { window.scrollTo({ top: alvo }); if (folga) folga.remove(); };
   const step = now => {
-    if (!d.isConnected) return;
-    const t = Math.min(1, (now - t0) / FOLD_MS);
-    const want = top0 * (1 - suave(t));
-    const cur = d.getBoundingClientRect().top - lim();
-    window.scrollTo({ top: window.scrollY + cur - want });
-    if (t < 1) requestAnimationFrame(step);
+    if (!d.isConnected || id !== foldGlide._id) { if (folga) folga.remove(); return; }
+    // usa o relógio da própria animação da seção, para a rolagem e a altura andarem no mesmo quadro
+    const ct = d._anim && d._anim.currentTime;
+    const t = Math.min(1, typeof ct === 'number' ? ct / FOLD_MS : (now - t0) / FOLD_MS);
+    window.scrollTo({ top: s0 + (alvo - s0) * suave(t) });
+    if (t >= 1 || (!d._anim && now - t0 >= FOLD_MS)) return fim();
+    requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
 }
 // abrir uma seção fecha as outras do mesmo nível
-function foldOpen(d, opts = {}) {
+function foldOpen(d) {
   if (!d) return;
   const solo = !d.classList.contains('sub') && !d.classList.contains('multi');
-  if (solo) $$(':scope > details.fold[open]:not(.sub):not(.multi)', d.parentNode).forEach(x => { if (x !== d) foldSet(x, false); });
-  foldSet(d, true);
-  if (solo || opts.always) foldGlide(d, !!opts.always);
+  const topo = el => el.getBoundingClientRect().top + window.scrollY;
+  const dTopo = topo(d), altura = document.documentElement.scrollHeight;
+  let acima = 0, total = 0;
+  if (solo) $$(':scope > details.fold[open]:not(.sub):not(.multi)', d.parentNode).forEach(x => {
+    if (x === d) return;
+    const antes = topo(x) < dTopo, dh = foldSet(x, false);
+    total += dh; if (antes) acima += dh;
+  });
+  total += foldSet(d, true);
+  if (solo) foldGlide(d, dTopo + acima, altura + total);
 }
 document.addEventListener('toggle', e => {
   const d = e.target; if (!d.matches || !d.matches('details.fold') || d.classList.contains('anim') || d._anim) return;
@@ -1534,7 +1599,7 @@ document.addEventListener('toggle', e => {
   if (!d.open || d.classList.contains('sub') || d.classList.contains('multi')) return;
   // aberta pelo código (sem animação): fecha as outras do mesmo nível e mostra o título
   $$(':scope > details.fold[open]:not(.sub):not(.multi)', d.parentNode).forEach(x => { if (x !== d && !x._anim) { x.open = false; x._want = false; } });
-  requestAnimationFrame(() => foldGlide(d, false));
+  requestAnimationFrame(() => { const ab = $('.appbar'), lim = (ab ? ab.getBoundingClientRect().bottom : 0) + 8, top = d.getBoundingClientRect().top; if (top < lim) window.scrollTo({ top: window.scrollY + top - lim }); });
 }, true);
 // toque no título: anima em vez de abrir ou fechar de uma vez
 document.addEventListener('click', e => {
@@ -1996,7 +2061,7 @@ function techCardHTML(q) {
       ${techField(q, 'work', 'Serviços realizados', 'O que foi feito, com mais detalhe que a lista de itens.', q.items.some(i => i.kind === 'svc') ? '<button class="linkish" data-work-items>Preencher com os serviços lançados</button>' : '')}
       ${testsHTML(q)}
       ${techField(q, 'recs', 'Recomendações', 'O que ainda precisa de atenção, riscos e cuidados de uso.')}
-      ${nextBtn(q, 'tech')}`);
+`);
 }
 function lineHTML(q, i) {
   const cli = i.kind === 'mat' && q.materialBy === 'cliente';
@@ -2012,13 +2077,6 @@ function lineHTML(q, i) {
   </div>`;
 }
 const payShort = p => ({ avista: 'À vista', entrada: `Entrada de ${p.entryPct}%`, parcelado: `Cartão em ${p.installments}×`, combinar: 'Pagamento a combinar' })[p.mode] || '';
-// ordem das etapas: o botão "Próximo" no fim de cada seção abre a seguinte
-function nextBtn(q, from) {
-  const order = isReport(q) ? ['cli', 'tech', 'items', 'val', 'cond', 'notes'] : ['cli', 'items', 'val', 'cond', 'notes'];
-  const k = order[order.indexOf(from) + 1]; if (!k) return '';
-  const T = { tech: 'relatório técnico', items: q.useRooms ? 'ambientes e itens' : 'serviços e material', val: 'valores', cond: isReport(q) ? 'datas, pagamento e garantia' : 'pagamento, datas e garantia', notes: 'observações' };
-  return `<button class="btn ghost next-btn" data-next="q:${q.id}:${k}">Próximo: ${T[k]}${I.arrow}</button>`;
-}
 function quoteSums(q, c) {
   const rep = isReport(q), nS = q.items.filter(i => i.kind === 'svc').length, nM = q.items.filter(i => i.kind === 'mat').length;
   const ds = ts => new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
@@ -2257,12 +2315,11 @@ VIEWS.quote = {
         </div>
         <div class="field"><label for="q-addr">Endereço da obra</label><input id="q-addr" type="text" autocomplete="off" placeholder="Rua, número, bairro" value="${esc(q.client.address)}"></div>
         <div class="field"><label for="q-title">Serviço</label><input id="q-title" type="text" autocomplete="off" placeholder="Ex.: Troca do quadro e instalação de chuveiro" value="${esc(q.title)}"></div>
-        ${nextBtn(q, 'cli')}
       ${panelClose}
 
       ${techCardHTML(q)}
-      ${panel(`q:${q.id}:items`, 'items', q.useRooms ? 'Ambientes e itens' : 'Serviços e material', S.items, roomToggleHTML(q) + (q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)) + nextBtn(q, 'items'), { def: !!q.client.name && !q.items.length, right: S.itemsR })}
-      ${panel(`q:${q.id}:val`, 'val', 'Valores', S.val, valuesHTML(q, c) + nextBtn(q, 'val'), { right: S.valR })}
+      ${panel(`q:${q.id}:items`, 'items', q.useRooms ? 'Ambientes e itens' : 'Serviços e material', S.items, roomToggleHTML(q) + (q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)), { def: !!q.client.name && !q.items.length, right: S.itemsR })}
+      ${panel(`q:${q.id}:val`, 'val', 'Valores', S.val, valuesHTML(q, c), { right: S.valR })}
 
       ${panelOpen(`q:${q.id}:cond`, 'cond', isReport(q) ? 'Datas, pagamento e garantia' : 'Pagamento, datas e garantia', S.cond, { attrs: ' id="h-cond"' })}
         <div class="field"><span class="lab">Pagamento</span>
@@ -2274,7 +2331,6 @@ VIEWS.quote = {
           <div class="field"><label for="q-war">Garantia (dias)</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
           ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade (dias)</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
         </div>
-        ${nextBtn(q, 'cond')}
       ${panelClose}
       ${panelOpen(`q:${q.id}:notes`, 'notes', 'Observações', S.notes)}
         <div class="field"><textarea id="q-notes" aria-label="Observações" placeholder="O que está fora do orçamento, cuidados no dia do serviço…">${esc(q.notes)}</textarea>
@@ -2297,14 +2353,6 @@ VIEWS.quote = {
       paintSums(v, quoteSums(q, c));
     };
     ['input', 'change'].forEach(ev => v.addEventListener(ev, () => requestAnimationFrame(paint)));
-    v.addEventListener('click', e => {
-      const b = e.target.closest('[data-next]'); if (!b) return;
-      const d = $(`details[data-panel="${b.dataset.next}"]`, v); if (!d) return;
-      foldOpen(d, { always: true });
-      const sm = $(':scope > summary', d);
-      sm.focus({ preventScroll: true });
-      if (!semMovimento()) { sm.classList.remove('chegou'); void sm.offsetWidth; sm.classList.add('chegou'); setTimeout(() => sm.classList.remove('chegou'), 1000); }
-    });
     $('[data-back]', v).onclick = () => back('/');
     $('[data-menu]', v).onclick = () => quoteMenu(q);
     $('[data-preview]', v).onclick = () => go('/q/' + q.id + '/proposta');
@@ -2370,7 +2418,7 @@ VIEWS.quote = {
     $('#q-tbd', v)?.addEventListener('change', e => { q.dateTbd = e.target.checked; touch(q); $('#q-cal-area', v).hidden = q.dateTbd; const cdc = $('#q-cdc', v); if (cdc) cdc.hidden = q.dateTbd || !!q.dates.length; requestAnimationFrame(() => paintSums(v, quoteSums(q, compute(q)))); });
     // serviço já realizado: vira relatório; desfazer volta para a situação anterior
     $('#q-done', v)?.addEventListener('change', e => { if (!e.target.checked) return; setStatus(q, 'concluido'); rerender(); window.scrollTo({ top: 0 }); setTimeout(() => baixaSheet(q), 350); toast('Agora é um Relatório de Serviços Executados.'); });
-    $('[data-goto-days]', v)?.addEventListener('click', () => { const d = $(`details[data-panel="q:${q.id}:cond"]`, v); foldOpen(d, { always: true }); setTimeout(() => $('#cal', v)?.querySelector('[aria-pressed="true"], button.cal-d:not([disabled])')?.focus({ preventScroll: true }), 320); });
+    $('[data-goto-days]', v)?.addEventListener('click', () => { const d = $(`details[data-panel="q:${q.id}:cond"]`, v); foldOpen(d); setTimeout(() => $('#cal', v)?.querySelector('[aria-pressed="true"], button.cal-d:not([disabled])')?.focus({ preventScroll: true }), FOLD_MS + 40); });
     $('[data-undone]', v)?.addEventListener('click', () => {
       const prev = q.prevStatus && q.prevStatus !== 'concluido' ? q.prevStatus : 'rascunho';
       setStatus(q, prev); rerender(); toast(`Voltou para ${STATUS[prev].toLowerCase()}. O documento é orçamento de novo.`);
@@ -3507,7 +3555,7 @@ function adjustSheet() {
 let gestaoAba = 'estoque', gestaoQuery = '', checkLado = 'ida';
 const GESTAO = {
   estoque: { nome: 'Estoque', criar: 'Novo material', sub: 'O material que você tem guardado, com custo e preço de repasse.' },
-  ferramentas: { nome: 'Ferramentas', criar: 'Nova ferramenta', sub: 'As ferramentas que você tem e as que quer comprar.' },
+  ferramentas: { nome: 'Ferramentas', criar: 'Nova ferramenta', sub: 'Marque as que você tem e as que quer comprar.' },
   checklist: { nome: 'Checklist', criar: 'Novo item', sub: 'Confira o que levar antes de ir e o que trazer antes de voltar da obra.' },
 };
 const margem = p => p.cost > 0 ? Math.round((p.price - p.cost) / p.cost * 100) : null;
@@ -3535,14 +3583,21 @@ function stockSheet(p) {
   const isNew = !p;
   const it = p ? { ...p } : { kind: 'mat', cat: '', name: '', unit: 'un', price: 0, cost: 0, brand: '', stock: 1, min: 0 };
   let link = p ? p.id : '';
-  const cats = () => [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))];
+  const ordem = catOrder('mat');
+  const cats = [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = ordem.indexOf(a), ib = ordem.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); });
+  const matsDe = c => prices.filter(x => x.kind === 'mat' && (x.cat || 'Outros') === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const matOpts = c => `<option value="">Escolha o material</option>${matsDe(c).map(x => `<option value="${x.id}" ${inStock(x) ? 'disabled' : ''}>${esc(x.name)} · ${BRL(x.price)}/${unitTxt(1, x.unit)}${inStock(x) ? ' (já no estoque)' : ''}</option>`).join('')}<option value="__novo">Outro material desta categoria…</option>`;
   const margemHTML = (cost, price) => {
     if (!cost || price === null) return '<span class="hint">Com o custo e o repasse, o app mostra a sua margem.</span>';
     const m = Math.round((price - cost) / cost * 100);
     return m >= 0 ? `${I.check}<span>Margem de <b>${m}%</b>: ${BRL(price - cost)} por unidade.</span>` : `${I.warn}<span><b>Repasse abaixo do custo.</b> Você perde ${BRL(cost - price)} por unidade.</span>`;
   };
   openSheet({ title: isNew ? 'Novo material no estoque' : 'Material no estoque', body: `
-      <div class="field"><label for="st-name">Material</label><input id="st-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Disjuntor 20 A" autocomplete="off"></div>
+      <div class="field"><label for="st-cat-sel">${isNew ? '1. Categoria' : 'Categoria'}</label><select id="st-cat-sel">${isNew ? '<option value="">Escolha a categoria</option>' : ''}${cats.map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+        <input id="st-cat" type="text" value="" placeholder="Nome da nova categoria" autocomplete="off" aria-label="Nome da nova categoria" hidden></div>
+      ${isNew ? `<div class="field"><label for="st-mat">2. Material</label><select id="st-mat" disabled><option value="">Escolha antes a categoria</option></select><span class="hint">Os materiais da sua tabela de Preços nesta categoria.</span></div>` : ''}
+      <div class="field" id="st-name-f" ${isNew ? 'hidden' : ''}><label for="st-name">${isNew ? 'Nome do material novo' : 'Material'}</label><input id="st-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Disjuntor 20 A" autocomplete="off"><span class="hint" ${isNew ? '' : 'hidden'}>Ele entra também na tabela de Preços, nesta categoria.</span></div>
+      <div class="st-resto" id="st-resto" ${isNew ? 'hidden' : ''}>
       <div class="field"><label for="st-brand">Marca (opcional)</label><input id="st-brand" type="text" value="${esc(it.brand || '')}" placeholder="Ex.: Steck" autocomplete="off"></div>
       <div class="grid2">
         <div class="field"><label for="st-qty">Quantidade</label><div class="stepper" style="width:100%"><button data-sq="-1" aria-label="Menos">${I.minus}</button><input id="st-qty" type="text" inputmode="decimal" value="${fmtQty(it.stock)}" style="flex:1;width:auto"><button data-sq="1" aria-label="Mais">${I.plus}</button></div></div>
@@ -3554,21 +3609,35 @@ function stockSheet(p) {
       </div>
       <div class="field"><label for="st-min">Avisar quando chegar a (opcional)</label><input id="st-min" type="text" inputmode="decimal" value="${it.min ? fmtQty(it.min) : ''}" placeholder="Ex.: 10" aria-describedby="st-min-h"><span class="hint" id="st-min-h">Mesma unidade da quantidade. Nesse ponto, o material entra em Para repor.</span></div>
       <p class="g-margin" id="st-margin" aria-live="polite">${margemHTML(it.cost, it.price || null)}</p>
-      <div class="field"><label for="st-cat">Categoria</label><input id="st-cat" type="text" value="${esc(it.cat)}" placeholder="Ex.: Proteção" autocomplete="off"></div>
-      <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos: mudou aqui, muda lá.</p>`,
+      <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos: mudou aqui, muda lá.</p>
+      </div>`,
     foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Tirar do estoque</button><button class="btn primary" data-save>Salvar</button>`,
     onMount: s => {
-      if (!isTouch) $('#st-name', s).focus();
+      if (!isTouch) $(isNew ? '#st-cat-sel' : '#st-qty', s).focus();
       const paintM = () => { $('#st-margin', s).innerHTML = margemHTML(parseMoney($('#st-cost', s).value) || 0, parseMoney($('#st-price', s).value)); };
       ['#st-cost', '#st-price'].forEach(sel => $(sel, s).addEventListener('input', paintM));
-      // material que já está na tabela de preços: liga ao mesmo item
-      attachSuggest($('#st-name', s), () => prices.filter(x => x.kind === 'mat' && (!inStock(x) || x.id === link)).map(x => ({ label: x.name, right: `${BRL(x.price)}/${unitTxt(1, x.unit)}`, x })), o => {
-        link = o.x.id; $('#st-price', s).value = BRL(o.x.price); $('#st-cat', s).value = o.x.cat || '';
-        if ($(`#st-unit option[value="${CSS.escape(o.x.unit)}"]`, s)) $('#st-unit', s).value = o.x.unit;
-        paintM(); toast('Ligado ao item da sua tabela de preços.');
+      const catSel = $('#st-cat-sel', s), catNova = $('#st-cat', s), matSel = $('#st-mat', s);
+      const mostra = (el, on) => { el.hidden = !on; };
+      // 1. categoria: a lista de materiais passa a ser a da tabela de Preços nessa categoria
+      catSel.addEventListener('change', () => {
+        const nova = catSel.value === '__nova';
+        mostra(catNova, nova); if (nova) catNova.focus();
+        if (!matSel) return;
+        link = ''; matSel.disabled = !catSel.value;
+        matSel.innerHTML = nova ? '<option value="__novo">Material novo</option>' : catSel.value ? matOpts(catSel.value) : '<option value="">Escolha antes a categoria</option>';
+        if (nova) matSel.dispatchEvent(new Event('change')); else { mostra($('#st-name-f', s), false); mostra($('#st-resto', s), false); }
       });
-      $('#st-name', s).addEventListener('input', () => { if (!p) link = ''; });
-      attachSuggest($('#st-cat', s), () => cats().map(c => ({ label: c })));
+      // 2. material: um da tabela (preço e unidade vêm de lá) ou um novo, que entra também em Preços
+      matSel?.addEventListener('change', () => {
+        const v = matSel.value, x = prices.find(y => y.id === v);
+        link = x ? x.id : '';
+        mostra($('#st-name-f', s), v === '__novo'); mostra($('#st-resto', s), !!v);
+        if (x) {
+          $('#st-name', s).value = x.name; $('#st-price', s).value = BRL(x.price);
+          if ($(`#st-unit option[value="${CSS.escape(x.unit)}"]`, s)) $('#st-unit', s).value = x.unit;
+          paintM(); if (!isTouch) $('#st-qty', s).focus();
+        } else if (v === '__novo') { $('#st-name', s).value = ''; $('#st-price', s).value = ''; paintM(); if (catSel.value !== '__nova') $('#st-name', s).focus(); }
+      });
       attachSuggest($('#st-brand', s), () => [...new Set(prices.filter(x => x.brand).map(x => x.brand))].map(b => ({ label: b })));
       $$('[data-sq]', s).forEach(b => b.onclick = () => { const v = parseQty($('#st-qty', s).value) || 0; $('#st-qty', s).value = fmtQty(Math.max(0, Math.round((v + +b.dataset.sq) * 100) / 100)); });
       $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
@@ -3579,12 +3648,15 @@ function stockSheet(p) {
       });
       $('[data-save]', s).onclick = () => {
         const name = $('#st-name', s).value.trim().replace(/\s+/g, ' '), price = parseMoney($('#st-price', s).value), cost = parseMoney($('#st-cost', s).value) || 0;
-        const qty = parseQty($('#st-qty', s).value);
+        const qRaw = $('#st-qty', s).value.trim(), qty = /^0+([.,]0*)?$/.test(qRaw) ? 0 : parseQty(qRaw);
+        const cat = catSel.value === '__nova' ? catNova.value.trim().replace(/\s+/g, ' ') : catSel.value;
+        if (!cat) return toast(catSel.value === '__nova' ? 'Escreva o nome da nova categoria.' : 'Escolha a categoria.');
+        if (isNew && !matSel.value) return toast('Escolha o material.');
         if (!name) return toast('Escreva o nome do material.');
         if (qty === null || qty < 0) return toast('Informe a quantidade. Use 0 se acabou.');
         if (price === null) return toast('Informe o preço de repasse ao cliente.');
         const min = parseQty($('#st-min', s).value) || 0;
-        const data = { kind: 'mat', name, price, cost, min: Math.max(0, Math.round(min * 100) / 100), stock: Math.round(qty * 100) / 100, brand: $('#st-brand', s).value.trim().replace(/\s+/g, ' '), unit: $('#st-unit', s).value, cat: $('#st-cat', s).value.trim().replace(/\s+/g, ' ') || 'Outros' };
+        const data = { kind: 'mat', name, price, cost, min: Math.max(0, Math.round(min * 100) / 100), stock: Math.round(qty * 100) / 100, brand: $('#st-brand', s).value.trim().replace(/\s+/g, ' '), unit: $('#st-unit', s).value, cat };
         if (!data.brand) delete data.brand;
         let alvo = prices.find(x => x.id === link) || (isNew && prices.find(x => x.kind === 'mat' && norm(x.name) === norm(name)));
         if (alvo && isNew && inStock(alvo)) return toast(`${alvo.name} já está no estoque. Toque nele na lista para alterar.`);
@@ -3593,25 +3665,38 @@ function stockSheet(p) {
       };
     } });
 }
+// ferramentas: lista pré-cadastrada por categoria; cada uma é "Não tenho", "Tenho" (com quantidade) ou "Quero comprar"
+let toolFiltro = '';
+const TOOL_ST = { nao: 'Não tenho', tenho: 'Tenho', quero: 'Quero comprar' };
+const TOOL_PROX = { nao: 'tenho', tenho: 'quero', quero: 'nao' };
+const toolStHTML = t => `<button class="tst st-${t.st}" data-tst="${t.id}" aria-label="${esc(t.name)}: ${TOOL_ST[t.st]}${t.st === 'tenho' && t.qty > 1 ? `, ${t.qty}` : ''}. Tocar para mudar para ${TOOL_ST[TOOL_PROX[t.st]]}">${t.st === 'tenho' ? I.check : t.st === 'quero' ? I.cart : ''}${TOOL_ST[t.st]}${t.st !== 'nao' && t.qty > 1 ? ` ×${t.qty}` : ''}</button>`;
 function toolsListHTML() {
-  if (!tools.length) return KitFacil.ui.vazio({ titulo: 'Nenhuma ferramenta cadastrada', texto: 'Toque em <b>Nova ferramenta</b> e cadastre as que você tem e as que pretende comprar.', icone: I.tool });
-  const row = t => `<div class="g-row"><button class="prow" data-tid="${t.id}"><span><b>${esc(t.name)}</b>${t.brand ? `<small>${esc(t.brand)}</small>` : ''}</span><span class="prow-price">${t.qty > 1 ? `${t.qty} un.` : '1 un.'}</span></button>${t.wish ? `<button class="btn sm ghost" data-comprei="${t.id}" aria-label="Já comprei ${esc(t.name)}">${I.check}Comprei</button>` : ''}</div>`;
-  const tenho = tools.filter(t => !t.wish).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')), quero = tools.filter(t => t.wish).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-  return `<div class="g-card"><div class="pk-cat">Tenho · ${tenho.length}</div>${tenho.length ? `<div class="plist">${tenho.map(row).join('')}</div>` : '<p class="hint">Nenhuma ainda. Ao comprar uma da lista abaixo, toque em Comprei.</p>'}</div>
-    <div class="g-card"><div class="pk-cat">Quero comprar · ${quero.length}</div>${quero.length ? `<div class="plist">${quero.map(row).join('')}</div>` : '<p class="hint">Nada na lista. Ao cadastrar, ligue "Ainda vou comprar".</p>'}</div>`;
+  const n = k => tools.filter(t => k === 'todas' || t.st === k).length;
+  const f = toolFiltro || (n('tenho') ? 'tenho' : 'todas');
+  const qf = fold(gestaoQuery);
+  const L = tools.filter(t => (f === 'todas' || t.st === f) && (!qf || fold([t.name, t.brand, t.cat].join(' ')).includes(qf)));
+  const cats = [...new Set([...TOOL_CATS, ...L.map(t => t.cat)])].filter(c => L.some(t => t.cat === c));
+  const chips = `<div class="chips scroll" role="group" aria-label="Mostrar">${[['tenho', 'Tenho'], ['quero', 'Quero comprar'], ['todas', 'Todas']].map(([k, l]) => `<button class="chip" data-tf="${k}" aria-pressed="${f === k}">${l} <span class="n">${n(k)}</span></button>`).join('')}</div>`;
+  const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar ferramenta" value="${esc(gestaoQuery)}" aria-label="Buscar ferramenta"></label>`;
+  const lista = L.length ? cats.map(c => `<div class="g-card"><div class="pk-cat">${esc(c)}</div><div class="plist">${L.filter(t => t.cat === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => `<div class="g-row"><button class="prow" data-tid="${t.id}"><span><b>${hl(t.name, qf)}</b>${t.brand ? `<small>${esc(t.brand)}</small>` : ''}</span></button>${toolStHTML(t)}</div>`).join('')}</div></div>`).join('')
+    : KitFacil.ui.vazio(qf ? { titulo: 'Nenhuma ferramenta encontrada', texto: 'Confira o nome ou veja em Todas.' } : f === 'tenho' ? { titulo: 'Nenhuma ferramenta marcada como Tenho', texto: 'Em <b>Todas</b>, toque em Não tenho para marcar as suas.', icone: I.tool } : { titulo: 'Nada na lista de compras', texto: 'Em <b>Todas</b>, toque no estado da ferramenta até aparecer Quero comprar.', icone: I.cart });
+  return chips + busca + `<p class="hint">Toque no estado para trocar: Não tenho, Tenho, Quero comprar. Toque no nome para quantidade e marca.</p><div id="g-list" class="g-list">${lista}</div>`;
 }
-function toolSheet(t, wish) {
+function toolSheet(t) {
   const isNew = !t;
-  const it = t ? { ...t } : { name: '', brand: '', qty: 1, wish: !!wish };
+  const it = t ? { ...t } : { name: '', brand: '', qty: 1, st: 'tenho', cat: '' };
   openSheet({ title: isNew ? 'Nova ferramenta' : 'Ferramenta', body: `
       <div class="field"><label for="tl-name">Ferramenta</label><input id="tl-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Alicate amperímetro" autocomplete="off"></div>
-      <div class="field"><label for="tl-brand">Marca (opcional)</label><input id="tl-brand" type="text" value="${esc(it.brand)}" placeholder="Ex.: Minipa" autocomplete="off"></div>
-      <div class="field"><label for="tl-qty">Quantidade</label><div class="stepper"><button data-tq="-1" aria-label="Menos">${I.minus}</button><input id="tl-qty" type="text" inputmode="numeric" value="${it.qty}"><button data-tq="1" aria-label="Mais">${I.plus}</button></div></div>
-      <label class="switch-row" for="tl-wish"><span><b>Ainda vou comprar</b><small>Fica na lista "Quero comprar" até você marcar Comprei.</small></span><input type="checkbox" class="sw" id="tl-wish" ${it.wish ? 'checked' : ''}></label>`,
+      <div class="field"><label for="tl-cat">Categoria</label><input id="tl-cat" type="text" value="${esc(it.cat === 'Outras' && isNew ? '' : it.cat)}" placeholder="Ex.: Medição e teste" autocomplete="off"></div>
+      <div class="field"><span class="lab" id="tl-st-l">Situação</span><div class="seg" role="group" aria-labelledby="tl-st-l">${Object.entries(TOOL_ST).map(([k, l]) => `<button data-st-t="${k}" aria-pressed="${it.st === k}">${l}</button>`).join('')}</div></div>
+      <div class="field" id="tl-qty-f" ${it.st === 'nao' ? 'hidden' : ''}><label for="tl-qty">Quantidade</label><div class="stepper"><button data-tq="-1" aria-label="Menos">${I.minus}</button><input id="tl-qty" type="text" inputmode="numeric" value="${it.qty}"><button data-tq="1" aria-label="Mais">${I.plus}</button></div></div>
+      <div class="field"><label for="tl-brand">Marca (opcional)</label><input id="tl-brand" type="text" value="${esc(it.brand)}" placeholder="Ex.: Minipa" autocomplete="off"></div>`,
     foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
     onMount: s => {
-      if (!isTouch) $('#tl-name', s).focus();
+      if (!isTouch && isNew) $('#tl-name', s).focus();
       attachSuggest($('#tl-brand', s), () => [...new Set(tools.filter(x => x.brand).map(x => x.brand))].map(b => ({ label: b })));
+      attachSuggest($('#tl-cat', s), () => [...new Set([...TOOL_CATS, ...tools.map(x => x.cat)])].map(c => ({ label: c })));
+      $$('[data-st-t]', s).forEach(b => b.onclick = () => { it.st = b.dataset.stT; $$('[data-st-t]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#tl-qty-f', s).hidden = it.st === 'nao'; });
       $$('[data-tq]', s).forEach(b => b.onclick = () => { const v = parseInt($('#tl-qty', s).value, 10) || 1; $('#tl-qty', s).value = Math.max(1, Math.min(999, v + +b.dataset.tq)); });
       $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
       $('[data-del]', s)?.addEventListener('click', () => {
@@ -3622,15 +3707,54 @@ function toolSheet(t, wish) {
       $('[data-save]', s).onclick = () => {
         const name = $('#tl-name', s).value.trim().replace(/\s+/g, ' ');
         if (!name) return toast('Escreva o nome da ferramenta.');
-        const data = { name, brand: $('#tl-brand', s).value.trim().replace(/\s+/g, ' '), qty: Math.max(1, Math.min(999, parseInt($('#tl-qty', s).value, 10) || 1)), wish: $('#tl-wish', s).checked };
-        if (isNew) tools.push(fixTool({ id: uid(), ...data })); else Object.assign(tools.find(x => x.id === t.id) || {}, data);
-        saveTools(); closeSheet(true); rerender(); toast(isNew ? `${name} adicionada${data.wish ? ' à lista de compras' : ''}.` : 'Ferramenta salva.');
+        if (isNew && tools.some(x => norm(x.name) === norm(name))) return toast(`${name} já está na lista. Busque por ela em Todas.`);
+        const data = { name, cat: $('#tl-cat', s).value.trim().replace(/\s+/g, ' ') || 'Outras', st: it.st, brand: $('#tl-brand', s).value.trim().replace(/\s+/g, ' '), qty: Math.max(1, Math.min(999, parseInt($('#tl-qty', s).value, 10) || 1)) };
+        if (isNew) tools.push(fixTool({ id: uid(), ...data })); else Object.assign(tools.find(x => x.id === t.id) || {}, fixTool({ ...t, ...data }));
+        saveTools(); closeSheet(true); rerender(); toast(isNew ? `${name} adicionada.` : 'Ferramenta salva.');
       };
+    } });
+}
+/* lista de compras única: material para repor e ferramentas que você quer comprar */
+const sugestaoCompra = p => p.min > 0 ? Math.max(1, Math.ceil(p.min * 2 - p.stock)) : 1;
+const comprasN = () => prices.filter(stockLow).length + tools.filter(t => t.st === 'quero').length;
+function comprasSheet() {
+  const L = [
+    ...prices.filter(stockLow).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => ({ k: 'm', id: p.id, nome: p.name, marca: p.brand || '', un: p.unit, qtd: sugestaoCompra(p), on: true, info: p.stock <= 0 ? 'em falta' : `tem ${fmtQty(p.stock)}${p.min ? `, mínimo ${fmtQty(p.min)}` : ''}` })),
+    ...tools.filter(t => t.st === 'quero').sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => ({ k: 'f', id: t.id, nome: t.name, marca: t.brand || '', un: 'un', qtd: t.qty || 1, on: true, info: t.cat })),
+  ];
+  const texto = () => {
+    const linha = x => `• ${x.nome}${x.marca ? ` (${x.marca})` : ''}: ${fmtQty(x.qtd)} ${unitTxt(x.qtd, x.un)}`;
+    const M = L.filter(x => x.on && x.k === 'm'), F = L.filter(x => x.on && x.k === 'f');
+    return [`*Lista de compras*${settings.company || settings.name ? ` · ${settings.company || settings.name}` : ''}`, M.length && `\n*Material*\n${M.map(linha).join('\n')}`, F.length && `\n*Ferramentas*\n${F.map(linha).join('\n')}`].filter(Boolean).join('\n');
+  };
+  const row = (x, i) => `<div class="cp-row"><label class="cp-chk"><input type="checkbox" data-cp="${i}" ${x.on ? 'checked' : ''}><span><b>${esc(x.nome)}</b><small>${esc([x.marca, x.info].filter(Boolean).join(' · '))}</small></span></label>
+    <div class="stepper"><button data-cq="-1" data-i="${i}" aria-label="Menos ${esc(x.nome)}">${I.minus}</button><input type="text" inputmode="decimal" data-ci="${i}" value="${fmtQty(x.qtd)}" aria-label="Quantidade de ${esc(x.nome)} (${unitName(x.un)})"><button data-cq="1" data-i="${i}" aria-label="Mais ${esc(x.nome)}">${I.plus}</button></div><span class="cp-un" aria-hidden="true">${unitTxt(x.qtd, x.un)}</span></div>`;
+  const corpo = () => {
+    if (!L.length) return KitFacil.ui.vazio({ titulo: 'Nada para comprar agora', texto: 'Aqui entram o material que chegou ao mínimo no estoque e as ferramentas marcadas como Quero comprar.', icone: I.cart });
+    const m = L.map((x, i) => [x, i]).filter(([x]) => x.k === 'm'), f = L.map((x, i) => [x, i]).filter(([x]) => x.k === 'f');
+    return `${m.length ? `<div class="pk-cat">Material para repor · ${m.length}</div><p class="hint">Sugestão: o bastante para ficar com o dobro do mínimo. Ajuste à vontade.</p>${m.map(([x, i]) => row(x, i)).join('')}` : ''}
+      ${f.length ? `<div class="pk-cat">Ferramentas para comprar · ${f.length}</div>${f.map(([x, i]) => row(x, i)).join('')}` : ''}`;
+  };
+  openSheet({ title: 'Lista de compras', tall: true, body: `<div id="cp-list">${corpo()}</div>`,
+    foot: L.length ? `<button class="btn ghost" data-cp-copy>${I.copy}Copiar</button><a class="btn wa" data-cp-wa href="#" target="_blank" rel="noopener">${I.wa}Enviar pelo WhatsApp</a>` : '',
+    onMount: s => {
+      const pinta = () => { const st = $('.kf-dlg-corpo', s)?.scrollTop; $('#cp-list', s).innerHTML = corpo(); if (st != null) $('.kf-dlg-corpo', s).scrollTop = st; };
+      s.addEventListener('click', e => {
+        const b = e.target.closest('[data-cq]');
+        if (b) { const x = L[+b.dataset.i]; x.qtd = Math.max(1, Math.round((x.qtd + +b.dataset.cq) * 100) / 100); pinta(); return; }
+        if (e.target.closest('[data-cp-copy]')) { if (!L.some(x => x.on)) return toast('Marque ao menos um item.'); copyText(texto(), 'Lista copiada.'); return; }
+        const wa = e.target.closest('[data-cp-wa]');
+        if (wa) { if (!L.some(x => x.on)) { e.preventDefault(); return toast('Marque ao menos um item.'); } wa.href = waLink('', texto()); }
+      });
+      s.addEventListener('change', e => {
+        const c = e.target.closest('[data-cp]'); if (c) { L[+c.dataset.cp].on = c.checked; return; }
+        const i = e.target.closest('[data-ci]'); if (i) { L[+i.dataset.ci].qtd = Math.max(1, parseQty(i.value) || 1); pinta(); }
+      });
     } });
 }
 const checkNome = c => { const t = c.toolId && tools.find(x => x.id === c.toolId); return t ? t.name : c.name; };
 function checklistHTML() {
-  const faltam = tools.filter(t => !t.wish && !checks.some(c => c.toolId === t.id));
+  const faltam = tools.filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
   const addTools = faltam.length ? `<button class="btn sm ghost" data-ck-tools>${I.plus}${checks.length ? `Adicionar ferramentas que faltam (${faltam.length})` : `Adicionar minhas ${plural(faltam.length, 'ferramenta', 'ferramentas')}`}</button>` : '';
   if (!checks.length) return KitFacil.ui.vazio({ titulo: 'Checklist vazio', texto: 'Monte uma vez a lista do que sempre vai para a obra. Toque em <b>Novo item</b>' + (faltam.length ? ' ou adicione as suas ferramentas de uma vez.' : '.'), icone: I.checklist, acao: addTools });
   const lista = checks.filter(c => checkLado === 'ida' || c.back);
@@ -3652,7 +3776,7 @@ function checkSheet(c) {
     foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
     onMount: s => {
       if (!isTouch && isNew) $('#ck-name', s).focus();
-      if (isNew) attachSuggest($('#ck-name', s), () => [...tools.filter(t => !t.wish).map(t => t.name), ...prices.filter(inStock).map(p => p.name)].filter(n => !checks.some(x => norm(checkNome(x)) === norm(n))).map(n => ({ label: n })));
+      if (isNew) attachSuggest($('#ck-name', s), () => [...tools.filter(temTool).map(t => t.name), ...prices.filter(inStock).map(p => p.name)].filter(n => !checks.some(x => norm(checkNome(x)) === norm(n))).map(n => ({ label: n })));
       $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
       $('[data-del]', s)?.addEventListener('click', () => {
         const idx = checks.findIndex(x => x.id === c.id); if (idx < 0) return;
@@ -3665,7 +3789,7 @@ function checkSheet(c) {
         const back = $('#ck-back', s).checked;
         if (isNew) {
           if (checks.some(x => norm(checkNome(x)) === norm(name))) return toast(`${name} já está no checklist.`);
-          const t = tools.find(x => !x.wish && norm(x.name) === norm(name));
+          const t = tools.find(x => temTool(x) && norm(x.name) === norm(name));
           checks.push(fixCheck({ id: uid(), name, back, toolId: t ? t.id : '' }));
         } else Object.assign(checks.find(x => x.id === c.id) || {}, { name, back });
         saveChecks(); closeSheet(true); rerender(); toast(isNew ? `${name} no checklist.` : 'Item salvo.');
@@ -3678,25 +3802,27 @@ VIEWS.gestao = {
     const corpo = gestaoAba === 'estoque' ? stockListHTML() : gestaoAba === 'ferramentas' ? toolsListHTML() : checklistHTML();
     return `${barraTopo()}
     <main class="page">
-      ${KitFacil.ui.cabecalho({ titulo: 'Gestão', sub: esc(G.sub), criar: { rotulo: G.criar, attrs: 'data-g-new' } })}
+      ${KitFacil.ui.cabecalho({ titulo: 'Gestão', sub: esc(G.sub), acoes: `<button class="btn sm ghost" data-compras>${I.cart}Lista de compras${comprasN() ? ` <span class="cp-n">${comprasN()}</span>` : ''}</button>`, criar: { rotulo: G.criar, attrs: 'data-g-new' } })}
       <div class="seg" role="group" aria-label="Parte da gestão">${Object.entries(GESTAO).map(([k, x]) => `<button data-aba="${k}" aria-pressed="${gestaoAba === k}">${x.nome}</button>`).join('')}</div>
       <div class="g-body" id="g-body">${corpo}</div>
     </main>`;
   },
   bind(v) {
     $$('[data-aba]', v).forEach(b => b.onclick = () => { if (gestaoAba === b.dataset.aba) return; gestaoAba = b.dataset.aba; gestaoQuery = ''; rerender(); });
+    $('[data-compras]', v).onclick = comprasSheet;
     $('[data-g-new]', v).onclick = () => gestaoAba === 'estoque' ? stockSheet(null) : gestaoAba === 'ferramentas' ? toolSheet(null) : checkSheet(null);
     const sq = $('#g-q', v);
-    if (sq) sq.addEventListener('input', () => { gestaoQuery = sq.value; const tmp = document.createElement('div'); tmp.innerHTML = stockListHTML(); $('#g-list', v).replaceWith($('#g-list', tmp)); });
+    if (sq) sq.addEventListener('input', () => { gestaoQuery = sq.value; const tmp = document.createElement('div'); tmp.innerHTML = gestaoAba === 'estoque' ? stockListHTML() : toolsListHTML(); $('#g-list', v).replaceWith($('#g-list', tmp)); });
     v.addEventListener('click', e => {
       const sb = e.target.closest('[data-sid]'); if (sb) return stockSheet(prices.find(p => p.id === sb.dataset.sid));
-      const cb = e.target.closest('[data-comprei]');
-      if (cb) { const t = tools.find(x => x.id === cb.dataset.comprei); if (!t) return; t.wish = false; saveTools(); rerender(); return toast(`${t.name} agora está em Tenho.`, { label: 'Desfazer', run: () => { t.wish = true; saveTools(); rerender(); } }); }
+      const ts = e.target.closest('[data-tst]');
+      if (ts) { const t = tools.find(x => x.id === ts.dataset.tst); if (!t) return; t.st = TOOL_PROX[t.st]; t.wish = t.st === 'quero'; vibrate(); saveTools(); const tmp = document.createElement('div'); tmp.innerHTML = toolStHTML(t); ts.replaceWith(tmp.firstElementChild); $(`[data-tst="${t.id}"]`, v)?.focus(); return; }
+      const tf = e.target.closest('[data-tf]'); if (tf) { toolFiltro = tf.dataset.tf; gestaoQuery = ''; return rerender(); }
       const tb = e.target.closest('[data-tid]'); if (tb) return toolSheet(tools.find(t => t.id === tb.dataset.tid));
       const ld = e.target.closest('[data-lado]'); if (ld) { checkLado = ld.dataset.lado; return rerender(); }
       const ce = e.target.closest('[data-ck-edit]'); if (ce) return checkSheet(checks.find(c => c.id === ce.dataset.ckEdit));
       if (e.target.closest('[data-ck-tools]')) {
-        const novos = tools.filter(t => !t.wish && !checks.some(c => c.toolId === t.id));
+        const novos = tools.filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
         novos.forEach(t => checks.push(fixCheck({ id: uid(), name: t.name, toolId: t.id, back: true })));
         saveChecks(); rerender(); return toast(`${plural(novos.length, 'ferramenta entrou', 'ferramentas entraram')} no checklist.`, { label: 'Desfazer', run: () => { checks = checks.filter(c => !novos.some(t => t.id === c.toolId)); saveChecks(); rerender(); } });
       }
@@ -3739,7 +3865,7 @@ function settingsSums() {
     pix: s.pix || 'Nenhuma chave cadastrada',
     deslocamento: s.kmPerL || s.fuelPrice ? [s.kmPerL && `${fmtQty(s.kmPerL)} km/l`, s.fuelPrice && `combustível ${BRL(s.fuelPrice)}`].filter(Boolean).join(' · ') : 'Consumo do veículo e preço do combustível',
     adicionais: `Urgência ${s.surUrgent}% · noturno ${s.surNight}% · fim de semana ${s.surWeekend}%`,
-    padrao: `Validade ${s.validity} dias · garantia ${s.warranty} dias · ${payShort({ mode: s.payMode, entryPct: s.entryPct, installments: s.installments }).toLowerCase()}`,
+    padrao: `Prazo ${prazoTxt({ n: Math.max(1, s.prazoN || 1), u: PRAZO_U[s.prazoU] ? s.prazoU : 'uteis' })} · validade ${s.validity} dias · garantia ${s.warranty} dias · ${payShort({ mode: s.payMode, entryPct: s.entryPct, installments: s.installments }).toLowerCase()}`,
     textos: 'Termo de aceite e condições da garantia',
   };
 }
@@ -3819,6 +3945,7 @@ VIEWS.settings = {
                 ${f('validity', 'Validade (dias)', '15', 'text', 'inputmode="numeric" data-int')}
                 ${f('warranty', 'Garantia (dias)', '90', 'text', 'inputmode="numeric" data-int')}
               </div>
+              <div class="field"><label for="st-prazoN">Prazo de execução</label><div class="prazo-row"><input id="st-prazoN" data-set="prazoN" data-int type="text" inputmode="numeric" value="${s.prazoN || 1}" style="max-width:96px" aria-label="Quantidade do prazo"><select id="st-prazoU" data-set="prazoU" aria-label="Unidade do prazo">${Object.entries(PRAZO_U).map(([k, [pl, sg]]) => `<option value="${k}" ${s.prazoU === k ? 'selected' : ''}>${(s.prazoN || 1) === 1 ? sg : pl}</option>`).join('')}</select></div></div>
               <div class="field"><span class="lab">Pagamento</span><div class="seg" role="group" aria-label="Pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${s.payMode === k}">${l}</button>`).join('')}</div></div>
               ${s.payMode === 'entrada' ? `<div class="field"><span class="lab">Entrada</span><div class="chips row5" role="group" aria-label="Entrada">${[30, 40, 50, 60, 70].map(n => `<button class="chip" data-ep="${n}" aria-pressed="${s.entryPct === n}">${n}%</button>`).join('')}</div></div>` : ''}
               <div class="field"><label for="st-notes">Observações que sempre vão na proposta</label><textarea id="st-notes" data-set="notes" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.notes)}</textarea></div>`) },

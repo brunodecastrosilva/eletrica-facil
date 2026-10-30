@@ -201,7 +201,9 @@ test('sincronização: orçamentos e preços passam de um aparelho para o outro,
   await A.page.evaluate(() => { tools.push(fixTool({ id: uid(), name: 'Alicate do A' })); saveTools(); checks.push(fixCheck({ id: uid(), name: 'Escada' })); saveChecks(); prices[0].stock = 7; savePrices(); });
   await A.page.evaluate(() => SY.agora({ quiet: true }));
   await B.page.evaluate(() => SY.agora({ quiet: true }));
-  assert.deepEqual(await B.page.evaluate(() => [tools.map(t => t.name), checks.map(c => c.name), prices[0].stock]), [['Alicate do A'], ['Escada'], 7]);
+  assert.deepEqual(await B.page.evaluate(() => [tools.filter(t => !t.seed).map(t => t.name), checks.map(c => c.name), prices[0].stock]), [['Alicate do A'], ['Escada'], 7]);
+  // as ferramentas pré-cadastradas têm o mesmo id nos dois aparelhos: não duplicam
+  assert.equal(await B.page.evaluate(() => tools.length), await A.page.evaluate(() => tools.length));
   await B.page.evaluate(() => { checks[0].ida = true; saveChecks(); });
   await B.page.evaluate(() => SY.agora({ quiet: true }));
   await A.page.evaluate(() => SY.agora({ quiet: true }));
@@ -273,20 +275,27 @@ test('um toque abre um orçamento uma vez só, mesmo depois de a tela ser redese
   await a.fechar();
 });
 
-test('orçamento: Próximo abre a seção seguinte e fecha a anterior, com animação e sem perder o lugar', async () => {
-  const a = await aparelho(amb, { viewport: { width: 390, height: 844 } });
-  const p = a.page;
-  const id = await criarOrcamento(p, 'Cliente Próximo', 'Troca de tomada');
-  await p.evaluate(id => go('/q/' + id), id);
-  await abrirPainel(p, `q:${id}:cli`);
-  await p.click(`details[data-panel="q:${id}:cli"] [data-next]`);
-  assert.equal(await p.evaluate(id => document.querySelector(`details[data-panel="q:${id}:items"]`).classList.contains('anim'), id), true, 'a seção deveria abrir com animação');
-  assert.ok(await esperar(() => p.evaluate(id => { const n = document.querySelector(`details[data-panel="q:${id}:items"]`), c = document.querySelector(`details[data-panel="q:${id}:cli"]`); return n.open && !c.open && !n.classList.contains('anim'); }, id)), 'Próximo não trocou de seção');
-  const topo = await p.evaluate(id => document.querySelector(`details[data-panel="q:${id}:items"]`).getBoundingClientRect().top - document.querySelector('.appbar').getBoundingClientRect().bottom, id);
-  assert.ok(topo >= 0 && topo < 40, `a seção aberta deveria ficar logo abaixo da barra de cima (${topo})`);
-  assert.match(await p.textContent('#ab-saved'), /Salvo/);
-  assert.deepEqual(a.erros, []);
-  await a.fechar();
+test('orçamento: tocar numa seção abre essa e fecha a outra, com animação, sem passar do fim da página', async () => {
+  for (const vp of [{ width: 390, height: 844 }, { width: 820, height: 1180 }]) {
+    const a = await aparelho(amb, { viewport: vp });
+    const p = a.page;
+    const id = await criarOrcamento(p, 'Cliente Seções', 'Troca de tomada');
+    await p.evaluate(id => go('/q/' + id), id);
+    assert.equal(await p.locator('[data-next]').count(), 0, 'o botão Próximo saiu do app');
+    await abrirPainel(p, `q:${id}:cli`);
+    await p.waitForTimeout(700);
+    await p.click(`details[data-panel="q:${id}:val"] > summary`);
+    assert.equal(await p.evaluate(id => document.querySelector(`details[data-panel="q:${id}:val"]`).classList.contains('anim'), id), true, 'a seção deveria abrir com animação');
+    assert.ok(await esperar(() => p.evaluate(id => { const n = document.querySelector(`details[data-panel="q:${id}:val"]`), c = document.querySelector(`details[data-panel="q:${id}:cli"]`); return n.open && !c.open && !n.classList.contains('anim'); }, id)), 'não trocou de seção');
+    await p.waitForTimeout(150);
+    // a rolagem termina onde a página permite: nada de tranco depois da animação
+    const pos = await p.evaluate(() => [scrollY, document.documentElement.scrollHeight - innerHeight]);
+    assert.ok(pos[0] <= pos[1] + 1, `rolou além do fim da página (${pos})`);
+    assert.equal(await p.locator('.fold-folga').count(), 0, 'o espaço provisório deveria sair no fim');
+    assert.match(await p.textContent('#ab-saved'), /Salvo/);
+    assert.deepEqual(a.erros, []);
+    await a.fechar();
+  }
 });
 
 test('prazo de execução integrado ao calendário: marca os dias, aceita ajuste, confere e não aceita data passada', async () => {
@@ -359,48 +368,74 @@ test('proposta: Concluir volta para a lista e confirma que foi salvo', async () 
   await a.fechar();
 });
 
-test('gestão: estoque ligado aos preços, ferramentas e checklist de ida e volta', async () => {
+test('gestão: estoque pela categoria e material de Preços, ferramentas pré-cadastradas, checklist e lista de compras', async () => {
   const a = await aparelho(amb, { viewport: { width: 360, height: 740 } });
   const p = a.page;
   await criarOrcamento(p, 'Cliente Gestão', 'Troca de tomada');
   await irPelaNav(p, 'Gestão');
   assert.equal(await p.evaluate(() => route().name), 'gestao');
   assert.ok(await semRolagemLateral(p));
-  // estoque: material novo vira item da tabela de preços, com o repasse como preço
+  // estoque: primeiro a categoria, depois o material da tabela de Preços daquela categoria
+  const ref = await p.evaluate(() => { const x = prices.find(y => y.kind === 'mat'); return { id: x.id, cat: x.cat, price: x.price, name: x.name }; });
   await p.click('[data-g-new]');
-  await p.fill('#st-name', 'Disjuntor DR 40 A');
-  await p.fill('#st-brand', 'Steck');
-  await p.fill('#st-qty', '5');
-  await p.fill('#st-cost', '9000');
-  await p.fill('#st-price', '14000');
-  assert.match(await p.textContent('#st-margin'), /56%/);
+  assert.equal(await p.locator('#st-mat').isDisabled(), true, 'o material vem depois da categoria');
+  await p.selectOption('#st-cat-sel', ref.cat);
+  const opts = await p.locator('#st-mat option').evaluateAll(L => L.map(o => o.value));
+  assert.ok(opts.includes(ref.id) && opts.includes('__novo'));
+  assert.equal(await p.evaluate(([ids, cat]) => ids.filter(i => i && i !== '__novo').every(i => prices.find(x => x.id === i).cat === cat), [opts, ref.cat]), true, 'só materiais da categoria');
+  await p.selectOption('#st-mat', ref.id);
+  assert.equal(await p.inputValue('#st-price'), await p.evaluate(v => BRL(v), ref.price), 'o repasse vem da tabela');
+  await p.fill('#st-qty', '5'); await p.fill('#st-cost', '100'); await p.fill('#st-min', '3');
   await p.click('.kf-dlg [data-save]');
-  const item = await p.evaluate(() => prices.find(x => x.name === 'Disjuntor DR 40 A'));
-  assert.deepEqual([item.kind, item.stock, item.cost, item.price, item.brand], ['mat', 5, 9000, 14000, 'Steck']);
-  assert.match(await p.textContent('#g-body'), /Disjuntor DR 40 A/);
-  // ferramentas: uma que tem e uma para comprar
+  assert.deepEqual(await p.evaluate(id => { const x = prices.find(y => y.id === id); return [x.stock, x.cost, x.min]; }, ref.id), [5, 100, 3]);
+  // material novo numa categoria nova entra também em Preços
+  await p.click('[data-g-new]');
+  await p.selectOption('#st-cat-sel', '__nova'); await p.fill('#st-cat', 'Automação');
+  await p.fill('#st-name', 'Relé de impulso'); await p.fill('#st-price', '8000'); await p.fill('#st-qty', '0');
+  await p.click('.kf-dlg [data-save]');
+  assert.deepEqual(await p.evaluate(() => { const x = prices.find(y => y.name === 'Relé de impulso'); return [x.kind, x.cat, x.stock]; }), ['mat', 'Automação', 0]);
+  // ferramentas: já vêm cadastradas; o toque no estado troca Não tenho → Tenho → Quero comprar
   await p.click('[data-aba="ferramentas"]');
-  for (const [nome, quero] of [['Multímetro', false], ['Furadeira', true]]) {
-    await p.click('[data-g-new]'); await p.fill('#tl-name', nome);
-    if (quero) await p.check('#tl-wish');
-    await p.click('.kf-dlg [data-save]');
-  }
-  assert.match(await p.textContent('#g-body'), /Quero comprar · 1/);
-  await p.click('[data-comprei]');
-  assert.match(await p.textContent('#g-body'), /Tenho · 2/);
+  assert.ok(await p.evaluate(() => tools.filter(t => t.seed).length) >= 40, 'faltam ferramentas pré-cadastradas');
+  await p.click('[data-tf="todas"]');
+  const mult = 'ft-multimetro-digital', fur = 'ft-furadeira-de-impacto';
+  await p.click(`[data-tst="${mult}"]`);
+  await p.click(`[data-tst="${fur}"]`); await p.click(`[data-tst="${fur}"]`);
+  assert.deepEqual(await p.evaluate(([a, b]) => [tools.find(t => t.id === a).st, tools.find(t => t.id === b).st], [mult, fur]), ['tenho', 'quero']);
+  await p.click('[data-tf="tenho"]');
+  assert.match(await p.textContent('#g-body'), /Multímetro digital/);
+  assert.ok(await semRolagemLateral(p));
   // checklist fixo: ida e volta
   await p.click('[data-aba="checklist"]');
   await p.click('[data-ck-tools]');
-  assert.equal(await p.locator('[data-ck]').count(), 2);
+  assert.equal(await p.locator('[data-ck]').count(), 1);
   await p.click('[data-g-new]'); await p.fill('#ck-name', 'Fita isolante'); await p.uncheck('#ck-back'); await p.click('.kf-dlg [data-save]');
   await p.locator('[data-ck]').first().check();
-  assert.match(await p.textContent('.g-prog'), /1 de 3/);
+  assert.match(await p.textContent('.g-prog'), /1 de 2/);
   await p.click('[data-lado="volta"]');
-  assert.equal(await p.locator('[data-ck]').count(), 2, 'o que fica na obra não aparece na volta');
-  assert.ok(await semRolagemLateral(p));
-  // tudo isso vai na sincronização e na cópia de segurança
+  assert.equal(await p.locator('[data-ck]').count(), 1, 'o que fica na obra não aparece na volta');
+  // lista de compras: material em falta + ferramenta que quer comprar
+  await p.click('[data-compras]');
+  const lista = await p.textContent('#cp-list');
+  assert.match(lista, /Relé de impulso/); assert.match(lista, /Furadeira de impacto/);
+  const href = await p.evaluate(() => { const a = document.querySelector('[data-cp-wa]'); a.addEventListener('click', e => e.preventDefault(), { once: true }); a.click(); return a.getAttribute('href'); });
+  assert.match(decodeURIComponent(href), /Lista de compras[\s\S]*Relé de impulso[\s\S]*Furadeira de impacto/);
+  // tudo isso vai na sincronização
   const pac = await p.evaluate(() => syncPayload());
-  assert.equal(pac.tools.length, 2); assert.equal(pac.checks.length, 3);
+  assert.ok(pac.tools.length >= 40); assert.equal(pac.checks.length, 2);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('prazo padrão nos Ajustes vale para o orçamento novo; prazo antigo em texto é convertido', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  await guia(p, 'padrao');
+  await p.fill('#st-prazoN', '2'); await p.selectOption('#st-prazoU', 'semanas');
+  await p.locator('#st-prazoN').dispatchEvent('change');
+  assert.deepEqual(await p.evaluate(() => blankQuote().prazo), { n: 2, u: 'semanas' });
+  assert.deepEqual(await p.evaluate(() => fixQuote({ deadline: '3 dias úteis', prazo: { n: 1, u: 'uteis' } }).prazo), { n: 3, u: 'uteis' });
+  assert.deepEqual(await p.evaluate(() => fixQuote({ deadline: '1 dia útil', prazo: { n: 1, u: 'uteis' } }).prazo), { n: 1, u: 'uteis' });
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
