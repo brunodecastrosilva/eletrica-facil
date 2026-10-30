@@ -188,8 +188,9 @@ se o app tiver, o botão do exemplo (`KitFacil.iniciar({ boasVindas: { novo, pas
 Quem vê as boas-vindas não vê as novidades na mesma abertura. Exceção registrada: o Estudo Fácil tem uma tela própria de
 primeiro uso (escolha do edital e da rotina), que faz esse papel.
 
-**Prazo de guarda no Firebase.** Avaliações e relatos ficam 2 anos (campo `enviadoEm`); comandas ao vivo, 30 dias
-depois de criadas ou encerradas (campo `expiraEm`, gravado pelo Conta Fácil). No plano gratuito o Firestore não aceita
+**Prazo de guarda no Firebase.** Avaliações e relatos ficam 2 anos (campo `enviadoEm`); comandas ao vivo são apagadas
+pelo anfitrião ao encerrar, e as nunca encerradas vencem 30 dias depois de criadas (campo `expiraEm`). Guardar só o
+necessário: dado que perdeu a função sai na hora. No plano gratuito o Firestore não aceita
 exclusão automática (TTL), então a limpeza é **manual, uma vez por mês**; passo a passo em `regras-firestore-feedback.txt`. Dado novo guardado em servidor só entra com prazo de guarda definido aqui.
 
 ## 7. Interface comum

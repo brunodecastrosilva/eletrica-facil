@@ -36,14 +36,30 @@
 // Prazo de guarda (política de privacidade, decisões de 29/10/2026): avaliações por 2 anos; comandas ao vivo por 30 dias
 // depois de criadas ou encerradas. No plano gratuito (Spark) o Firestore recusa a exclusão automática (TTL, erro 403),
 // então a limpeza é MANUAL, uma vez por mês, no console do Firebase → Firestore → Dados:
-// 1. coleção `mesas` → Filtrar → campo `expiraEm`, condição "<", valor: a data de hoje → apagar os documentos listados;
+// 1. coleção `mesas` → Filtrar → campo `expiraEm`, condição "<", valor: a data de hoje → apagar os documentos listados
+//    (são só as comandas nunca encerradas: desde o Conta Fácil 1.4.0, o anfitrião apaga a comanda ao encerrar);
 // 2. coleção `feedback` → Filtrar → campo `enviadoEm`, condição "<", valor: a data de hoje menos 2 anos → apagar os
 //    documentos listados (a primeira vez que algo vence é em outubro de 2028);
 // 3. só uma vez: as comandas ao vivo criadas antes do Conta Fácil 1.3.2 não têm `expiraEm`. Apague as que tiverem
 //    `createdAt` menor que 1793242800000 (29/10/2026, 0h de Brasília).
 // Se um dia o projeto for para o plano Blaze, troque a limpeza manual por políticas de TTL (Google Cloud console →
 // Firestore → Time-to-live): `feedback`/`enviadoEm` com adiamento de 730 dias e `mesas`/`expiraEm` sem adiamento.
-// A regra de `/mesas` publicada aceita o campo `expiraEm` (o update não restringe campos).
+// Regra de `/mesas` (Conta Fácil 1.4.0): troque o bloco `match /mesas/{code} { ... }` por este e publique.
+// - create: exige os campos da comanda; `hostUid`, se vier, tem de ser o aparelho que cria;
+// - update: ninguém troca o `hostUid` (e um sinal de presença que chegue depois de apagada não recria a comanda);
+// - delete: só o aparelho que criou (comandas antigas, sem `hostUid`, só saem pela limpeza mensal).
+//
+//    match /mesas/{code} {
+//      allow get: if request.auth != null && code.size() >= 10;
+//      allow create: if request.auth != null && code.size() >= 10
+//        && request.resource.data.keys().hasAll(['place', 'people', 'items', 'closed', 'v'])
+//        && (!('hostUid' in request.resource.data) || request.resource.data.hostUid == request.auth.uid);
+//      allow update: if request.auth != null && code.size() >= 10
+//        && ((!('hostUid' in resource.data) && !('hostUid' in request.resource.data))
+//            || request.resource.data.hostUid == resource.data.hostUid);
+//      allow delete: if request.auth != null && ('hostUid' in resource.data) && resource.data.hostUid == request.auth.uid;
+//      allow list: if false;
+//    }
 
 // Opcional, recomendado antes de divulgar os apps:
 // - Google Cloud → APIs e serviços → Credenciais: restrinja a chave "Browser key (auto created by Firebase)"
