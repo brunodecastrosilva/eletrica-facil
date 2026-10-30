@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.8.1 · 2026-10-30
+
+- Ajustes internos do Kit Fácil, sem mudança para quem usa.
+- Kit Fácil 2.4.0: tira partes antigas que nenhum app usava mais (`ajudaHTML`, `kf-marca-compacta`, a opção `topo.html({ ajustes })`).
+
 ## 2.8.0 · 2026-10-29
 
 - O botão Novo orçamento (e Novo item, na tabela de preços) não cobre mais o fim da lista. No computador, ele fica no topo da lista.

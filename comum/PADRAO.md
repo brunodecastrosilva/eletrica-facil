@@ -3,7 +3,7 @@
 Regras comuns do **Conta Fácil**, do **Elétrica Fácil** e do **Estudo Fácil** e de qualquer app novo do projeto.
 Este arquivo fica em `comum/PADRAO.md`, igual nos três repositórios, junto com o **Kit Fácil** (o código comum).
 
-Versão do padrão: 2.2 · Kit Fácil 2.3.0 · outubro de 2026.
+Versão do padrão: 2.2 · Kit Fácil 2.4.0 · outubro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 

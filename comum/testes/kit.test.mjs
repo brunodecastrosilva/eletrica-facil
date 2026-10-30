@@ -484,7 +484,6 @@ test('chopp: sem chave Pix não aparece; com chave fica entre a nuvem e o balão
   await a.fechar();
   const b = await aparelho(amb, { caminho: pagina() + '&apoio=1' });
   assert.equal(await b.page.evaluate(() => KitFacil.topo.html({ principal: false }).includes('data-kf="apoio"')), false);
-  assert.equal(await b.page.evaluate(() => KitFacil.topo.html({ ajustes: false }).includes('data-kf="apoio"')), false);
   assert.equal(await b.page.evaluate(() => KitFacil.topo.html({ principal: true }).includes('data-kf="ajustes"')), false);
   await b.fechar();
 });

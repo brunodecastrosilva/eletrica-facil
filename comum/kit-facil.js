@@ -15,7 +15,7 @@
    - janelas (diálogos) acessíveis e avisos */
 (function (global) {
   'use strict';
-  const VERSAO = '2.3.0';
+  const VERSAO = '2.4.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -484,8 +484,6 @@
       corpo: `${sobreHTML()}<h3 class="kf-sub">Seus dados e sua privacidade</h3><ul class="kf-lista">${itensPrivacidade().map(t => `<li>${esc(t)}</li>`).join('')}</ul>`,
       pe: `<button type="button" class="kf-btn kf-pri" data-kf-fechar>Fechar</button>` });
   }
-  /* bloco antigo da tela de Ajustes (mantido para quem ainda usa) */
-  function ajudaHTML() { return escolhasHTML(); }
 
   /* ================= tema: automático, claro ou escuro (vale só neste aparelho) ================= */
   const TEMAS = [['auto', 'Automático'], ['claro', 'Claro'], ['escuro', 'Escuro']];
@@ -638,9 +636,9 @@
   }
   /* Área superior, igual nos três apps: nuvem · chopp · balão.
      o = { principal: true } nas telas principais (mostra o chopp); { principal: false } nas telas internas (só nuvem e balão).
-     O antigo { ajustes: true/false } continua valendo como principal/interna. Ajustes fica na navegação (KitFacil.nav.ajustes). */
+     Sem a opção, vale como tela principal. Ajustes fica na navegação (KitFacil.nav.ajustes). */
   function topoHTML(o = {}) {
-    const principal = o.principal != null ? !!o.principal : o.ajustes !== false;
+    const principal = o.principal !== false;
     return `<div class="kf-topo" data-kf-topo><span class="kf-topo-par">${botaoNuvem()}${principal && apoioAtivo() ? botaoApoio() : ''}<button type="button" class="kf-topo-btn${fila.quantos() ? ' kf-com-pendente' : ''}" data-kf="feedback" aria-label="Avaliação e feedback" title="Avaliação e feedback">${IC.balao}<span class="kf-ponto" aria-hidden="true"></span></button></span></div>`;
   }
   function atualizarTopo() {
@@ -1313,7 +1311,6 @@
     copiar,
     feedback: { abrir: abrirFeedback, escolha: abrirEscolhaFeedback, pendentes: () => fila.quantos(), reenviar: () => fila.tentar(), _enviar: enviarRegistro, _fila: fila, _campos: camposFS, CATEGORIAS, GRAVIDADES },
     sobre: { abrir: abrirSobre },
-    ajudaHTML,
     topo: { html: topoHTML, atualizar: atualizarTopo, estado: estadoNuvem, ESTADOS },
     nav: { ajustes: navAjustesHTML, organizar: organizarNav, MAX: NAV_MAX },
     ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML },
