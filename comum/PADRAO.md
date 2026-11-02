@@ -297,7 +297,7 @@ Padrão 2.6, duas escolhas opcionais:
 | Destaque (`--kf-accent`) | verde azulejo `#1D5A3B` | amarelo de segurança `#FFC400` | azul caneta `#2742D3` | grafite `#2B2B30`, com o vermelho do pedal |
 | Neutros | fundo esverdeado | fundo cimento | fundo papel azulado | grafite frio |
 | Tema de fábrica | Automático | Automático | Automático | Escuro |
-| Fonte dos títulos | Atkinson | Atkinson | Atkinson | Atkinson (fonte própria em escolha) |
+| Fonte dos títulos | Atkinson | Atkinson | Atkinson | Big Shoulders Display (700 a 900) |
 
 Variáveis que o app liga: `--kf-bg`, `--kf-surface`, `--kf-surface-2`, `--kf-line`, `--kf-line-2`, `--kf-ink`,
 `--kf-muted`, `--kf-accent`, `--kf-accent-ink`, `--kf-accent-soft`, `--kf-accent-texto` (destaque legível sobre o fundo),
