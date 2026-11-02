@@ -16,7 +16,7 @@
    - lista de escolha do Kit no lugar da lista do sistema (toda <select>) e seções que abrem e fecham com movimento suave */
 (function (global) {
   'use strict';
-  const VERSAO = '2.7.0';
+  const VERSAO = '2.8.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -489,14 +489,16 @@
       pe: `<button type="button" class="kf-btn kf-pri" data-kf-fechar>Fechar</button>` });
   }
 
-  /* ================= tema: automático, claro ou escuro (vale só neste aparelho) ================= */
+  /* ================= tema: automático, claro ou escuro (vale só neste aparelho) =================
+     Kit 2.8: o app escolhe o tema de fábrica (padrao), usado enquanto a pessoa não escolher outro em Aparência. */
   const TEMAS = [['auto', 'Automático'], ['claro', 'Claro'], ['escuro', 'Escuro']];
   const tema = {
-    chave: '', cores: { claro: '#FFFFFF', escuro: '#000000' }, valor: 'auto', ouvindo: false,
-    iniciar({ chave, cores }) {
+    chave: '', cores: { claro: '#FFFFFF', escuro: '#000000' }, valor: 'auto', padrao: 'auto', ouvindo: false,
+    iniciar({ chave, cores, padrao }) {
       this.chave = chave; if (cores) this.cores = cores;
+      this.padrao = ['auto', 'claro', 'escuro'].includes(padrao) ? padrao : 'auto';
       const p = ler(chave, {}) || {};
-      this.valor = ['auto', 'claro', 'escuro'].includes(p.tema) ? p.tema : 'auto';
+      this.valor = ['auto', 'claro', 'escuro'].includes(p.tema) ? p.tema : this.padrao;
       this.aplicar();
       if (!this.ouvindo) {
         this.ouvindo = true;
@@ -521,7 +523,7 @@
     nome() { return { auto: 'Automático, segue o aparelho', claro: 'Claro', escuro: 'Escuro' }[this.valor]; },
     seletorHTML() {
       return `<div class="kf-seg" role="group" aria-label="Tema">${TEMAS.map(([k, l]) => `<button type="button" data-kf="tema" data-v="${k}" aria-pressed="${this.valor === k}">${l}</button>`).join('')}</div>
-        <p class="kf-ajuda">No automático, o app segue o tema do aparelho. Vale só para este aparelho.</p>`;
+        <p class="kf-ajuda">${this.padrao === 'auto' ? '' : `O ${esc(C.nome || 'app')} abre no tema ${this.padrao === 'escuro' ? 'escuro' : 'claro'}. `}No automático, o app segue o tema do aparelho. Vale só para este aparelho.</p>`;
     },
   };
 

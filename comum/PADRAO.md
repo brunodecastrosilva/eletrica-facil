@@ -1,9 +1,10 @@
 # Padrão do Projeto Integrador
 
-Regras comuns do **Conta Fácil**, do **Elétrica Fácil** e do **Estudo Fácil** e de qualquer app novo do projeto.
-Este arquivo fica em `comum/PADRAO.md`, igual nos três repositórios, junto com o **Kit Fácil** (o código comum).
+Regras comuns do **Conta Fácil**, do **Elétrica Fácil**, do **Estudo Fácil** e do **Guitarra Fácil** e de qualquer app
+novo do projeto. Este arquivo fica em `comum/PADRAO.md`, igual em todos os repositórios, junto com o **Kit Fácil** (o
+código comum).
 
-Versão do padrão: 2.5 · Kit Fácil 2.7.0 · outubro de 2026.
+Versão do padrão: 2.6 · Kit Fácil 2.8.0 · novembro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -244,7 +245,7 @@ Lista de guias à esquerda (ou em tela cheia no celular) e a guia aberta à dire
 
 1. **Conta e perfil** — sem cadastro; conta GitHub da sincronização, quando ligada; dados do perfil próprios do app
 2. **Sincronização e armazenamento** — estado da nuvem, conta, última sincronização, ações; espaço usado neste aparelho; cópia de segurança
-3. **Aparência** — tema Automático, Claro ou Escuro
+3. **Aparência** — tema Automático, Claro ou Escuro; o app abre no seu tema de fábrica (Automático, se o app não escolher outro) até a pessoa escolher
 4. **Preferências gerais** — idioma, moeda, data e hora; instalar o app
 5. **Notificações** — o que o app avisa e como (nenhum app envia notificações para o aparelho hoje)
 6. **Privacidade e segurança** — onde ficam os dados, segurança da chave, desconectar, apagar os dados deste aparelho
@@ -278,13 +279,25 @@ aberta) e trocar de guia não empilha o histórico. Cada guia da lista tem uma l
 | Moldura | `--kf-barra-h` 60 · `--kf-nav-h` 64 · `--kf-trilho-w` 240 · `--kf-alvo` 44 px |
 | Estados | `--kf-ok` (sucesso), `--kf-warn` (aviso, pendente), `--kf-bad` (erro, ação destrutiva) e os fundos `-soft`; `--kf-star` (estrelas). Claro e escuro |
 
-**De cada app** (ligado no `:root` do app, claro e escuro): a cor de destaque e os neutros tingidos por ela.
+**De cada app** (ligado no `:root` do app, claro e escuro): a cor de destaque e os neutros tingidos por ela e, desde o
+Padrão 2.6, duas escolhas opcionais:
 
-| | Conta Fácil | Elétrica Fácil | Estudo Fácil |
-|---|---|---|---|
-| Ideia | comanda de boteco | ferramenta de obra | caderno e marca-texto |
-| Destaque (`--kf-accent`) | verde azulejo `#1D5A3B` | amarelo de segurança `#FFC400` | azul caneta `#2742D3` |
-| Neutros | fundo esverdeado | fundo cimento | fundo papel azulado |
+- **Tema de fábrica**: `KitFacil.tema.iniciar({ chave, cores, padrao: 'escuro' })` (ou `'claro'`; sem `padrao`, Automático).
+  Vale até a pessoa escolher outro tema em Aparência; os três temas continuam disponíveis e o modo escuro e o claro
+  continuam obrigatórios em todas as telas. Para não piscar ao abrir, o app escuro de fábrica põe
+  `data-theme="dark"` na tag `<html>`; o Kit troca ao iniciar se a pessoa escolheu outro tema.
+- **Fonte dos títulos** (`--kf-font-display`): uma fonte de caráter, só em títulos, marca e números grandes. O texto
+  corrido, os botões, os campos e a navegação continuam em Atkinson (`--kf-font`). Regras: licença livre (SIL OFL),
+  carregada do Google Fonts no mesmo `<link>` da Atkinson, com a Atkinson logo depois na lista de fontes (se a fonte
+  não chegar, o título sai em Atkinson), legível em 20 px no celular, com acentos do português, e registrada abaixo.
+
+| | Conta Fácil | Elétrica Fácil | Estudo Fácil | Guitarra Fácil |
+|---|---|---|---|---|
+| Ideia | comanda de boteco | ferramenta de obra | caderno e marca-texto | pedal de efeito sobre amplificador |
+| Destaque (`--kf-accent`) | verde azulejo `#1D5A3B` | amarelo de segurança `#FFC400` | azul caneta `#2742D3` | grafite `#2B2B30`, com o vermelho do pedal |
+| Neutros | fundo esverdeado | fundo cimento | fundo papel azulado | grafite frio |
+| Tema de fábrica | Automático | Automático | Automático | Escuro |
+| Fonte dos títulos | Atkinson | Atkinson | Atkinson | Atkinson (fonte própria em escolha) |
 
 Variáveis que o app liga: `--kf-bg`, `--kf-surface`, `--kf-surface-2`, `--kf-line`, `--kf-line-2`, `--kf-ink`,
 `--kf-muted`, `--kf-accent`, `--kf-accent-ink`, `--kf-accent-soft`, `--kf-accent-texto` (destaque legível sobre o fundo),
@@ -376,7 +389,7 @@ demais campos aparecem depois. Linhas que abrem alguma coisa têm a seta à dire
 
 1. Altere `comum/` num dos repositórios e aumente a `VERSAO` em `comum/kit-facil.js` quando mudar comportamento.
 2. Rode `node comum/verificar.mjs --gerar` para atualizar o `comum/MANIFESTO.json`.
-3. Copie a pasta `comum/` inteira para os outros dois repositórios.
+3. Copie a pasta `comum/` inteira para os outros repositórios da família.
 4. Em cada um: `npm run verificar` e `npm test`; aumente a versão do app se ele mudou para quem usa; registre no CHANGELOG.
 
 ## 11. App novo no projeto

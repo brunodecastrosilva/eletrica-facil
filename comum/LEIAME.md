@@ -1,7 +1,7 @@
 # Kit Fácil (pasta `comum/`)
 
-Código e regras comuns aos apps do Projeto Integrador. **Esta pasta é igual no Conta Fácil, no Elétrica Fácil e no
-Estudo Fácil.** Não altere só num repositório: siga o item 10 do [PADRAO.md](PADRAO.md) e rode `npm run verificar`.
+Código e regras comuns aos apps do Projeto Integrador. **Esta pasta é igual no Conta Fácil, no Elétrica Fácil, no
+Estudo Fácil e no Guitarra Fácil.** Não altere só num repositório: siga o item 10 do [PADRAO.md](PADRAO.md) e rode `npm run verificar`.
 
 | Arquivo | Para quê |
 |---|---|
@@ -12,7 +12,7 @@ Estudo Fácil.** Não altere só num repositório: siga o item 10 do [PADRAO.md]
 | `servidor.mjs` | servidor local (`npm start`) |
 | `verificar.mjs` | verificação do padrão (`npm run verificar`) |
 | `testar.mjs` | roda os testes do kit e do app (`npm test`) |
-| `MANIFESTO.json` | impressão digital dos arquivos acima, para saber se as três cópias são iguais |
+| `MANIFESTO.json` | impressão digital dos arquivos acima, para saber se as cópias são iguais |
 | `testes/` | testes do kit, a página de teste e o ambiente comum (GitHub e Firestore simulados, conferências do padrão) |
 
 ## Como o app usa o kit
@@ -47,7 +47,7 @@ KitFacil.iniciar({
   novidades: [{ versao: VERSAO, itens: ['O que mudou, escrito para quem usa.'] }], // janela única depois de atualizar
   boasVindas: { novo: () => !temDados(), passos: [['Passo', 'explicação']], exemplo: () => abrirExemplo() }, // primeiro uso
 });
-KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#EFEEE9', escuro: '#0E0D0A' } });
+KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#EFEEE9', escuro: '#0E0D0A' } }); // padrao: 'escuro' abre no escuro (Kit 2.8)
 document.getElementById('topo').outerHTML = KitFacil.topo.html({ principal: true });
 // Ajustes é o último item da navegação: KitFacil.nav.ajustes('nav') na barra de baixo e KitFacil.nav.ajustes('trilho') no trilho
 ```

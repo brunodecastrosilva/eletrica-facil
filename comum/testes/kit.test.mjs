@@ -342,6 +342,29 @@ test('Ajustes: conteúdo das guias comuns (conta, sincronização, armazenamento
   await a.fechar();
 });
 
+test('tema de fábrica do app (Kit 2.8): vale até a pessoa escolher; sem padrão, continua Automático', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.waitForFunction(() => window.KitFacil);
+  const r = await p.evaluate(() => {
+    const cores = { claro: '#F4F4F1', escuro: '#111111' }, T = KitFacil.tema;
+    T.iniciar({ chave: 'kitteste.tema-a', cores });
+    const semPadrao = T.valor;
+    T.iniciar({ chave: 'kitteste.tema-b', cores, padrao: 'escuro' });
+    const fabrica = [T.valor, document.documentElement.getAttribute('data-theme'), T.seletorHTML().includes('abre no tema escuro')];
+    T.definir('claro');
+    T.iniciar({ chave: 'kitteste.tema-b', cores, padrao: 'escuro' });
+    const escolhido = [T.valor, document.documentElement.getAttribute('data-theme')];
+    T.iniciar({ chave: 'kitteste.tema-c', cores, padrao: 'qualquer' });
+    return { semPadrao, fabrica, escolhido, invalido: T.valor };
+  });
+  assert.equal(r.semPadrao, 'auto');
+  assert.deepEqual(r.fabrica, ['escuro', 'dark', true], 'o app abre no escuro e a Aparência explica');
+  assert.deepEqual(r.escolhido, ['claro', 'light'], 'a escolha da pessoa vale mais que a de fábrica');
+  assert.equal(r.invalido, 'auto', 'valor desconhecido volta para o Automático');
+  await a.fechar();
+});
+
 test('Ajustes: cópia de segurança e apagar os dados deste aparelho', async () => {
   const gh = githubFalso();
   const a = await aparelho(amb, { github: gh, viewport: COMPUTADOR, caminho: pagina() });
