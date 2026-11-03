@@ -2,6 +2,26 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.15.0 · 2026-11-03
+
+- **Cartão com juros:** três jeitos de cobrar o parcelado: **Sem juros**, **Taxa da maquininha** e **Juros ao mês**
+  (parcelas iguais, como no banco). Crédito de 1× a 18× ou débito; **Sem juros até N×**; e **quem paga a taxa**:
+  o cliente (o app calcula o valor para você receber o total cheio) ou você (o app mostra quanto você recebe).
+  A tabela de taxas da maquininha (débito e 1× a 12×) fica em Ajustes, Orçamento novo, e vale para todo orçamento
+  novo; dá para mudar a taxa em cada orçamento. Proposta, PDF e WhatsApp mostram as parcelas e o total no cartão.
+- **Desconto à vista:** desconto que só vale para pagamento à vista, separado do desconto do serviço (em Valores).
+  Entra no Pix, no recibo e na proposta ("5% de desconto para pagamento à vista"). Padrão em Ajustes, Orçamento novo.
+- **Materiais:** a guia Estoque virou **Materiais**, no mesmo formato de Ferramentas: **Em estoque**, **Repor** (o que
+  chegou ao mínimo ou que você marcou como Preciso repor) e **Catálogo** (os materiais da tabela de Preços). Cada
+  material abre uma caixa com as **marcas** que você tem (quantidade e custo de cada uma), o repasse, o mínimo,
+  Preciso repor e Comprei. A baixa no estoque sai primeiro da marca mais antiga e volta para ela ao desfazer.
+- **Ferramentas:** "Ferramentas cadastradas" passou a se chamar **Catálogo**.
+- **Catálogos maiores:** 60 serviços de mão de obra novos (rede, som e segurança; energia solar e gerador; laudos e
+  manutenção, entre outros), 128 materiais novos e 62 ferramentas novas, com preços de referência. Quem já usa o app
+  recebe só os itens que ainda não tem; os seus preços e itens não mudam.
+- A barra de baixo do orçamento mostra o total que o cliente paga (à vista com desconto ou no cartão).
+- Quem tinha estoque na 2.14 tem cada material convertido para uma marca, com a quantidade e o custo de antes.
+
 ## 2.14.2 · 2026-11-02
 
 - Ajustes internos do Kit Fácil, sem mudança para quem usa.

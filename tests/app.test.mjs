@@ -387,19 +387,30 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   assert.equal(await p.evaluate(([ids, cat]) => ids.filter(i => i && i !== '__novo').every(i => prices.find(x => x.id === i).cat === cat), [opts, ref.cat]), true, 'só materiais da categoria');
   await escolher(p, 'st-mat', ref.id);
   assert.equal(await p.inputValue('#st-price'), await p.evaluate(v => BRL(v), ref.price), 'o repasse vem da tabela');
-  await p.fill('#st-qty', '5'); await p.fill('#st-cost', '100'); await p.fill('#st-min', '3');
+  await p.fill('#st-brand', 'Steck'); await p.fill('#st-qty', '5'); await p.fill('#st-cost', '100');
   await p.click('.kf-dlg [data-save]');
-  assert.deepEqual(await p.evaluate(id => { const x = prices.find(y => y.id === id); return [x.stock, x.cost, x.min]; }, ref.id), [5, 100, 3]);
+  assert.deepEqual(await p.evaluate(id => { const x = prices.find(y => y.id === id); return [x.stock, x.cost, x.brand]; }, ref.id), [5, 100, 'Steck']);
+  // materiais: Em estoque · Repor · Catálogo; a caixa do material aceita outra marca e o mínimo
+  assert.deepEqual(await p.locator('[data-mf]').evaluateAll(L => L.map(b => b.firstChild.textContent.trim())), ['Em estoque', 'Repor', 'Catálogo']);
+  await p.click(`[data-mat="${ref.id}"]`);
+  await p.click('.kf-dlg [data-novo-lote]');
+  await p.fill('#lt-brand', 'WEG'); await p.fill('#lt-qty', '3'); await p.fill('#lt-cost', '200');
+  await p.click('.kf-dlg [data-save]');
+  await p.fill('#mt-min', '10'); await p.locator('#mt-min').dispatchEvent('change');
+  await p.click('.kf-dlg [data-ok]');
+  assert.deepEqual(await p.evaluate(id => { const x = prices.find(y => y.id === id); return [x.stock, x.lotes.map(l => l.brand + ':' + l.qty), x.cost, x.min]; }, ref.id), [8, ['Steck:5', 'WEG:3'], 138, 10]);
+  await p.click('[data-mf="repor"]');
+  assert.match(await p.textContent('#g-body'), new RegExp(ref.name.replace(/[()]/g, '.')));
   // material novo numa categoria nova entra também em Preços
   await p.click('[data-g-new]');
   await escolher(p, 'st-cat-sel', '__nova'); await p.fill('#st-cat', 'Automação');
-  await p.fill('#st-name', 'Relé de impulso'); await p.fill('#st-price', '8000'); await p.fill('#st-qty', '0');
+  await p.fill('#st-name', 'Relé biestável'); await p.fill('#st-price', '8000'); await p.fill('#st-qty', '0');
   await p.click('.kf-dlg [data-save]');
-  assert.deepEqual(await p.evaluate(() => { const x = prices.find(y => y.name === 'Relé de impulso'); return [x.kind, x.cat, x.stock]; }), ['mat', 'Automação', 0]);
+  assert.deepEqual(await p.evaluate(() => { const x = prices.find(y => y.name === 'Relé biestável'); return [x.kind, x.cat, x.stock]; }), ['mat', 'Automação', 0]);
   // ferramentas: já vêm cadastradas; cada linha abre a caixa da ferramenta, onde se diz se é sua
   await p.click('[data-aba="ferramentas"]');
   assert.ok(await p.evaluate(() => tiposTool().filter(t => t.seed).length) >= 40, 'faltam ferramentas pré-cadastradas');
-  assert.deepEqual(await p.locator('[data-tf]').evaluateAll(L => L.map(b => b.firstChild.textContent.trim())), ['Minhas ferramentas', 'Quero comprar', 'Ferramentas cadastradas']);
+  assert.deepEqual(await p.locator('[data-tf]').evaluateAll(L => L.map(b => b.firstChild.textContent.trim())), ['Minhas ferramentas', 'Quero comprar', 'Catálogo']);
   assert.equal(await p.locator('[data-tst], .tst').count(), 0, 'sem botões de estado na lista');
   await p.click('[data-tipo="ft-multimetro-digital"]');
   await p.click('.kf-dlg [data-novo-item]');
@@ -430,9 +441,9 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   // lista de compras: material em falta + ferramenta que quer comprar
   await p.click('[data-compras]');
   const lista = await p.textContent('#cp-list');
-  assert.match(lista, /Relé de impulso/); assert.match(lista, /Furadeira de impacto/);
+  assert.match(lista, /Relé biestável/); assert.match(lista, /Furadeira de impacto/);
   const href = await p.evaluate(() => { const a = document.querySelector('[data-cp-wa]'); a.addEventListener('click', e => e.preventDefault(), { once: true }); a.click(); return a.getAttribute('href'); });
-  assert.match(decodeURIComponent(href), /Lista de compras[\s\S]*Relé de impulso[\s\S]*Furadeira de impacto/);
+  assert.match(decodeURIComponent(href), /Lista de compras[\s\S]*Relé biestável[\s\S]*Furadeira de impacto/);
   // tudo isso vai na sincronização
   const pac = await p.evaluate(() => syncPayload());
   assert.ok(pac.tools.length >= 40); assert.equal(pac.checks.length, 2);
@@ -471,9 +482,9 @@ test('baixa no estoque ao concluir, devolução ao desfazer e aviso de estoque b
   assert.equal(await p.evaluate(() => prices.find(x => x.kind === 'mat').stock), 5);
   assert.deepEqual(await p.evaluate(id => getQ(id).baixa.map(b => b.qty), id), [7]);
   // estoque baixo aparece na Gestão
-  await p.evaluate(() => go('/gestao'));
-  assert.match(await p.textContent('.g-repor'), /1 material para repor/);
-  assert.match(await p.textContent('.g-repor'), /5 de 5/);
+  await p.evaluate(() => { gestaoAba = 'estoque'; matFiltro = 'repor'; go('/gestao'); });
+  assert.match(await p.textContent('#g-body'), /tem 5, mínimo 5/);
+  assert.equal(await p.evaluate(() => comprasN()), 1);
   // desfazer a conclusão devolve o material
   await p.evaluate(id => { setStatus(getQ(id), 'aprovado'); }, id);
   assert.equal(await p.evaluate(() => prices.find(x => x.kind === 'mat').stock), 12);
@@ -508,6 +519,53 @@ test('aprovação com o calendário do app (sem datas futuras) e Comprei na caix
   await p.fill('#it-brand', 'Bosch'); await p.fill('#it-model', 'GSB 13 RE');
   await p.click('.kf-dlg [data-save]');
   assert.deepEqual(await p.evaluate(() => [tools.find(x => x.id === 'ft-furadeira-de-impacto').quero, itensDe('ft-furadeira-de-impacto').map(i => [i.brand, i.model, i.qty])]), [false, [['Bosch', 'GSB 13 RE', 2]]]);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('pagamento: juros do cartão (taxa da maquininha, juros ao mês, sem juros até N×, débito) e desconto à vista', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  const r = await p.evaluate(() => {
+    settings.cardRates = { debito: 1.5, 1: 3, 6: 9, 12: 15 }; saveSettings();
+    const q = blankQuote(); q.items = [{ id: 'x', kind: 'svc', name: 'Serviço', unit: 'un', qty: 1, price: 100000, room: '' }];
+    const pg = q.payment, out = {};
+    pg.mode = 'parcelado'; pg.installments = 6;
+    pg.juros = 'sem'; out.sem = compute(q).card.total;
+    pg.juros = 'taxa'; pg.paga = 'cliente'; const c1 = compute(q).card; out.repasse = [c1.total, c1.recebe, c1.parts.length];
+    pg.paga = 'eu'; const c2 = compute(q).card; out.absorve = [c2.total, c2.recebe];
+    pg.paga = 'cliente'; pg.semAte = 6; out.semAte6 = compute(q).card.total; pg.semAte = 3; out.semAte3 = compute(q).card.total;
+    pg.semAte = 0; pg.juros = 'mes'; pg.mesPct = 2.5; const c3 = compute(q).card; out.mes = [c3.total, c3.parts[0]];
+    pg.cardTipo = 'debito'; pg.juros = 'taxa'; const c4 = compute(q).card; out.deb = [c4.n, c4.total, c4.recebe];
+    pg.cardTipo = 'credito'; pg.juros = 'taxa'; pg.installments = 6; out.texto = payText(q, compute(q));
+    pg.mode = 'avista'; pg.avista = { mode: 'pct', pct: 5, value: 0 }; const c5 = compute(q); out.avista = [c5.total, c5.avistaTotal, c5.pixValue]; out.avTxt = payText(q, c5);
+    pg.avista = { mode: 'value', pct: 0, value: 3000 }; out.avistaR = compute(q).avistaTotal;
+    out.antigo = fixQuote({ payment: { mode: 'parcelado', entryPct: 50, installments: 4 } }).payment.juros;
+    return out;
+  });
+  assert.equal(r.sem, 100000);
+  assert.deepEqual(r.repasse, [109890, 100000, 6], 'repassada: o cliente paga o bastante para você receber o valor cheio');
+  assert.deepEqual(r.absorve, [100000, 91000], 'paga por você: recebe menos');
+  assert.equal(r.semAte6, 100000); assert.equal(r.semAte3, 109890);
+  assert.deepEqual(r.mes, [108930, 18155], 'juros de 2,5% ao mês em 6× (parcelas iguais)');
+  assert.deepEqual(r.deb, [1, 101523, 100000]);
+  assert.match(r.texto, /6× de R\$\s?183,15.*total R\$\s?1\.098,90, com a taxa do cartão/);
+  assert.deepEqual(r.avista, [100000, 95000, 95000]);
+  assert.match(r.avTxt, /5% de desconto para pagamento à vista/);
+  assert.equal(r.avistaR, 97000);
+  assert.equal(r.antigo, 'sem', 'orçamento antigo continua sem juros');
+  // na tela: Cartão com taxa repassada mostra quanto você recebe
+  const id = await criarOrcamento(p, 'Cliente Cartão', 'Troca de tomada');
+  await p.evaluate(id => go('/q/' + id), id);
+  await abrirPainel(p, `q:${id}:cond`);
+  await p.click('[data-pm="parcelado"]');
+  await p.click('[data-jur="taxa"]');
+  for (let k = 0; k < 3; k++) await p.click('[data-in="1"]');
+  assert.equal(await p.inputValue('#q-inst'), '6×');
+  assert.match(await p.textContent('#pay-sum'), /Você recebe, depois da taxa/);
+  await p.click('[data-pm="avista"]');
+  await p.fill('#q-avd', '10');
+  assert.match(await p.textContent('#pay-sum'), /Desconto à vista/);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });

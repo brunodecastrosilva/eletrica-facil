@@ -582,6 +582,10 @@ details.tech[open] > summary::after{content:"–"}
 .cal-msg .linkish{margin-left:0}
 .prazo-row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
 .prazo-row .stepper{flex:none}
+.tx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.tx-cel{display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:var(--muted)}
+.tx-cel input{min-height:44px;text-align:center}
+.pay-sum .ps-rec{color:var(--muted)}
 .prazo-row .kf-esc{flex:1;min-width:150px;width:auto}
 .cal-d.velho span{opacity:.6}
 .cal-d.prazo span{background:var(--volt-soft)}
@@ -651,7 +655,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.14.2';
+const VERSAO = '2.15.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -822,9 +826,199 @@ const SEED = [
   ['mat', 'Diversos', 'Fita isolante', 'un', 800],
   ['mat', 'Diversos', 'Conector de emenda', 'un', 150],
   ['mat', 'Diversos', 'Abraçadeiras (pacote)', 'un', 1000],
+  // 2.15: catálogo ampliado de mão de obra e material (preços de referência)
+  ['svc', 'Tomadas e interruptores', 'Instalação de tomada USB', 'un', 5500],
+  ['svc', 'Tomadas e interruptores', 'Troca de espelho ou placa', 'un', 1500],
+  ['svc', 'Tomadas e interruptores', 'Instalação de interruptor com dimmer', 'un', 6500],
+  ['svc', 'Tomadas e interruptores', 'Instalação de campainha', 'un', 8000],
+  ['svc', 'Tomadas e interruptores', 'Instalação de tomada de piso', 'un', 9000],
+  ['svc', 'Tomadas e interruptores', 'Ponto de tomada externa à prova de tempo', 'ponto', 11000],
+  ['svc', 'Iluminação', 'Instalação de perfil de LED', 'm', 4000],
+  ['svc', 'Iluminação', 'Instalação de arandela', 'un', 7000],
+  ['svc', 'Iluminação', 'Instalação de luminária de emergência', 'un', 6000],
+  ['svc', 'Iluminação', 'Instalação de poste ou balizador de jardim', 'un', 15000],
+  ['svc', 'Iluminação', 'Instalação de fotocélula', 'un', 6000],
+  ['svc', 'Iluminação', 'Instalação de trilho eletrificado', 'm', 5000],
+  ['svc', 'Iluminação', 'Troca de reator ou driver', 'un', 5000],
+  ['svc', 'Iluminação', 'Ponto de iluminação novo (com fiação)', 'ponto', 9000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de cooktop ou forno elétrico', 'un', 15000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de aquecedor a gás (parte elétrica)', 'un', 12000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de exaustor ou coifa', 'un', 12000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de motor de portão', 'un', 30000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de bomba d\'água', 'un', 20000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de aquecedor de passagem elétrico', 'un', 15000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de purificador ou filtro elétrico', 'un', 7000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de máquina de lavar (ponto exclusivo)', 'un', 14000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de ar-condicionado split (parte elétrica)', 'un', 35000],
+  ['svc', 'Quadro e proteção', 'Troca de quadro de distribuição', 'un', 55000],
+  ['svc', 'Quadro e proteção', 'Organização e identificação de quadro', 'un', 25000],
+  ['svc', 'Quadro e proteção', 'Instalação de disjuntor geral', 'un', 8000],
+  ['svc', 'Quadro e proteção', 'Instalação de IDR', 'un', 11000],
+  ['svc', 'Quadro e proteção', 'Balanceamento de fases', 'un', 30000],
+  ['svc', 'Quadro e proteção', 'Instalação de quadro de medição', 'un', 60000],
+  ['svc', 'Quadro e proteção', 'Instalação de contator ou relé', 'un', 12000],
+  ['svc', 'Quadro e proteção', 'Instalação de temporizador', 'un', 9000],
+  ['svc', 'Fiação e infraestrutura', 'Passagem de cabo em eletroduto existente', 'm', 600],
+  ['svc', 'Fiação e infraestrutura', 'Instalação de eletrocalha', 'm', 3500],
+  ['svc', 'Fiação e infraestrutura', 'Instalação de canaleta', 'm', 1800],
+  ['svc', 'Fiação e infraestrutura', 'Abertura de caixa na alvenaria', 'un', 4000],
+  ['svc', 'Fiação e infraestrutura', 'Instalação de eletroduto embutido', 'm', 2500],
+  ['svc', 'Fiação e infraestrutura', 'Ramal de entrada (concessionária)', 'un', 45000],
+  ['svc', 'Fiação e infraestrutura', 'Lançamento de cabo subterrâneo', 'm', 3500],
+  ['svc', 'Rede, som e segurança', 'Ponto de rede (RJ45)', 'ponto', 9000],
+  ['svc', 'Rede, som e segurança', 'Ponto de antena ou TV', 'ponto', 8000],
+  ['svc', 'Rede, som e segurança', 'Instalação de câmera de segurança', 'un', 15000],
+  ['svc', 'Rede, som e segurança', 'Instalação de interfone ou porteiro eletrônico', 'un', 20000],
+  ['svc', 'Rede, som e segurança', 'Instalação de cerca elétrica', 'm', 3500],
+  ['svc', 'Rede, som e segurança', 'Instalação de alarme', 'un', 40000],
+  ['svc', 'Rede, som e segurança', 'Instalação de sensor de alarme', 'un', 6000],
+  ['svc', 'Rede, som e segurança', 'Instalação de fechadura elétrica', 'un', 15000],
+  ['svc', 'Energia solar e gerador', 'Instalação de inversor', 'un', 60000],
+  ['svc', 'Energia solar e gerador', 'Instalação de string box', 'un', 25000],
+  ['svc', 'Energia solar e gerador', 'Montagem de módulo fotovoltaico', 'un', 12000],
+  ['svc', 'Energia solar e gerador', 'Instalação de chave de transferência de gerador', 'un', 45000],
+  ['svc', 'Energia solar e gerador', 'Instalação de nobreak', 'un', 12000],
+  ['svc', 'Laudos e manutenção', 'Inspeção de instalação elétrica', 'un', 30000],
+  ['svc', 'Laudos e manutenção', 'Laudo técnico com ART', 'un', 80000],
+  ['svc', 'Laudos e manutenção', 'Medição de aterramento', 'un', 20000],
+  ['svc', 'Laudos e manutenção', 'Termografia de quadro', 'un', 35000],
+  ['svc', 'Laudos e manutenção', 'Manutenção preventiva de quadro', 'un', 25000],
+  ['svc', 'Laudos e manutenção', 'Reaperto de conexões', 'un', 15000],
+  ['svc', 'Visita e diagnóstico', 'Diária técnica', 'un', 60000],
+  ['svc', 'Visita e diagnóstico', 'Atendimento de emergência', 'un', 25000],
+  ['svc', 'Visita e diagnóstico', 'Orçamento no local', 'un', 8000],
+  ['mat', 'Cabos', 'Cabo flexível 0,75 mm²', 'm', 180],
+  ['mat', 'Cabos', 'Cabo flexível 16 mm²', 'm', 2300],
+  ['mat', 'Cabos', 'Cabo flexível 25 mm²', 'm', 3600],
+  ['mat', 'Cabos', 'Cabo PP 2 x 1,5 mm²', 'm', 650],
+  ['mat', 'Cabos', 'Cabo PP 3 x 1,5 mm²', 'm', 900],
+  ['mat', 'Cabos', 'Cabo PP 3 x 2,5 mm²', 'm', 1300],
+  ['mat', 'Cabos', 'Cabo PP 4 x 4 mm²', 'm', 2600],
+  ['mat', 'Cabos', 'Cabo paralelo 2 x 1,5 mm²', 'm', 400],
+  ['mat', 'Cabos', 'Cabo de cobre nu 16 mm²', 'm', 2400],
+  ['mat', 'Cabos', 'Cabo de rede UTP Cat6', 'm', 300],
+  ['mat', 'Cabos', 'Cabo coaxial RG6', 'm', 250],
+  ['mat', 'Cabos', 'Cabo para alarme 4 vias', 'm', 200],
+  ['mat', 'Cabos', 'Cabo solar 6 mm²', 'm', 900],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto corrugado 1"', 'm', 350],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto corrugado 1/2"', 'm', 200],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto rígido PVC 3/4" (barra 3 m)', 'barra', 1800],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto rígido PVC 1" (barra 3 m)', 'barra', 2600],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto metálico 3/4" (barra 3 m)', 'barra', 4500],
+  ['mat', 'Eletrodutos e caixas', 'Curva PVC 3/4"', 'un', 400],
+  ['mat', 'Eletrodutos e caixas', 'Luva PVC 3/4"', 'un', 200],
+  ['mat', 'Eletrodutos e caixas', 'Bucha e arruela 3/4"', 'un', 150],
+  ['mat', 'Eletrodutos e caixas', 'Caixa 4x2 para drywall', 'un', 450],
+  ['mat', 'Eletrodutos e caixas', 'Caixa octogonal 4x4 de laje', 'un', 450],
+  ['mat', 'Eletrodutos e caixas', 'Caixa de sobrepor 4x2', 'un', 800],
+  ['mat', 'Eletrodutos e caixas', 'Condulete 3/4"', 'un', 1200],
+  ['mat', 'Eletrodutos e caixas', 'Canaleta 20 x 10 mm (barra 2 m)', 'barra', 1200],
+  ['mat', 'Eletrodutos e caixas', 'Eletrocalha perfurada 100 x 50 (barra 3 m)', 'barra', 9000],
+  ['mat', 'Eletrodutos e caixas', 'Caixa de passagem 20 x 20', 'un', 3500],
+  ['mat', 'Eletrodutos e caixas', 'Abraçadeira tipo D 3/4"', 'un', 100],
+  ['mat', 'Eletrodutos e caixas', 'Fita perfurada', 'm', 200],
+  ['mat', 'Tomadas e interruptores', 'Tomada USB com placa', 'un', 6500],
+  ['mat', 'Tomadas e interruptores', 'Tomada de embutir 2P+T 10 A (módulo)', 'un', 900],
+  ['mat', 'Tomadas e interruptores', 'Tomada de embutir 2P+T 20 A (módulo)', 'un', 1200],
+  ['mat', 'Tomadas e interruptores', 'Interruptor simples (módulo)', 'un', 700],
+  ['mat', 'Tomadas e interruptores', 'Interruptor paralelo (módulo)', 'un', 1000],
+  ['mat', 'Tomadas e interruptores', 'Placa 4x2 (1 posto)', 'un', 600],
+  ['mat', 'Tomadas e interruptores', 'Placa 4x2 (2 postos)', 'un', 600],
+  ['mat', 'Tomadas e interruptores', 'Placa 4x4', 'un', 1200],
+  ['mat', 'Tomadas e interruptores', 'Suporte 4x2', 'un', 300],
+  ['mat', 'Tomadas e interruptores', 'Dimmer rotativo', 'un', 4500],
+  ['mat', 'Tomadas e interruptores', 'Pulsador de campainha', 'un', 1500],
+  ['mat', 'Tomadas e interruptores', 'Tomada de sobrepor', 'un', 1800],
+  ['mat', 'Tomadas e interruptores', 'Tomada industrial 2P+T 16 A', 'un', 3500],
+  ['mat', 'Tomadas e interruptores', 'Tomada para piso', 'un', 9000],
+  ['mat', 'Tomadas e interruptores', 'Plugue macho 10 A', 'un', 600],
+  ['mat', 'Tomadas e interruptores', 'Plugue fêmea 10 A', 'un', 600],
+  ['mat', 'Proteção', 'Disjuntor monopolar 40 a 63 A', 'un', 3200],
+  ['mat', 'Proteção', 'Disjuntor bipolar 40 a 63 A', 'un', 9500],
+  ['mat', 'Proteção', 'Disjuntor tripolar', 'un', 13000],
+  ['mat', 'Proteção', 'Disjuntor tripolar 70 a 100 A', 'un', 28000],
+  ['mat', 'Proteção', 'DR tetrapolar 40 A 30 mA', 'un', 25000],
+  ['mat', 'Proteção', 'DR bipolar 63 A 30 mA', 'un', 22000],
+  ['mat', 'Proteção', 'IDR bipolar 25 A', 'un', 18000],
+  ['mat', 'Proteção', 'DPS 175 V', 'un', 5000],
+  ['mat', 'Proteção', 'Quadro para 6 disjuntores', 'un', 6500],
+  ['mat', 'Proteção', 'Quadro para 18 disjuntores', 'un', 18000],
+  ['mat', 'Proteção', 'Quadro para 24 disjuntores', 'un', 26000],
+  ['mat', 'Proteção', 'Quadro de sobrepor', 'un', 9000],
+  ['mat', 'Proteção', 'Barramento pente monopolar', 'un', 2500],
+  ['mat', 'Proteção', 'Barramento de neutro e terra', 'un', 1500],
+  ['mat', 'Proteção', 'Trilho DIN', 'm', 1200],
+  ['mat', 'Proteção', 'Tampa cega para quadro', 'un', 400],
+  ['mat', 'Proteção', 'Caixa de medição monofásica', 'un', 15000],
+  ['mat', 'Proteção', 'Caixa de medição bifásica', 'un', 22000],
+  ['mat', 'Aterramento', 'Haste de aterramento 2,4 m', 'un', 4500],
+  ['mat', 'Aterramento', 'Conector para haste', 'un', 800],
+  ['mat', 'Aterramento', 'Caixa de inspeção de aterramento', 'un', 3000],
+  ['mat', 'Aterramento', 'Barra de equipotencialização (BEP)', 'un', 6000],
+  ['mat', 'Aterramento', 'Cordoalha de cobre', 'm', 2000],
+  ['mat', 'Iluminação', 'Lâmpada LED 12 W', 'un', 1400],
+  ['mat', 'Iluminação', 'Lâmpada LED 15 W', 'un', 1800],
+  ['mat', 'Iluminação', 'Lâmpada tubular LED 18 W', 'un', 2500],
+  ['mat', 'Iluminação', 'Lâmpada LED bulbo 30 W', 'un', 4500],
+  ['mat', 'Iluminação', 'Plafon LED 24 W', 'un', 6000],
+  ['mat', 'Iluminação', 'Painel LED embutido 18 W', 'un', 5500],
+  ['mat', 'Iluminação', 'Spot direcionável', 'un', 4500],
+  ['mat', 'Iluminação', 'Fita de LED 5 m', 'un', 6000],
+  ['mat', 'Iluminação', 'Fonte para fita de LED', 'un', 5000],
+  ['mat', 'Iluminação', 'Perfil de alumínio para LED (barra 2 m)', 'barra', 4000],
+  ['mat', 'Iluminação', 'Refletor LED 50 W', 'un', 7000],
+  ['mat', 'Iluminação', 'Refletor LED 100 W', 'un', 12000],
+  ['mat', 'Iluminação', 'Luminária de emergência', 'un', 3500],
+  ['mat', 'Iluminação', 'Sensor de presença de teto', 'un', 4000],
+  ['mat', 'Iluminação', 'Relé fotocélula', 'un', 3000],
+  ['mat', 'Iluminação', 'Arandela', 'un', 6000],
+  ['mat', 'Iluminação', 'Soquete E27', 'un', 500],
+  ['mat', 'Iluminação', 'Driver para LED', 'un', 3500],
+  ['mat', 'Aparelhos', 'Chuveiro elétrico 220 V', 'un', 9000],
+  ['mat', 'Aparelhos', 'Resistência para chuveiro', 'un', 2500],
+  ['mat', 'Aparelhos', 'Torneira elétrica', 'un', 15000],
+  ['mat', 'Aparelhos', 'Campainha', 'un', 4000],
+  ['mat', 'Aparelhos', 'Ventilador de teto', 'un', 25000],
+  ['mat', 'Aparelhos', 'Exaustor', 'un', 9000],
+  ['mat', 'Rede, som e segurança', 'Conector RJ45', 'un', 100],
+  ['mat', 'Rede, som e segurança', 'Tomada RJ45 (módulo)', 'un', 1500],
+  ['mat', 'Rede, som e segurança', 'Conector F para coaxial', 'un', 100],
+  ['mat', 'Rede, som e segurança', 'Câmera de segurança', 'un', 15000],
+  ['mat', 'Rede, som e segurança', 'Fonte 12 V para câmera', 'un', 3000],
+  ['mat', 'Rede, som e segurança', 'Interfone', 'un', 20000],
+  ['mat', 'Rede, som e segurança', 'Sensor de alarme', 'un', 4000],
+  ['mat', 'Automação e comando', 'Contator', 'un', 9000],
+  ['mat', 'Automação e comando', 'Relé de impulso', 'un', 8000],
+  ['mat', 'Automação e comando', 'Temporizador digital', 'un', 9000],
+  ['mat', 'Automação e comando', 'Minuteria', 'un', 4000],
+  ['mat', 'Automação e comando', 'Interruptor inteligente Wi-Fi', 'un', 9000],
+  ['mat', 'Automação e comando', 'Tomada inteligente Wi-Fi', 'un', 7000],
+  ['mat', 'Automação e comando', 'Botoeira liga e desliga', 'un', 4000],
+  ['mat', 'Automação e comando', 'Chave boia', 'un', 4000],
+  ['mat', 'Conexões e terminais', 'Conector de emenda Wago (2 vias)', 'un', 250],
+  ['mat', 'Conexões e terminais', 'Conector de emenda Wago (3 vias)', 'un', 300],
+  ['mat', 'Conexões e terminais', 'Conector de emenda Wago (5 vias)', 'un', 400],
+  ['mat', 'Conexões e terminais', 'Terminal tubular (pacote 100)', 'pct', 1500],
+  ['mat', 'Conexões e terminais', 'Terminal olhal (pacote 100)', 'pct', 2500],
+  ['mat', 'Conexões e terminais', 'Terminal forquilha (pacote 100)', 'pct', 2500],
+  ['mat', 'Conexões e terminais', 'Conector split bolt', 'un', 1200],
+  ['mat', 'Conexões e terminais', 'Borne de passagem', 'un', 600],
+  ['mat', 'Conexões e terminais', 'Conector de derivação perfurante', 'un', 1500],
+  ['mat', 'Fixação e acabamento', 'Bucha e parafuso 6 mm (pacote 100)', 'pct', 1500],
+  ['mat', 'Fixação e acabamento', 'Bucha e parafuso 8 mm (pacote 100)', 'pct', 2000],
+  ['mat', 'Fixação e acabamento', 'Abraçadeira de nylon (pacote 100)', 'pct', 1200],
+  ['mat', 'Fixação e acabamento', 'Abraçadeira com base adesiva (pacote 100)', 'pct', 2500],
+  ['mat', 'Fixação e acabamento', 'Espaguete termorretrátil', 'm', 300],
+  ['mat', 'Fixação e acabamento', 'Fita isolante de alta fusão', 'un', 2500],
+  ['mat', 'Fixação e acabamento', 'Fita isolante colorida (kit)', 'un', 2500],
+  ['mat', 'Fixação e acabamento', 'Massa de calafetar', 'un', 1500],
+  ['mat', 'Fixação e acabamento', 'Gesso (saco 1 kg)', 'un', 600],
+  ['mat', 'Fixação e acabamento', 'Massa corrida (galão)', 'un', 4500],
+  ['mat', 'Fixação e acabamento', 'Identificador de cabos (kit)', 'un', 2000],
 ];
 const catOrder = kind => [...new Set(SEED.filter(s => s[0] === kind).map(s => s[1])), 'Outros'];
 // itens que entraram depois da primeira tabela (são acrescentados em quem já usa o app)
+// 2.15: tudo o que ainda não está na tabela entra (por nome), sem mexer nos itens e preços de quem já usa
 const SEED_V2 = ['Ponto de interruptor paralelo (three-way)', 'Tomada dupla 10 A com placa', 'Interruptor duplo com placa', 'Interruptor paralelo (three-way) com placa', 'Interruptor intermediário (four-way)'];
 const seedPrices = () => SEED.map(([kind, cat, name, unit, price]) => ({ id: uid(), kind, cat, name, unit, price }));
 
@@ -837,7 +1031,9 @@ const LS = {
 const ACCEPT_DEFAULT = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita (WhatsApp ou e-mail).';
 const WARRANTY_DEFAULT = 'A garantia cobre falhas no serviço executado. Não cobre: mau uso; alterações feitas por terceiros; sobrecarga causada por equipamentos ligados depois do serviço; surtos de tensão, descargas atmosféricas e falhas da rede da concessionária; e materiais fornecidos pelo cliente, que seguem a garantia do fabricante. Esta garantia não exclui os direitos previstos no Código de Defesa do Consumidor.';
 const DEF = { toolSeedV: 0, name: '', company: '', phone: '', email: '', doc: '', city: '', pix: '', logo: '', logoRatio: 1,
-  validity: 15, warranty: 90, prazoN: 1, prazoU: 'uteis', payMode: 'entrada', entryPct: 50, installments: 3, notes: '', seq: 0,
+  validity: 15, warranty: 90, prazoN: 1, prazoU: 'uteis', payMode: 'entrada', entryPct: 50, installments: 3, notes: '',
+  // cartão: tipo de juros, taxa da maquininha por parcelamento (em %), juros ao mês, sem juros até N× e quem paga a taxa
+  cardJuros: 'sem', cardRates: {}, cardMes: 0, cardSemAte: 0, cardPaga: 'cliente', avistaPct: 0, seq: 0,
   kmPerL: 0, fuelPrice: 0, wearPerKm: 0, hourRate: 0, minVisit: 0, roundTrip: true,
   surUrgent: 50, surNight: 30, surWeekend: 50, seedV: 0,
   acceptText: ACCEPT_DEFAULT, warrantyTerms: WARRANTY_DEFAULT };
@@ -861,7 +1057,12 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.14.0', itens: ['Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas.', 'O calendário da data de aprovação agora é o calendário comum da família, com Hoje.'] }, { versao: '2.13.0', itens: [
+  novidades: [{ versao: '2.15.0', itens: [
+    'Cartão com juros: sem juros, taxa da maquininha (cadastre a tabela em Ajustes, Orçamento novo) ou juros ao mês, com sem juros até N×, débito e a escolha de quem paga a taxa. O app mostra quanto você recebe.',
+    'Desconto à vista: um desconto só para quem paga à vista, separado do desconto do serviço.',
+    'Gestão: Estoque virou Materiais, com Em estoque, Repor e Catálogo, como em Ferramentas. Um material pode ter várias marcas, cada uma com quantidade e custo.',
+    'Catálogos maiores: 89 serviços de mão de obra, 155 materiais e 116 ferramentas já vêm no app. Os seus preços não mudam.',
+  ] }, { versao: '2.14.0', itens: ['Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas.', 'O calendário da data de aprovação agora é o calendário comum da família, com Hoje.'] }, { versao: '2.13.0', itens: [
     'A data da aprovação agora usa o calendário do próprio app, sem datas futuras.',
     'Comprei: abra uma ferramenta da lista de compras, toque em Comprei e diga a marca e o modelo. Ela vai para Minhas ferramentas.',
     'A lista de escolha e o movimento das seções agora são os mesmos nos três apps da família.',
@@ -937,7 +1138,7 @@ function blankQuote() {
     client: { name: '', phone: '', address: '', doc: '' }, title: '', items: [], materialBy: 'eu',
     startAt: null, endAt: null, dateTbd: false, approvedVia: '', days: 1, dates: [],
     travel: 0, discount: { mode: 'value', value: 0, pct: 0 },
-    payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments },
+    payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments, cardTipo: 'credito', juros: settings.cardJuros || 'sem', taxaPct: null, mesPct: settings.cardMes || 0, semAte: settings.cardSemAte || 0, paga: settings.cardPaga || 'cliente', avista: { mode: 'pct', pct: settings.avistaPct || 0, value: 0 } },
     validity: settings.validity, deadline: '', prazo: { n: Math.max(1, Math.min(99, settings.prazoN || 1)), u: PRAZO_U[settings.prazoU] ? settings.prazoU : 'uteis' }, warranty: settings.warranty, notes: settings.notes,
     status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false,
     trip: null, extras: { urgent: 0, night: 0, weekend: 0 }, useRooms: false, rooms: [],
@@ -948,6 +1149,14 @@ function fixQuote(q) {
   q = { ...d, ...src };
   q.client = { ...d.client, ...(q.client || {}) };
   q.payment = { ...d.payment, ...(q.payment || {}) };
+  // orçamentos de antes da 2.15: cartão sem juros e sem desconto à vista (o total não muda)
+  if (!src.payment || !('juros' in src.payment)) { q.payment.juros = 'sem'; q.payment.avista = { mode: 'pct', pct: 0, value: 0 }; }
+  const pg = q.payment;
+  pg.cardTipo = pg.cardTipo === 'debito' ? 'debito' : 'credito';
+  pg.juros = ['sem', 'taxa', 'mes'].includes(pg.juros) ? pg.juros : 'sem';
+  pg.paga = pg.paga === 'eu' ? 'eu' : 'cliente';
+  pg.installments = Math.max(1, Math.min(18, parseInt(pg.installments, 10) || 1));
+  pg.avista = { mode: pg.avista && pg.avista.mode === 'value' ? 'value' : 'pct', pct: Math.max(0, Math.min(50, +(pg.avista && pg.avista.pct) || 0)), value: Math.max(0, +(pg.avista && pg.avista.value) || 0) };
   if (typeof q.travel !== 'number') q.travel = q.travel && q.travel.enabled ? (q.travel.value || 0) : 0;
   const ds = q.discount || {};
   q.discount = { mode: ds.mode === 'pct' ? 'pct' : 'value', value: ds.enabled === false ? 0 : (ds.value || 0), pct: ds.enabled === false ? 0 : (ds.pct || 0) };
@@ -1006,14 +1215,56 @@ const TOOL_SEED = [
   ['Instalação e acabamento', ['Trena', 'Nível', 'Esquadro', 'Martelo', 'Talhadeira', 'Ponteiro', 'Ferro de solda', 'Soprador térmico', 'Lanterna de cabeça', 'Caixa de ferramentas']],
   ['Acesso', ['Escada de 6 degraus', 'Escada extensível', 'Andaime']],
   ['Segurança (EPI)', ['Luvas isolantes', 'Óculos de proteção', 'Capacete com jugular', 'Botina de segurança sem metal', 'Cinto de segurança com talabarte', 'Protetor auricular', 'Kit de bloqueio e etiquetagem']],
+  // 2.15: catálogo ampliado
+  ['Medição e teste', ['Alicate wattímetro', 'Analisador de qualidade de energia', 'Termômetro infravermelho', 'Câmera termográfica', 'Luxímetro', 'Testador de DR', 'Detector de cabos na parede', 'Testador de cabo de rede']],
+  ['Alicates', ['Alicate de bico curvo', 'Alicate rebitador', 'Alicate decapador automático', 'Alicate de corte para cabos', 'Alicate crimpador RJ45', 'Alicate prensa-terminal hidráulico']],
+  ['Chaves', ['Chave de boca', 'Jogo de soquetes', 'Chave canhão', 'Chave catraca', 'Chave de fenda de toco', 'Torquímetro']],
+  ['Furação e corte', ['Furadeira de bancada', 'Serra mármore', 'Serra circular', 'Cortador de tubos', 'Jogo de brocas de vídia', 'Jogo de brocas para metal', 'Broca de serra copo para drywall', 'Rasgadeira de parede', 'Tesoura para chapa']],
+  ['Passagem de fios', ['Guia passa-cabos de fibra', 'Lubrificante para passagem de cabos', 'Sonda passa-fio com rolo']],
+  ['Instalação e acabamento', ['Nível a laser', 'Prumo', 'Lima', 'Espátula', 'Desempenadeira', 'Pistola de cola quente', 'Grampeador de pressão', 'Marcador permanente', 'Lápis de carpinteiro', 'Fita métrica de aço longa', 'Bolsa porta-ferramentas', 'Maleta organizadora']],
+  ['Acesso', ['Escada de 8 degraus', 'Escada de fibra (isolante)', 'Plataforma de trabalho', 'Cavalete']],
+  ['Segurança (EPI)', ['Luvas de vaqueta', 'Manga isolante', 'Tapete isolante', 'Protetor facial', 'Máscara contra poeira', 'Vara de manobra', 'Placas de sinalização', 'Detector de tensão por contato']],
+  ['Elétrica e energia', ['Extensão de obra', 'Carretel de extensão', 'Gerador portátil', 'Lanterna recarregável', 'Refletor de obra', 'Carregador de baterias']],
 ];
-const TOOL_CATS = TOOL_SEED.map(x => x[0]);
+const TOOL_CATS = [...new Set(TOOL_SEED.map(x => x[0]))];
 const seedTools = () => TOOL_SEED.flatMap(([cat, L]) => L.map(name => fixTipo({ id: 'ft-' + fold(name).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), name, cat, st: 'nao', seed: true })));
 const fixCheck = c => ({ id: String(c.id || uid()), name: String(c.name || '').trim(), back: c.back !== false, ida: !!c.ida, volta: !!c.volta, toolId: c.toolId ? String(c.toolId) : '' });
 // material do estoque: quantidade, custo e marca ficam no próprio item da tabela de preços
 const inStock = p => p.kind === 'mat' && typeof p.stock === 'number';
+// material em estoque por marca (lotes: { id, brand, qty, cost }); stock, cost e brand do item são o resumo das marcas
+// (stock = soma, cost = média ponderada, brand = a marca com mais), para a tabela, os orçamentos e versões antigas
+function acertaLotes(p) {
+  if (!p || p.kind !== 'mat') return p;
+  if (!Array.isArray(p.lotes) && typeof p.stock === 'number') p.lotes = [{ id: p.id + '-1', brand: p.brand || '', qty: p.stock, cost: p.cost || 0 }];
+  if (!Array.isArray(p.lotes)) return p;
+  // aparelho com versão antiga mudou só a quantidade: com uma marca só, a marca acompanha
+  if (p.lotes.length === 1 && typeof p.stock === 'number' && p.stock !== p.lotes[0].qty && p._st === p.lotes[0].qty) p.lotes[0].qty = p.stock;
+  p.lotes = p.lotes.filter(l => l && typeof l.qty === 'number').map(l => ({ id: String(l.id || uid()), brand: String(l.brand || '').trim(), qty: Math.max(0, Math.round(l.qty * 100) / 100), cost: Math.max(0, Math.round(+l.cost || 0)) }));
+  if (!p.lotes.length) { delete p.lotes; delete p.stock; delete p.cost; delete p.brand; delete p._st; return p; }
+  const tot = sum(p.lotes.map(l => l.qty)), cc = p.lotes.filter(l => l.cost);
+  p.stock = Math.round(tot * 100) / 100;
+  p.cost = cc.length ? Math.round(sum(cc.map(l => l.cost * (l.qty || 1))) / (sum(cc.map(l => l.qty || 1)) || 1)) : 0;
+  const top = [...p.lotes].sort((a, b) => b.qty - a.qty)[0];
+  if (top.brand) p.brand = top.brand; else delete p.brand;
+  p._st = p.stock;
+  return p;
+}
 // estoque baixo: chegou ao mínimo que o usuário escolheu (ou acabou)
+// baixa e devolução por marca: sai primeiro da marca que entrou antes (a primeira da lista)
+function tiraDoEstoque(p, qty) {
+  acertaLotes(p); const partes = []; let falta = qty;
+  (p.lotes || []).forEach(l => { if (falta <= 0 || l.qty <= 0) return; const sai = Math.min(l.qty, falta); l.qty = Math.round((l.qty - sai) * 100) / 100; falta = Math.round((falta - sai) * 100) / 100; partes.push({ id: l.id, qty: sai }); });
+  acertaLotes(p); return partes;
+}
+function devolveAoEstoque(p, b) {
+  if (!p) return;
+  acertaLotes(p);
+  const partes = b.lotes && b.lotes.length ? b.lotes : [{ id: null, qty: b.qty }];
+  partes.forEach(x => { let l = (p.lotes || []).find(y => y.id === x.id); if (!l) { p.lotes = p.lotes || []; l = p.lotes[0] || (p.lotes.push({ id: uid(), brand: '', qty: 0, cost: p.cost || 0 }), p.lotes[0]); } l.qty = Math.round((l.qty + x.qty) * 100) / 100; });
+  acertaLotes(p);
+}
 const stockLow = p => inStock(p) && (p.stock <= 0 || (p.min > 0 && p.stock <= p.min));
+const sugestaoCompra = p => p.min > 0 ? Math.max(1, Math.ceil(p.min * 2 - (p.stock || 0))) : 1;
 const stockTxt = p => !inStock(p) ? '' : p.stock <= 0 ? 'em falta no estoque' : `${fmtQty(p.stock)} em estoque${stockLow(p) ? ' · repor' : ''}`;
 // dados da primeira versão do app (mesmo aparelho ou cópia de segurança antiga)
 function fromV1(cat, bills, draft) {
@@ -1048,17 +1299,22 @@ if (!prices || !quotes) {
   saveSettings(); savePrices(); saveQuotes();
 }
 quotes = quotes.map(fixQuote);
+prices.forEach(acertaLotes);
 tools = normTools(tools); checks = (Array.isArray(checks) ? checks : []).map(fixCheck);
 // ferramentas pré-cadastradas: entram uma vez, como "não tenho" (quem já tinha uma com o mesmo nome fica com a sua)
-if ((settings.toolSeedV || 0) < 1) {
+if ((settings.toolSeedV || 0) < 2) {
   seedTools().forEach(t => { const ja = tools.find(x => x.k === 'tipo' && (x.id === t.id || norm(x.name) === norm(t.name))); if (!ja) tools.push(t); else if (ja.cat === 'Outras') ja.cat = t.cat; });
-  settings.toolSeedV = 1; LS.set('tools', tools); saveSettings();
+  settings.toolSeedV = 2; LS.set('tools', tools); saveSettings();
 }
 settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
 if ((settings.seedV || 0) < 2) {
   prices.forEach(p => { if (p.name === 'Interruptor paralelo com placa') p.name = 'Interruptor paralelo (three-way) com placa'; });
   SEED.filter(x => SEED_V2.includes(x[2])).forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price }); });
   settings.seedV = 2; savePrices(); saveSettings();
+}
+if ((settings.seedV || 0) < 3) {
+  SEED.forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price }); });
+  settings.seedV = 3; savePrices(); saveSettings();
 }
 
 const getQ = id => quotes.find(q => q.id === id);
@@ -1160,7 +1416,7 @@ function applyRemote(R) {
   // ferramentas e checklist: registro a registro (aparelhos com versões antigas não mandam essas listas)
   const juntar = (L, R, k) => Array.isArray(R) ? mergeList(L, R, x => st[k + ':' + x.id] || 0, x => rs[k + ':' + x.id] || 0, del, x => { if (rs[k + ':' + x.id]) st[k + ':' + x.id] = rs[k + ':' + x.id]; }) : L;
   tools = normTools(juntar(tools, R.tools, 't')); checks = juntar(checks, R.checks, 'c').map(fixCheck);
-  settings = { ...DEF, ...S }; prices = P;
+  settings = { ...DEF, ...S }; prices = P; prices.forEach(acertaLotes);
   const vivos = new Set([...P, ...tools, ...checks].map(p => p.id));
   Object.keys(st).forEach(k => { if (/^[ptc]:/.test(k) && !vivos.has(k.slice(2))) delete st[k]; });
   sync.st = st; sync.del = del;
@@ -1182,10 +1438,45 @@ function compute(q) {
   const total = sub - discount, p = q.payment;
   const entry = p.mode === 'entrada' ? Math.round(total * p.entryPct / 100) : 0;
   const rest = p.mode === 'entrada' ? total - entry : 0;
-  const n = Math.max(1, p.installments || 1), parts = [];
-  if (p.mode === 'parcelado') { const base = Math.floor(total / n); for (let k = 0; k < n; k++) parts.push(base + (k < total - base * n ? 1 : 0)); }
-  const pixValue = p.mode === 'avista' ? total : p.mode === 'entrada' ? entry : 0;
-  return { svc, mat, labor, surPct, extra, matTotal, matIn, travel, sub, discount, total, entry, rest, parts, pixValue, validUntil: q.createdAt + (q.validity || 0) * DAY };
+  // à vista: desconto que só vale se o cliente pagar à vista (além do desconto do serviço)
+  const av = p.avista || { mode: 'pct', pct: 0, value: 0 };
+  const avistaDesc = p.mode === 'avista' ? (av.mode === 'value' ? Math.min(av.value || 0, total) : Math.round(total * Math.min(50, av.pct || 0) / 100)) : 0;
+  const avistaTotal = total - avistaDesc;
+  // cartão
+  const cd = cardCalc(p, total);
+  const pixValue = p.mode === 'avista' ? avistaTotal : p.mode === 'entrada' ? entry : 0;
+  const payTotal = p.mode === 'avista' ? avistaTotal : p.mode === 'parcelado' ? cd.total : total;
+  return { svc, mat, labor, surPct, extra, matTotal, matIn, travel, sub, discount, total, entry, rest, parts: cd.parts, card: cd, avistaDesc, avistaTotal, payTotal, pixValue, validUntil: q.createdAt + (q.validity || 0) * DAY };
+}
+/* cartão: sem juros, taxa da maquininha (repassada ao cliente ou paga por você) ou juros ao mês (parcelas iguais) */
+const parcelasDe = (total, n) => { const base = Math.floor(total / n), L = []; for (let k = 0; k < n; k++) L.push(base + (k < total - base * n ? 1 : 0)); return L; };
+// taxa da maquininha para o parcelamento: a do orçamento, se você mudou, ou a da tabela dos Ajustes
+const taxaDaTabela = (tipo, n) => { const R = settings.cardRates || {}; const v = R[tipo === 'debito' ? 'debito' : String(n)]; return typeof v === 'number' ? v : 0; };
+function cardCalc(p, total) {
+  const deb = p.cardTipo === 'debito', n = deb ? 1 : Math.max(1, p.installments || 1);
+  const semJuros = p.juros === 'sem' || (!deb && p.semAte > 0 && n <= p.semAte);
+  const taxa = p.juros === 'taxa' ? (p.taxaPct != null ? p.taxaPct : taxaDaTabela(p.cardTipo, n)) : 0;
+  let cardTotal = total, recebe = total, taxaPct = 0, mes = 0;
+  if (p.juros === 'taxa') {
+    taxaPct = Math.max(0, Math.min(40, taxa));
+    // repassada: o cliente paga o suficiente para você receber o valor cheio depois da taxa
+    if (p.paga === 'cliente' && !semJuros) cardTotal = Math.round(total / (1 - taxaPct / 100));
+    recebe = Math.round(cardTotal * (1 - taxaPct / 100));
+  } else if (p.juros === 'mes' && !semJuros && n > 1) {
+    mes = Math.max(0, Math.min(20, p.mesPct || 0)) / 100;
+    if (mes > 0) { const pmt = total * mes / (1 - Math.pow(1 + mes, -n)); cardTotal = Math.round(pmt * n); }
+    recebe = cardTotal;
+  }
+  // com juros, as parcelas ficam iguais (como na maquininha): o total é parcela × número de parcelas
+  if (cardTotal !== total && n > 1) { cardTotal = Math.round(cardTotal / n) * n; if (p.juros === 'taxa') recebe = Math.round(cardTotal * (1 - taxaPct / 100)); else recebe = cardTotal; }
+  return { n, deb, semJuros, taxaPct, mesPct: mes * 100, total: cardTotal, juros: cardTotal - total, recebe, parts: parcelasDe(cardTotal, n) };
+}
+// nome do total que o cliente paga, na barra de baixo do orçamento
+const payLabel = (q, c) => c.payTotal === c.total ? 'Total' : q.payment.mode === 'avista' ? 'Total à vista' : 'Total no cartão';
+function cardTxt(p, c) {
+  const k = c.card, parc = k.deb ? `no débito: ${BRL(k.total)}` : k.n === 1 ? `no crédito à vista: ${BRL(k.total)}` : partsText(k.parts);
+  const j = k.juros > 0 ? (p.juros === 'mes' ? ` (juros de ${fmtQty(k.mesPct)}% ao mês; total ${BRL(k.total)})` : ` (total ${BRL(k.total)}, com a taxa do cartão)`) : (!k.deb && k.n > 1 ? ' sem juros' : '');
+  return { parc, j };
 }
 function partsText(parts) {
   const n = parts.length; if (!n) return '';
@@ -1196,9 +1487,9 @@ function partsText(parts) {
 }
 function payText(q, c) {
   const p = q.payment;
-  if (p.mode === 'avista') return `À vista: ${BRL(c.total)}.`;
+  if (p.mode === 'avista') return c.avistaDesc ? `À vista: ${BRL(c.avistaTotal)}, com ${p.avista.mode === 'pct' ? `${fmtQty(p.avista.pct)}% de desconto` : `desconto de ${BRL(c.avistaDesc)}`} para pagamento à vista.` : `À vista: ${BRL(c.total)}.`;
   if (p.mode === 'entrada') return `Entrada de ${p.entryPct}% (${BRL(c.entry)}) na aprovação e ${BRL(c.rest)} na conclusão do serviço.`;
-  if (p.mode === 'parcelado') return `Parcelado no cartão em ${partsText(c.parts)}.`;
+  if (p.mode === 'parcelado') { const t = cardTxt(p, c); return c.card.deb || c.card.n === 1 ? `Cartão ${t.parc}.` : `Parcelado no cartão em ${t.parc}${t.j}.`; }
   return 'A combinar.';
 }
 // adicionais sobre a mão de obra: [chave, rótulo curto, ajuste padrão, texto na proposta]
@@ -1395,7 +1686,7 @@ function setStatus(q, st) {
   if (st === 'concluido' && q.status !== 'concluido') q.prevStatus = q.status;
   // saiu de concluído: o material que tinha baixado volta para o estoque
   if (st !== 'concluido' && q.baixa && q.baixa.length) {
-    q.baixa.forEach(b => { const p = prices.find(x => x.id === b.id); if (p && inStock(p)) p.stock = Math.round((p.stock + b.qty) * 100) / 100; });
+    q.baixa.forEach(b => devolveAoEstoque(prices.find(x => x.id === b.id), b));
     q.baixa = null; savePrices(); setTimeout(() => toast('O material voltou para o estoque.'), 2600);
   }
   q.status = st;
@@ -2016,7 +2307,7 @@ function lineHTML(q, i) {
     </div>
   </div>`;
 }
-const payShort = p => ({ avista: 'À vista', entrada: `Entrada de ${p.entryPct}%`, parcelado: `Cartão em ${p.installments}×`, combinar: 'Pagamento a combinar' })[p.mode] || '';
+const payShort = p => ({ avista: p.avista && (p.avista.pct || p.avista.value) ? 'À vista com desconto' : 'À vista', entrada: `Entrada de ${p.entryPct}%`, parcelado: p.cardTipo === 'debito' ? 'Cartão de débito' : `Cartão em ${p.installments}×${p.juros === 'sem' || (p.semAte && p.installments <= p.semAte) ? '' : ' com juros'}`, combinar: 'Pagamento a combinar' })[p.mode] || '';
 function quoteSums(q, c) {
   const rep = isReport(q), nS = q.items.filter(i => i.kind === 'svc').length, nM = q.items.filter(i => i.kind === 'mat').length;
   const ds = ts => new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
@@ -2062,14 +2353,37 @@ function payBlockHTML(q, c) {
   const p = q.payment;
   let detail = '';
   if (p.mode === 'entrada') detail = `<div class="field"><span class="lab">Entrada na aprovação</span><div class="chips row5">${[30, 40, 50, 60, 70].map(n => `<button class="chip" data-ep="${n}" aria-pressed="${p.entryPct === n}">${n}%</button>`).join('')}</div></div>`;
-  if (p.mode === 'parcelado') detail = `<div class="field"><span class="lab">Parcelas no cartão</span><div class="stepper"><button data-in="-1" aria-label="Menos parcelas" ${p.installments <= 2 ? 'disabled' : ''}>${I.minus}</button><input id="q-inst" type="text" readonly value="${p.installments}×" aria-label="Parcelas"><button data-in="1" aria-label="Mais parcelas" ${p.installments >= 12 ? 'disabled' : ''}>${I.plus}</button></div></div>`;
+  if (p.mode === 'avista') {
+    const a = p.avista;
+    detail = `<div class="field"><label for="q-avd">Desconto para pagamento à vista</label><div class="disc"><div class="seg" role="group" aria-label="Tipo de desconto à vista"><button data-avm="pct" aria-pressed="${a.mode === 'pct'}">%</button><button data-avm="value" aria-pressed="${a.mode === 'value'}">R$</button></div>${a.mode === 'value'
+      ? `<input id="q-avd" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${a.value ? BRL(a.value) : ''}">`
+      : `<input id="q-avd" type="text" inputmode="decimal" placeholder="0" value="${a.pct ? fmtQty(a.pct) : ''}" aria-label="Desconto à vista em porcentagem">`}</div>
+      <span class="hint">Só vale se o cliente pagar à vista (Pix, dinheiro). É separado do desconto do serviço, em Valores.</span></div>`;
+  }
+  if (p.mode === 'parcelado') {
+    const k = c.card, deb = p.cardTipo === 'debito', semTab = p.juros === 'taxa' && !Object.keys(settings.cardRates || {}).length;
+    detail = `<div class="seg" role="group" aria-label="Tipo de cartão"><button data-ct="credito" aria-pressed="${!deb}">Crédito</button><button data-ct="debito" aria-pressed="${deb}">Débito</button></div>
+      ${deb ? '' : `<div class="field"><span class="lab">Parcelas</span><div class="stepper"><button data-in="-1" aria-label="Menos parcelas" ${p.installments <= 1 ? 'disabled' : ''}>${I.minus}</button><input id="q-inst" type="text" readonly value="${p.installments}×" aria-label="Parcelas"><button data-in="1" aria-label="Mais parcelas" ${p.installments >= 18 ? 'disabled' : ''}>${I.plus}</button></div></div>`}
+      <div class="field"><span class="lab" id="q-jur-l">Juros e taxa do cartão</span><div class="seg" role="group" aria-labelledby="q-jur-l"><button data-jur="sem" aria-pressed="${p.juros === 'sem'}">Sem juros</button><button data-jur="taxa" aria-pressed="${p.juros === 'taxa'}">Taxa da maquininha</button>${deb ? '' : `<button data-jur="mes" aria-pressed="${p.juros === 'mes'}">Juros ao mês</button>`}</div></div>
+      ${p.juros === 'taxa' ? `<div class="field"><label for="q-taxa">Taxa ${deb ? 'no débito' : `em ${p.installments}×`} (%)</label><input id="q-taxa" type="text" inputmode="decimal" placeholder="0" value="${fmtQty(k.taxaPct)}"><span class="hint">${p.taxaPct != null ? '<button class="linkish" data-taxa-tab>Usar a da tabela</button>' : semTab ? 'Cadastre as taxas em Ajustes, Orçamento novo.' : 'Da sua tabela, em Ajustes.'}</span></div>
+        <div class="field"><span class="lab" id="q-paga-l">Quem paga a taxa</span><div class="seg" role="group" aria-labelledby="q-paga-l"><button data-paga="cliente" aria-pressed="${p.paga === 'cliente'}">O cliente (repassar)</button><button data-paga="eu" aria-pressed="${p.paga === 'eu'}">Eu (absorver)</button></div></div>` : ''}
+      ${p.juros === 'mes' && !deb ? `<div class="field"><label for="q-mes">Juros ao mês (%)</label><input id="q-mes" type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${p.mesPct ? fmtQty(p.mesPct) : ''}"></div>` : ''}
+      ${p.juros !== 'sem' && !deb ? `<div class="field"><label for="q-semate">Sem juros até (parcelas)</label><div class="stepper"><button data-sa="-1" aria-label="Menos">${I.minus}</button><input id="q-semate" type="text" readonly value="${p.semAte ? p.semAte + '×' : 'Não'}" aria-label="Sem juros até"><button data-sa="1" aria-label="Mais">${I.plus}</button></div><span class="hint">Até esse número de parcelas, ${p.juros === 'taxa' ? 'você absorve a taxa' : 'não há juros'}.</span></div>` : ''}`;
+  }
   return detail + `<div class="pay-sum" id="pay-sum">${paySumHTML(q, c)}</div>`;
 }
 function paySumHTML(q, c) {
   const p = q.payment;
-  if (p.mode === 'avista') return `<div><span>À vista</span><b>${BRL(c.total)}</b></div>`;
+  if (p.mode === 'avista') return c.avistaDesc ? `<div><span>Total do orçamento</span><b>${BRL(c.total)}</b></div><div><span>Desconto à vista</span><b>− ${BRL(c.avistaDesc)}</b></div><div><span>À vista</span><b>${BRL(c.avistaTotal)}</b></div>` : `<div><span>À vista</span><b>${BRL(c.total)}</b></div>`;
   if (p.mode === 'entrada') return `<div><span>Entrada de ${p.entryPct}% na aprovação</span><b>${BRL(c.entry)}</b></div><div><span>Na conclusão do serviço</span><b>${BRL(c.rest)}</b></div>`;
-  if (p.mode === 'parcelado') return `<div><span>No cartão</span><b>${partsText(c.parts)}</b></div>`;
+  if (p.mode === 'parcelado') {
+    const k = c.card, t = cardTxt(p, c);
+    const linhas = [`<div><span>${k.deb ? 'No débito' : k.n === 1 ? 'Crédito à vista' : 'No cartão'}</span><b>${k.deb || k.n === 1 ? BRL(k.total) : partsText(k.parts)}</b></div>`];
+    if (k.juros > 0) linhas.push(`<div><span>${p.juros === 'mes' ? `Juros (${fmtQty(k.mesPct)}% ao mês)` : `Taxa repassada (${fmtQty(k.taxaPct)}%)`}</span><b>+ ${BRL(k.juros)}</b></div>`, `<div><span>Total no cartão</span><b>${BRL(k.total)}</b></div>`);
+    else if (!k.deb && k.n > 1) linhas.push(`<div><span>Sem juros</span><b>${BRL(k.total)}</b></div>`);
+    if (p.juros === 'taxa' && k.taxaPct > 0) linhas.push(`<div class="ps-rec"><span>Você recebe, depois da taxa</span><b>${BRL(k.recebe)}</b></div>`);
+    return linhas.join('');
+  }
   return `<div><span>Forma de pagamento a combinar com o cliente</span></div>`;
 }
 const matSwitchHTML = q => `<label class="switch-row" for="q-matcli"><span><b>O cliente compra o material</b><small>${q.materialBy === 'cliente' ? 'A lista vai na proposta, com valores estimados fora do total.' : 'Desligado: o material entra no total da proposta.'}</small></span><input type="checkbox" class="sw" id="q-matcli" ${q.materialBy === 'cliente' ? 'checked' : ''}></label>`;
@@ -2278,7 +2592,7 @@ VIEWS.quote = {
       ${panelClose}
     </main>
     <div class="bbar"><div class="bbar-in">
-      <div class="bb-total"><small>Total</small><b data-t="total">${BRL(c.total)}</b></div>
+      <div class="bb-total"><small data-t="paylab">${payLabel(q, c)}</small><b data-t="paytotal">${BRL(c.payTotal)}</b></div>
       <button class="btn primary" data-preview>${isReport(q) ? 'Ver relatório' : 'Ver proposta'}${I.arrow}</button>
     </div></div>`;
   },
@@ -2289,6 +2603,8 @@ VIEWS.quote = {
       $$('[data-t="labor"]', v).forEach(e => e.textContent = BRL(c.labor));
       $$('[data-t="mat"]', v).forEach(e => e.textContent = BRL(c.matTotal));
       $$('[data-t="total"]', v).forEach(e => e.textContent = BRL(c.total));
+      $$('[data-t="paytotal"]', v).forEach(e => e.textContent = BRL(c.payTotal));
+      $$('[data-t="paylab"]', v).forEach(e => e.textContent = payLabel(q, c));
       const ps = $('#pay-sum', v); if (ps) ps.innerHTML = paySumHTML(q, c);
       paintSums(v, quoteSums(q, c));
     };
@@ -2350,7 +2666,17 @@ VIEWS.quote = {
     // condições
     $$('[data-pm]', v).forEach(b => b.onclick = () => { q.payment.mode = b.dataset.pm; touch(q); rerender(); });
     $$('[data-ep]', v).forEach(b => b.onclick = () => { q.payment.entryPct = +b.dataset.ep; touch(q); rerender(); });
-    $$('[data-in]', v).forEach(b => b.onclick = () => { q.payment.installments = Math.max(2, Math.min(12, (q.payment.installments || 3) + +b.dataset.in)); touch(q); rerender(); });
+    $$('[data-in]', v).forEach(b => b.onclick = () => { q.payment.installments = Math.max(1, Math.min(18, (q.payment.installments || 3) + +b.dataset.in)); q.payment.taxaPct = null; touch(q); rerender(); });
+    $$('[data-ct]', v).forEach(b => b.onclick = () => { q.payment.cardTipo = b.dataset.ct; if (b.dataset.ct === 'debito' && q.payment.juros === 'mes') q.payment.juros = 'taxa'; q.payment.taxaPct = null; touch(q); rerender(); });
+    $$('[data-jur]', v).forEach(b => b.onclick = () => { q.payment.juros = b.dataset.jur; touch(q); rerender(); });
+    $$('[data-paga]', v).forEach(b => b.onclick = () => { q.payment.paga = b.dataset.paga; touch(q); rerender(); });
+    $$('[data-sa]', v).forEach(b => b.onclick = () => { q.payment.semAte = Math.max(0, Math.min(18, (q.payment.semAte || 0) + +b.dataset.sa)); touch(q); rerender(); });
+    $$('[data-avm]', v).forEach(b => b.onclick = () => { if (q.payment.avista.mode === b.dataset.avm) return; q.payment.avista.mode = b.dataset.avm; touch(q); rerender(); });
+    $('[data-taxa-tab]', v)?.addEventListener('click', () => { q.payment.taxaPct = null; touch(q); rerender(); });
+    $('#q-taxa', v)?.addEventListener('input', e => { const x = parseQty(e.target.value); q.payment.taxaPct = x === null ? 0 : Math.max(0, Math.min(40, x)); touch(q); paint(); });
+    $('#q-taxa', v)?.addEventListener('change', () => rerender());
+    $('#q-mes', v)?.addEventListener('input', e => { q.payment.mesPct = Math.max(0, Math.min(20, parseQty(e.target.value) || 0)); touch(q); paint(); });
+    $('#q-avd', v)?.addEventListener('input', e => { const a = q.payment.avista; if (a.mode === 'value') a.value = parseMoney(e.target.value) || 0; else a.pct = Math.max(0, Math.min(50, parseQty(e.target.value) || 0)); touch(q); paint(); });
     $('#q-war', v).addEventListener('input', e => { q.warranty = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
     $('#q-val', v)?.addEventListener('input', e => { q.validity = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
     // datas do serviço: dias de serviço e calendário
@@ -2470,11 +2796,11 @@ function baixaSheet(q) {
       $('[data-no]', s).onclick = () => closeSheet();
       $('[data-ok]', s).onclick = () => {
         q.baixa = [];
-        L.forEach(x => { const sai = Math.min(x.p.stock, x.qty); if (sai <= 0) return; x.p.stock = Math.round((x.p.stock - sai) * 100) / 100; q.baixa.push({ id: x.p.id, qty: sai }); });
+        L.forEach(x => { const sai = Math.min(x.p.stock, x.qty); if (sai <= 0) return; const lotes = tiraDoEstoque(x.p, sai); q.baixa.push({ id: x.p.id, qty: sai, lotes }); });
         savePrices(); touch(q); closeSheet(true); rerender();
         const low = L.filter(x => stockLow(x.p)).length;
         toast(`Baixa feita: ${plural(q.baixa.length, 'material', 'materiais')}.${low ? ` ${plural(low, 'precisa', 'precisam')} de reposição.` : ''}`, { label: 'Desfazer', run: () => {
-          (q.baixa || []).forEach(b => { const p = prices.find(x => x.id === b.id); if (p) p.stock = Math.round((p.stock + b.qty) * 100) / 100; });
+          (q.baixa || []).forEach(b => devolveAoEstoque(prices.find(x => x.id === b.id), b));
           q.baixa = null; savePrices(); touch(q); rerender();
         } });
       };
@@ -2970,7 +3296,7 @@ function pixPayload(px) {
 }
 function pixOf(q, c, mode = docMode(q)) {
   if (!settings.pix) return null;
-  let value = c.pixValue, what = q.payment.mode === 'entrada' ? 'a entrada' : 'o total';
+  let value = c.pixValue, what = q.payment.mode === 'entrada' ? 'a entrada' : c.avistaDesc ? 'o total à vista' : 'o total';
   if (mode === 'report' && q.payment.mode === 'entrada') { value = c.rest; what = 'o restante'; }
   if (!value) return null;
   return { key: settings.pix, name: settings.company || settings.name || 'Recebedor', city: settings.city, value, what };
@@ -3336,11 +3662,11 @@ function extenso(cents) {
 }
 function receiptSheet(q) {
   const c = compute(q);
-  const def = q.status === 'aprovado' && q.payment.mode === 'entrada' ? c.entry : c.total;
+  const def = q.status === 'aprovado' && q.payment.mode === 'entrada' ? c.entry : c.payTotal;
   let method = 'Pix';
   openSheet({ title: 'Recibo de pagamento', body: `
       <div class="field"><label for="rc-val">Valor recebido</label><input id="rc-val" type="text" inputmode="numeric" data-money value="${BRL(def)}"></div>
-      <div class="chips" aria-label="Sugestões de valor">${[['Total', c.total], q.payment.mode === 'entrada' ? ['Entrada', c.entry] : null, q.payment.mode === 'entrada' ? ['Restante', c.rest] : null].filter(Boolean).map(([l, v]) => `<button class="chip" data-v="${v}">${l} · ${BRL(v)}</button>`).join('')}</div>
+      <div class="chips" aria-label="Sugestões de valor">${[['Total', c.payTotal], q.payment.mode === 'entrada' ? ['Entrada', c.entry] : null, q.payment.mode === 'entrada' ? ['Restante', c.rest] : null].filter(Boolean).map(([l, v]) => `<button class="chip" data-v="${v}">${l} · ${BRL(v)}</button>`).join('')}</div>
       <div class="field"><label for="rc-ref">Referente a</label><input id="rc-ref" type="text" value="${esc((q.title || 'serviços elétricos').replace(/^./, ch => ch.toLowerCase()))} (${isReport(q) ? 'relatório' : 'orçamento'} ${esc(numLabel(q))})"></div>
       <div class="field"><span class="lab">Forma de pagamento</span><div class="seg" role="group">${['Pix', 'Dinheiro', 'Cartão', 'Transferência'].map(m => `<button data-m="${m}" aria-pressed="${m === method}">${m}</button>`).join('')}</div></div>
       <p class="hint" id="rc-ext"></p>`,
@@ -3505,121 +3831,220 @@ function adjustSheet() {
 // estoque = materiais da tabela de preços com quantidade guardada; o preço de repasse é o próprio preço da tabela
 let gestaoAba = 'estoque', gestaoQuery = '', checkLado = 'ida';
 const GESTAO = {
-  estoque: { nome: 'Estoque', criar: 'Novo material', sub: 'O material que você tem guardado, com custo e preço de repasse.' },
-  ferramentas: { nome: 'Ferramentas', criar: 'Nova ferramenta', sub: 'As suas ferramentas, as que quer comprar e as cadastradas no app.' },
+  estoque: { nome: 'Materiais', criar: 'Novo material', sub: 'O que você tem em estoque, o que precisa repor e o catálogo de materiais.' },
+  ferramentas: { nome: 'Ferramentas', criar: 'Nova ferramenta', sub: 'As suas ferramentas, as que quer comprar e o catálogo.' },
   checklist: { nome: 'Checklist', criar: 'Novo item', sub: 'Confira o que levar antes de ir e o que trazer antes de voltar da obra.' },
 };
 const margem = p => p.cost > 0 ? Math.round((p.price - p.cost) / p.cost * 100) : null;
 const margemTxt = p => { const m = margem(p); return m === null ? '' : m >= 0 ? `margem +${m}%` : `abaixo do custo (${m}%)`; };
+// materiais: três listas, como em Ferramentas — Em estoque (o que você tem, por marca), Repor (chegou ao mínimo ou
+// marcado como Preciso repor) e Catálogo (todos os materiais da tabela de Preços). Cada linha abre a caixa do material.
+let matFiltro = '';
+const MAT_FILTROS = [['estoque', 'Em estoque'], ['repor', 'Repor'], ['catalogo', 'Catálogo']];
+const precisaRepor = p => p.kind === 'mat' && (stockLow(p) || !!p.repor);
+const lotesTxt = p => (p.lotes || []).map(l => `${l.brand || 'Sem marca'}: ${fmtQty(l.qty)} ${unitTxt(l.qty, p.unit)}`).join(' · ');
 function stockListHTML() {
-  const qf = fold(gestaoQuery), all = prices.filter(inStock);
-  if (!all.length) return KitFacil.ui.vazio({ titulo: 'Nenhum material no estoque', texto: 'Toque em <b>Novo material</b> e cadastre o que você tem guardado, com o custo e o preço de repasse para o cliente.', icone: I.box });
-  const list = all.filter(p => !qf || fold([p.name, p.brand, p.cat].join(' ')).includes(qf));
-  const custo = sum(all.map(p => Math.round((p.cost || 0) * p.stock))), repasse = sum(all.map(p => Math.round(p.price * p.stock)));
-  const repor = all.filter(stockLow).sort((a, b) => a.stock - b.stock);
-  const resumo = `<div class="g-sum" role="group" aria-label="Resumo do estoque">
-      <div><b>${all.length}</b><span>${all.length === 1 ? 'material' : 'materiais'}</span></div>
-      <div><b>${BRL(custo)}</b><span>pago (custo)</span></div>
-      <div><b>${BRL(repasse)}</b><span>no repasse</span></div>
-    </div>${repor.length ? `<div class="g-repor" role="group" aria-label="Para repor"><p class="g-alert">${I.warn}<span><b>${plural(repor.length, 'material para repor', 'materiais para repor')}</b></span></p>
-      ${repor.map(p => `<button class="g-rp" data-sid="${p.id}"><span>${esc(p.name)}</span><span class="num">${p.stock <= 0 ? 'em falta' : `${fmtQty(p.stock)}${p.min > 0 ? ` de ${fmtQty(p.min)}` : ''} ${unitTxt(p.min || p.stock, p.unit)}`}</span></button>`).join('')}</div>` : ''}`;
-  const busca = all.length > 6 ? `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar material, marca ou categoria" value="${esc(gestaoQuery)}" aria-label="Buscar no estoque"></label>` : '';
-  const rows = list.length ? groupByCat(list).map(([cat, L]) => `<div class="g-card"><div class="pk-cat">${esc(cat)}</div><div class="plist">${L.map(p => `<button class="prow" data-sid="${p.id}">
-      <span><b>${hl(p.name, qf)}</b><small>${[p.brand && esc(p.brand), p.cost ? `custo ${BRL(p.cost)}` : 'sem custo', `repasse ${BRL(p.price)}`, margemTxt(p)].filter(Boolean).join(' · ')}</small></span>
-      <span class="prow-price${stockLow(p) ? ' g-zero' : ''}">${p.stock <= 0 ? `${I.warn}Em falta` : `${stockLow(p) ? I.warn : ''}${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}`}</span></button>`).join('')}</div></div>`).join('')
-    : KitFacil.ui.vazio({ titulo: 'Nenhum material encontrado', texto: 'Confira o nome, a marca ou a categoria.' });
-  return resumo + busca + `<div id="g-list" class="g-list">${rows}</div>`;
-}
-function stockSheet(p) {
-  const isNew = !p;
-  const it = p ? { ...p } : { kind: 'mat', cat: '', name: '', unit: 'un', price: 0, cost: 0, brand: '', stock: 1, min: 0 };
-  let link = p ? p.id : '';
-  const ordem = catOrder('mat');
-  const cats = [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = ordem.indexOf(a), ib = ordem.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); });
-  const matsDe = c => prices.filter(x => x.kind === 'mat' && (x.cat || 'Outros') === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-  const matOpts = c => `<option value="" hidden>Escolha o material</option>${matsDe(c).map(x => `<option value="${x.id}" ${inStock(x) ? 'disabled' : ''}>${esc(x.name)} · ${BRL(x.price)}/${unitTxt(1, x.unit)}${inStock(x) ? ' (já no estoque)' : ''}</option>`).join('')}<option value="__novo">Outro material desta categoria…</option>`;
-  const margemHTML = (cost, price) => {
-    if (!cost || price === null) return '<span class="hint">Com o custo e o repasse, o app mostra a sua margem.</span>';
-    const m = Math.round((price - cost) / cost * 100);
-    return m >= 0 ? `${I.check}<span>Margem de <b>${m}%</b>: ${BRL(price - cost)} por unidade.</span>` : `${I.warn}<span><b>Repasse abaixo do custo.</b> Você perde ${BRL(cost - price)} por unidade.</span>`;
+  const mats = prices.filter(p => p.kind === 'mat'), est = mats.filter(inStock), rep = mats.filter(precisaRepor);
+  const n = { estoque: est.length, repor: rep.length, catalogo: mats.length };
+  const f = matFiltro || (est.length ? 'estoque' : 'catalogo');
+  const qf = fold(gestaoQuery);
+  const bate = p => !qf || fold([p.name, p.cat, ...(p.lotes || []).map(l => l.brand)].join(' ')).includes(qf);
+  const chips = `<div class="chips scroll" role="group" aria-label="Mostrar">${MAT_FILTROS.map(([k, l]) => `<button class="chip" data-mf="${k}" aria-pressed="${f === k}">${l} <span class="n">${n[k]}</span></button>`).join('')}</div>`;
+  const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar material, marca ou categoria" value="${esc(gestaoQuery)}" aria-label="Buscar material"></label>`;
+  let resumo = '';
+  if (f === 'estoque' && est.length && !qf) {
+    const custo = sum(est.map(p => sum((p.lotes || []).map(l => Math.round(l.qty * (l.cost || 0)))))), repasse = sum(est.map(p => Math.round(p.price * p.stock)));
+    resumo = `<div class="g-sum" role="group" aria-label="Resumo do estoque"><div><b>${est.length}</b><span>${est.length === 1 ? 'material' : 'materiais'}</span></div><div><b>${BRL(custo)}</b><span>pago (custo)</span></div><div><b>${BRL(repasse)}</b><span>no repasse</span></div></div>`;
+  }
+  const L = (f === 'estoque' ? est : f === 'repor' ? rep : mats).filter(bate);
+  const linha = p => {
+    let sub = '', dir = '';
+    if (f === 'catalogo') { sub = `repasse ${BRL(p.price)} por ${unitName(p.unit)}`; dir = inStock(p) ? `<span class="t-tem">${I.check}${fmtQty(p.stock)}</span>` : p.repor ? `<span class="t-quero">${I.cart}</span>` : ''; }
+    else if (f === 'repor') { sub = p.repor && !stockLow(p) ? `marcado para repor ${fmtQty(p.reporQtd || 1)} ${unitTxt(p.reporQtd || 1, p.unit)}` : p.stock <= 0 ? 'em falta' : `tem ${fmtQty(p.stock)}${p.min ? `, mínimo ${fmtQty(p.min)}` : ''}`; dir = `<span class="g-zero">${I.warn}</span>`; }
+    else { sub = lotesTxt(p) || 'Sem marca'; dir = p.stock <= 0 ? `<span class="g-zero">${I.warn}Em falta</span>` : `<span class="${stockLow(p) ? 'g-zero' : ''}">${stockLow(p) ? I.warn : ''}${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}</span>`; }
+    return `<button class="prow" data-mat="${p.id}"><span><b>${hl(p.name, qf)}</b><small>${esc(sub)}</small></span><span class="prow-price">${dir}</span></button>`;
   };
-  openSheet({ title: isNew ? 'Novo material no estoque' : 'Material no estoque', body: `
-      <div class="field"><label for="st-cat-sel">${isNew ? '1. Categoria' : 'Categoria'}</label><select id="st-cat-sel">${isNew ? '<option value="" hidden>Escolha a categoria</option>' : ''}${cats.map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
-        <input id="st-cat" type="text" value="" placeholder="Nome da nova categoria" autocomplete="off" aria-label="Nome da nova categoria" hidden></div>
-      ${isNew ? `<div class="field"><label for="st-mat">2. Material</label><select id="st-mat" disabled><option value="" hidden>Escolha antes a categoria</option></select><span class="hint">Os materiais da sua tabela de Preços nesta categoria.</span></div>` : ''}
-      <div class="field" id="st-name-f" ${isNew ? 'hidden' : ''}><label for="st-name">${isNew ? 'Nome do material novo' : 'Material'}</label><input id="st-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Disjuntor 20 A" autocomplete="off"><span class="hint" ${isNew ? '' : 'hidden'}>Ele entra também na tabela de Preços, nesta categoria.</span></div>
-      <div class="st-resto" id="st-resto" ${isNew ? 'hidden' : ''}>
-      <div class="field"><label for="st-brand">Marca (opcional)</label><input id="st-brand" type="text" value="${esc(it.brand || '')}" placeholder="Ex.: Steck" autocomplete="off"></div>
+  const lista = L.length ? groupByCat(L).map(([cat, M]) => `<div class="g-card"><div class="pk-cat">${esc(cat)}</div><div class="plist">${M.map(linha).join('')}</div></div>`).join('')
+    : KitFacil.ui.vazio(qf ? { titulo: 'Nenhum material encontrado', texto: 'Confira o nome, a marca ou a categoria.' }
+      : f === 'estoque' ? { titulo: 'Nenhum material em estoque', texto: 'Toque em <b>Novo material</b>, ou abra um no <b>Catálogo</b> e diga quanto você tem.', icone: I.box }
+      : f === 'repor' ? { titulo: 'Nada para repor', texto: 'Aqui entram o material que chegou ao mínimo e o que você marcar como Preciso repor.', icone: I.cart }
+      : { titulo: 'Nenhum material no catálogo', texto: 'Toque em <b>Novo material</b> para cadastrar.', icone: I.box });
+  return chips + busca + resumo + `<div id="g-list" class="g-list">${lista}</div>`;
+}
+const margemHTML = (cost, price) => {
+  if (!cost || price === null) return '<span class="hint">Com o custo e o repasse, o app mostra a sua margem.</span>';
+  const m = Math.round((price - cost) / cost * 100);
+  return m >= 0 ? `${I.check}<span>Margem de <b>${m}%</b>: ${BRL(price - cost)} por unidade.</span>` : `${I.warn}<span><b>Repasse abaixo do custo.</b> Você perde ${BRL(cost - price)} por unidade.</span>`;
+};
+// caixa do material: as marcas que você tem, o repasse, o mínimo e a lista de compras
+function matSheet(p) {
+  if (!p) return;
+  const corpo = () => {
+    const L = p.lotes || [], tem = inStock(p);
+    return `<p class="hint">${esc(p.cat || 'Outros')} · cobrado por ${unitName(p.unit)}</p>
+      <div class="pk-cat">Em estoque · ${tem ? `${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}` : 'nada'}</div>
+      ${L.length ? `<div class="plist">${L.map(l => `<button class="prow" data-lote="${l.id}"><span><b>${esc(l.brand || 'Sem marca')}</b><small>${l.cost ? `custo ${BRL(l.cost)}` : 'sem custo'}</small></span><span class="prow-price${l.qty <= 0 ? ' g-zero' : ''}">${fmtQty(l.qty)} ${unitTxt(l.qty, p.unit)}</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem este material no estoque.</p>'}
+      <button class="add-btn" data-novo-lote>${I.plus}${L.length ? 'Adicionar outra marca' : 'Tenho este material'}</button>
       <div class="grid2">
-        <div class="field"><label for="st-qty">Quantidade</label><div class="stepper" style="width:100%"><button data-sq="-1" aria-label="Menos">${I.minus}</button><input id="st-qty" type="text" inputmode="decimal" value="${fmtQty(it.stock)}" style="flex:1;width:auto"><button data-sq="1" aria-label="Mais">${I.plus}</button></div></div>
-        <div class="field"><label for="st-unit">Unidade</label><select id="st-unit">${UNITS.filter(([u]) => !['ponto', 'h', 'vb'].includes(u)).map(([u, l]) => `<option value="${esc(u)}" ${u === it.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+        <div class="field"><label for="mt-price">Repasse ao cliente (por ${unitName(p.unit)})</label><input id="mt-price" type="text" inputmode="numeric" data-money value="${BRL(p.price)}"></div>
+        <div class="field"><label for="mt-min">Avisar quando chegar a (opcional)</label><input id="mt-min" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${p.min ? fmtQty(p.min) : ''}"></div>
       </div>
-      <div class="grid2">
-        <div class="field"><label for="st-cost">Custo de compra (por unidade)</label><input id="st-cost" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${it.cost ? BRL(it.cost) : ''}"></div>
-        <div class="field"><label for="st-price">Repasse ao cliente (por unidade)</label><input id="st-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${it.price ? BRL(it.price) : ''}"></div>
-      </div>
-      <div class="field"><label for="st-min">Avisar quando chegar a (opcional)</label><input id="st-min" type="text" inputmode="decimal" value="${it.min ? fmtQty(it.min) : ''}" placeholder="Ex.: 10" aria-describedby="st-min-h"><span class="hint" id="st-min-h">Mesma unidade da quantidade. Nesse ponto, o material entra em Para repor.</span></div>
-      <p class="g-margin" id="st-margin" aria-live="polite">${margemHTML(it.cost, it.price || null)}</p>
-      <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos: mudou aqui, muda lá.</p>
-      </div>`,
-    foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Tirar do estoque</button><button class="btn primary" data-save>Salvar</button>`,
+      <p class="g-margin" id="mt-margin" aria-live="polite">${margemHTML(p.cost || 0, p.price)}</p>
+      <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos.${stockLow(p) ? ' Chegou ao mínimo: já está em Repor.' : ''}</p>
+      <label class="switch-row" for="mt-repor"><span><b>Preciso repor</b><small>Entra na lista de compras${stockLow(p) ? ', além do aviso de mínimo' : ''}.</small></span><input type="checkbox" class="sw" id="mt-repor" ${p.repor ? 'checked' : ''}></label>
+      <div class="field" id="mt-rq-f" ${p.repor || stockLow(p) ? '' : 'hidden'}><label for="mt-rq">Quanto quer comprar</label><div class="tp-qq-row"><div class="stepper"><button data-rq="-1" aria-label="Menos">${I.minus}</button><input id="mt-rq" type="text" inputmode="decimal" value="${fmtQty(p.reporQtd || sugestaoCompra(p))}"><button data-rq="1" aria-label="Mais">${I.plus}</button></div><button class="btn ok" data-comprei-mat>${I.check}Comprei</button></div></div>`;
+  };
+  openSheet({ title: p.name, body: `<div id="mt-corpo" class="tp-corpo">${corpo()}</div>`,
+    foot: `${inStock(p) ? `<button class="btn danger-text" data-del>${I.trash}Tirar do estoque</button>` : ''}<button class="btn primary${inStock(p) ? '' : ' block'}" data-ok>Pronto</button>`,
+    onClose: () => rerender(),
     onMount: s => {
-      if (!isTouch) $(isNew ? '#st-cat-sel' : '#st-qty', s).focus();
-      const paintM = () => { $('#st-margin', s).innerHTML = margemHTML(parseMoney($('#st-cost', s).value) || 0, parseMoney($('#st-price', s).value)); };
-      ['#st-cost', '#st-price'].forEach(sel => $(sel, s).addEventListener('input', paintM));
-      const catSel = $('#st-cat-sel', s), catNova = $('#st-cat', s), matSel = $('#st-mat', s);
-      const mostra = (el, on) => { el.hidden = !on; };
-      // 1. categoria: a lista de materiais passa a ser a da tabela de Preços nessa categoria
-      catSel.addEventListener('change', () => {
-        const nova = catSel.value === '__nova';
-        mostra(catNova, nova); if (nova) catNova.focus();
-        if (!matSel) return;
-        link = ''; matSel.disabled = !catSel.value;
-        matSel.innerHTML = nova ? '<option value="__novo">Material novo</option>' : catSel.value ? matOpts(catSel.value) : '<option value="" hidden>Escolha antes a categoria</option>';
-        if (nova) matSel.dispatchEvent(new Event('change')); else { mostra($('#st-name-f', s), false); mostra($('#st-resto', s), false); }
+      s.addEventListener('click', e => {
+        const lt = e.target.closest('[data-lote]'); if (lt) return loteSheet(p, (p.lotes || []).find(l => l.id === lt.dataset.lote));
+        if (e.target.closest('[data-novo-lote]')) return loteSheet(p, null);
+        if (e.target.closest('[data-comprei-mat]')) return loteSheet(p, null, parseQty($('#mt-rq', s).value) || 1);
+        const rq = e.target.closest('[data-rq]'); if (rq) { p.reporQtd = Math.max(1, Math.round(((parseQty($('#mt-rq', s).value) || 1) + +rq.dataset.rq) * 100) / 100); $('#mt-rq', s).value = fmtQty(p.reporQtd); savePrices(); }
       });
-      // 2. material: um da tabela (preço e unidade vêm de lá) ou um novo, que entra também em Preços
-      matSel?.addEventListener('change', () => {
-        const v = matSel.value, x = prices.find(y => y.id === v);
-        link = x ? x.id : '';
-        mostra($('#st-name-f', s), v === '__novo'); mostra($('#st-resto', s), !!v);
-        if (x) {
-          $('#st-name', s).value = x.name; $('#st-price', s).value = BRL(x.price);
-          if ($(`#st-unit option[value="${CSS.escape(x.unit)}"]`, s)) $('#st-unit', s).value = x.unit;
-          paintM(); if (!isTouch) $('#st-qty', s).focus();
-        } else if (v === '__novo') { $('#st-name', s).value = ''; $('#st-price', s).value = ''; paintM(); if (catSel.value !== '__nova') $('#st-name', s).focus(); }
+      s.addEventListener('input', e => {
+        if (e.target.id === 'mt-price') { const v = parseMoney(e.target.value); if (v !== null) { p.price = v; savePrices(); $('#mt-margin', s).innerHTML = margemHTML(p.cost || 0, p.price); } }
+        if (e.target.id === 'mt-min') { p.min = Math.max(0, parseQty(e.target.value) || 0); savePrices(); }
       });
-      attachSuggest($('#st-brand', s), () => [...new Set(prices.filter(x => x.brand).map(x => x.brand))].map(b => ({ label: b })));
-      $$('[data-sq]', s).forEach(b => b.onclick = () => { const v = parseQty($('#st-qty', s).value) || 0; $('#st-qty', s).value = fmtQty(Math.max(0, Math.round((v + +b.dataset.sq) * 100) / 100)); });
-      $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
+      s.addEventListener('change', e => {
+        if (e.target.id === 'mt-repor') { p.repor = e.target.checked; if (p.repor && !p.reporQtd) p.reporQtd = sugestaoCompra(p); $('#mt-rq-f', s).hidden = !(p.repor || stockLow(p)); savePrices(); toast(p.repor ? `${p.name} na lista de compras.` : `${p.name} saiu da lista de compras.`); }
+        if (e.target.id === 'mt-rq') { p.reporQtd = Math.max(1, parseQty(e.target.value) || 1); e.target.value = fmtQty(p.reporQtd); savePrices(); }
+        if (e.target.id === 'mt-min' || e.target.id === 'mt-price') toast('Salvo.');
+      });
+      $('[data-ok]', s).onclick = () => closeSheet();
       $('[data-del]', s)?.addEventListener('click', () => {
-        const before = { stock: p.stock, cost: p.cost, brand: p.brand, min: p.min };
-        delete p.stock; delete p.cost; delete p.brand; delete p.min; savePrices(); closeSheet(true); rerender();
-        toast(`${p.name} saiu do estoque. Continua na tabela de preços.`, { label: 'Desfazer', run: () => { Object.assign(p, before); savePrices(); rerender(); } });
+        const antes = JSON.stringify(p);
+        delete p.lotes; delete p.stock; delete p.cost; delete p.brand; savePrices(); closeSheet(true); rerender();
+        toast(`${p.name} saiu do estoque. Continua no catálogo.`, { label: 'Desfazer', run: () => { Object.assign(p, JSON.parse(antes)); savePrices(); rerender(); } });
+      });
+    } });
+}
+// uma marca do material: quantidade e custo. comprar = veio de Comprei (soma a compra e tira da lista de compras)
+function loteSheet(p, lote, comprar) {
+  const isNew = !lote;
+  const x = lote ? { ...lote } : { brand: '', qty: comprar || 1, cost: 0 };
+  openSheet({ title: comprar ? 'Comprei' : isNew ? (inStock(p) ? 'Outra marca' : 'Tenho este material') : 'Marca no estoque', body: `
+      <p class="hint"><b>${esc(p.name)}</b>${comprar ? '. A quantidade entra no estoque e o material sai da lista de compras.' : ''}</p>
+      <div class="field"><label for="lt-brand">Marca (opcional)</label><input id="lt-brand" type="text" value="${esc(x.brand)}" placeholder="Ex.: Steck" autocomplete="off"></div>
+      <div class="grid2">
+        <div class="field"><label for="lt-qty">${comprar ? 'Quantidade comprada' : 'Quantidade'} (${unitName(p.unit)})</label><div class="stepper" style="width:100%"><button data-lq="-1" aria-label="Menos">${I.minus}</button><input id="lt-qty" type="text" inputmode="decimal" value="${fmtQty(x.qty)}" style="flex:1;width:auto"><button data-lq="1" aria-label="Mais">${I.plus}</button></div></div>
+        <div class="field"><label for="lt-cost">Custo por ${unitName(p.unit)}</label><input id="lt-cost" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${x.cost ? BRL(x.cost) : ''}"></div>
+      </div>
+      <p class="g-margin" id="lt-margin" aria-live="polite">${margemHTML(x.cost, p.price)}</p>`,
+    foot: isNew ? `<button class="btn ghost" data-cancel>Voltar</button><button class="btn primary" data-save>${comprar ? I.check + 'Confirmar compra' : I.plus + 'Adicionar'}</button>` : `<button class="btn danger-text" data-del>${I.trash}Não tenho mais</button><button class="btn primary" data-save>Salvar</button>`,
+    onClose: () => rerender(),
+    onMount: s => {
+      if (!isTouch) $('#lt-brand', s).focus();
+      attachSuggest($('#lt-brand', s), () => [...new Set(prices.flatMap(y => (y.lotes || []).map(l => l.brand)).filter(Boolean))].map(b => ({ label: b })));
+      $('#lt-cost', s).addEventListener('input', () => { $('#lt-margin', s).innerHTML = margemHTML(parseMoney($('#lt-cost', s).value) || 0, p.price); });
+      $$('[data-lq]', s).forEach(b => b.onclick = () => { $('#lt-qty', s).value = fmtQty(Math.max(0, Math.round(((parseQty($('#lt-qty', s).value) || 0) + +b.dataset.lq) * 100) / 100)); });
+      const volta = () => matSheet(p);
+      $('[data-cancel]', s)?.addEventListener('click', volta);
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const antes = JSON.stringify(p.lotes);
+        p.lotes = p.lotes.filter(l => l.id !== lote.id); acertaLotes(p); savePrices(); volta();
+        toast('Marca tirada do estoque.', { label: 'Desfazer', run: () => { p.lotes = JSON.parse(antes); acertaLotes(p); savePrices(); rerender(); } });
       });
       $('[data-save]', s).onclick = () => {
-        const name = $('#st-name', s).value.trim().replace(/\s+/g, ' '), price = parseMoney($('#st-price', s).value), cost = parseMoney($('#st-cost', s).value) || 0;
-        const qRaw = $('#st-qty', s).value.trim(), qty = /^0+([.,]0*)?$/.test(qRaw) ? 0 : parseQty(qRaw);
+        const raw = $('#lt-qty', s).value.trim(), qty = /^0+([.,]0*)?$/.test(raw) ? 0 : parseQty(raw);
+        if (qty === null || qty < 0) return toast('Informe a quantidade. Use 0 se acabou.');
+        const data = { brand: $('#lt-brand', s).value.trim().replace(/\s+/g, ' '), qty: Math.round(qty * 100) / 100, cost: parseMoney($('#lt-cost', s).value) || 0 };
+        p.lotes = p.lotes || [];
+        const igual = p.lotes.find(l => l.id !== (lote && lote.id) && norm(l.brand) === norm(data.brand));
+        if (igual && (isNew || comprar)) {
+          // mesma marca: soma a quantidade; o custo fica a média ponderada
+          const tot = igual.qty + data.qty;
+          if (data.cost) igual.cost = tot ? Math.round((igual.qty * (igual.cost || data.cost) + data.qty * data.cost) / tot) : data.cost;
+          igual.qty = Math.round(tot * 100) / 100;
+        } else if (isNew) p.lotes.push({ id: uid(), ...data });
+        else Object.assign(p.lotes.find(l => l.id === lote.id), data);
+        if (comprar) p.repor = false;
+        acertaLotes(p); savePrices();
+        toast(comprar ? `${p.name}: compra no estoque.` : igual && isNew ? `Somado ao ${data.brand || 'sem marca'} que já estava no estoque.` : isNew ? `${p.name} no estoque.` : 'Estoque salvo.');
+        volta();
+      };
+    } });
+}
+// novo material: 1. categoria, 2. material do catálogo (ou um novo, que entra em Preços), depois marca, quantidade e custo
+function stockSheet(p) {
+  if (p) return matSheet(p);
+  let modo = 'tenho';
+  const ordem = catOrder('mat');
+  const cats = [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = ordem.indexOf(a), ib = ordem.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); });
+  const opts = c => `<option value="" hidden>Escolha o material</option>${prices.filter(x => x.kind === 'mat' && (x.cat || 'Outros') === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(x => `<option value="${x.id}">${esc(x.name)}${inStock(x) ? ` (tem ${fmtQty(x.stock)})` : ''}</option>`).join('')}<option value="__novo">Outro material desta categoria…</option>`;
+  openSheet({ title: 'Novo material', body: `
+      <div class="field"><label for="st-cat-sel">1. Categoria</label><select id="st-cat-sel"><option value="" hidden>Escolha a categoria</option>${cats.map(c => `<option>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+        <input id="st-cat" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
+      <div class="field"><label for="st-mat">2. Material</label><select id="st-mat" disabled><option value="" hidden>Escolha antes a categoria</option></select><span class="hint">Os materiais do catálogo (a sua tabela de Preços) nesta categoria.</span></div>
+      <div class="field" id="st-name-f" hidden><label for="st-name">Nome do material novo</label><input id="st-name" type="text" placeholder="Ex.: Disjuntor 20 A" autocomplete="off"><span class="hint">Ele entra também no catálogo e na tabela de Preços.</span></div>
+      <div class="st-resto" id="st-resto" hidden>
+        <div class="seg" role="group" aria-label="Situação"><button data-modo="tenho" aria-pressed="true">Tenho em estoque</button><button data-modo="repor" aria-pressed="false">Preciso comprar</button></div>
+        <div class="grid2" id="st-un-f"><div class="field"><label for="st-unit">Unidade</label><select id="st-unit">${UNITS.filter(([u]) => !['ponto', 'h', 'vb'].includes(u)).map(([u, l]) => `<option value="${esc(u)}">${l}</option>`).join('')}</select></div>
+          <div class="field"><label for="st-price">Repasse ao cliente</label><input id="st-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00"></div></div>
+        <div class="field" id="st-brand-f"><label for="st-brand">Marca (opcional)</label><input id="st-brand" type="text" placeholder="Ex.: Steck" autocomplete="off"></div>
+        <div class="grid2">
+          <div class="field"><label for="st-qty">Quantidade</label><div class="stepper" style="width:100%"><button data-sq="-1" aria-label="Menos">${I.minus}</button><input id="st-qty" type="text" inputmode="decimal" value="1" style="flex:1;width:auto"><button data-sq="1" aria-label="Mais">${I.plus}</button></div></div>
+          <div class="field" id="st-cost-f"><label for="st-cost">Custo por unidade</label><input id="st-cost" type="text" inputmode="numeric" data-money placeholder="R$ 0,00"></div>
+        </div>
+        <p class="g-margin" id="st-margin" aria-live="polite">${margemHTML(0, null)}</p>
+      </div>`,
+    foot: `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>`,
+    onMount: s => {
+      const catSel = $('#st-cat-sel', s), catNova = $('#st-cat', s), matSel = $('#st-mat', s);
+      const paintM = () => { $('#st-margin', s).innerHTML = modo === 'tenho' ? margemHTML(parseMoney($('#st-cost', s).value) || 0, parseMoney($('#st-price', s).value)) : ''; };
+      ['#st-cost', '#st-price'].forEach(sel => $(sel, s).addEventListener('input', paintM));
+      catSel.addEventListener('change', () => {
+        const nv = catSel.value === '__nova';
+        catNova.hidden = !nv; if (nv) catNova.focus();
+        matSel.disabled = !catSel.value;
+        matSel.innerHTML = nv ? '<option value="__novo">Material novo</option>' : opts(catSel.value);
+        if (nv) matSel.dispatchEvent(new Event('change')); else { $('#st-name-f', s).hidden = true; $('#st-resto', s).hidden = true; }
+      });
+      matSel.addEventListener('change', () => {
+        const x = prices.find(y => y.id === matSel.value);
+        $('#st-name-f', s).hidden = matSel.value !== '__novo'; $('#st-resto', s).hidden = !matSel.value;
+        $('#st-un-f', s).hidden = !!x;
+        if (x) { $('#st-price', s).value = BRL(x.price); paintM(); }
+        else if (matSel.value === '__novo' && catSel.value !== '__nova') $('#st-name', s).focus();
+      });
+      $$('[data-modo]', s).forEach(b => b.onclick = () => { modo = b.dataset.modo; $$('[data-modo]', s).forEach(y => y.setAttribute('aria-pressed', y === b)); $('#st-brand-f', s).hidden = $('#st-cost-f', s).hidden = modo !== 'tenho'; paintM(); });
+      $$('[data-sq]', s).forEach(b => b.onclick = () => { $('#st-qty', s).value = fmtQty(Math.max(0, Math.round(((parseQty($('#st-qty', s).value) || 0) + +b.dataset.sq) * 100) / 100)); });
+      attachSuggest($('#st-brand', s), () => [...new Set(prices.flatMap(y => (y.lotes || []).map(l => l.brand)).filter(Boolean))].map(b => ({ label: b })));
+      $('[data-cancel]', s).onclick = () => closeSheet();
+      $('[data-save]', s).onclick = () => {
         const cat = catSel.value === '__nova' ? catNova.value.trim().replace(/\s+/g, ' ') : catSel.value;
         if (!cat) return toast(catSel.value === '__nova' ? 'Escreva o nome da nova categoria.' : 'Escolha a categoria.');
-        if (isNew && !matSel.value) return toast('Escolha o material.');
-        if (!name) return toast('Escreva o nome do material.');
+        if (!matSel.value) return toast('Escolha o material.');
+        const raw = $('#st-qty', s).value.trim(), qty = /^0+([.,]0*)?$/.test(raw) ? 0 : parseQty(raw);
         if (qty === null || qty < 0) return toast('Informe a quantidade. Use 0 se acabou.');
-        if (price === null) return toast('Informe o preço de repasse ao cliente.');
-        const min = parseQty($('#st-min', s).value) || 0;
-        const data = { kind: 'mat', name, price, cost, min: Math.max(0, Math.round(min * 100) / 100), stock: Math.round(qty * 100) / 100, brand: $('#st-brand', s).value.trim().replace(/\s+/g, ' '), unit: $('#st-unit', s).value, cat };
-        if (!data.brand) delete data.brand;
-        let alvo = prices.find(x => x.id === link) || (isNew && prices.find(x => x.kind === 'mat' && norm(x.name) === norm(name)));
-        if (alvo && isNew && inStock(alvo)) return toast(`${alvo.name} já está no estoque. Toque nele na lista para alterar.`);
-        if (alvo) { if (!data.brand) delete alvo.brand; Object.assign(alvo, data); } else prices.push({ id: uid(), ...data });
-        savePrices(); closeSheet(true); rerender(); toast(isNew ? `${name} no estoque.` : 'Estoque salvo.');
+        let p = prices.find(y => y.id === matSel.value);
+        if (!p) {
+          const name = $('#st-name', s).value.trim().replace(/\s+/g, ' '), price = parseMoney($('#st-price', s).value);
+          if (!name) return toast('Escreva o nome do material.');
+          if (price === null) return toast('Informe o preço de repasse ao cliente.');
+          p = prices.find(y => y.kind === 'mat' && norm(y.name) === norm(name));
+          if (!p) { p = { id: uid(), kind: 'mat', cat, name, unit: $('#st-unit', s).value, price }; prices.push(p); }
+        } else { const pr = parseMoney($('#st-price', s).value); if (pr !== null) p.price = pr; }
+        if (modo === 'repor') { p.repor = true; p.reporQtd = Math.max(1, qty || 1); }
+        else {
+          const brand = $('#st-brand', s).value.trim().replace(/\s+/g, ' '), cost = parseMoney($('#st-cost', s).value) || 0;
+          p.lotes = p.lotes || [];
+          const igual = p.lotes.find(l => norm(l.brand) === norm(brand));
+          if (igual) { const tot = igual.qty + qty; if (cost) igual.cost = tot ? Math.round((igual.qty * (igual.cost || cost) + qty * cost) / tot) : cost; igual.qty = Math.round(tot * 100) / 100; }
+          else p.lotes.push({ id: uid(), brand, qty: Math.round(qty * 100) / 100, cost });
+          acertaLotes(p);
+        }
+        savePrices(); matFiltro = modo === 'repor' ? 'repor' : 'estoque'; closeSheet(true); rerender();
+        toast(modo === 'repor' ? `${p.name} na lista de compras.` : `${p.name} no estoque.`);
       };
     } });
 }
 // ferramentas: três listas — Minhas ferramentas (as unidades que você tem), Quero comprar e Ferramentas cadastradas
 // (o catálogo). Cada linha abre a caixa da ferramenta, onde você diz se tem (com marca, modelo e quantidade) ou quer comprar
 let toolFiltro = '';
-const TOOL_FILTROS = [['minhas', 'Minhas ferramentas'], ['quero', 'Quero comprar'], ['cadastradas', 'Ferramentas cadastradas']];
+const TOOL_FILTROS = [['minhas', 'Minhas ferramentas'], ['quero', 'Quero comprar'], ['cadastradas', 'Catálogo']];
 const toolCats = () => { const usadas = new Set(tiposTool().map(t => t.cat)); return [...TOOL_CATS.filter(c => usadas.has(c)), ...[...usadas].filter(c => !TOOL_CATS.includes(c)).sort((a, b) => a.localeCompare(b, 'pt-BR'))]; };
 function toolsListHTML() {
   const itens = tools.filter(t => t.k === 'item' && tipoDe(t)), quero = tiposTool().filter(t => t.quero), todos = tiposTool();
@@ -3770,11 +4195,10 @@ function newToolSheet() {
     } });
 }
 /* lista de compras única: material para repor e ferramentas que você quer comprar */
-const sugestaoCompra = p => p.min > 0 ? Math.max(1, Math.ceil(p.min * 2 - p.stock)) : 1;
-const comprasN = () => prices.filter(stockLow).length + tiposTool().filter(t => t.quero).length;
+const comprasN = () => prices.filter(precisaRepor).length + tiposTool().filter(t => t.quero).length;
 function comprasSheet() {
   const L = [
-    ...prices.filter(stockLow).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => ({ k: 'm', id: p.id, nome: p.name, marca: p.brand || '', un: p.unit, qtd: sugestaoCompra(p), on: true, info: p.stock <= 0 ? 'em falta' : `tem ${fmtQty(p.stock)}${p.min ? `, mínimo ${fmtQty(p.min)}` : ''}` })),
+    ...prices.filter(precisaRepor).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => ({ k: 'm', id: p.id, nome: p.name, marca: p.brand || '', un: p.unit, qtd: p.repor && p.reporQtd ? p.reporQtd : sugestaoCompra(p), on: true, info: !inStock(p) ? 'não tem no estoque' : p.stock <= 0 ? 'em falta' : `tem ${fmtQty(p.stock)}${p.min ? `, mínimo ${fmtQty(p.min)}` : ''}` })),
     ...tiposTool().filter(t => t.quero).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => ({ k: 'f', id: t.id, nome: t.name, marca: '', un: 'un', qtd: t.queroQtd || 1, on: true, info: t.cat })),
   ];
   const texto = () => {
@@ -3869,7 +4293,8 @@ VIEWS.gestao = {
     const sq = $('#g-q', v);
     if (sq) sq.addEventListener('input', () => { gestaoQuery = sq.value; const tmp = document.createElement('div'); tmp.innerHTML = gestaoAba === 'estoque' ? stockListHTML() : toolsListHTML(); $('#g-list', v).replaceWith($('#g-list', tmp)); });
     v.addEventListener('click', e => {
-      const sb = e.target.closest('[data-sid]'); if (sb) return stockSheet(prices.find(p => p.id === sb.dataset.sid));
+      const sb = e.target.closest('[data-mat]'); if (sb) return matSheet(prices.find(p => p.id === sb.dataset.mat));
+      const mf = e.target.closest('[data-mf]'); if (mf) { matFiltro = mf.dataset.mf; gestaoQuery = ''; return rerender(); }
       const ti = e.target.closest('[data-tipo]'); if (ti) return typeSheet(tools.find(x => x.id === ti.dataset.tipo));
       const it = e.target.closest('[data-item]'); if (it) { const x = tools.find(y => y.id === it.dataset.item); return itemSheet(x, null, true); }
       const tf = e.target.closest('[data-tf]'); if (tf) { toolFiltro = tf.dataset.tf; gestaoQuery = ''; return rerender(); }
@@ -3939,12 +4364,24 @@ async function restaurarCopiaEletrica(file) {
   } catch { data = null; }
   if (!data || !Array.isArray(data.quotes) || !Array.isArray(data.prices)) { toast('Esse arquivo não é uma cópia do Elétrica Fácil.'); return; }
   confirmSheet('Restaurar a cópia?', `O arquivo tem ${plural(data.quotes.length, 'orçamento', 'orçamentos')} e ${plural(data.prices.length, 'preço', 'preços')}. Os dados deste aparelho${syncOn() ? ' e dos outros aparelhos conectados' : ''} serão substituídos.`, 'Restaurar', () => {
-    settings = { ...DEF, ...data.settings }; prices = data.prices; quotes = data.quotes.map(fixQuote);
+    settings = { ...DEF, ...data.settings }; prices = data.prices; prices.forEach(acertaLotes); quotes = data.quotes.map(fixQuote);
     if (data.tools) { tools = normTools(data.tools); saveTools(); }
     if (data.checks) { checks = data.checks.map(fixCheck); saveChecks(); }
     settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
     saveSettings(); savePrices(); saveQuotes(); rerender(); toast('Cópia restaurada.');
   });
+}
+// cartão nos Ajustes: como cobrar o parcelado e a tabela de taxas da maquininha
+function cartaoAjHTML(s) {
+  const R = s.cardRates || {}, v = k => typeof R[k] === 'number' ? fmtQty(R[k]) : '';
+  const cel = (k, l) => `<label class="tx-cel"><span>${l}</span><input type="text" inputmode="decimal" data-rate="${k}" value="${v(k)}" placeholder="0" aria-label="Taxa ${l} (%)"></label>`;
+  return `<div class="field"><span class="lab" id="aj-jur-l">Cartão: juros e taxas</span><div class="seg" role="group" aria-labelledby="aj-jur-l">${[['sem', 'Sem juros'], ['taxa', 'Taxa da maquininha'], ['mes', 'Juros ao mês']].map(([k, l]) => `<button data-aj-jur="${k}" aria-pressed="${(s.cardJuros || 'sem') === k}">${l}</button>`).join('')}</div>
+      <span class="kf-ajuda">Como começa todo orçamento novo no cartão. Dá para mudar em cada orçamento.</span></div>
+    <div class="field"><span class="lab">Taxa da maquininha (%)</span><div class="tx-grid">${cel('debito', 'Débito')}${Array.from({ length: 12 }, (_, i) => cel(String(i + 1), `${i + 1}×`)).join('')}</div>
+      <span class="kf-ajuda">Copie da sua maquininha ou do app do banco. ${(s.cardPaga || 'cliente') === 'cliente' ? 'Repassada ao cliente: ele paga o suficiente para você receber o valor cheio.' : 'Paga por você: o cliente paga o valor do orçamento e você recebe menos.'}</span></div>
+    <div class="grid2"><div class="field"><span class="lab" id="aj-paga-l">Quem paga a taxa</span><div class="seg" role="group" aria-labelledby="aj-paga-l"><button data-aj-paga="cliente" aria-pressed="${(s.cardPaga || 'cliente') === 'cliente'}">O cliente</button><button data-aj-paga="eu" aria-pressed="${s.cardPaga === 'eu'}">Eu</button></div></div>
+      <div class="field"><label for="st-cardSemAte">Sem juros até (parcelas)</label><input id="st-cardSemAte" data-set="cardSemAte" data-int type="text" inputmode="numeric" placeholder="0" value="${s.cardSemAte || ''}"></div></div>
+    <div class="field"><label for="st-cardMes">Juros ao mês (%)</label><input id="st-cardMes" data-set="cardMes" data-dec type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${s.cardMes ? fmtQty(s.cardMes) : ''}"></div>`;
 }
 const ICONES_AJ = {
   pix: '<path d="m12 3 9 9-9 9-9-9z"/><path d="m8.5 12 3.5-3.5 3.5 3.5-3.5 3.5z"/>',
@@ -4002,6 +4439,8 @@ VIEWS.settings = {
               <div class="field"><label for="st-prazoN">Prazo de execução</label><div class="prazo-row"><input id="st-prazoN" data-set="prazoN" data-int type="text" inputmode="numeric" value="${s.prazoN || 1}" style="max-width:96px" aria-label="Quantidade do prazo"><select id="st-prazoU" data-set="prazoU" aria-label="Unidade do prazo">${Object.entries(PRAZO_U).map(([k, [pl, sg]]) => `<option value="${k}" ${s.prazoU === k ? 'selected' : ''}>${(s.prazoN || 1) === 1 ? sg : pl}</option>`).join('')}</select></div></div>
               <div class="field"><span class="lab">Pagamento</span><div class="seg" role="group" aria-label="Pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${s.payMode === k}">${l}</button>`).join('')}</div></div>
               ${s.payMode === 'entrada' ? `<div class="field"><span class="lab">Entrada</span><div class="chips row5" role="group" aria-label="Entrada">${[30, 40, 50, 60, 70].map(n => `<button class="chip" data-ep="${n}" aria-pressed="${s.entryPct === n}">${n}%</button>`).join('')}</div></div>` : ''}
+              ${cartaoAjHTML(s)}
+              <div class="field"><label for="st-avistaPct">Desconto para pagamento à vista (%)</label><input id="st-avistaPct" data-set="avistaPct" data-dec type="text" inputmode="decimal" placeholder="0" value="${s.avistaPct ? fmtQty(s.avistaPct) : ''}"><span class="kf-ajuda">Entra em todo orçamento novo à vista. Separado do desconto do serviço.</span></div>
               <div class="field"><label for="st-notes">Observações que sempre vão na proposta</label><textarea id="st-notes" data-set="notes" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.notes)}</textarea></div>`) },
           { id: 'textos', titulo: 'Textos dos documentos', icone: ICONES_AJ.textos, resumo: S.textos, html: bloco('Textos dos documentos', `<p class="kf-ajuda">Saem em todos os orçamentos e relatórios. Deixe em branco para não usar.</p>
               <div class="field"><label for="st-acceptText">Termo de aceite (acima da assinatura do orçamento)</label><textarea id="st-acceptText" data-set="acceptText">${esc(s.acceptText)}</textarea>
@@ -4037,6 +4476,12 @@ VIEWS.settings = {
       });
     });
     $$('[data-pm]', v).forEach(b => b.onclick = () => { settings.payMode = b.dataset.pm; saveSettings(); rerender(); });
+    $$('[data-aj-jur]', v).forEach(b => b.onclick = () => { settings.cardJuros = b.dataset.ajJur; saveSettings(); rerender(); });
+    $$('[data-aj-paga]', v).forEach(b => b.onclick = () => { settings.cardPaga = b.dataset.ajPaga; saveSettings(); rerender(); });
+    $$('[data-rate]', v).forEach(i => {
+      i.addEventListener('input', () => { const R = { ...(settings.cardRates || {}) }, x = parseQty(i.value); if (x === null || i.value.trim() === '') delete R[i.dataset.rate]; else R[i.dataset.rate] = Math.max(0, Math.min(40, x)); settings.cardRates = R; clearTimeout(t); t = setTimeout(saveSettings, 250); });
+      i.addEventListener('change', () => { saveSettings(); pintarResumos(); toast('Salvo.'); });
+    });
     $$('[data-reset]', v).forEach(b => b.onclick = () => { const k = b.dataset.reset; settings[k] = k === 'acceptText' ? ACCEPT_DEFAULT : WARRANTY_DEFAULT; saveSettings(); rerender(); toast('Texto sugerido de volta.'); });
     $$('[data-ep]', v).forEach(b => b.onclick = () => { settings.entryPct = +b.dataset.ep; saveSettings(); rerender(); });
     const lf = $('#st-logo', v);
