@@ -2,6 +2,19 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.19.1 · 2026-11-04
+
+- **Sem parênteses:** nenhum nome do catálogo de fábrica tem parênteses ("Interruptor simples (módulo)" virou "Módulo de
+  interruptor simples", "Conector de emenda Wago (2 vias)" virou "de 2 vias", "Segurança (EPI)" virou "Segurança e
+  EPI"). Os rótulos dos campos também: "(opcional)" virou a etiqueta "opcional" e as unidades entram no texto
+  ("Garantia, em dias"). Os textos que o app monta (proposta, relatório, mensagens, recibo) também ficaram sem parênteses.
+  Quem já tinha os itens recebe os nomes novos.
+- **Itens de fábrica editáveis:** na Gestão, a janela do material tem a seção "Nome, categoria e unidade", e a da
+  ferramenta, "Nome e categoria". As ferramentas que vêm com o app também podem ser excluídas.
+- **Listas de escolha inteiras à vista:** ao abrir a lista perto do pé da janela (ou acima das barras de baixo), a tela
+  rola até o último item aparecer. Correção feita no app; proposta ao Integrador para levar ao Kit.
+- **Excluir do rascunho sem emenda:** o vermelho fica atrás do cartão inteiro, sem as falhas brancas nos cantos.
+
 ## 2.19.0 · 2026-11-04
 
 - **Linhas no lugar dos botões lado a lado:** as escolhas passaram a ser linhas, como em Preços. Bolinha para uma

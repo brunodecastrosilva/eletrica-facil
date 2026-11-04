@@ -561,7 +561,7 @@ test('pagamento: juros do cartão (taxa da maquininha, juros ao mês, sem juros 
   assert.equal(r.semAte6, 100000); assert.equal(r.semAte3, 109890);
   assert.deepEqual(r.mes, [108930, 18155], 'juros de 2,5% ao mês em 6× (parcelas iguais)');
   assert.deepEqual(r.deb, [1, 101523, 100000]);
-  assert.match(r.texto, /6× de R\$\s?183,15.*total R\$\s?1\.098,90, com a taxa do cartão/);
+  assert.match(r.texto, /6× de R\$\s?183,15.*total de R\$\s?1\.098,90 com a taxa do cartão/);
   assert.deepEqual(r.avista, [100000, 95000, 95000]);
   assert.match(r.avTxt, /5% de desconto para pagamento à vista/);
   assert.equal(r.avistaR, 97000);
@@ -661,7 +661,7 @@ test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar 
     const st = JSON.parse(localStorage.getItem('eletricafacil.settings')); st.seedV = 5; localStorage.setItem('eletricafacil.settings', JSON.stringify(st));
   });
   await p.reload(); await p.locator('.welcome h1').waitFor();
-  assert.deepEqual(await p.evaluate(() => { const m = prices.find(x => x.id === 'velho'); return [m.name, m.unit, settings.seedV]; }), ['Massa corrida', 'galão', 6]);
+  assert.deepEqual(await p.evaluate(() => { const m = prices.find(x => x.id === 'velho'); return [m.name, m.unit, settings.seedV]; }), ['Massa corrida', 'galão', 7]);
   // nenhum botão lado a lado sobrou no app
   const id = await criarOrcamento(p, 'Cliente Linhas', 'Troca de tomada');
   await p.evaluate(id => go('/q/' + id), id);
@@ -710,11 +710,60 @@ test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar 
   await p.waitForTimeout(350);
   assert.ok((await card.boundingBox()).x < bx.x - 80, 'o cartão deveria ter ido para a esquerda');
   assert.equal(await p.evaluate(() => location.hash.includes('/q/')), false, 'arrastar não abre o orçamento');
-  await p.click(`[data-del-draft="${rid}"]`);
+  // toca na parte à mostra, à direita do cartão
+  const db = await p.locator(`[data-del-draft="${rid}"]`).boundingBox();
+  await p.mouse.click(db.x + db.width - 40, db.y + db.height / 2);
   assert.equal(await p.evaluate(id => !!getQ(id), rid), false);
   await p.click('.kf-toast button');
   assert.equal(await p.evaluate(id => !!getQ(id), rid), true);
   assert.ok(await semRolagemLateral(p));
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('2.19.1: nenhum parêntese nos nomes e rótulos, itens de fábrica editáveis, lista de escolha inteira à vista e Excluir sem emenda', async () => {
+  const a = await aparelho(amb, { viewport: { width: 390, height: 844 } });
+  const p = a.page;
+  await p.locator('.welcome h1').waitFor();
+  // catálogo de fábrica sem parênteses: preços, ferramentas e categorias
+  assert.deepEqual(await p.evaluate(() => [...prices.map(x => x.name + x.cat), ...tools.map(t => (t.name || '') + (t.cat || ''))].filter(n => /[()]/.test(n))), []);
+  // migração: quem tinha o nome antigo recebe o novo
+  await p.evaluate(() => {
+    const ps = JSON.parse(localStorage.getItem('eletricafacil.prices'));
+    const i = ps.findIndex(x => x.name === 'Módulo de interruptor simples'); ps[i].name = 'Interruptor simples (módulo)';
+    localStorage.setItem('eletricafacil.prices', JSON.stringify(ps));
+    const st = JSON.parse(localStorage.getItem('eletricafacil.settings')); st.seedV = 6; localStorage.setItem('eletricafacil.settings', JSON.stringify(st));
+  });
+  await p.reload(); await p.locator('.welcome h1').waitFor();
+  assert.equal(await p.evaluate(() => prices.some(x => x.name === 'Módulo de interruptor simples') && !prices.some(x => /\(/.test(x.name))), true);
+  // material de fábrica: nome, categoria e unidade editáveis na Gestão
+  const id = await p.evaluate(() => { const m = prices.find(x => x.ref && x.kind === 'mat'); go('/gestao'); return m.id; });
+  await p.evaluate(id => matSheet(prices.find(x => x.id === id)), id);
+  await abrirCat(p, '#mt-name');
+  await p.fill('#mt-name', 'Material renomeado'); await p.locator('#mt-name').blur();
+  await escolher(p, 'mt-unit', 'kit');
+  assert.deepEqual(await p.evaluate(id => { const m = prices.find(x => x.id === id); return [m.name, m.unit]; }, id), ['Material renomeado', 'kit']);
+  assert.equal((await p.textContent('.kf-dlg')).includes('('), false, 'a janela do material não deveria ter parênteses');
+  // a lista de unidades abre com o último item à vista, acima do rodapé da janela
+  await p.click('#mt-unit-esc');
+  await p.waitForTimeout(900);
+  const vis = await p.evaluate(() => { const ops = [...document.querySelectorAll('.kf-esc.kf-aberta .kf-esc-op')], l = ops.at(-1).closest('.kf-esc-lista'); l.scrollTop = l.scrollHeight; const r = l.getBoundingClientRect(), pe = document.querySelector('.kf-dlg-pe').getBoundingClientRect(); return r.bottom <= pe.top + 1; });
+  assert.equal(vis, true, 'a lista deveria terminar acima do rodapé da janela');
+  await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
+  // ferramenta de fábrica: nome e categoria editáveis, e pode ser excluída
+  await p.evaluate(() => typeSheet(tools.find(t => t.seed)));
+  await abrirCat(p, '#tp-name');
+  await p.fill('#tp-name', 'Ferramenta renomeada'); await p.locator('#tp-name').blur();
+  assert.equal(await p.evaluate(() => tools.some(t => t.name === 'Ferramenta renomeada')), true);
+  assert.equal(await p.locator('.kf-dlg [data-del]').count(), 1);
+  await p.keyboard.press('Escape');
+  // Excluir do rascunho: o vermelho cobre o cartão inteiro (sem emenda nos cantos) e some quando o cartão volta
+  const rid = await p.evaluate(() => { const q = blankQuote(); q.num = ++settings.seq; q.client.name = 'R'; q.items = [{ id: uid(), kind: 'svc', name: 'x', unit: 'un', qty: 1, price: 100, room: '' }]; quotes.push(q); saveQuotes(); PANEL['home:rascunho'] = true; go('/'); return q.id; });
+  const card = p.locator(`[data-swipe="${rid}"] .qcard`); await card.waitFor();
+  assert.equal(await p.locator(`[data-swipe="${rid}"] .qc-del`).evaluate(b => getComputedStyle(b).opacity), '0');
+  await p.focus(`[data-del-draft="${rid}"]`); await p.waitForTimeout(400);
+  const g = await p.evaluate(id => { const w = document.querySelector(`[data-swipe="${id}"]`), d = w.querySelector('.qc-del').getBoundingClientRect(), r = w.getBoundingClientRect(); return [Math.round(d.left - r.left), Math.round(r.right - d.right), getComputedStyle(w.querySelector('.qc-del')).opacity]; }, rid);
+  assert.deepEqual(g, [0, 0, '1']);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });

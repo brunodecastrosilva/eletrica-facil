@@ -155,7 +155,8 @@ details.fold .lins,.vrows .lins{background:none;border:0;border-radius:0;padding
 .qswipe{position:relative;border-radius:16px;overflow:hidden;display:block}
 .qswipe .qcard{position:relative;z-index:1;touch-action:pan-y;transition:transform .28s cubic-bezier(.45,0,.2,1)}
 .qswipe.arrastando .qcard{transition:none}
-.qc-del{position:absolute;inset:0 0 0 auto;width:104px;border:0;background:var(--bad);color:var(--surface);font-weight:700;font-size:14.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.qc-del{position:absolute;inset:0;border:0;border-radius:16px;background:var(--bad);color:var(--surface);font-weight:700;font-size:14.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding-left:calc(100% - 104px);opacity:0}
+.qswipe.mexe .qc-del{opacity:1}
 .qc-del svg{width:20px;height:20px;color:inherit}
 .qc-del:focus-visible{outline:3px solid var(--ink);outline-offset:-5px}
 @media (prefers-reduced-motion:reduce){.qswipe .qcard{transition:none}}
@@ -678,7 +679,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.19.0';
+const VERSAO = '2.19.1';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -797,9 +798,9 @@ const unitName = u => (UNITS.find(x => x[0] === u) || UNITS[0])[1].toLowerCase()
 const SEED = [
   ['svc', 'Tomadas e interruptores', 'Instalação de tomada ou interruptor', 'un', 4500],
   ['svc', 'Tomadas e interruptores', 'Troca de tomada ou interruptor', 'un', 3000],
-  ['svc', 'Tomadas e interruptores', 'Ponto novo de tomada (com fiação)', 'ponto', 9000],
+  ['svc', 'Tomadas e interruptores', 'Ponto novo de tomada com fiação', 'ponto', 9000],
   ['svc', 'Tomadas e interruptores', 'Tomada de uso específico 20 A', 'un', 7000],
-  ['svc', 'Tomadas e interruptores', 'Ponto de interruptor paralelo (three-way)', 'ponto', 12000],
+  ['svc', 'Tomadas e interruptores', 'Ponto de interruptor paralelo three-way', 'ponto', 12000],
   ['svc', 'Iluminação', 'Instalação de luminária ou plafon', 'un', 6000],
   ['svc', 'Iluminação', 'Instalação de lustre ou pendente', 'un', 12000],
   ['svc', 'Iluminação', 'Instalação de spot embutido', 'un', 3500],
@@ -815,7 +816,7 @@ const SEED = [
   ['svc', 'Quadro e proteção', 'Instalação de DR', 'un', 9000],
   ['svc', 'Quadro e proteção', 'Instalação de DPS', 'un', 7000],
   ['svc', 'Quadro e proteção', 'Montagem de quadro de distribuição', 'un', 45000],
-  ['svc', 'Quadro e proteção', 'Aterramento (haste e conexões)', 'un', 25000],
+  ['svc', 'Quadro e proteção', 'Aterramento com haste e conexões', 'un', 25000],
   ['svc', 'Quadro e proteção', 'Instalação de padrão de entrada', 'un', 90000],
   ['svc', 'Fiação e infraestrutura', 'Passagem de fiação', 'm', 800],
   ['svc', 'Fiação e infraestrutura', 'Troca da fiação de um circuito', 'un', 18000],
@@ -838,8 +839,8 @@ const SEED = [
   ['mat', 'Tomadas e interruptores', 'Interruptor simples com placa', 'un', 1600],
   ['mat', 'Tomadas e interruptores', 'Tomada dupla 10 A com placa', 'un', 2800],
   ['mat', 'Tomadas e interruptores', 'Interruptor duplo com placa', 'un', 2400],
-  ['mat', 'Tomadas e interruptores', 'Interruptor paralelo (three-way) com placa', 'un', 2200],
-  ['mat', 'Tomadas e interruptores', 'Interruptor intermediário (four-way)', 'un', 4500],
+  ['mat', 'Tomadas e interruptores', 'Interruptor paralelo three-way com placa', 'un', 2200],
+  ['mat', 'Tomadas e interruptores', 'Interruptor intermediário four-way', 'un', 4500],
   ['mat', 'Proteção', 'Disjuntor monopolar 10 a 32 A', 'un', 2200],
   ['mat', 'Proteção', 'Disjuntor bipolar', 'un', 7500],
   ['mat', 'Proteção', 'DR bipolar 40 A 30 mA', 'un', 16000],
@@ -865,16 +866,16 @@ const SEED = [
   ['svc', 'Iluminação', 'Instalação de fotocélula', 'un', 6000],
   ['svc', 'Iluminação', 'Instalação de trilho eletrificado', 'm', 5000],
   ['svc', 'Iluminação', 'Troca de reator ou driver', 'un', 5000],
-  ['svc', 'Iluminação', 'Ponto de iluminação novo (com fiação)', 'ponto', 9000],
+  ['svc', 'Iluminação', 'Ponto de iluminação novo com fiação', 'ponto', 9000],
   ['svc', 'Chuveiro e aparelhos', 'Instalação de cooktop ou forno elétrico', 'un', 15000],
-  ['svc', 'Chuveiro e aparelhos', 'Instalação de aquecedor a gás (parte elétrica)', 'un', 12000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação elétrica de aquecedor a gás', 'un', 12000],
   ['svc', 'Chuveiro e aparelhos', 'Instalação de exaustor ou coifa', 'un', 12000],
   ['svc', 'Chuveiro e aparelhos', 'Instalação de motor de portão', 'un', 30000],
   ['svc', 'Chuveiro e aparelhos', 'Instalação de bomba d\'água', 'un', 20000],
   ['svc', 'Chuveiro e aparelhos', 'Instalação de aquecedor de passagem elétrico', 'un', 15000],
   ['svc', 'Chuveiro e aparelhos', 'Instalação de purificador ou filtro elétrico', 'un', 7000],
-  ['svc', 'Chuveiro e aparelhos', 'Instalação de máquina de lavar (ponto exclusivo)', 'un', 14000],
-  ['svc', 'Chuveiro e aparelhos', 'Instalação de ar-condicionado split (parte elétrica)', 'un', 35000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de máquina de lavar com ponto exclusivo', 'un', 14000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação elétrica de ar-condicionado split', 'un', 35000],
   ['svc', 'Quadro e proteção', 'Troca de quadro de distribuição', 'un', 55000],
   ['svc', 'Quadro e proteção', 'Organização e identificação de quadro', 'un', 25000],
   ['svc', 'Quadro e proteção', 'Instalação de disjuntor geral', 'un', 8000],
@@ -888,9 +889,9 @@ const SEED = [
   ['svc', 'Fiação e infraestrutura', 'Instalação de canaleta', 'm', 1800],
   ['svc', 'Fiação e infraestrutura', 'Abertura de caixa na alvenaria', 'un', 4000],
   ['svc', 'Fiação e infraestrutura', 'Instalação de eletroduto embutido', 'm', 2500],
-  ['svc', 'Fiação e infraestrutura', 'Ramal de entrada (concessionária)', 'un', 45000],
+  ['svc', 'Fiação e infraestrutura', 'Ramal de entrada da concessionária', 'un', 45000],
   ['svc', 'Fiação e infraestrutura', 'Lançamento de cabo subterrâneo', 'm', 3500],
-  ['svc', 'Rede, som e segurança', 'Ponto de rede (RJ45)', 'ponto', 9000],
+  ['svc', 'Rede, som e segurança', 'Ponto de rede RJ45', 'ponto', 9000],
   ['svc', 'Rede, som e segurança', 'Ponto de antena ou TV', 'ponto', 8000],
   ['svc', 'Rede, som e segurança', 'Instalação de câmera de segurança', 'un', 15000],
   ['svc', 'Rede, som e segurança', 'Instalação de interfone ou porteiro eletrônico', 'un', 20000],
@@ -942,12 +943,12 @@ const SEED = [
   ['mat', 'Eletrodutos e caixas', 'Abraçadeira tipo D 3/4"', 'un', 100],
   ['mat', 'Eletrodutos e caixas', 'Fita perfurada', 'm', 200],
   ['mat', 'Tomadas e interruptores', 'Tomada USB com placa', 'un', 6500],
-  ['mat', 'Tomadas e interruptores', 'Tomada de embutir 2P+T 10 A (módulo)', 'un', 900],
-  ['mat', 'Tomadas e interruptores', 'Tomada de embutir 2P+T 20 A (módulo)', 'un', 1200],
-  ['mat', 'Tomadas e interruptores', 'Interruptor simples (módulo)', 'un', 700],
-  ['mat', 'Tomadas e interruptores', 'Interruptor paralelo (módulo)', 'un', 1000],
-  ['mat', 'Tomadas e interruptores', 'Placa 4x2 (1 posto)', 'un', 600],
-  ['mat', 'Tomadas e interruptores', 'Placa 4x2 (2 postos)', 'un', 600],
+  ['mat', 'Tomadas e interruptores', 'Módulo de tomada 2P+T 10 A', 'un', 900],
+  ['mat', 'Tomadas e interruptores', 'Módulo de tomada 2P+T 20 A', 'un', 1200],
+  ['mat', 'Tomadas e interruptores', 'Módulo de interruptor simples', 'un', 700],
+  ['mat', 'Tomadas e interruptores', 'Módulo de interruptor paralelo', 'un', 1000],
+  ['mat', 'Tomadas e interruptores', 'Placa 4x2 de 1 posto', 'un', 600],
+  ['mat', 'Tomadas e interruptores', 'Placa 4x2 de 2 postos', 'un', 600],
   ['mat', 'Tomadas e interruptores', 'Placa 4x4', 'un', 1200],
   ['mat', 'Tomadas e interruptores', 'Suporte 4x2', 'un', 300],
   ['mat', 'Tomadas e interruptores', 'Dimmer rotativo', 'un', 4500],
@@ -978,7 +979,7 @@ const SEED = [
   ['mat', 'Aterramento', 'Haste de aterramento 2,4 m', 'un', 4500],
   ['mat', 'Aterramento', 'Conector para haste', 'un', 800],
   ['mat', 'Aterramento', 'Caixa de inspeção de aterramento', 'un', 3000],
-  ['mat', 'Aterramento', 'Barra de equipotencialização (BEP)', 'un', 6000],
+  ['mat', 'Aterramento', 'Barra de equipotencialização BEP', 'un', 6000],
   ['mat', 'Aterramento', 'Cordoalha de cobre', 'm', 2000],
   ['mat', 'Iluminação', 'Lâmpada LED 12 W', 'un', 1400],
   ['mat', 'Iluminação', 'Lâmpada LED 15 W', 'un', 1800],
@@ -1005,7 +1006,7 @@ const SEED = [
   ['mat', 'Aparelhos', 'Ventilador de teto', 'un', 25000],
   ['mat', 'Aparelhos', 'Exaustor', 'un', 9000],
   ['mat', 'Rede, som e segurança', 'Conector RJ45', 'un', 100],
-  ['mat', 'Rede, som e segurança', 'Tomada RJ45 (módulo)', 'un', 1500],
+  ['mat', 'Rede, som e segurança', 'Módulo de tomada RJ45', 'un', 1500],
   ['mat', 'Rede, som e segurança', 'Conector F para coaxial', 'un', 100],
   ['mat', 'Rede, som e segurança', 'Câmera de segurança', 'un', 15000],
   ['mat', 'Rede, som e segurança', 'Fonte 12 V para câmera', 'un', 3000],
@@ -1019,9 +1020,9 @@ const SEED = [
   ['mat', 'Automação e comando', 'Tomada inteligente Wi-Fi', 'un', 7000],
   ['mat', 'Automação e comando', 'Botoeira liga e desliga', 'un', 4000],
   ['mat', 'Automação e comando', 'Chave boia', 'un', 4000],
-  ['mat', 'Conexões e terminais', 'Conector de emenda Wago (2 vias)', 'un', 250],
-  ['mat', 'Conexões e terminais', 'Conector de emenda Wago (3 vias)', 'un', 300],
-  ['mat', 'Conexões e terminais', 'Conector de emenda Wago (5 vias)', 'un', 400],
+  ['mat', 'Conexões e terminais', 'Conector de emenda Wago de 2 vias', 'un', 250],
+  ['mat', 'Conexões e terminais', 'Conector de emenda Wago de 3 vias', 'un', 300],
+  ['mat', 'Conexões e terminais', 'Conector de emenda Wago de 5 vias', 'un', 400],
   ['mat', 'Conexões e terminais', 'Terminal tubular, 100 peças', 'pct', 1500],
   ['mat', 'Conexões e terminais', 'Terminal olhal, 100 peças', 'pct', 2500],
   ['mat', 'Conexões e terminais', 'Terminal forquilha, 100 peças', 'pct', 2500],
@@ -1043,7 +1044,7 @@ const SEED = [
 const catOrder = kind => [...new Set(SEED.filter(s => s[0] === kind).map(s => s[1])), 'Outros'];
 // itens que entraram depois da primeira tabela (são acrescentados em quem já usa o app)
 // 2.15: tudo o que ainda não está na tabela entra (por nome), sem mexer nos itens e preços de quem já usa
-const SEED_V2 = ['Ponto de interruptor paralelo (three-way)', 'Tomada dupla 10 A com placa', 'Interruptor duplo com placa', 'Interruptor paralelo (three-way) com placa', 'Interruptor intermediário (four-way)'];
+const SEED_V2 = ['Ponto de interruptor paralelo three-way', 'Tomada dupla 10 A com placa', 'Interruptor duplo com placa', 'Interruptor paralelo three-way com placa', 'Interruptor intermediário four-way'];
 const seedPrices = () => SEED.map(([kind, cat, name, unit, price]) => ({ id: uid(), kind, cat, name, unit, price, ref: true }));
 /* preços de fábrica: os que vêm com o app aparecem em cinza; qualquer mudança no valor (no item, na caixa do material
    ou no reajuste) deixa o preço em preto. O leitor de tela diz "preço que vem com o app" e a nota no fim de Preços
@@ -1057,7 +1058,8 @@ const LS = {
   get(k, d) { try { const v = localStorage.getItem(KEY + k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); return true; } catch { return false; } },
 };
-const ACCEPT_DEFAULT = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita (WhatsApp ou e-mail).';
+const ACCEPT_DEFAULT = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita, no WhatsApp ou no e-mail.';
+const ACCEPT_V6 = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita (WhatsApp ou e-mail).';
 const WARRANTY_DEFAULT = 'A garantia cobre falhas no serviço executado. Não cobre: mau uso; alterações feitas por terceiros; sobrecarga causada por equipamentos ligados depois do serviço; surtos de tensão, descargas atmosféricas e falhas da rede da concessionária; e materiais fornecidos pelo cliente, que seguem a garantia do fabricante. Esta garantia não exclui os direitos previstos no Código de Defesa do Consumidor.';
 const DEF = { toolSeedV: 0, name: '', company: '', phone: '', email: '', doc: '', city: '', pix: '', logo: '', logoRatio: 1,
   validity: 15, warranty: 90, prazoN: 1, prazoU: 'uteis', payMode: 'entrada', entryPct: 50, installments: 3, notes: '',
@@ -1086,7 +1088,7 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
+  novidades: [{ versao: '2.19.1', itens: ['Nenhum nome tem mais parênteses: os itens da tabela, as ferramentas, as categorias e os rótulos dos campos.', 'Os materiais e as ferramentas que vêm com o app agora podem ser alterados na Gestão: nome, categoria e unidade. As ferramentas também podem ser excluídas.', 'As listas de escolha abertas perto do pé da janela rolam até o último item aparecer.', 'O vermelho do Excluir, ao arrastar um rascunho, ficou emendado com o cartão.'] }, { versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
     'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
     'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
     'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
@@ -1136,8 +1138,8 @@ KitFacil.iniciar({
   boasVindas: { novo: () => PRIMEIRO_USO && !(quotes || []).some(q => !q.example) },
   copia: { descricao: 'Baixe um arquivo com os orçamentos, a tabela de preços, o estoque, as ferramentas e os ajustes.', baixar: () => baixarCopiaEletrica(), restaurar: f => restaurarCopiaEletrica(f) },
   privacidade: [
-    'Os orçamentos, a tabela de preços, o estoque, as ferramentas, os ajustes e os dados dos clientes que você cadastra (nome, telefone, endereço, CPF ou CNPJ) ficam guardados neste aparelho. Você é responsável por eles perante os seus clientes.',
-    'Propostas, relatórios e recibos em PDF são feitos aqui no aparelho. Eles só saem quando você compartilha (WhatsApp, e-mail ou outro app).',
+    'Os orçamentos, a tabela de preços, o estoque, as ferramentas, os ajustes e os dados dos clientes que você cadastra, como nome, telefone, endereço e CPF ou CNPJ, ficam guardados neste aparelho. Você é responsável por eles perante os seus clientes.',
+    'Propostas, relatórios e recibos em PDF são feitos aqui no aparelho. Eles só saem quando você compartilha, pelo WhatsApp, por e-mail ou por outro app.',
   ],
 });
 KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#EFEEE9', escuro: '#0E0D0A' } });
@@ -1249,7 +1251,7 @@ const TOOL_SEED = [
   ['Passagem de fios', ['Passa-fio de aço', 'Passa-fio de nylon', 'Puxador de cabos']],
   ['Instalação e acabamento', ['Trena', 'Nível', 'Esquadro', 'Martelo', 'Talhadeira', 'Ponteiro', 'Ferro de solda', 'Soprador térmico', 'Lanterna de cabeça', 'Caixa de ferramentas']],
   ['Acesso', ['Escada de 6 degraus', 'Escada extensível', 'Andaime']],
-  ['Segurança (EPI)', ['Luvas isolantes', 'Óculos de proteção', 'Capacete com jugular', 'Botina de segurança sem metal', 'Cinto de segurança com talabarte', 'Protetor auricular', 'Kit de bloqueio e etiquetagem']],
+  ['Segurança e EPI', ['Luvas isolantes', 'Óculos de proteção', 'Capacete com jugular', 'Botina de segurança sem metal', 'Cinto de segurança com talabarte', 'Protetor auricular', 'Kit de bloqueio e etiquetagem']],
   // 2.15: catálogo ampliado
   ['Medição e teste', ['Alicate wattímetro', 'Analisador de qualidade de energia', 'Termômetro infravermelho', 'Câmera termográfica', 'Luxímetro', 'Testador de DR', 'Detector de cabos na parede', 'Testador de cabo de rede']],
   ['Alicates', ['Alicate de bico curvo', 'Alicate rebitador', 'Alicate decapador automático', 'Alicate de corte para cabos', 'Alicate crimpador RJ45', 'Alicate prensa-terminal hidráulico']],
@@ -1257,8 +1259,8 @@ const TOOL_SEED = [
   ['Furação e corte', ['Furadeira de bancada', 'Serra mármore', 'Serra circular', 'Cortador de tubos', 'Jogo de brocas de vídia', 'Jogo de brocas para metal', 'Broca de serra copo para drywall', 'Rasgadeira de parede', 'Tesoura para chapa']],
   ['Passagem de fios', ['Guia passa-cabos de fibra', 'Lubrificante para passagem de cabos', 'Sonda passa-fio com rolo']],
   ['Instalação e acabamento', ['Nível a laser', 'Prumo', 'Lima', 'Espátula', 'Desempenadeira', 'Pistola de cola quente', 'Grampeador de pressão', 'Marcador permanente', 'Lápis de carpinteiro', 'Fita métrica de aço longa', 'Bolsa porta-ferramentas', 'Maleta organizadora']],
-  ['Acesso', ['Escada de 8 degraus', 'Escada de fibra (isolante)', 'Plataforma de trabalho', 'Cavalete']],
-  ['Segurança (EPI)', ['Luvas de vaqueta', 'Manga isolante', 'Tapete isolante', 'Protetor facial', 'Máscara contra poeira', 'Vara de manobra', 'Placas de sinalização', 'Detector de tensão por contato']],
+  ['Acesso', ['Escada de 8 degraus', 'Escada de fibra isolante', 'Plataforma de trabalho', 'Cavalete']],
+  ['Segurança e EPI', ['Luvas de vaqueta', 'Manga isolante', 'Tapete isolante', 'Protetor facial', 'Máscara contra poeira', 'Vara de manobra', 'Placas de sinalização', 'Detector de tensão por contato']],
   ['Elétrica e energia', ['Extensão de obra', 'Carretel de extensão', 'Gerador portátil', 'Lanterna recarregável', 'Refletor de obra', 'Carregador de baterias']],
 ];
 const TOOL_CATS = [...new Set(TOOL_SEED.map(x => x[0]))];
@@ -1342,6 +1344,19 @@ if ((settings.toolSeedV || 0) < 2) {
   settings.toolSeedV = 2; LS.set('tools', tools); saveSettings();
 }
 settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
+// 2.19.1: nenhum nome de fábrica tem parênteses
+const RENOMEIA_V7 = [['Ponto novo de tomada (com fiação)', 'Ponto novo de tomada com fiação'], ['Ponto de interruptor paralelo (three-way)', 'Ponto de interruptor paralelo three-way'], ['Aterramento (haste e conexões)', 'Aterramento com haste e conexões'], ['Interruptor paralelo (three-way) com placa', 'Interruptor paralelo three-way com placa'], ['Interruptor intermediário (four-way)', 'Interruptor intermediário four-way'], ['Ponto de iluminação novo (com fiação)', 'Ponto de iluminação novo com fiação'], ['Instalação de aquecedor a gás (parte elétrica)', 'Instalação elétrica de aquecedor a gás'], ['Instalação de máquina de lavar (ponto exclusivo)', 'Instalação de máquina de lavar com ponto exclusivo'], ['Instalação de ar-condicionado split (parte elétrica)', 'Instalação elétrica de ar-condicionado split'], ['Ramal de entrada (concessionária)', 'Ramal de entrada da concessionária'], ['Ponto de rede (RJ45)', 'Ponto de rede RJ45'], ['Tomada de embutir 2P+T 10 A (módulo)', 'Módulo de tomada 2P+T 10 A'], ['Tomada de embutir 2P+T 20 A (módulo)', 'Módulo de tomada 2P+T 20 A'], ['Interruptor simples (módulo)', 'Módulo de interruptor simples'], ['Interruptor paralelo (módulo)', 'Módulo de interruptor paralelo'], ['Placa 4x2 (1 posto)', 'Placa 4x2 de 1 posto'], ['Placa 4x2 (2 postos)', 'Placa 4x2 de 2 postos'], ['Barra de equipotencialização (BEP)', 'Barra de equipotencialização BEP'], ['Tomada RJ45 (módulo)', 'Módulo de tomada RJ45'], ['Conector de emenda Wago (2 vias)', 'Conector de emenda Wago de 2 vias'], ['Conector de emenda Wago (3 vias)', 'Conector de emenda Wago de 3 vias'], ['Conector de emenda Wago (5 vias)', 'Conector de emenda Wago de 5 vias'], ['Escada de fibra (isolante)', 'Escada de fibra isolante']];
+const CATS_V7 = [['Segurança (EPI)', 'Segurança e EPI']];
+if ((settings.seedV || 0) < 7) {
+  RENOMEIA_V7.forEach(([de, para]) => {
+    prices.filter(x => norm(x.name) === norm(de)).forEach(p => { if (!prices.some(x => x.kind === p.kind && norm(x.name) === norm(para))) p.name = para; });
+    tools.filter(t => t.k === 'tipo' && norm(t.name) === norm(de)).forEach(t => { t.name = para; });
+    checks.forEach(c => { if (c.name && norm(c.name) === norm(de)) c.name = para; });
+  });
+  CATS_V7.forEach(([de, para]) => { tools.forEach(t => { if (t.cat === de) t.cat = para; }); prices.forEach(p => { if (p.cat === de) p.cat = para; }); });
+  if (settings.acceptText === ACCEPT_V6) settings.acceptText = ACCEPT_DEFAULT;
+  LS.set('tools', tools); LS.set('checks', checks);
+}
 // 2.19: a unidade sai do nome do material e fica só no campo de unidade ("Gesso (saco 1 kg)" vira "Gesso 1 kg", por saco)
 const RENOMEIA_V6 = [['Abraçadeiras (pacote)', 'Abraçadeiras', 'un', 'pct'], ['Eletroduto rígido PVC 3/4" (barra 3 m)', 'Eletroduto rígido PVC 3/4" de 3 m'],
   ['Eletroduto rígido PVC 1" (barra 3 m)', 'Eletroduto rígido PVC 1" de 3 m'], ['Eletroduto metálico 3/4" (barra 3 m)', 'Eletroduto metálico 3/4" de 3 m'],
@@ -1360,7 +1375,7 @@ if ((settings.seedV || 0) < 6) {
   });
 }
 if ((settings.seedV || 0) < 2) {
-  prices.forEach(p => { if (p.name === 'Interruptor paralelo com placa') p.name = 'Interruptor paralelo (three-way) com placa'; });
+  prices.forEach(p => { if (p.name === 'Interruptor paralelo com placa') p.name = 'Interruptor paralelo three-way com placa'; });
   SEED.filter(x => SEED_V2.includes(x[2])).forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price }); });
   settings.seedV = 2; savePrices(); saveSettings();
 }
@@ -1382,6 +1397,7 @@ if ((settings.seedV || 0) < 5) {
   settings.seedV = 5; savePrices(); saveSettings();
 }
 if ((settings.seedV || 0) < 6) { settings.seedV = 6; savePrices(); saveSettings(); }
+if ((settings.seedV || 0) < 7) { settings.seedV = 7; savePrices(); saveSettings(); }
 
 const getQ = id => quotes.find(q => q.id === id);
 const touch = q => { acertaGeral(q); q.updatedAt = Date.now(); saveQuotes(); };
@@ -1541,7 +1557,7 @@ function cardCalc(p, total) {
 const payLabel = (q, c) => c.payTotal === c.total ? 'Total' : q.payment.mode === 'avista' ? 'Total à vista' : 'Total no cartão';
 function cardTxt(p, c) {
   const k = c.card, parc = k.deb ? `no débito: ${BRL(k.total)}` : k.n === 1 ? `no crédito à vista: ${BRL(k.total)}` : partsText(k.parts);
-  const j = k.juros > 0 ? (p.juros === 'mes' ? ` (juros de ${fmtQty(k.mesPct)}% ao mês; total ${BRL(k.total)})` : ` (total ${BRL(k.total)}, com a taxa do cartão)`) : (!k.deb && k.n > 1 ? ' sem juros' : '');
+  const j = k.juros > 0 ? (p.juros === 'mes' ? `, com juros de ${fmtQty(k.mesPct)}% ao mês e total de ${BRL(k.total)}` : `, total de ${BRL(k.total)} com a taxa do cartão`) : (!k.deb && k.n > 1 ? ' sem juros' : '');
   return { parc, j };
 }
 function partsText(parts) {
@@ -1559,7 +1575,7 @@ function outrasTxt(q) {
 function payText(q, c) {
   const p = q.payment;
   if (p.mode === 'avista') return c.avistaDesc ? `À vista: ${BRL(c.avistaTotal)}, com ${p.avista.mode === 'pct' ? `${fmtQty(p.avista.pct)}% de desconto` : `desconto de ${BRL(c.avistaDesc)}`} para pagamento à vista.` : `À vista: ${BRL(c.total)}.`;
-  if (p.mode === 'entrada') return `Entrada de ${p.entryPct}% (${BRL(c.entry)}) na aprovação e ${BRL(c.rest)} na conclusão do serviço.`;
+  if (p.mode === 'entrada') return `Entrada de ${p.entryPct}%, ${BRL(c.entry)}, na aprovação e ${BRL(c.rest)} na conclusão do serviço.`;
   if (p.mode === 'parcelado') { const t = cardTxt(p, c); return c.card.deb || c.card.n === 1 ? `Cartão ${t.parc}.` : `Parcelado no cartão em ${t.parc}${t.j}.`; }
   return 'A combinar.';
 }
@@ -1737,9 +1753,9 @@ function soUteis(L) {
 function diasResumo(L) {
   if (!L.length) return '';
   if (L.length === 1) return fmtDate(L[0]);
-  if (seguidos(L)) return `de ${fmtShort(L[0])} a ${fmtDate(L[L.length - 1])} (${L.length} dias seguidos)`;
-  if (soUteis(L)) return `de ${fmtShort(L[0])} a ${fmtDate(L[L.length - 1])}, em dias úteis (${L.length} dias)`;
-  return `${datesText(L)} (${L.length} dias, não seguidos)`;
+  if (seguidos(L)) return `de ${fmtShort(L[0])} a ${fmtDate(L[L.length - 1])}, ${L.length} dias seguidos`;
+  if (soUteis(L)) return `de ${fmtShort(L[0])} a ${fmtDate(L[L.length - 1])}, ${L.length} dias úteis`;
+  return `${datesText(L)}: ${L.length} dias, não seguidos`;
 }
 // cabeçalho do relatório: um dia ou o período
 const execHead = q => q.dates.length > 1 ? `Executado entre ${fmtShort(q.dates[0])} e ${fmtDate(q.dates[q.dates.length - 1])}` : `Executado em ${fmtDate(q.doneAt || q.dates[0])}`;
@@ -1757,7 +1773,7 @@ function schedText(q) {
   if (q.startAt && q.endAt && dateInput(q.startAt) !== dateInput(q.endAt)) return `Início em ${fmtDate(q.startAt)} e término em ${fmtDate(q.endAt)}.`;
   return `Início e término em ${fmtDate(q.startAt || q.endAt)}.`;
 }
-const APPROVAL = { msg: 'por mensagem escrita (WhatsApp ou e-mail)', sign: 'com assinatura na proposta', verbal: 'pessoalmente' };
+const APPROVAL = { msg: 'por mensagem escrita, no WhatsApp ou no e-mail', sign: 'com assinatura na proposta', verbal: 'pessoalmente' };
 const approvalText = q => q.approvedAt && q.approvedVia ? `Orçamento aprovado pelo cliente em ${fmtDate(q.approvedAt)}, ${APPROVAL[q.approvedVia] || ''}.` : '';
 function warrantyText(q, mode) {
   const base = `${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado`;
@@ -2007,6 +2023,19 @@ function rerender() {
 }
 function onScroll() { const ab = $('.appbar'); if (ab) ab.classList.toggle('scrolled', window.scrollY > 4); }
 window.addEventListener('scroll', onScroll, { passive: true });
+// lista de escolha, calendário e relógio do Kit abertos perto do pé: rola o que falta para o último item ficar à vista,
+// acima do rodapé da janela ou das barras fixas de baixo. Correção do app até o Kit corrigir (Proposta para o Integrador)
+document.addEventListener('click', e => {
+  const w = e.target.closest('.kf-esc'); if (!w || !e.target.closest('.kf-esc-btn')) return;
+  setTimeout(() => {
+    const el = w.classList.contains('kf-aberta') && $('.kf-esc-lista:not([hidden]), .kf-cal:not([hidden])', w); if (!el) return;
+    const corpo = el.closest('.kf-dlg-corpo');
+    let fundo = corpo ? corpo.getBoundingClientRect().bottom : innerHeight;
+    if (!corpo) $$('.bbar, .kf-nav').forEach(b => { if (b.getClientRects().length) fundo = Math.min(fundo, b.getBoundingClientRect().top); });
+    const falta = el.getBoundingClientRect().bottom + 12 - fundo;
+    if (falta > 0) (corpo || window).scrollBy({ top: falta, behavior: KitFacil.movimento.reduzido() ? 'auto' : 'smooth' });
+  }, KitFacil.movimento.curto + 60);
+});
 $('#nav-home .kf-nav-ic').innerHTML = I.doc; $('#nav-prices .kf-nav-ic').innerHTML = I.tag; $('#nav-gestao .kf-nav-ic').innerHTML = I.box;
 $('#trilho-home .kf-nav-ic-t').outerHTML = I.doc; $('#trilho-prices .kf-nav-ic-t').outerHTML = I.tag; $('#trilho-gestao .kf-nav-ic-t').outerHTML = I.box;
 // Ajustes é o último item da navegação (barra de baixo no celular, pé do trilho no computador)
@@ -2057,16 +2086,16 @@ function createExample() {
     notes: 'Não inclui reparos de alvenaria, gesso ou pintura.\nA energia será desligada durante parte do serviço.',
     useRooms: true, rooms: [sala, coz],
     items: [
-      it(sala.id, 'svc', 'Ponto novo de tomada (com fiação)', 'ponto', 5, 9000),
+      it(sala.id, 'svc', 'Ponto novo de tomada com fiação', 'ponto', 5, 9000),
       it(sala.id, 'svc', 'Instalação de tomada ou interruptor', 'un', 3, 4500),
-      it(sala.id, 'svc', 'Ponto de interruptor paralelo (three-way)', 'ponto', 1, 12000),
+      it(sala.id, 'svc', 'Ponto de interruptor paralelo three-way', 'ponto', 1, 12000),
       it(sala.id, 'svc', 'Instalação de luminária ou plafon', 'un', 2, 6000),
       it(sala.id, 'mat', 'Tomada 10 A com placa', 'un', 3, 1800),
       it(sala.id, 'mat', 'Tomada dupla 10 A com placa', 'un', 2, 2800),
       it(sala.id, 'mat', 'Interruptor simples com placa', 'un', 3, 1600),
-      it(sala.id, 'mat', 'Interruptor paralelo (three-way) com placa', 'un', 1, 2200),
+      it(sala.id, 'mat', 'Interruptor paralelo three-way com placa', 'un', 1, 2200),
       it(sala.id, 'mat', 'Caixa 4x2', 'un', 9, 250),
-      it(coz.id, 'svc', 'Ponto novo de tomada (com fiação)', 'ponto', 3, 9000),
+      it(coz.id, 'svc', 'Ponto novo de tomada com fiação', 'ponto', 3, 9000),
       it(coz.id, 'svc', 'Tomada de uso específico 20 A', 'un', 2, 7000),
       it(coz.id, 'svc', 'Instalação de luminária ou plafon', 'un', 1, 6000),
       it(coz.id, 'mat', 'Tomada 20 A com placa', 'un', 5, 2200),
@@ -2127,7 +2156,12 @@ function excluiRascunho(id) {
 }
 function bindSwipe(v) {
   let aberto = null, arrastou = false;
-  const poe = (w, x) => { const c = $('.qcard', w); c.style.transform = x ? `translateX(${x}px)` : ''; };
+  // o vermelho fica atrás do cartão inteiro (sem emenda nos cantos) e só aparece enquanto o cartão sai do lugar
+  const poe = (w, x) => {
+    const c = $('.qcard', w); c.style.transform = x ? `translateX(${x}px)` : '';
+    clearTimeout(w._t);
+    if (x) w.classList.add('mexe'); else w._t = setTimeout(() => w.classList.remove('mexe'), KitFacil.movimento.reduzido() ? 0 : KitFacil.movimento.curto);
+  };
   const fecha = () => { if (aberto) { poe(aberto, 0); aberto = null; } };
   $$('[data-swipe]', v).forEach(w => {
     const c = $('.qcard', w), del = $('.qc-del', w);
@@ -2271,9 +2305,9 @@ const TECH = {
     { l: 'Disjuntor', a: 'disjuntor', w: W_CIRC, r: true, o: opts('Qual a falha?', [
       ['Desarma por sobrecarga', 'desarmando por sobrecarga'], ['Desarma por curto', 'desarmando por curto-circuito'],
       ['Não rearma', 'com falha interna: não rearma'], ['Desarma sem carga', 'com falha interna: desarma sem carga ligada'],
-      ['Não desarma', 'com falha interna: não desarma (sem proteção)'], ['Mecanismo quebrado', 'com mecanismo travado ou quebrado'],
+      ['Não desarma', 'com falha interna: não desarma e deixa o circuito sem proteção'], ['Mecanismo quebrado', 'com mecanismo travado ou quebrado'],
       ['Terminais carbonizados', 'com terminais aquecidos ou carbonizados'], ['Mau contato', 'com mau contato nos terminais'],
-      ['Pequeno para a carga', 'subdimensionado para a carga do circuito'], ['Grande para o cabo', 'superdimensionado para o cabo (não protege a fiação)'],
+      ['Pequeno para a carga', 'subdimensionado para a carga do circuito'], ['Grande para o cabo', 'superdimensionado para o cabo, sem proteger a fiação'],
       ['Fora de padrão', 'antigo e fora de padrão']]) },
     { l: 'DR', a: 'DR', w: W_CIRC, o: opts('Qual a falha?', [
       ['Fuga de corrente', 'desarmando por fuga de corrente no circuito'], ['Desarma sem fuga', 'com falha interna: desarma sem fuga de corrente'],
@@ -2283,13 +2317,13 @@ const TECH = {
     { l: 'Tomada', a: 'tomada', r: true, o: opts('Qual a falha?', [
       ['Mau contato', 'com mau contato'], ['Derretida', 'derretida ou carbonizada'], ['Terminais frouxos', 'com terminais frouxos'], ['Solta', 'solta da caixa'],
       ['Quebrada', 'quebrada'], ['Sem aterramento', 'sem aterramento'], ['Fase e neutro invertidos', 'com fase e neutro invertidos'],
-      ['10 A para aparelho de 20 A', 'de 10 A usada por aparelho que exige 20 A'], ['Padrão antigo', 'fora do padrão atual (NBR 14136)']]) },
+      ['10 A para aparelho de 20 A', 'de 10 A usada por aparelho que exige 20 A'], ['Padrão antigo', 'fora do padrão atual da NBR 14136']]) },
     { l: 'Interruptor', a: 'interruptor', r: true, o: opts('Qual a falha?', [
       ['Mau contato', 'com mau contato'], ['Não liga ou desliga', 'sem acionar a carga'], ['Aquecendo', 'aquecendo durante o uso'], ['Quebrado', 'quebrado'],
-      ['Corta o neutro', 'ligado no neutro (não interrompe a fase)']]) },
+      ['Corta o neutro', 'ligado no neutro, sem interromper a fase']]) },
     { l: 'Chuveiro', a: 'chuveiro', r: true, o: opts('Qual a falha?', [
       ['Resistência queimada', 'com resistência queimada'], ['Ligação derretida', 'com fiação de ligação derretida'], ['Conexões aquecidas', 'com conexões aquecidas'],
-      ['Dando choque', 'com fuga de corrente (dando choque)'], ['Sem aterramento', 'sem aterramento'], ['Potência alta', 'com potência acima do que o circuito suporta']]) },
+      ['Dando choque', 'com fuga de corrente, dando choque'], ['Sem aterramento', 'sem aterramento'], ['Potência alta', 'com potência acima do que o circuito suporta']]) },
     { l: 'Iluminação', a: '', r: true, o: opts('Qual a falha?', [
       ['Lâmpada queimada', 'lâmpada queimada'], ['Reator queimado', 'reator queimado'], ['Driver queimado', 'driver de LED queimado'], ['Mau contato', 'luminária com mau contato'],
       ['Soquete danificado', 'soquete danificado'], ['Sensor de presença', 'sensor de presença com defeito'], ['Fotocélula', 'fotocélula com defeito']]) },
@@ -2302,43 +2336,43 @@ const TECH = {
       ['Barramento oxidado', 'com barramento oxidado'], ['Sem tampa', 'sem tampa de proteção'], ['Sem espaço', 'sem espaço para novos circuitos'],
       ['Com fusíveis', 'antigo, com fusíveis'], ['Sem barramento de terra', 'sem barramento de terra']]) },
     { l: 'Aterramento', a: '', o: opts('Qual o problema?', [
-      ['Sem aterramento', 'instalação sem aterramento'], ['Terra ausente nas tomadas', 'condutor de proteção (terra) ausente nas tomadas'], ['Resistência alta', 'aterramento com resistência elevada'],
+      ['Sem aterramento', 'instalação sem aterramento'], ['Terra ausente nas tomadas', 'condutor de proteção, o terra, ausente nas tomadas'], ['Resistência alta', 'aterramento com resistência elevada'],
       ['Haste corroída', 'haste de aterramento corroída ou desconectada'], ['Terra no neutro', 'terra ligado ao neutro']]) },
     { l: 'Proteção', a: '', o: opts('O que falta?', [
-      ['Sem DR', 'instalação sem DR (proteção contra choque elétrico)'], ['Sem DPS', 'instalação sem DPS (proteção contra surtos)'],
+      ['Sem DR', 'instalação sem DR, a proteção contra choque elétrico'], ['Sem DPS', 'instalação sem DPS, a proteção contra surtos'],
       ['Chuveiro sem circuito próprio', 'chuveiro sem circuito exclusivo'], ['Disjuntor compartilhado', 'vários circuitos ligados no mesmo disjuntor']]) },
     { l: 'Rede elétrica', a: '', w: W_PTS, o: opts('Qual o problema?', [
       ['Falta de fase', 'falta de fase'], ['Neutro interrompido', 'neutro interrompido'], ['Oscilação', 'oscilação de tensão'],
-      ['Tensão baixa', 'tensão abaixo do normal'], ['Tensão alta', 'tensão acima do normal']], true), v: { lab: 'Tensão medida (opcional)', pre: ': ', sug: ['127 V', '220 V', '110 V', '240 V'] } },
+      ['Tensão baixa', 'tensão abaixo do normal'], ['Tensão alta', 'tensão acima do normal']], true), v: { opt: true, lab: 'Tensão medida', pre: ': ', sug: ['127 V', '220 V', '110 V', '240 V'] } },
   ],
   work: [
     { l: 'Troca', a: 'substituição', ord: ['o', 'w'], w: W_CIRC, r: true, o: opts('O que foi trocado?', [
       ['Disjuntor', 'do disjuntor'], ['DR', 'do DR'], ['DPS', 'do DPS'], ['Tomadas', 'das tomadas'], ['Interruptores', 'dos interruptores'], ['Chuveiro', 'do chuveiro'],
       ['Resistência', 'da resistência do chuveiro'], ['Lâmpadas', 'das lâmpadas'], ['Reator ou driver', 'do reator ou driver'], ['Luminária', 'da luminária'], ['Quadro', 'do quadro de distribuição']]),
-      v: { lab: 'Por qual? (opcional)', pre: ' por ', sug: ['modelo equivalente', 'disjuntor de 32 A', 'disjuntor de 40 A', 'DR de 40 A 30 mA', 'tomada de 20 A'] } },
+      v: { opt: true, lab: 'Por qual?', pre: ' por ', sug: ['modelo equivalente', 'disjuntor de 32 A', 'disjuntor de 40 A', 'DR de 40 A 30 mA', 'tomada de 20 A'] } },
     { l: 'Instalação', a: 'instalação', ord: ['o', 'w'], w: W_CIRC_NO, r: true, o: opts('O que foi instalado?', [
       ['DR', 'de DR'], ['DPS', 'de DPS'], ['Tomadas', 'de tomadas'], ['Interruptores', 'de interruptores'], ['Luminárias', 'de luminárias'], ['Chuveiro', 'de chuveiro'],
       ['Circuito novo', 'de circuito novo'], ['Quadro', 'de quadro de distribuição'], ['Haste de terra', 'de haste de aterramento']]) },
     { l: 'Fiação', a: '', ord: ['o', 'w'], w: W_CIRC, r: true, o: opts('O que foi feito?', [
       ['Troca dos cabos', 'substituição dos cabos'], ['Cabos novos', 'passagem de cabos novos'], ['Emendas refeitas', 'emendas refeitas com conectores adequados'],
       ['Isolamento', 'isolamento das emendas'], ['Bitola adequada', 'adequação da bitola dos cabos à carga']]),
-      v: { lab: 'Bitola do cabo (opcional)', pre: ', com cabos de ', sug: ['1,5 mm²', '2,5 mm²', '4 mm²', '6 mm²', '10 mm²'] } },
+      v: { opt: true, lab: 'Bitola do cabo', pre: ', com cabos de ', sug: ['1,5 mm²', '2,5 mm²', '4 mm²', '6 mm²', '10 mm²'] } },
     { l: 'Reparo', a: '', ord: ['o', 'w'], w: W_CIRC_NO, r: true, o: opts('O que foi feito?', [
-      ['Achar a falha', 'localização e isolamento do ponto de falha'], ['Reparo do curto', 'reparo do ponto de curto-circuito'], ['Polaridade', 'correção da polaridade (fase e neutro)'],
+      ['Achar a falha', 'localização e isolamento do ponto de falha'], ['Reparo do curto', 'reparo do ponto de curto-circuito'], ['Polaridade', 'correção da polaridade de fase e neutro'],
       ['Interruptor na fase', 'ligação do interruptor na fase'], ['Separar neutro e terra', 'separação de neutro e terra'], ['Dividir circuito', 'divisão do circuito sobrecarregado']]) },
     { l: 'Quadro', a: '', o: opts('O que foi feito?', [
       ['Reaperto', 'reaperto das conexões do quadro de distribuição'], ['Identificação', 'identificação dos circuitos no quadro de distribuição'],
       ['Organização', 'organização da fiação do quadro de distribuição'], ['Barramentos', 'instalação de barramentos de terra e neutro no quadro']]) },
     { l: 'Aterramento', a: '', o: opts('O que foi feito?', [
-      ['Haste', 'instalação de haste de aterramento'], ['Terra nas tomadas', 'ligação do condutor de proteção (terra) às tomadas'], ['Terra no quadro', 'interligação do aterramento ao quadro de distribuição']]) },
+      ['Haste', 'instalação de haste de aterramento'], ['Terra nas tomadas', 'ligação do condutor de proteção, o terra, às tomadas'], ['Terra no quadro', 'interligação do aterramento ao quadro de distribuição']]) },
   ],
   tests: [
     { l: 'Tensão', a: 'medição de tensão', w: W_PTS, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['127 V', '220 V', '127/220 V', 'dentro do normal'] } },
     { l: 'Corrente', a: 'medição de corrente', w: W_CIRC_NO, v: { lab: 'Resultado', pre: ': ', sug: ['dentro da capacidade do disjuntor', 'acima da capacidade do disjuntor'] } },
-    { l: 'DR', a: 'teste do DR', w: W_CIRC, o: opts('Como foi testado?', [['Botão de teste', 'pelo botão de teste'], ['Com instrumento', 'com instrumento (corrente de disparo)']], true),
+    { l: 'DR', a: 'teste do DR', w: W_CIRC, o: opts('Como foi testado?', [['Botão de teste', 'pelo botão de teste'], ['Com instrumento', 'com instrumento, medindo a corrente de disparo']], true),
       v: { lab: 'Resultado', pre: ': ', sug: ['desarmou corretamente', 'não desarmou'] } },
     { l: 'Aterramento', a: 'verificação do aterramento', w: W_PTS, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['presente e funcionando', 'ausente', 'resistência de 10 Ω'] } },
-    { l: 'Isolamento', a: 'medição de resistência de isolamento', w: { list: 'circ', form: 2, lab: 'De qual circuito?' }, v: { lab: 'Resultado', pre: ': ', sug: ['acima de 1 MΩ (aprovado)', 'abaixo do mínimo'] } },
+    { l: 'Isolamento', a: 'medição de resistência de isolamento', w: { list: 'circ', form: 2, lab: 'De qual circuito?' }, v: { lab: 'Resultado', pre: ': ', sug: ['acima de 1 MΩ, aprovado', 'abaixo do mínimo'] } },
     { l: 'Polaridade', a: 'verificação de polaridade', w: W_PTS, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['correta', 'corrigida'] } },
     { l: 'Aquecimento', a: 'verificação de aquecimento', w: W_PTS, o: opts('Como?', [['Termômetro', 'com termômetro infravermelho'], ['Visual', 'por inspeção visual']], true),
       v: { lab: 'Resultado', pre: ': ', sug: ['sem aquecimento', 'aquecimento corrigido'] } },
@@ -2372,7 +2406,7 @@ function techSentence(it, sel, rooms) {
     w: it.w ? joinPt(sel.w.map(i => PLACES[it.w.list][i][it.w.form])) : '',
   };
   let s = [it.a, ...(it.ord || ['w', 'o']).map(k => part[k])].filter(Boolean).join(' ');
-  if (sel.r.length) s += ` (${joinPt(sel.r.map(i => rooms[i].charAt(0).toLowerCase() + rooms[i].slice(1)))})`;
+  if (sel.r.length) s += `, ${sel.r.length > 1 ? 'ambientes' : 'ambiente'}: ${joinPt(sel.r.map(i => rooms[i].charAt(0).toLowerCase() + rooms[i].slice(1)))}`;
   if (sel.v.trim()) s += (it.v.pre || ': ') + sel.v.trim();
   s = capFirst(s.trim());
   return s && !/[.!?]$/.test(s) ? s + '.' : s;
@@ -2390,7 +2424,7 @@ function techSheet(q, key, idx, onAdd) {
     : `<div class="stack14">${it.o ? secao('o', it.o.lab, it.o.list.map(x => x[0]), it.o.one, true) : ''}
       ${it.w ? secao('w', it.w.lab, PLACES[it.w.list].map(x => x[0]), false, !it.o) : ''}
       ${it.r ? secao('r', 'Ambiente', rooms, false, false) : ''}
-      ${it.v ? `<div class="field"><label for="tb-v">${esc(it.v.lab)}</label><input id="tb-v" type="text" autocomplete="off">${linhas(it.v.sug.map(x => linha(`data-sug="${esc(x)}"`, esc(x), { tipo: 'um' })), ' role="group" aria-label="Sugestões"')}</div>` : ''}</div>
+      ${it.v ? `<div class="field"><label for="tb-v">${esc(it.v.lab)}${it.v.opt ? ' <span class="lab-opt">opcional</span>' : ''}</label><input id="tb-v" type="text" autocomplete="off">${linhas(it.v.sug.map(x => linha(`data-sug="${esc(x)}"`, esc(x), { tipo: 'um' })), ' role="group" aria-label="Sugestões"')}</div>` : ''}</div>
 `;
   openSheet({ title: `${TECH_TITLE[key]}: ${it.l}`, tall: true, body,
     foot: `${it.free ? '' : '<div class="tb-prev"><label for="tb-out">Vai entrar assim</label><textarea id="tb-out" rows="2" placeholder="Escolha as opções acima"></textarea></div>'}<button class="btn ghost" data-no>Cancelar</button><button class="btn primary" data-ok>${I.plus}Adicionar</button>`,
@@ -2463,7 +2497,7 @@ function lineHTML(q, i) {
     <button class="line-main" data-edit="${i.id}" aria-label="Alterar ${esc(i.name)}">
       <span class="line-name">${esc(i.name)}</span>
       <span class="line-meta">${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${refLinha(i) ? refV(BRL(i.price)) : BRL(i.price)}</span>
-      ${abaixoCusto(q, i) ? `<span class="line-warn">${I.warn}Abaixo do seu custo (${BRL(abaixoCusto(q, i))} por ${unitName(i.unit)})</span>` : ''}
+      ${abaixoCusto(q, i) ? `<span class="line-warn">${I.warn}Abaixo do seu custo de ${BRL(abaixoCusto(q, i))} por ${unitName(i.unit)}</span>` : ''}
     </button>
     <div class="line-side">
       <span class="line-total">${BRL(lineTotal(i))}</span>
@@ -2523,17 +2557,17 @@ function payDetailHTML(q, c, mode) {
     detail = `<div class="field"><label for="q-avd">Desconto para pagamento à vista</label><div class="disc"><div class="seg" role="group" aria-label="Tipo de desconto à vista"><button data-avm="pct" aria-pressed="${a.mode === 'pct'}">%</button><button data-avm="value" aria-pressed="${a.mode === 'value'}">R$</button></div>${a.mode === 'value'
       ? `<input id="q-avd" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${a.value ? BRL(a.value) : ''}">`
       : `<input id="q-avd" type="text" inputmode="decimal" placeholder="0" value="${a.pct ? fmtQty(a.pct) : ''}" aria-label="Desconto à vista em porcentagem">`}</div>
-      <span class="hint">Só vale se o cliente pagar à vista (Pix, dinheiro). É separado do desconto do serviço, em Valores.</span></div>`;
+      <span class="hint">Só vale se o cliente pagar à vista, em Pix ou dinheiro. É separado do desconto do serviço, em Valores.</span></div>`;
   }
   if (mode === 'parcelado') {
     const k = c.card, deb = p.cardTipo === 'debito', semTab = p.juros === 'taxa' && !Object.keys(settings.cardRates || {}).length;
     detail = `<div class="seg" role="group" aria-label="Tipo de cartão"><button data-ct="credito" aria-pressed="${!deb}">Crédito</button><button data-ct="debito" aria-pressed="${deb}">Débito</button></div>
       ${deb ? '' : `<div class="field"><span class="lab">Parcelas</span><div class="stepper"><button data-in="-1" aria-label="Menos parcelas" ${p.installments <= 1 ? 'disabled' : ''}>${I.minus}</button><input id="q-inst" type="text" readonly value="${p.installments}×" aria-label="Parcelas"><button data-in="1" aria-label="Mais parcelas" ${p.installments >= 18 ? 'disabled' : ''}>${I.plus}</button></div></div>`}
       <div class="field"><span class="lab" id="q-jur-l">Juros e taxa do cartão</span><div class="seg" role="group" aria-labelledby="q-jur-l"><button data-jur="sem" aria-pressed="${p.juros === 'sem'}">Sem juros</button><button data-jur="taxa" aria-pressed="${p.juros === 'taxa'}">Taxa da maquininha</button>${deb ? '' : `<button data-jur="mes" aria-pressed="${p.juros === 'mes'}">Juros ao mês</button>`}</div></div>
-      ${p.juros === 'taxa' ? `<div class="field"><label for="q-taxa">Taxa ${deb ? 'no débito' : `em ${p.installments}×`} (%)</label><input id="q-taxa" type="text" inputmode="decimal" placeholder="0" value="${fmtQty(k.taxaPct)}"><span class="hint">${p.taxaPct != null ? '<button class="linkish" data-taxa-tab>Usar a da tabela</button>' : semTab ? 'Cadastre as taxas em Ajustes, Orçamento novo.' : 'Da sua tabela, em Ajustes.'}</span></div>
-        <div class="field"><span class="lab" id="q-paga-l">Quem paga a taxa</span><div class="seg" role="group" aria-labelledby="q-paga-l"><button data-paga="cliente" aria-pressed="${p.paga === 'cliente'}">O cliente (repassar)</button><button data-paga="eu" aria-pressed="${p.paga === 'eu'}">Eu (absorver)</button></div></div>` : ''}
-      ${p.juros === 'mes' && !deb ? `<div class="field"><label for="q-mes">Juros ao mês (%)</label><input id="q-mes" type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${p.mesPct ? fmtQty(p.mesPct) : ''}"></div>` : ''}
-      ${p.juros !== 'sem' && !deb ? `<div class="field"><label for="q-semate">Sem juros até (parcelas)</label><div class="stepper"><button data-sa="-1" aria-label="Menos">${I.minus}</button><input id="q-semate" type="text" readonly value="${p.semAte ? p.semAte + '×' : 'Não'}" aria-label="Sem juros até"><button data-sa="1" aria-label="Mais">${I.plus}</button></div><span class="hint">Até esse número de parcelas, ${p.juros === 'taxa' ? 'você absorve a taxa' : 'não há juros'}.</span></div>` : ''}`;
+      ${p.juros === 'taxa' ? `<div class="field"><label for="q-taxa">Taxa ${deb ? 'no débito' : `em ${p.installments}×`}, em %</label><input id="q-taxa" type="text" inputmode="decimal" placeholder="0" value="${fmtQty(k.taxaPct)}"><span class="hint">${p.taxaPct != null ? '<button class="linkish" data-taxa-tab>Usar a da tabela</button>' : semTab ? 'Cadastre as taxas em Ajustes, Orçamento novo.' : 'Da sua tabela, em Ajustes.'}</span></div>
+        <div class="field"><span class="lab" id="q-paga-l">Quem paga a taxa</span><div class="seg" role="group" aria-labelledby="q-paga-l"><button data-paga="cliente" aria-pressed="${p.paga === 'cliente'}">O cliente</button><button data-paga="eu" aria-pressed="${p.paga === 'eu'}">Eu</button></div></div>` : ''}
+      ${p.juros === 'mes' && !deb ? `<div class="field"><label for="q-mes">Juros ao mês, em %</label><input id="q-mes" type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${p.mesPct ? fmtQty(p.mesPct) : ''}"></div>` : ''}
+      ${p.juros !== 'sem' && !deb ? `<div class="field"><label for="q-semate">Sem juros até quantas parcelas</label><div class="stepper"><button data-sa="-1" aria-label="Menos">${I.minus}</button><input id="q-semate" type="text" readonly value="${p.semAte ? p.semAte + '×' : 'Não'}" aria-label="Sem juros até"><button data-sa="1" aria-label="Mais">${I.plus}</button></div><span class="hint">Até esse número de parcelas, ${p.juros === 'taxa' ? 'você absorve a taxa' : 'não há juros'}.</span></div>` : ''}`;
   }
   return detail;
 }
@@ -2555,7 +2589,7 @@ function paySumHTML(q, c) {
   if (p.mode === 'parcelado') {
     const k = c.card, t = cardTxt(p, c);
     const linhas = [`<div><span>${k.deb ? 'No débito' : k.n === 1 ? 'Crédito à vista' : 'No cartão'}</span><b>${k.deb || k.n === 1 ? BRL(k.total) : partsText(k.parts)}</b></div>`];
-    if (k.juros > 0) linhas.push(`<div><span>${p.juros === 'mes' ? `Juros (${fmtQty(k.mesPct)}% ao mês)` : `Taxa repassada (${fmtQty(k.taxaPct)}%)`}</span><b>+ ${BRL(k.juros)}</b></div>`, `<div><span>Total no cartão</span><b>${BRL(k.total)}</b></div>`);
+    if (k.juros > 0) linhas.push(`<div><span>${p.juros === 'mes' ? `Juros de ${fmtQty(k.mesPct)}% ao mês` : `Taxa repassada de ${fmtQty(k.taxaPct)}%`}</span><b>+ ${BRL(k.juros)}</b></div>`, `<div><span>Total no cartão</span><b>${BRL(k.total)}</b></div>`);
     else if (!k.deb && k.n > 1) linhas.push(`<div><span>Sem juros</span><b>${BRL(k.total)}</b></div>`);
     if (p.juros === 'taxa' && k.taxaPct > 0) linhas.push(`<div class="ps-rec"><span>Você recebe, depois da taxa</span><b>${BRL(k.recebe)}</b></div>`);
     return linhas.join('');
@@ -2661,7 +2695,7 @@ function calHTML(q) {
 }
 function calMsgHTML(q) {
   const n = q.dates.length, rep = isReport(q);
-  if (!n) return `<p class="hint">${rep ? 'Toque nos dias em que o serviço foi feito. Dá para escolher dias que não são seguidos.' : `Toque no dia de início: o app marca ${q.prazo.n > 1 || !ehDia(q.prazo) ? `os dias do prazo (${prazoTxt(q.prazo)})` : 'o dia'}${q.prazo.u === 'uteis' || !ehDia(q.prazo) ? ', sem fins de semana e feriados' : ''}. Depois, toque num dia para pôr ou tirar.`}</p>`;
+  if (!n) return `<p class="hint">${rep ? 'Toque nos dias em que o serviço foi feito. Dá para escolher dias que não são seguidos.' : `Toque no dia de início: o app marca ${q.prazo.n > 1 || !ehDia(q.prazo) ? `os ${prazoTxt(q.prazo)} do prazo` : 'o dia'}${q.prazo.u === 'uteis' || !ehDia(q.prazo) ? ', sem fins de semana e feriados' : ''}. Depois, toque num dia para pôr ou tirar.`}</p>`;
   const pr = prazoProblema(q);
   if (pr) {
     const fix = pr === 'retro' ? '<button class="linkish" data-cal-reset>Escolher outro início</button>'
@@ -2739,7 +2773,7 @@ VIEWS.quote = {
         <div class="field"><label for="q-name">Nome</label><input id="q-name" type="text" autocapitalize="words" autocomplete="off" placeholder="Nome do cliente" value="${esc(q.client.name)}"></div>
         <div class="grid2 stack">
           <div class="field"><label for="q-phone">WhatsApp</label><input id="q-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="(11) 90000-0000" value="${esc(fmtPhone(q.client.phone))}"></div>
-          <div class="field"><label for="q-doc">CPF ou CNPJ (opcional)</label><input id="q-doc" type="text" inputmode="numeric" autocomplete="off" placeholder="Sai no orçamento e no recibo" value="${esc(fmtDoc(q.client.doc))}"></div>
+          <div class="field"><label for="q-doc">CPF ou CNPJ <span class="lab-opt">opcional</span></label><input id="q-doc" type="text" inputmode="numeric" autocomplete="off" placeholder="Sai no orçamento e no recibo" value="${esc(fmtDoc(q.client.doc))}"></div>
         </div>
         <div class="field"><label for="q-addr">Endereço da obra</label><input id="q-addr" type="text" autocomplete="off" placeholder="Rua, número, bairro" value="${esc(q.client.address)}"></div>
         <div class="field"><label for="q-title">Serviço</label><input id="q-title" type="text" autocomplete="off" placeholder="Ex.: Troca do quadro e instalação de chuveiro" value="${esc(q.title)}"></div>
@@ -2756,8 +2790,8 @@ VIEWS.quote = {
         ${payBlockHTML(q, c)}
         ${daysBlockHTML(q)}
         <div class="grid2">
-          <div class="field"><label for="q-war">Garantia (dias)</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
-          ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade (dias)</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
+          <div class="field"><label for="q-war">Garantia, em dias</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
+          ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade, em dias</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
         </div>
       ${panelClose}
       ${panelOpen(`q:${q.id}:notes`, 'notes', 'Observações', S.notes)}
@@ -3180,7 +3214,7 @@ function tripSheet(q) {
   openSheet({ title: 'Deslocamento', body: `
       <div class="seg" role="group" aria-label="Como cobrar"><button data-mode="calc" aria-pressed="${mode === 'calc'}">Calcular pela distância</button><button data-mode="fixed" aria-pressed="${mode === 'fixed'}">Valor fixo</button></div>
       <div id="tp-calc" class="stack14"${mode === 'fixed' ? ' hidden' : ''}>
-        <div class="field"><label for="tp-km">Distância até a obra (km, só ida)</label><input id="tp-km" type="text" inputmode="decimal" placeholder="Ex.: 18" value="${t.km ? fmtQty(t.km) : ''}">
+        <div class="field"><label for="tp-km">Distância até a obra, em km, só ida</label><input id="tp-km" type="text" inputmode="decimal" placeholder="Ex.: 18" value="${t.km ? fmtQty(t.km) : ''}">
           ${q.client.address ? `<a class="linkish" href="${mapsLink(q.client.address)}" target="_blank" rel="noopener">${I.pin}Ver a rota e a distância no mapa</a>` : '<p class="hint">Com o endereço da obra preenchido, dá para abrir a rota no mapa.</p>'}</div>
         <label class="switch-row" for="tp-rt"><span><b>Ida e volta</b><small>Conta o caminho de volta também.</small></span><input type="checkbox" class="sw" id="tp-rt" ${t.roundTrip ? 'checked' : ''}></label>
         <div class="field"><span class="lab">Visitas à obra</span>
@@ -3188,16 +3222,16 @@ function tripSheet(q) {
           <p class="hint">Uma ida por dia de serviço. Some a visita para orçar, se for cobrar por ela.</p></div>
         <div class="subcard"><div class="card-hr"><b>${I.car}Seu veículo</b><span class="hint">fica salvo</span></div>
           <div class="grid2">
-            <div class="field"><label for="tp-kml">Consumo (km por litro)</label><input id="tp-kml" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${t.kmPerL ? fmtQty(t.kmPerL) : ''}"></div>
-            <div class="field"><label for="tp-fuel">Combustível (litro)</label>${money('tp-fuel', t.fuelPrice, 'Ex.: R$ 6,19')}</div>
+            <div class="field"><label for="tp-kml">Consumo, em km por litro</label><input id="tp-kml" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${t.kmPerL ? fmtQty(t.kmPerL) : ''}"></div>
+            <div class="field"><label for="tp-fuel">Preço do litro do combustível</label>${money('tp-fuel', t.fuelPrice, 'Ex.: R$ 6,19')}</div>
           </div></div>
-        <details class="more"${t.toll || t.minutes || t.wearPerKm ? ' open' : ''}><summary>Outros custos (opcional)</summary><div class="more-in">
+        <details class="more"${t.toll || t.minutes || t.wearPerKm ? ' open' : ''}><summary>Outros custos <span class="lab-opt">opcional</span></summary><div class="more-in">
           <div class="field"><label for="tp-toll">Pedágio e estacionamento por visita</label>${money('tp-toll', t.toll)}</div>
           <div class="grid2">
-            <div class="field"><label for="tp-min">Tempo de viagem (min, só ida)</label><input id="tp-min" type="text" inputmode="numeric" placeholder="Ex.: 30" value="${t.minutes || ''}"></div>
+            <div class="field"><label for="tp-min">Tempo de viagem, em minutos, só ida</label><input id="tp-min" type="text" inputmode="numeric" placeholder="Ex.: 30" value="${t.minutes || ''}"></div>
             <div class="field"><label for="tp-hour">Valor da sua hora</label>${money('tp-hour', t.hourRate)}</div>
           </div>
-          <div class="field"><label for="tp-wear">Desgaste do veículo (por km)</label>${money('tp-wear', t.wearPerKm)}<p class="hint">Pneus, óleo, manutenção e depreciação. Sem isso, o cálculo cobre só o combustível.</p></div>
+          <div class="field"><label for="tp-wear">Desgaste do veículo por km</label>${money('tp-wear', t.wearPerKm)}<p class="hint">Pneus, óleo, manutenção e depreciação. Sem isso, o cálculo cobre só o combustível.</p></div>
         </div></details>
         <div class="breakdown" id="tp-out" aria-live="polite"></div>
       </div>
@@ -3257,7 +3291,7 @@ function paperHTML(q, c, mode = docMode(q)) {
     body = roomList(q).filter(g => g.items.length).map(g => {
       const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
       const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
-      return `<tr class="p-sec"><td colspan="2">${esc(g.name)}</td></tr>${svc.length ? `<tr class="p-kind"><td colspan="2">Mão de obra</td></tr>${svc.map(i => row(i)).join('')}` : ''}${mat.length ? `<tr class="p-kind"><td colspan="2">Material${c.matIn ? '' : ' (cliente)'}</td></tr>${mat.map(i => row(i, !c.matIn)).join('')}` : ''}<tr class="p-sub"><td>Subtotal ${esc(g.name)}</td><td>${BRL(st)}</td></tr>`;
+      return `<tr class="p-sec"><td colspan="2">${esc(g.name)}</td></tr>${svc.length ? `<tr class="p-kind"><td colspan="2">Mão de obra</td></tr>${svc.map(i => row(i)).join('')}` : ''}${mat.length ? `<tr class="p-kind"><td colspan="2">Material${c.matIn ? '' : ' por conta do cliente'}</td></tr>${mat.map(i => row(i, !c.matIn)).join('')}` : ''}<tr class="p-sub"><td>Subtotal ${esc(g.name)}</td><td>${BRL(st)}</td></tr>`;
     }).join('');
     if (!body) body = '<tr class="dim"><td colspan="2">Nenhum item lançado</td></tr>';
     else if (c.mat.length && !c.matIn) body += `<tr class="p-note"><td colspan="2">${rep ? 'Material fornecido pelo cliente: valores de referência, fora do total.' : 'Material por conta do cliente: valores estimados, fora do total.'}</td></tr>`;
@@ -3287,9 +3321,9 @@ function paperHTML(q, c, mode = docMode(q)) {
     <div class="p-tot">
       <div><span>Mão de obra</span><b>${BRL(c.labor)}</b></div>
       ${c.extra ? `<div><span>Adicionais (+${c.surPct}%)</span><b>${BRL(c.extra)}</b></div>` : ''}
-      ${c.mat.length ? `<div><span>Material${c.matIn ? '' : ' (cliente)'}</span><b>${c.matIn ? BRL(c.matTotal) : '—'}</b></div>` : ''}
+      ${c.mat.length ? `<div><span>Material${c.matIn ? '' : ' por conta do cliente'}</span><b>${c.matIn ? BRL(c.matTotal) : '—'}</b></div>` : ''}
       ${c.travel ? `<div><span>Deslocamento</span><b>${BRL(c.travel)}</b></div>` : ''}
-      ${c.discount ? `<div><span>Desconto${q.discount.mode === 'pct' ? ` (${fmtQty(q.discount.pct)}%)` : ''}</span><b>−${BRL(c.discount)}</b></div>` : ''}
+      ${c.discount ? `<div><span>Desconto${q.discount.mode === 'pct' ? ` de ${fmtQty(q.discount.pct)}%` : ''}</span><b>−${BRL(c.discount)}</b></div>` : ''}
       <div class="p-grand"><span>TOTAL</span><span>${BRL(c.total)}</span></div>
     </div>
     <dl class="p-cond">
@@ -3377,7 +3411,7 @@ function shareMore(q) {
   const c = compute(q), px = pixOf(q, c);
   openSheet({ title: 'Mais opções', body: `<div class="opts">
       <button class="opt" data-o="copy">${I.copy}<span>Copiar texto${isReport(q) ? '' : ' da proposta'}<small>Para colar em outro aplicativo</small></span></button>
-      ${q.useRooms && q.items.length ? `<button class="opt" data-o="conf">${I.list}<span>Conferência por ambiente (PDF)<small>Quantidades de cada cômodo, sem preços, para conferir na obra</small></span></button>` : ''}
+      ${q.useRooms && q.items.length ? `<button class="opt" data-o="conf">${I.list}<span>PDF da conferência por ambiente<small>Quantidades de cada cômodo, sem preços, para conferir na obra</small></span></button>` : ''}
       ${c.mat.length ? `<a class="opt" data-o="mat" href="${waLink(q.client.phone, materialMessage(q, c))}" target="_blank" rel="noopener">${I.wa}<span>Lista de material pelo WhatsApp<small>Total de cada item, para o cliente comprar</small></span></a>` : ''}
       ${px ? `<button class="opt" data-o="pix">${I.pix}<span>QR code do Pix<small>${BRL(px.value)} · ${px.what}</small></span></button>` : ''}
       <button class="opt" data-o="status">${I.flag}<span>Alterar situação<small>Agora: ${STATUS[q.status]}</small></span></button>
@@ -3409,7 +3443,7 @@ const signature = () => [settings.name, settings.company && settings.company !==
 function quoteMessage(q, c, mode = docMode(q)) {
   const L = [], fn = firstName(q.client.name), rep = mode === 'report';
   const line = (i, tag) => `• ${i.name}${tag && i.kind === 'mat' ? ' (material)' : ''}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)} = ${BRL(lineTotal(i))}`;
-  L.push(rep ? `Olá${fn ? ', ' + fn : ''}! Segue o relatório dos serviços executados${q.dates.length > 1 ? ' ' + (seguidos(q.dates) ? '' : 'em ') + execText(q) : q.doneAt ? ' em ' + fmtDate(q.doneAt) : ''} (${numLabel(q)}${q.title ? ' – ' + q.title : ''}).`
+  L.push(rep ? `Olá${fn ? ', ' + fn : ''}! Segue o relatório dos serviços executados${q.dates.length > 1 ? ' ' + (seguidos(q.dates) ? '' : 'em ') + execText(q) : q.doneAt ? ' em ' + fmtDate(q.doneAt) : ''}, ${numLabel(q)}${q.title ? ' – ' + q.title : ''}.`
     : `Olá${fn ? ', ' + fn : ''}! Segue o orçamento ${numLabel(q)}${q.title ? ' – ' + q.title : ''}.`);
   if (rep && q.diag.trim()) L.push('', '*Diagnóstico:*', q.diag.trim());
   if (rep && q.work.trim()) L.push('', '*Serviços realizados:*', q.work.trim());
@@ -3430,7 +3464,7 @@ function quoteMessage(q, c, mode = docMode(q)) {
   L.push('', `Mão de obra: ${BRL(c.labor)}`);
   if (c.extra) L.push(`Adicionais – ${extrasText(q).replace(/^./, ch => ch.toLowerCase())}: ${BRL(c.extra)}`);
   if (c.mat.length && c.matIn) L.push(`Material: ${BRL(c.matTotal)}`);
-  if (c.travel) L.push(`Deslocamento${q.trip ? ` (${tripShort(q.trip)})` : ''}: ${BRL(c.travel)}`);
+  if (c.travel) L.push(`Deslocamento${q.trip ? `, ${tripShort(q.trip)}` : ''}: ${BRL(c.travel)}`);
   if (c.discount) L.push(`Desconto: −${BRL(c.discount)}`);
   L.push(`*Total: ${BRL(c.total)}*`, '', `*Pagamento:* ${payText(q, c)}`);
   if (outrasTxt(q)) L.push(`*Ou, se preferir:* ${capFirst(outrasTxt(q))}`);
@@ -3440,18 +3474,18 @@ function quoteMessage(q, c, mode = docMode(q)) {
   if (!rep && q.validity) L.push(`Proposta válida até ${fmtDate(c.validUntil)}.`);
   if (rep && q.recs.trim()) L.push('', '*Recomendações:*', q.recs.trim());
   if (q.notes.trim()) L.push('', q.notes.trim());
-  const px = pixOf(q, c, mode); if (px) L.push('', `Pix para ${px.what} (${BRL(px.value)}): ${px.key}`);
+  const px = pixOf(q, c, mode); if (px) L.push('', `Pix para ${px.what}, ${BRL(px.value)}: ${px.key}`);
   if (!rep && (q.status === 'rascunho' || q.status === 'enviado')) L.push('', 'Para aprovar, é só responder *De acordo* nesta conversa.');
   const sig = signature(); if (sig.length) L.push('', ...sig);
   return L.join('\n');
 }
 function followMessage(q, c) {
   const fn = firstName(q.client.name);
-  return `Olá${fn ? ', ' + fn : ''}, tudo bem? Passando para saber se você conseguiu ver o orçamento ${numLabel(q)}${q.title ? ` (${q.title})` : ''}, no valor de ${BRL(c.total)}. Se quiser ajustar alguma coisa, é só me falar.${settings.name ? `\n${firstName(settings.name)}` : ''}`;
+  return `Olá${fn ? ', ' + fn : ''}, tudo bem? Passando para saber se você conseguiu ver o orçamento ${numLabel(q)}${q.title ? `, “${q.title}”,` : ''} no valor de ${BRL(c.total)}. Se quiser ajustar alguma coisa, é só me falar.${settings.name ? `\n${firstName(settings.name)}` : ''}`;
 }
 function materialMessage(q, c) {
   const fn = firstName(q.client.name), L = consolidate(q, 'mat');
-  return [`Olá${fn ? ', ' + fn : ''}! Esta é a lista de material para o serviço${q.title ? ` (${q.title})` : ''}:`, '',
+  return [`Olá${fn ? ', ' + fn : ''}! Esta é a lista de material para o serviço${q.title ? ` “${q.title}”` : ''}:`, '',
     ...L.map(e => `• ${fmtQty(e.qty)} ${unitTxt(e.qty, e.unit)} – ${e.name}`), '',
     `Valor estimado: ${BRL(c.matTotal)} (pode variar conforme a loja).`, ...(signature().length ? ['', ...signature()] : [])].join('\n');
 }
@@ -3691,7 +3725,7 @@ async function buildQuotePDF(q, mode = docMode(q)) {
       const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
       curRoom = ''; section(g.name); curRoom = g.name;
       if (svc.length) { kindLabel('Mão de obra'); svc.forEach(i => row(i)); }
-      if (mat.length) { kindLabel(c.matIn ? 'Material' : 'Material (cliente)'); mat.forEach(i => row(i, !c.matIn)); }
+      if (mat.length) { kindLabel(c.matIn ? 'Material' : 'Material por conta do cliente'); mat.forEach(i => row(i, !c.matIn)); }
       const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
       if (need(6.5)) brk();
       txt(`Subtotal ${g.name}`, unitR, y + 4.4, { size: 8.6, color: PC.muted, align: 'right' });
@@ -3708,9 +3742,9 @@ async function buildQuotePDF(q, mode = docMode(q)) {
   y += 5;
   const rows = [['Mão de obra', BRL(c.labor)]];
   if (c.extra) rows.push([`Adicionais (+${c.surPct}%)`, BRL(c.extra)]);
-  if (c.mat.length) rows.push([c.matIn ? 'Material' : 'Material (cliente)', c.matIn ? BRL(c.matTotal) : '-']);
+  if (c.mat.length) rows.push([c.matIn ? 'Material' : 'Material por conta do cliente', c.matIn ? BRL(c.matTotal) : '-']);
   if (c.travel) rows.push(['Deslocamento', BRL(c.travel)]);
-  if (c.discount) rows.push(['Desconto' + (q.discount.mode === 'pct' ? ` (${fmtQty(q.discount.pct)}%)` : ''), '- ' + BRL(c.discount)]);
+  if (c.discount) rows.push(['Desconto' + (q.discount.mode === 'pct' ? ` de ${fmtQty(q.discount.pct)}%` : ''), '- ' + BRL(c.discount)]);
   const totH = rows.length * 6 + 13;
   need(Math.max(totH, px && qr ? 34 : 0) + 6);
   const bw = 82, bx = M + CW - bw, top = y;
@@ -3863,7 +3897,7 @@ function receiptSheet(q) {
   openSheet({ title: 'Recibo de pagamento', body: `
       <div class="field"><label for="rc-val">Valor recebido</label><input id="rc-val" type="text" inputmode="numeric" data-money value="${BRL(def)}"></div>
       ${linhas([['Total', c.payTotal], q.payment.mode === 'entrada' ? ['Entrada', c.entry] : null, q.payment.mode === 'entrada' ? ['Restante', c.rest] : null].filter(Boolean).map(([l, v]) => linha(`data-v="${v}"`, l, { tipo: 'um', on: v === def, dir: BRL(v) })), ' role="group" aria-label="Sugestões de valor"')}
-      <div class="field"><label for="rc-ref">Referente a</label><input id="rc-ref" type="text" value="${esc((q.title || 'serviços elétricos').replace(/^./, ch => ch.toLowerCase()))} (${isReport(q) ? 'relatório' : 'orçamento'} ${esc(numLabel(q))})"></div>
+      <div class="field"><label for="rc-ref">Referente a</label><input id="rc-ref" type="text" value="${esc((q.title || 'serviços elétricos').replace(/^./, ch => ch.toLowerCase()))}, ${isReport(q) ? 'relatório' : 'orçamento'} ${esc(numLabel(q))}"></div>
       <div class="field"><span class="lab">Forma de pagamento</span><div class="seg" role="group">${['Pix', 'Dinheiro', 'Cartão', 'Transferência'].map(m => `<button data-m="${m}" aria-pressed="${m === method}">${m}</button>`).join('')}</div></div>
       <p class="hint" id="rc-ext"></p>`,
     foot: `<button class="btn primary" data-go>${I.share}Gerar recibo em PDF</button>`,
@@ -3892,7 +3926,7 @@ async function buildReceiptPDF(q, value, ref, method) {
   label('Valor', M + CW - 66, y + 5.5);
   txt(BRL(value), M + CW - 4, y + 13, { size: 16, bold: true, align: 'right' });
   y += 30;
-  const body = `Recebi de ${q.client.name || 'cliente'}${q.client.doc ? ', ' + fmtDoc(q.client.doc) + ',' : ''} a importância de ${BRL(value)} (${extenso(value)}), referente a ${ref || 'serviços elétricos'}.`;
+  const body = `Recebi de ${q.client.name || 'cliente'}${q.client.doc ? ', ' + fmtDoc(q.client.doc) + ',' : ''} a importância de ${BRL(value)}, ${extenso(value)}, referente a ${ref || 'serviços elétricos'}.`;
   wrap(body, CW, 12).forEach(t => { txt(t, M, y, { size: 12 }); y += 6.6; });
   y += 3;
   txt(`Forma de pagamento: ${method}.`, M, y, { size: 12 }); y += 14;
@@ -4006,7 +4040,7 @@ function adjustSheet() {
   const nv = p => Math.round(p.price * (1 + pct / 100));
   const prev = () => affected().slice(0, 3).map(p => `<div class="vrow"><span style="font-size:14.5px">${esc(p.name)}</span><b>${BRL(p.price)} → ${BRL(nv(p))}</b></div>`).join('');
   openSheet({ title: 'Reajustar preços', body: `
-      <p class="hint">Aumenta (ou diminui, com sinal de menos) todos os preços de uma vez. Bom para acompanhar a inflação ou o aumento do material.</p>
+      <p class="hint">Aumenta ou diminui, com sinal de menos, todos os preços de uma vez. Bom para acompanhar a inflação ou o aumento do material.</p>
       <div class="seg" role="group" aria-label="Quais preços"><button data-sc="svc" aria-pressed="${scope === 'svc'}">Mão de obra</button><button data-sc="mat" aria-pressed="${scope === 'mat'}">Material</button><button data-sc="all" aria-pressed="false">Todos</button></div>
       <div class="field"><label for="aj-pct">Percentual</label><div class="stepper" style="width:100%"><button data-ap="-1" aria-label="Menos">${I.minus}</button><input id="aj-pct" type="text" inputmode="decimal" value="10%" style="flex:1;width:auto"><button data-ap="1" aria-label="Mais">${I.plus}</button></div></div>
       <div><span class="lab">Como fica</span><div class="vrows" id="aj-prev">${prev()}</div></div>`,
@@ -4038,7 +4072,7 @@ const GESTAO = {
   checklist: { nome: 'Checklist', criar: 'Novo item', sub: 'Confira o que levar antes de ir e o que trazer antes de voltar da obra.' },
 };
 const margem = p => p.cost > 0 ? Math.round((p.price - p.cost) / p.cost * 100) : null;
-const margemTxt = p => { const m = margem(p); return m === null ? '' : m >= 0 ? `margem +${m}%` : `abaixo do custo (${m}%)`; };
+const margemTxt = p => { const m = margem(p); return m === null ? '' : m >= 0 ? `margem +${m}%` : `abaixo do custo, ${m}%`; };
 // materiais: três listas, como em Ferramentas — Em estoque (o que você tem, por marca), Repor (chegou ao mínimo ou
 // marcado como Preciso repor) e Catálogo (todos os materiais da tabela de Preços). Cada linha abre a caixa do material.
 let matFiltro = '';
@@ -4056,7 +4090,7 @@ function stockListHTML() {
   let resumo = '';
   if (f === 'estoque' && est.length && !qf) {
     const custo = sum(est.map(p => sum((p.lotes || []).map(l => Math.round(l.qty * (l.cost || 0)))))), repasse = sum(est.map(p => Math.round(p.price * p.stock)));
-    resumo = `<div class="g-sum" role="group" aria-label="Resumo do estoque"><div><b>${est.length}</b><span>${est.length === 1 ? 'material' : 'materiais'}</span></div><div><b>${BRL(custo)}</b><span>pago (custo)</span></div><div><b>${BRL(repasse)}</b><span>no repasse</span></div></div>`;
+    resumo = `<div class="g-sum" role="group" aria-label="Resumo do estoque"><div><b>${est.length}</b><span>${est.length === 1 ? 'material' : 'materiais'}</span></div><div><b>${BRL(custo)}</b><span>de custo</span></div><div><b>${BRL(repasse)}</b><span>no repasse</span></div></div>`;
   }
   const L = (f === 'estoque' ? est : f === 'repor' ? rep : mats).filter(bate);
   const linha = p => {
@@ -4086,12 +4120,19 @@ function matSheet(p) {
   if (!p) return;
   const corpo = () => {
     const L = p.lotes || [], tem = inStock(p);
-    return `<p class="hint">${esc(p.cat || 'Outros')} · cobrado por ${unitName(p.unit)}</p>
+    const cats = (() => { const o = catOrder('mat'); return [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = o.indexOf(a), ib = o.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); }); })();
+    // nome, categoria e unidade: editáveis também nos itens que vêm com o app
+    return `${panel(`mt:${p.id}:dados`, 'mt-dados', 'Nome, categoria e unidade', `${p.cat || 'Outros'} · por ${unitName(p.unit)}`, `<div class="stack14">
+        <div class="field"><label for="mt-name">Nome do material</label><input id="mt-name" type="text" value="${esc(p.name)}" autocomplete="off"></div>
+        <div class="field"><label for="mt-cat">Categoria</label><select id="mt-cat">${cats.map(c => `<option ${c === (p.cat || 'Outros') ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+          <input id="mt-cat-n" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
+        <div class="field"><label for="mt-unit">Cobrado por</label><select id="mt-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === p.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      </div>`)}
       ${panel(`mt:${p.id}:est`, '', 'Em estoque', tem ? resumoDe(L, l => `${l.brand || 'Sem marca'} ${fmtQty(l.qty)}`) : 'Nada no estoque', `${L.length ? `<div class="plist">${L.map(l => `<button class="prow" data-lote="${l.id}"><span><b>${esc(l.brand || 'Sem marca')}</b><small>${l.cost ? `custo ${BRL(l.cost)}` : 'sem custo'}</small></span><span class="prow-price${l.qty <= 0 ? ' g-zero' : ''}">${fmtQty(l.qty)} ${unitTxt(l.qty, p.unit)}</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem este material no estoque.</p>'}
       <button class="add-btn" data-novo-lote>${I.plus}${L.length ? 'Adicionar outra marca' : 'Tenho este material'}</button>`, { right: tem ? `${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}` : conta(0) })}
       <div class="grid2">
-        <div class="field"><label for="mt-price">Repasse ao cliente (por ${unitName(p.unit)})</label><input id="mt-price" type="text" inputmode="numeric" data-money value="${BRL(p.price)}"></div>
-        <div class="field"><label for="mt-min">Avisar quando chegar a (opcional)</label><input id="mt-min" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${p.min ? fmtQty(p.min) : ''}"></div>
+        <div class="field"><label for="mt-price">Repasse ao cliente por ${unitName(p.unit)}</label><input id="mt-price" type="text" inputmode="numeric" data-money value="${BRL(p.price)}"></div>
+        <div class="field"><label for="mt-min">Avisar quando chegar a <span class="lab-opt">opcional</span></label><input id="mt-min" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${p.min ? fmtQty(p.min) : ''}"></div>
       </div>
       <p class="g-margin" id="mt-margin" aria-live="polite">${margemHTML(p.cost || 0, p.price)}</p>
       <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos.${stockLow(p) ? ' Chegou ao mínimo: já está em Repor.' : ''}</p>
@@ -4112,7 +4153,21 @@ function matSheet(p) {
         if (e.target.id === 'mt-price') { const v = parseMoney(e.target.value); if (v !== null) { if (v !== p.price) p.ref = false; p.price = v; savePrices(); $('#mt-margin', s).innerHTML = margemHTML(p.cost || 0, p.price); } }
         if (e.target.id === 'mt-min') { p.min = Math.max(0, parseQty(e.target.value) || 0); savePrices(); }
       });
+      const resumoDados = () => { const sm = $('[data-sum="mt-dados"]', s); if (sm) sm.textContent = `${p.cat || 'Outros'} · por ${unitName(p.unit)}`; };
       s.addEventListener('change', e => {
+        if (e.target.id === 'mt-name') {
+          const nn = e.target.value.trim().replace(/\s+/g, ' ');
+          if (!nn) { e.target.value = p.name; return toast('Escreva o nome do material.'); }
+          if (prices.some(x => x !== p && x.kind === 'mat' && norm(x.name) === norm(nn))) { e.target.value = p.name; return toast('Já existe um material com esse nome.'); }
+          p.name = nn; savePrices(); const tt = $('.kf-dlg-tt'); if (tt) tt.textContent = nn; toast('Nome salvo.');
+        }
+        if (e.target.id === 'mt-cat') {
+          const cn = $('#mt-cat-n', s), nv = e.target.value === '__nova'; cn.hidden = !nv;
+          if (nv) { cn.focus(); return; }
+          p.cat = e.target.value; savePrices(); resumoDados(); toast('Categoria salva.');
+        }
+        if (e.target.id === 'mt-cat-n') { const c = e.target.value.trim().replace(/\s+/g, ' '); if (!c) return; p.cat = c; savePrices(); resumoDados(); toast('Categoria salva.'); }
+        if (e.target.id === 'mt-unit') { p.unit = e.target.value; savePrices(); resumoDados(); const lb = $('label[for="mt-price"]', s); if (lb) lb.textContent = 'Repasse ao cliente por ' + unitName(p.unit); toast('Unidade salva.'); }
         if (e.target.id === 'mt-repor') { p.repor = e.target.checked; if (p.repor && !p.reporQtd) p.reporQtd = sugestaoCompra(p); $('#mt-rq-f', s).hidden = !(p.repor || stockLow(p)); savePrices(); toast(p.repor ? `${p.name} na lista de compras.` : `${p.name} saiu da lista de compras.`); }
         if (e.target.id === 'mt-rq') { p.reporQtd = Math.max(1, parseQty(e.target.value) || 1); e.target.value = fmtQty(p.reporQtd); savePrices(); }
         if (e.target.id === 'mt-min' || e.target.id === 'mt-price') toast('Salvo.');
@@ -4131,9 +4186,9 @@ function loteSheet(p, lote, comprar) {
   const x = lote ? { ...lote } : { brand: '', qty: comprar || 1, cost: 0 };
   openSheet({ title: comprar ? 'Comprei' : isNew ? (inStock(p) ? 'Outra marca' : 'Tenho este material') : 'Marca no estoque', body: `
       <p class="hint"><b>${esc(p.name)}</b>${comprar ? '. A quantidade entra no estoque e o material sai da lista de compras.' : ''}</p>
-      <div class="field"><label for="lt-brand">Marca (opcional)</label><input id="lt-brand" type="text" value="${esc(x.brand)}" placeholder="Ex.: Steck" autocomplete="off"></div>
+      <div class="field"><label for="lt-brand">Marca <span class="lab-opt">opcional</span></label><input id="lt-brand" type="text" value="${esc(x.brand)}" placeholder="Ex.: Steck" autocomplete="off"></div>
       <div class="grid2">
-        <div class="field"><label for="lt-qty">${comprar ? 'Quantidade comprada' : 'Quantidade'} (${unitName(p.unit)})</label><div class="stepper" style="width:100%"><button data-lq="-1" aria-label="Menos">${I.minus}</button><input id="lt-qty" type="text" inputmode="decimal" value="${fmtQty(x.qty)}" style="flex:1;width:auto"><button data-lq="1" aria-label="Mais">${I.plus}</button></div></div>
+        <div class="field"><label for="lt-qty">${comprar ? 'Quantidade comprada' : 'Quantidade'}, em ${unitName(p.unit)}</label><div class="stepper" style="width:100%"><button data-lq="-1" aria-label="Menos">${I.minus}</button><input id="lt-qty" type="text" inputmode="decimal" value="${fmtQty(x.qty)}" style="flex:1;width:auto"><button data-lq="1" aria-label="Mais">${I.plus}</button></div></div>
         <div class="field"><label for="lt-cost">Custo por ${unitName(p.unit)}</label><input id="lt-cost" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${x.cost ? BRL(x.cost) : ''}"></div>
       </div>
       <p class="g-margin" id="lt-margin" aria-live="polite">${margemHTML(x.cost, p.price)}</p>`,
@@ -4177,17 +4232,17 @@ function stockSheet(p) {
   let modo = 'tenho';
   const ordem = catOrder('mat');
   const cats = [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = ordem.indexOf(a), ib = ordem.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); });
-  const opts = c => `<option value="" hidden>Escolha o material</option>${prices.filter(x => x.kind === 'mat' && (x.cat || 'Outros') === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(x => `<option value="${x.id}">${esc(x.name)}${inStock(x) ? ` (tem ${fmtQty(x.stock)})` : ''}</option>`).join('')}<option value="__novo">Outro material desta categoria…</option>`;
+  const opts = c => `<option value="" hidden>Escolha o material</option>${prices.filter(x => x.kind === 'mat' && (x.cat || 'Outros') === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(x => `<option value="${x.id}">${esc(x.name)}${inStock(x) ? ` · tem ${fmtQty(x.stock)}` : ''}</option>`).join('')}<option value="__novo">Outro material desta categoria…</option>`;
   openSheet({ title: 'Novo material', body: `
       <div class="field"><label for="st-cat-sel">1. Categoria</label><select id="st-cat-sel"><option value="" hidden>Escolha a categoria</option>${cats.map(c => `<option>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
         <input id="st-cat" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
-      <div class="field"><label for="st-mat">2. Material</label><select id="st-mat" disabled><option value="" hidden>Escolha antes a categoria</option></select><span class="hint">Os materiais do catálogo (a sua tabela de Preços) nesta categoria.</span></div>
+      <div class="field"><label for="st-mat">2. Material</label><select id="st-mat" disabled><option value="" hidden>Escolha antes a categoria</option></select><span class="hint">Os materiais desta categoria no catálogo, que é a sua tabela de Preços.</span></div>
       <div class="field" id="st-name-f" hidden><label for="st-name">Nome do material novo</label><input id="st-name" type="text" placeholder="Ex.: Disjuntor 20 A" autocomplete="off"><span class="hint">Ele entra também no catálogo e na tabela de Preços.</span></div>
       <div class="st-resto" id="st-resto" hidden>
         <div class="seg" role="group" aria-label="Situação"><button data-modo="tenho" aria-pressed="true">Tenho em estoque</button><button data-modo="repor" aria-pressed="false">Preciso comprar</button></div>
         <div class="grid2" id="st-un-f"><div class="field"><label for="st-unit">Unidade</label><select id="st-unit">${UNITS.filter(([u]) => !['ponto', 'h', 'vb'].includes(u)).map(([u, l]) => `<option value="${esc(u)}">${l}</option>`).join('')}</select></div>
           <div class="field"><label for="st-price">Repasse ao cliente</label><input id="st-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00"></div></div>
-        <div class="field" id="st-brand-f"><label for="st-brand">Marca (opcional)</label><input id="st-brand" type="text" placeholder="Ex.: Steck" autocomplete="off"></div>
+        <div class="field" id="st-brand-f"><label for="st-brand">Marca <span class="lab-opt">opcional</span></label><input id="st-brand" type="text" placeholder="Ex.: Steck" autocomplete="off"></div>
         <div class="grid2">
           <div class="field"><label for="st-qty">Quantidade</label><div class="stepper" style="width:100%"><button data-sq="-1" aria-label="Menos">${I.minus}</button><input id="st-qty" type="text" inputmode="decimal" value="1" style="flex:1;width:auto"><button data-sq="1" aria-label="Mais">${I.plus}</button></div></div>
           <div class="field" id="st-cost-f"><label for="st-cost">Custo por unidade</label><input id="st-cost" type="text" inputmode="numeric" data-money placeholder="R$ 0,00"></div>
@@ -4277,15 +4332,20 @@ function toolsListHTML() {
 function typeSheet(t) {
   if (!t) return;
   const corpo = () => {
-    const its = itensDe(t.id);
-    return `<p class="hint">${esc(t.cat)}</p>
+    const its = itensDe(t.id), cats = [...new Set([...TOOL_CATS, ...tiposTool().map(x => x.cat)])];
+    // nome e categoria: editáveis também nas ferramentas que vêm com o app
+    return `${panel(`tp:${t.id}:dados`, 'tp-dados', 'Nome e categoria', t.cat, `<div class="stack14">
+        <div class="field"><label for="tp-name">Nome da ferramenta</label><input id="tp-name" type="text" value="${esc(t.name)}" autocomplete="off"></div>
+        <div class="field"><label for="tp-cat">Categoria</label><select id="tp-cat">${cats.map(c => `<option ${c === t.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+          <input id="tp-cat-n" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
+      </div>`)}
       ${panel(`tp:${t.id}:minhas`, '', 'Minhas ferramentas', its.length ? resumoDe(its, it => itemTxt(it) || 'Sem marca e modelo') : 'Nenhuma ainda', `${its.length ? `<div class="plist">${its.map(it => `<button class="prow" data-item="${it.id}"><span><b>${esc(itemTxt(it) || 'Sem marca e modelo')}</b></span><span class="prow-price">${it.qty} un.</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem esta ferramenta cadastrada como sua.</p>'}
       <button class="add-btn" data-novo-item>${I.plus}${its.length ? 'Adicionar outra marca ou modelo' : 'Tenho esta ferramenta'}</button>`, { right: conta(sum(its.map(i => i.qty))) })}
       <label class="switch-row" for="tp-quero"><span><b>Quero comprar</b><small>Entra na lista de compras.</small></span><input type="checkbox" class="sw" id="tp-quero" ${t.quero ? 'checked' : ''}></label>
       <div class="field" id="tp-qq-f" ${t.quero ? '' : 'hidden'}><label for="tp-qq">Quantas quer comprar</label><div class="tp-qq-row"><div class="stepper"><button data-qq="-1" aria-label="Menos">${I.minus}</button><input id="tp-qq" type="text" inputmode="numeric" value="${t.queroQtd}"><button data-qq="1" aria-label="Mais">${I.plus}</button></div><button class="btn ok" data-comprei>${I.check}Comprei</button></div></div>`;
   };
   openSheet({ title: t.name, body: `<div id="tp-corpo" class="tp-corpo">${corpo()}</div>`,
-    foot: `${t.seed ? '' : `<button class="btn danger-text" data-del>${I.trash}Excluir</button>`}<button class="btn primary${t.seed ? ' block' : ''}" data-ok>Pronto</button>`,
+    foot: `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-ok>Pronto</button>`,
     onClose: () => rerender(),
     onMount: s => {
       s.addEventListener('click', e => {
@@ -4295,6 +4355,15 @@ function typeSheet(t) {
         const qq = e.target.closest('[data-qq]'); if (qq) { t.queroQtd = Math.max(1, Math.min(999, t.queroQtd + +qq.dataset.qq)); $('#tp-qq', s).value = t.queroQtd; saveTools(); }
       });
       s.addEventListener('change', e => {
+        if (e.target.id === 'tp-name') {
+          const nn = e.target.value.trim().replace(/\s+/g, ' ');
+          if (!nn) { e.target.value = t.name; return toast('Escreva o nome da ferramenta.'); }
+          if (tiposTool().some(x => x !== t && norm(x.name) === norm(nn))) { e.target.value = t.name; return toast('Já existe uma ferramenta com esse nome.'); }
+          t.name = nn; saveTools(); const tt = $('.kf-dlg-tt'); if (tt) tt.textContent = nn; toast('Nome salvo.');
+        }
+        const poeCat = c => { t.cat = c; saveTools(); const sm = $('[data-sum="tp-dados"]', s); if (sm) sm.textContent = c; toast('Categoria salva.'); };
+        if (e.target.id === 'tp-cat') { const cn = $('#tp-cat-n', s), nv = e.target.value === '__nova'; cn.hidden = !nv; if (nv) cn.focus(); else poeCat(e.target.value); }
+        if (e.target.id === 'tp-cat-n') { const c = e.target.value.trim().replace(/\s+/g, ' '); if (c) poeCat(c); }
         if (e.target.id === 'tp-quero') { t.quero = e.target.checked; $('#tp-qq-f', s).hidden = !t.quero; saveTools(); toast(t.quero ? `${t.name} na lista de compras.` : `${t.name} saiu da lista de compras.`); }
         if (e.target.id === 'tp-qq') { t.queroQtd = Math.max(1, Math.min(999, parseInt(e.target.value, 10) || 1)); e.target.value = t.queroQtd; saveTools(); }
       });
@@ -4315,8 +4384,8 @@ function itemSheet(it, tipo, daLista, comprei) {
   openSheet({ title: comprei ? 'Comprei' : isNew ? 'Tenho esta ferramenta' : 'Minha ferramenta', body: `
       <p class="hint"><b>${esc(tipo.name)}</b> · ${esc(tipo.cat)}${comprei ? '. Diga a marca e o modelo: ela vai para Minhas ferramentas e sai da lista de compras.' : ''}</p>
       <div class="grid2">
-        <div class="field"><label for="it-brand">Marca (opcional)</label><input id="it-brand" type="text" value="${esc(x.brand)}" placeholder="Ex.: Bosch" autocomplete="off"></div>
-        <div class="field"><label for="it-model">Modelo (opcional)</label><input id="it-model" type="text" value="${esc(x.model)}" placeholder="Ex.: GSB 13 RE" autocomplete="off"></div>
+        <div class="field"><label for="it-brand">Marca <span class="lab-opt">opcional</span></label><input id="it-brand" type="text" value="${esc(x.brand)}" placeholder="Ex.: Bosch" autocomplete="off"></div>
+        <div class="field"><label for="it-model">Modelo <span class="lab-opt">opcional</span></label><input id="it-model" type="text" value="${esc(x.model)}" placeholder="Ex.: GSB 13 RE" autocomplete="off"></div>
       </div>
       <div class="field"><label for="it-qty">Quantidade</label><div class="stepper"><button data-iq2="-1" aria-label="Menos">${I.minus}</button><input id="it-qty" type="text" inputmode="numeric" value="${x.qty}"><button data-iq2="1" aria-label="Mais">${I.plus}</button></div></div>`,
     foot: isNew ? `<button class="btn ghost" data-cancel>Voltar</button><button class="btn primary" data-save>${comprei ? I.check + 'Confirmar compra' : I.plus + 'Adicionar'}</button>` : `<button class="btn danger-text" data-del>${I.trash}Não tenho mais</button><button class="btn primary" data-save>Salvar</button>`,
@@ -4344,7 +4413,7 @@ function itemSheet(it, tipo, daLista, comprei) {
 // nova ferramenta: 1. categoria, 2. ferramenta do catálogo (ou uma nova), depois se é sua ou se quer comprar
 function newToolSheet() {
   let modo = 'minha';
-  const opts = c => `<option value="" hidden>Escolha a ferramenta</option>${tiposTool().filter(t => t.cat === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => `<option value="${t.id}">${esc(t.name)}${temTool(t) ? ' (já tem)' : ''}</option>`).join('')}<option value="__novo">Outra ferramenta desta categoria…</option>`;
+  const opts = c => `<option value="" hidden>Escolha a ferramenta</option>${tiposTool().filter(t => t.cat === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => `<option value="${t.id}">${esc(t.name)}${temTool(t) ? ' · já tem' : ''}</option>`).join('')}<option value="__novo">Outra ferramenta desta categoria…</option>`;
   openSheet({ title: 'Nova ferramenta', body: `
       <div class="field"><label for="nt-cat">1. Categoria</label><select id="nt-cat"><option value="" hidden>Escolha a categoria</option>${toolCats().map(c => `<option>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
         <input id="nt-cat-nova" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
@@ -4353,8 +4422,8 @@ function newToolSheet() {
       <div class="st-resto" id="nt-resto" hidden>
         <div class="seg" role="group" aria-label="Situação"><button data-modo="minha" aria-pressed="true">É minha</button><button data-modo="quero" aria-pressed="false">Quero comprar</button></div>
         <div class="grid2" id="nt-marca">
-          <div class="field"><label for="nt-brand">Marca (opcional)</label><input id="nt-brand" type="text" placeholder="Ex.: Bosch" autocomplete="off"></div>
-          <div class="field"><label for="nt-model">Modelo (opcional)</label><input id="nt-model" type="text" placeholder="Ex.: GSB 13 RE" autocomplete="off"></div>
+          <div class="field"><label for="nt-brand">Marca <span class="lab-opt">opcional</span></label><input id="nt-brand" type="text" placeholder="Ex.: Bosch" autocomplete="off"></div>
+          <div class="field"><label for="nt-model">Modelo <span class="lab-opt">opcional</span></label><input id="nt-model" type="text" placeholder="Ex.: GSB 13 RE" autocomplete="off"></div>
         </div>
         <div class="field"><label for="nt-qty">Quantidade</label><div class="stepper"><button data-nq="-1" aria-label="Menos">${I.minus}</button><input id="nt-qty" type="text" inputmode="numeric" value="1"><button data-nq="1" aria-label="Mais">${I.plus}</button></div></div>
       </div>`,
@@ -4406,7 +4475,7 @@ function comprasSheet() {
     ...tiposTool().filter(t => t.quero).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => ({ k: 'f', id: t.id, nome: t.name, marca: '', un: 'un', qtd: t.queroQtd || 1, on: true, info: t.cat })),
   ];
   const texto = () => {
-    const linha = x => `• ${x.nome}${x.marca ? ` (${x.marca})` : ''}: ${fmtQty(x.qtd)} ${unitTxt(x.qtd, x.un)}`;
+    const linha = x => `• ${x.nome}${x.marca ? `, ${x.marca}` : ''}: ${fmtQty(x.qtd)} ${unitTxt(x.qtd, x.un)}`;
     const M = L.filter(x => x.on && x.k === 'm'), F = L.filter(x => x.on && x.k === 'f');
     return [`*Lista de compras*${settings.company || settings.name ? ` · ${settings.company || settings.name}` : ''}`, M.length && `\n*Material*\n${M.map(linha).join('\n')}`, F.length && `\n*Ferramentas*\n${F.map(linha).join('\n')}`].filter(Boolean).join('\n');
   };
@@ -4459,7 +4528,7 @@ function comprasSheet() {
 const checkNome = c => { const t = c.toolId && tools.find(x => x.id === c.toolId); return t ? t.name : c.name; };
 function checklistHTML() {
   const faltam = tiposTool().filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
-  const addTools = faltam.length ? `<button class="btn sm ghost" data-ck-tools>${I.plus}${checks.length ? `Adicionar ferramentas que faltam (${faltam.length})` : `Adicionar minhas ${plural(faltam.length, 'ferramenta', 'ferramentas')}`}</button>` : '';
+  const addTools = faltam.length ? `<button class="btn sm ghost" data-ck-tools>${I.plus}${checks.length ? `Adicionar ${plural(faltam.length, 'ferramenta que falta', 'ferramentas que faltam')}` : `Adicionar minhas ${plural(faltam.length, 'ferramenta', 'ferramentas')}`}</button>` : '';
   if (!checks.length) return KitFacil.ui.vazio({ titulo: 'Checklist vazio', texto: 'Monte uma vez a lista do que sempre vai para a obra. Toque em <b>Novo item</b>' + (faltam.length ? ' ou adicione as suas ferramentas de uma vez.' : '.'), icone: I.checklist, acao: addTools });
   const lista = checks.filter(c => checkLado === 'ida' || c.back);
   const k = checkLado, feitos = lista.filter(c => c[k]).length, tot = lista.length, pct = tot ? Math.round(feitos / tot * 100) : 0;
@@ -4602,11 +4671,11 @@ function cartaoAjHTML(s) {
   const cel = (k, l) => `<label class="tx-cel"><span>${l}</span><input type="text" inputmode="decimal" data-rate="${k}" value="${v(k)}" placeholder="0" aria-label="Taxa ${l} (%)"></label>`;
   return `<div class="field"><span class="lab" id="aj-jur-l">Cartão: juros e taxas</span><div class="seg" role="group" aria-labelledby="aj-jur-l">${[['sem', 'Sem juros'], ['taxa', 'Taxa da maquininha'], ['mes', 'Juros ao mês']].map(([k, l]) => `<button data-aj-jur="${k}" aria-pressed="${(s.cardJuros || 'sem') === k}">${l}</button>`).join('')}</div>
       <span class="kf-ajuda">Como começa todo orçamento novo no cartão. Dá para mudar em cada orçamento.</span></div>
-    <div class="field"><span class="lab">Taxa da maquininha (%)</span><div class="tx-grid">${cel('debito', 'Débito')}${Array.from({ length: 12 }, (_, i) => cel(String(i + 1), `${i + 1}×`)).join('')}</div>
+    <div class="field"><span class="lab">Taxa da maquininha, em %</span><div class="tx-grid">${cel('debito', 'Débito')}${Array.from({ length: 12 }, (_, i) => cel(String(i + 1), `${i + 1}×`)).join('')}</div>
       <span class="kf-ajuda">Copie da sua maquininha ou do app do banco. ${(s.cardPaga || 'cliente') === 'cliente' ? 'Repassada ao cliente: ele paga o suficiente para você receber o valor cheio.' : 'Paga por você: o cliente paga o valor do orçamento e você recebe menos.'}</span></div>
     <div class="grid2"><div class="field"><span class="lab" id="aj-paga-l">Quem paga a taxa</span><div class="seg" role="group" aria-labelledby="aj-paga-l"><button data-aj-paga="cliente" aria-pressed="${(s.cardPaga || 'cliente') === 'cliente'}">O cliente</button><button data-aj-paga="eu" aria-pressed="${s.cardPaga === 'eu'}">Eu</button></div></div>
-      <div class="field"><label for="st-cardSemAte">Sem juros até (parcelas)</label><input id="st-cardSemAte" data-set="cardSemAte" data-int type="text" inputmode="numeric" placeholder="0" value="${s.cardSemAte || ''}"></div></div>
-    <div class="field"><label for="st-cardMes">Juros ao mês (%)</label><input id="st-cardMes" data-set="cardMes" data-dec type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${s.cardMes ? fmtQty(s.cardMes) : ''}"></div>`;
+      <div class="field"><label for="st-cardSemAte">Sem juros até quantas parcelas</label><input id="st-cardSemAte" data-set="cardSemAte" data-int type="text" inputmode="numeric" placeholder="0" value="${s.cardSemAte || ''}"></div></div>
+    <div class="field"><label for="st-cardMes">Juros ao mês, em %</label><input id="st-cardMes" data-set="cardMes" data-dec type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${s.cardMes ? fmtQty(s.cardMes) : ''}"></div>`;
 }
 const ICONES_AJ = {
   pix: '<path d="m12 3 9 9-9 9-9-9z"/><path d="m8.5 12 3.5-3.5 3.5 3.5-3.5 3.5z"/>',
@@ -4619,7 +4688,7 @@ VIEWS.settings = {
   html() {
     const s = settings, S = settingsSums();
     const money = (k, label, ph) => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" data-money type="text" inputmode="numeric" value="${s[k] ? BRL(s[k]) : ''}" placeholder="${esc(ph)}"></div>`;
-    const pct = (k, label) => `<div class="field"><label for="st-${k}">${label} (%)</label><input id="st-${k}" data-set="${k}" data-int type="text" inputmode="numeric" placeholder="${{ surUrgent: 50, surNight: 30, surWeekend: 50 }[k]}" value="${s[k] || ''}"></div>`;
+    const pct = (k, label) => `<div class="field"><label for="st-${k}">${label}, em %</label><input id="st-${k}" data-set="${k}" data-int type="text" inputmode="numeric" placeholder="${{ surUrgent: 50, surNight: 30, surWeekend: 50 }[k]}" value="${s[k] || ''}"></div>`;
     const f = (k, label, ph, type = 'text', extra = '') => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" type="${type}" value="${esc(k === 'phone' ? fmtPhone(s[k]) : s[k])}" placeholder="${esc(ph)}" ${extra}></div>`;
     const bloco = (titulo, corpo) => `<div class="kf-bloco"><h3>${titulo}</h3>${corpo}</div>`;
     return `${barraTopo()}
@@ -4634,21 +4703,21 @@ VIEWS.settings = {
               <input type="file" id="st-logo" accept="image/*" hidden>
             </div>
             ${f('name', 'Seu nome', 'Ex.: Carlos Pereira', 'text', 'autocapitalize="words"')}
-            ${f('company', 'Nome da empresa (opcional)', 'Ex.: Pereira Instalações Elétricas', 'text', 'autocapitalize="words"')}
+            ${f('company', 'Nome da empresa <span class="lab-opt">opcional</span>', 'Ex.: Pereira Instalações Elétricas', 'text', 'autocapitalize="words"')}
             <div class="grid2 stack">
               ${f('phone', 'WhatsApp', '(11) 90000-0000', 'tel', 'inputmode="tel"')}
-              ${f('email', 'E-mail (opcional)', 'voce@email.com', 'email', 'autocapitalize="off"')}
-              ${f('doc', 'CPF ou CNPJ (opcional)', 'Sai no recibo')}
+              ${f('email', 'E-mail <span class="lab-opt">opcional</span>', 'voce@email.com', 'email', 'autocapitalize="off"')}
+              ${f('doc', 'CPF ou CNPJ <span class="lab-opt">opcional</span>', 'Sai no recibo')}
               ${f('city', 'Cidade', 'Ex.: São Paulo', 'text', 'autocapitalize="words"')}
             </div>`),
         },
         produto: [
-          { id: 'pix', titulo: 'Pix', icone: ICONES_AJ.pix, resumo: S.pix, html: bloco('Chave Pix', `<p class="kf-ajuda">Com a chave, a proposta já sai com o QR code da entrada (ou do total, no pagamento à vista).</p>
+          { id: 'pix', titulo: 'Pix', icone: ICONES_AJ.pix, resumo: S.pix, html: bloco('Chave Pix', `<p class="kf-ajuda">Com a chave, a proposta já sai com o QR code da entrada, ou do total no pagamento à vista.</p>
               ${f('pix', 'Chave Pix', 'CPF, celular, e-mail ou chave aleatória', 'text', 'autocapitalize="off" spellcheck="false"')}`) },
           { id: 'deslocamento', titulo: 'Veículo e deslocamento', icone: ICONES_AJ.deslocamento, resumo: S.deslocamento, html: bloco('Calculadora de deslocamento', `<p class="kf-ajuda">Base da calculadora de deslocamento. O preço do combustível também pode ser atualizado direto no orçamento.</p>
               <div class="grid2">
-                <div class="field"><label for="st-kmPerL">Consumo médio (km/l)</label><input id="st-kmPerL" data-set="kmPerL" data-dec type="text" inputmode="decimal" value="${s.kmPerL ? fmtQty(s.kmPerL) : ''}" placeholder="Ex.: 10"></div>
-                ${money('fuelPrice', 'Combustível (litro)', 'Ex.: R$ 6,19')}
+                <div class="field"><label for="st-kmPerL">Consumo médio, em km por litro</label><input id="st-kmPerL" data-set="kmPerL" data-dec type="text" inputmode="decimal" value="${s.kmPerL ? fmtQty(s.kmPerL) : ''}" placeholder="Ex.: 10"></div>
+                ${money('fuelPrice', 'Preço do litro do combustível', 'Ex.: R$ 6,19')}
                 ${money('wearPerKm', 'Desgaste por km', 'Opcional')}
                 ${money('hourRate', 'Valor da sua hora', 'Opcional')}
               </div>
@@ -4658,17 +4727,17 @@ VIEWS.settings = {
               <div class="grid3">${pct('surUrgent', 'Urgência')}${pct('surNight', 'Noturno')}${pct('surWeekend', 'Fim de sem.')}</div>`) },
           { id: 'padrao', titulo: 'Orçamento novo', icone: ICONES_AJ.padrao, resumo: S.padrao, html: bloco('Padrão de cada orçamento novo', `<p class="kf-ajuda">Dá para mudar em cada orçamento.</p>
               <div class="grid2">
-                ${f('validity', 'Validade (dias)', '15', 'text', 'inputmode="numeric" data-int')}
-                ${f('warranty', 'Garantia (dias)', '90', 'text', 'inputmode="numeric" data-int')}
+                ${f('validity', 'Validade, em dias', '15', 'text', 'inputmode="numeric" data-int')}
+                ${f('warranty', 'Garantia, em dias', '90', 'text', 'inputmode="numeric" data-int')}
               </div>
               <div class="field"><label for="st-prazoN">Prazo de execução</label><div class="prazo-row"><input id="st-prazoN" data-set="prazoN" data-int type="text" inputmode="numeric" value="${s.prazoN || 1}" style="max-width:96px" aria-label="Quantidade do prazo"><select id="st-prazoU" data-set="prazoU" aria-label="Unidade do prazo">${Object.entries(PRAZO_U).map(([k, [pl, sg]]) => `<option value="${k}" ${s.prazoU === k ? 'selected' : ''}>${(s.prazoN || 1) === 1 ? sg : pl}</option>`).join('')}</select></div></div>
               <div class="field"><span class="lab">Pagamento</span><div class="seg" role="group" aria-label="Pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${s.payMode === k}">${l}</button>`).join('')}</div></div>
               ${s.payMode === 'entrada' ? `<div class="field"><span class="lab">Entrada</span><div class="seg" role="group" aria-label="Entrada">${[30, 40, 50, 60, 70].map(n => `<button data-ep="${n}" aria-pressed="${s.entryPct === n}">${n}%</button>`).join('')}</div></div>` : ''}
               ${cartaoAjHTML(s)}
-              <div class="field"><label for="st-avistaPct">Desconto para pagamento à vista (%)</label><input id="st-avistaPct" data-set="avistaPct" data-dec type="text" inputmode="decimal" placeholder="0" value="${s.avistaPct ? fmtQty(s.avistaPct) : ''}"><span class="kf-ajuda">Entra em todo orçamento novo à vista. Separado do desconto do serviço.</span></div>
+              <div class="field"><label for="st-avistaPct">Desconto para pagamento à vista, em %</label><input id="st-avistaPct" data-set="avistaPct" data-dec type="text" inputmode="decimal" placeholder="0" value="${s.avistaPct ? fmtQty(s.avistaPct) : ''}"><span class="kf-ajuda">Entra em todo orçamento novo à vista. Separado do desconto do serviço.</span></div>
               <div class="field"><label for="st-notes">Observações que sempre vão na proposta</label><textarea id="st-notes" data-set="notes" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.notes)}</textarea></div>`) },
           { id: 'textos', titulo: 'Textos dos documentos', icone: ICONES_AJ.textos, resumo: S.textos, html: bloco('Textos dos documentos', `<p class="kf-ajuda">Saem em todos os orçamentos e relatórios. Deixe em branco para não usar.</p>
-              <div class="field"><label for="st-acceptText">Termo de aceite (acima da assinatura do orçamento)</label><textarea id="st-acceptText" data-set="acceptText">${esc(s.acceptText)}</textarea>
+              <div class="field"><label for="st-acceptText">Termo de aceite, acima da assinatura do orçamento</label><textarea id="st-acceptText" data-set="acceptText">${esc(s.acceptText)}</textarea>
                 ${s.acceptText !== ACCEPT_DEFAULT ? '<button class="linkish" data-reset="acceptText">Voltar ao texto sugerido</button>' : ''}</div>
               <div class="field"><label for="st-warrantyTerms">Condições da garantia</label><textarea id="st-warrantyTerms" data-set="warrantyTerms">${esc(s.warrantyTerms)}</textarea>
                 ${s.warrantyTerms !== WARRANTY_DEFAULT ? '<button class="linkish" data-reset="warrantyTerms">Voltar ao texto sugerido</button>' : ''}</div>`) },

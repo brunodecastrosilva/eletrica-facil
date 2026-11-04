@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.19.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 2.19.1 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -104,6 +104,11 @@ Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
   se destacar claramente do preto dos preços do usuário; o mais claro que passa no AA ficava escuro demais. Para não
   depender só da cor: o leitor de tela diz "preço que vem com o app" e a nota no fim de Preços explica o cinza. A levar
   ao Integrador para registro.
+
+- **Lista de escolha, calendário e relógio do Kit perto do pé da tela:** o Kit só rola quando a lista passa do fim da
+  janela do navegador; dentro de uma janela do app, a lista pode ficar atrás do rodapé (e, na página, atrás das barras de
+  baixo). O app completa: depois de abrir, rola o que falta para o último item aparecer (correção em `index.html`, sem
+  mexer no `comum/`). A levar ao Integrador como correção do Kit, para os quatro apps.
 
 ## Publicação
 
