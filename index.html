@@ -586,6 +586,18 @@ details.tech[open] > summary::after{content:"–"}
 .tx-cel{display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:var(--muted)}
 .tx-cel input{min-height:44px;text-align:center}
 .pay-sum .ps-rec{color:var(--muted)}
+.ref-tag{display:inline-block;padding:1px 7px;border-radius:99px;border:1px dashed var(--faint);background:var(--surface-2);color:var(--muted);font-size:12px;font-weight:600;line-height:1.5;white-space:nowrap;vertical-align:1px}
+.ref-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13.5px;color:var(--muted);padding:2px 0 8px}
+.ref-box{display:flex;flex-direction:column;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px dashed var(--line-2)}
+.ref-box p{margin:0;font-size:14.5px}
+.cp-pe{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.field > .disc{display:flex;gap:8px;align-items:stretch}
+.field > .disc .seg{width:auto;flex:none}
+.field > .disc input{flex:1;min-width:0}
+@media (max-width:380px){.seg button{font-size:13.5px;padding:4px 3px}}
+.alt-blk{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:14px;border:1px dashed var(--line-2)}
+.line-warn{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--bad)}
+.line-warn .i{width:15px;height:15px}
 .prazo-row .kf-esc{flex:1;min-width:150px;width:auto}
 .cal-d.velho span{opacity:.6}
 .cal-d.prazo span{background:var(--volt-soft)}
@@ -655,7 +667,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.15.0';
+const VERSAO = '2.16.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -1020,7 +1032,11 @@ const catOrder = kind => [...new Set(SEED.filter(s => s[0] === kind).map(s => s[
 // itens que entraram depois da primeira tabela (são acrescentados em quem já usa o app)
 // 2.15: tudo o que ainda não está na tabela entra (por nome), sem mexer nos itens e preços de quem já usa
 const SEED_V2 = ['Ponto de interruptor paralelo (three-way)', 'Tomada dupla 10 A com placa', 'Interruptor duplo com placa', 'Interruptor paralelo (three-way) com placa', 'Interruptor intermediário (four-way)'];
-const seedPrices = () => SEED.map(([kind, cat, name, unit, price]) => ({ id: uid(), kind, cat, name, unit, price }));
+const seedPrices = () => SEED.map(([kind, cat, name, unit, price]) => ({ id: uid(), kind, cat, name, unit, price, ref: true }));
+/* valores de referência: os preços que vêm com o app (e os adicionais padrão) têm a etiqueta "a conferir" até você
+   mudar o valor ou confirmar que ele vale para você. Reajuste em massa não confirma. */
+const refTag = () => '<span class="ref-tag" title="Valor de referência do app: confira e confirme">a conferir</span>';
+const refLinha = i => prices.some(p => p.ref && p.kind === i.kind && norm(p.name) === norm(i.name) && p.price === i.price);
 
 /* ================= dados (tudo guardado neste aparelho) ================= */
 const KEY = 'eletricafacil.';
@@ -1035,7 +1051,7 @@ const DEF = { toolSeedV: 0, name: '', company: '', phone: '', email: '', doc: ''
   // cartão: tipo de juros, taxa da maquininha por parcelamento (em %), juros ao mês, sem juros até N× e quem paga a taxa
   cardJuros: 'sem', cardRates: {}, cardMes: 0, cardSemAte: 0, cardPaga: 'cliente', avistaPct: 0, seq: 0,
   kmPerL: 0, fuelPrice: 0, wearPerKm: 0, hourRate: 0, minVisit: 0, roundTrip: true,
-  surUrgent: 50, surNight: 30, surWeekend: 50, seedV: 0,
+  surUrgent: 50, surNight: 30, surWeekend: 50, refAdic: true, seedV: 0,
   acceptText: ACCEPT_DEFAULT, warrantyTerms: WARRANTY_DEFAULT };
 const TESTS_V1 = { tensao: 'Medição de tensão nas tomadas e no quadro de distribuição.', dr: 'Teste do DR pelo botão de teste.', terra: 'Verificação do aterramento.',
   func: 'Teste de funcionamento dos circuitos e equipamentos.', aquec: 'Verificação de aquecimento nas conexões.', carga: 'Teste do circuito com carga.', isol: 'Medição de resistência de isolamento.' };
@@ -1057,7 +1073,12 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.15.0', itens: [
+  novidades: [{ versao: '2.16.0', itens: [
+    'Preços que vêm com o app agora têm a etiqueta "a conferir". Mude o valor ou confirme, um a um ou a categoria inteira, em Preços.',
+    'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
+    'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
+    'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
+  ] }, { versao: '2.15.0', itens: [
     'Cartão com juros: sem juros, taxa da maquininha (cadastre a tabela em Ajustes, Orçamento novo) ou juros ao mês, com sem juros até N×, débito e a escolha de quem paga a taxa. O app mostra quanto você recebe.',
     'Desconto à vista: um desconto só para quem paga à vista, separado do desconto do serviço.',
     'Gestão: Estoque virou Materiais, com Em estoque, Repor e Catálogo, como em Ferramentas. Um material pode ter várias marcas, cada uma com quantidade e custo.',
@@ -1138,7 +1159,7 @@ function blankQuote() {
     client: { name: '', phone: '', address: '', doc: '' }, title: '', items: [], materialBy: 'eu',
     startAt: null, endAt: null, dateTbd: false, approvedVia: '', days: 1, dates: [],
     travel: 0, discount: { mode: 'value', value: 0, pct: 0 },
-    payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments, cardTipo: 'credito', juros: settings.cardJuros || 'sem', taxaPct: null, mesPct: settings.cardMes || 0, semAte: settings.cardSemAte || 0, paga: settings.cardPaga || 'cliente', avista: { mode: 'pct', pct: settings.avistaPct || 0, value: 0 } },
+    payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments, cardTipo: 'credito', juros: settings.cardJuros || 'sem', taxaPct: null, mesPct: settings.cardMes || 0, semAte: settings.cardSemAte || 0, paga: settings.cardPaga || 'cliente', avista: { mode: 'pct', pct: settings.avistaPct || 0, value: 0 }, outras: [] },
     validity: settings.validity, deadline: '', prazo: { n: Math.max(1, Math.min(99, settings.prazoN || 1)), u: PRAZO_U[settings.prazoU] ? settings.prazoU : 'uteis' }, warranty: settings.warranty, notes: settings.notes,
     status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false,
     trip: null, extras: { urgent: 0, night: 0, weekend: 0 }, useRooms: false, rooms: [],
@@ -1155,6 +1176,7 @@ function fixQuote(q) {
   pg.cardTipo = pg.cardTipo === 'debito' ? 'debito' : 'credito';
   pg.juros = ['sem', 'taxa', 'mes'].includes(pg.juros) ? pg.juros : 'sem';
   pg.paga = pg.paga === 'eu' ? 'eu' : 'cliente';
+  pg.outras = (Array.isArray(pg.outras) ? pg.outras : []).filter(m => ['avista', 'entrada', 'parcelado'].includes(m));
   pg.installments = Math.max(1, Math.min(18, parseInt(pg.installments, 10) || 1));
   pg.avista = { mode: pg.avista && pg.avista.mode === 'value' ? 'value' : 'pct', pct: Math.max(0, Math.min(50, +(pg.avista && pg.avista.pct) || 0)), value: Math.max(0, +(pg.avista && pg.avista.value) || 0) };
   if (typeof q.travel !== 'number') q.travel = q.travel && q.travel.enabled ? (q.travel.value || 0) : 0;
@@ -1313,8 +1335,14 @@ if ((settings.seedV || 0) < 2) {
   settings.seedV = 2; savePrices(); saveSettings();
 }
 if ((settings.seedV || 0) < 3) {
-  SEED.forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price }); });
+  SEED.forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price, ref: true }); });
   settings.seedV = 3; savePrices(); saveSettings();
+}
+// 2.16: item do app com o preço de fábrica ainda não foi conferido; adicionais com os valores de fábrica também
+if ((settings.seedV || 0) < 4) {
+  prices.forEach(p => { const sd = SEED.find(x => x[0] === p.kind && norm(x[2]) === norm(p.name)); if (sd && p.price === sd[4] && p.ref === undefined) p.ref = true; });
+  if (settings.surUrgent === 50 && settings.surNight === 30 && settings.surWeekend === 50) settings.refAdic = true;
+  settings.seedV = 4; savePrices(); saveSettings();
 }
 
 const getQ = id => quotes.find(q => q.id === id);
@@ -1484,6 +1512,11 @@ function partsText(parts) {
   if (hi === lo) return `${n}× de ${BRL(hi)}`;
   const k = parts.filter(x => x === hi).length;
   return `${k}× de ${BRL(hi)} + ${n - k}× de ${BRL(lo)}`;
+}
+// "Ou: à vista, R$ 950,00, com 5% de desconto; parcelado no cartão em 6× de R$ 183,15."
+function outrasTxt(q) {
+  const L = outrasFormas(q).map(m => { const x = comForma(q, m); return payText(x.q, x.c).replace(/\.$/, ''); });
+  return L.length ? L.map(t => t.charAt(0).toLowerCase() + t.slice(1)).join('; ') + '.' : '';
 }
 function payText(q, c) {
   const p = q.payment;
@@ -2294,12 +2327,19 @@ function techCardHTML(q) {
       ${techField(q, 'recs', 'Recomendações', 'O que ainda precisa de atenção, riscos e cuidados de uso.')}
 `);
 }
+// material lançado com valor menor que o custo médio do seu estoque (só quando o material é por sua conta)
+function abaixoCusto(q, i) {
+  if (i.kind !== 'mat' || q.materialBy === 'cliente') return 0;
+  const p = prices.find(x => x.kind === 'mat' && norm(x.name) === norm(i.name));
+  return p && inStock(p) && p.cost > 0 && i.price < p.cost ? p.cost : 0;
+}
 function lineHTML(q, i) {
   const cli = i.kind === 'mat' && q.materialBy === 'cliente';
   return `<div class="line${cli ? ' cli' : ''}" data-line="${i.id}">
     <button class="line-main" data-edit="${i.id}" aria-label="Alterar ${esc(i.name)}">
       <span class="line-name">${esc(i.name)}</span>
-      <span class="line-meta">${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)}</span>
+      <span class="line-meta">${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)}${refLinha(i) ? ` ${refTag()}` : ''}</span>
+      ${abaixoCusto(q, i) ? `<span class="line-warn">${I.warn}Abaixo do seu custo (${BRL(abaixoCusto(q, i))} por ${unitName(i.unit)})</span>` : ''}
     </button>
     <div class="line-side">
       <span class="line-total">${BRL(lineTotal(i))}</span>
@@ -2349,18 +2389,19 @@ function statusBanner(q, c) {
   </div>`;
   return '';
 }
-function payBlockHTML(q, c) {
+// detalhe de uma forma de pagamento (a principal ou outra que também vai na proposta)
+function payDetailHTML(q, c, mode) {
   const p = q.payment;
   let detail = '';
-  if (p.mode === 'entrada') detail = `<div class="field"><span class="lab">Entrada na aprovação</span><div class="chips row5">${[30, 40, 50, 60, 70].map(n => `<button class="chip" data-ep="${n}" aria-pressed="${p.entryPct === n}">${n}%</button>`).join('')}</div></div>`;
-  if (p.mode === 'avista') {
+  if (mode === 'entrada') detail = `<div class="field"><span class="lab">Entrada na aprovação</span><div class="chips row5">${[30, 40, 50, 60, 70].map(n => `<button class="chip" data-ep="${n}" aria-pressed="${p.entryPct === n}">${n}%</button>`).join('')}</div></div>`;
+  if (mode === 'avista') {
     const a = p.avista;
     detail = `<div class="field"><label for="q-avd">Desconto para pagamento à vista</label><div class="disc"><div class="seg" role="group" aria-label="Tipo de desconto à vista"><button data-avm="pct" aria-pressed="${a.mode === 'pct'}">%</button><button data-avm="value" aria-pressed="${a.mode === 'value'}">R$</button></div>${a.mode === 'value'
       ? `<input id="q-avd" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${a.value ? BRL(a.value) : ''}">`
       : `<input id="q-avd" type="text" inputmode="decimal" placeholder="0" value="${a.pct ? fmtQty(a.pct) : ''}" aria-label="Desconto à vista em porcentagem">`}</div>
       <span class="hint">Só vale se o cliente pagar à vista (Pix, dinheiro). É separado do desconto do serviço, em Valores.</span></div>`;
   }
-  if (p.mode === 'parcelado') {
+  if (mode === 'parcelado') {
     const k = c.card, deb = p.cardTipo === 'debito', semTab = p.juros === 'taxa' && !Object.keys(settings.cardRates || {}).length;
     detail = `<div class="seg" role="group" aria-label="Tipo de cartão"><button data-ct="credito" aria-pressed="${!deb}">Crédito</button><button data-ct="debito" aria-pressed="${deb}">Débito</button></div>
       ${deb ? '' : `<div class="field"><span class="lab">Parcelas</span><div class="stepper"><button data-in="-1" aria-label="Menos parcelas" ${p.installments <= 1 ? 'disabled' : ''}>${I.minus}</button><input id="q-inst" type="text" readonly value="${p.installments}×" aria-label="Parcelas"><button data-in="1" aria-label="Mais parcelas" ${p.installments >= 18 ? 'disabled' : ''}>${I.plus}</button></div></div>`}
@@ -2370,8 +2411,19 @@ function payBlockHTML(q, c) {
       ${p.juros === 'mes' && !deb ? `<div class="field"><label for="q-mes">Juros ao mês (%)</label><input id="q-mes" type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${p.mesPct ? fmtQty(p.mesPct) : ''}"></div>` : ''}
       ${p.juros !== 'sem' && !deb ? `<div class="field"><label for="q-semate">Sem juros até (parcelas)</label><div class="stepper"><button data-sa="-1" aria-label="Menos">${I.minus}</button><input id="q-semate" type="text" readonly value="${p.semAte ? p.semAte + '×' : 'Não'}" aria-label="Sem juros até"><button data-sa="1" aria-label="Mais">${I.plus}</button></div><span class="hint">Até esse número de parcelas, ${p.juros === 'taxa' ? 'você absorve a taxa' : 'não há juros'}.</span></div>` : ''}`;
   }
-  return detail + `<div class="pay-sum" id="pay-sum">${paySumHTML(q, c)}</div>`;
+  return detail;
 }
+const PAY_NOME = { avista: 'À vista', entrada: 'Entrada', parcelado: 'Cartão' };
+// a mesma conta com outra forma de pagamento (para as outras formas que vão na proposta)
+const comForma = (q, mode) => { const q2 = { ...q, payment: { ...q.payment, mode } }; return { q: q2, c: compute(q2) }; };
+const outrasFormas = q => isReport(q) ? [] : (q.payment.outras || []).filter(m => m !== q.payment.mode);
+function payBlockHTML(q, c) {
+  const p = q.payment, outras = ['avista', 'entrada', 'parcelado'].filter(m => m !== p.mode);
+  const alts = outrasFormas(q).map(m => { const x = comForma(q, m); return `<div class="alt-blk"><div class="sublab">${PAY_NOME[m]}, também na proposta</div>${payDetailHTML(q, x.c, m)}<div class="pay-sum" id="pay-sum-${m}">${paySumHTML(x.q, x.c)}</div></div>`; }).join('');
+  return payDetailHTML(q, c, p.mode) + `<div class="pay-sum" id="pay-sum">${paySumHTML(q, c)}</div>`
+    + (isReport(q) ? '' : `<div class="field"><span class="lab" id="q-outras-l">O cliente também pode pagar</span><div class="chips" role="group" aria-labelledby="q-outras-l">${outras.map(m => `<button class="chip" data-outra="${m}" aria-pressed="${(p.outras || []).includes(m)}">${(p.outras || []).includes(m) ? I.check : I.plus}${PAY_NOME[m]}</button>`).join('')}</div><span class="hint">As formas marcadas aparecem na proposta, além da principal.</span></div>${alts}`);
+}
+
 function paySumHTML(q, c) {
   const p = q.payment;
   if (p.mode === 'avista') return c.avistaDesc ? `<div><span>Total do orçamento</span><b>${BRL(c.total)}</b></div><div><span>Desconto à vista</span><b>− ${BRL(c.avistaDesc)}</b></div><div><span>À vista</span><b>${BRL(c.avistaTotal)}</b></div>` : `<div><span>À vista</span><b>${BRL(c.total)}</b></div>`;
@@ -2606,6 +2658,7 @@ VIEWS.quote = {
       $$('[data-t="paytotal"]', v).forEach(e => e.textContent = BRL(c.payTotal));
       $$('[data-t="paylab"]', v).forEach(e => e.textContent = payLabel(q, c));
       const ps = $('#pay-sum', v); if (ps) ps.innerHTML = paySumHTML(q, c);
+      outrasFormas(q).forEach(m => { const e = $('#pay-sum-' + m, v); if (e) { const x = comForma(q, m); e.innerHTML = paySumHTML(x.q, x.c); } });
       paintSums(v, quoteSums(q, c));
     };
     ['input', 'change'].forEach(ev => v.addEventListener(ev, () => requestAnimationFrame(paint)));
@@ -2664,7 +2717,8 @@ VIEWS.quote = {
     });
 
     // condições
-    $$('[data-pm]', v).forEach(b => b.onclick = () => { q.payment.mode = b.dataset.pm; touch(q); rerender(); });
+    $$('[data-pm]', v).forEach(b => b.onclick = () => { q.payment.mode = b.dataset.pm; q.payment.outras = (q.payment.outras || []).filter(m => m !== b.dataset.pm); touch(q); rerender(); });
+    $$('[data-outra]', v).forEach(b => b.onclick = () => { const m = b.dataset.outra, L = q.payment.outras || []; q.payment.outras = L.includes(m) ? L.filter(x => x !== m) : [...L, m]; touch(q); rerender(); });
     $$('[data-ep]', v).forEach(b => b.onclick = () => { q.payment.entryPct = +b.dataset.ep; touch(q); rerender(); });
     $$('[data-in]', v).forEach(b => b.onclick = () => { q.payment.installments = Math.max(1, Math.min(18, (q.payment.installments || 3) + +b.dataset.in)); q.payment.taxaPct = null; touch(q); rerender(); });
     $$('[data-ct]', v).forEach(b => b.onclick = () => { q.payment.cardTipo = b.dataset.ct; if (b.dataset.ct === 'debito' && q.payment.juros === 'mes') q.payment.juros = 'taxa'; q.payment.taxaPct = null; touch(q); rerender(); });
@@ -2835,7 +2889,7 @@ function pickerSheet(q, kind, room) {
     const qf = fold(query);
     const list = prices.filter(p => p.kind === k && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
     const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name) && (!inRoom || roomOf(q, i) === room)).map(i => i.qty));
-    const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}</span><span class="pk-price">${BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
+    const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}${p.ref ? ' ' + refTag() : ''}</span><span class="pk-price">${BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
     return (rows || KitFacil.ui.vazio({ titulo: `Nada com “${esc(query)}”`, texto: `na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}. Adicione como item fora da tabela.` }))
       + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}${query ? `Adicionar “${esc(query)}”` : `${k === 'svc' ? 'Serviço' : 'Material'} fora da tabela`}</button>`;
   };
@@ -3102,6 +3156,7 @@ function paperHTML(q, c, mode = docMode(q)) {
       ${rep ? `<dt>Execução</dt><dd>${esc(capFirst(execText(q)))}</dd>` : ''}
       ${rep && approvalText(q) ? `<dt>Aprovação</dt><dd>${esc(approvalText(q))}</dd>` : ''}
       <dt>Pagamento</dt><dd>${esc(payText(q, c))}</dd>
+      ${outrasTxt(q) ? `<dt>Ou, se preferir</dt><dd>${esc(capFirst(outrasTxt(q)))}</dd>` : ''}
       ${!rep && schedText(q) ? `<dt>Execução</dt><dd>${esc(schedText(q))}</dd>` : ''}
       ${!rep && prazoDoc(q) ? `<dt>Prazo</dt><dd>${esc(prazoDoc(q))}</dd>` : ''}
       ${q.warranty ? `<dt>Garantia</dt><dd>${esc(warrantyText(q, mode))}</dd>` : ''}
@@ -3125,6 +3180,8 @@ VIEWS.preview = {
     const q = getQ(r.id), c = compute(q), mode = docMode(q);
     const warn = [];
     if (!settings.name && !settings.company) warn.push('Seu nome e telefone ainda não aparecem no cabeçalho.');
+    const nRef = q.items.filter(refLinha).length;
+    if (nRef) warn.push(`${plural(nRef, 'item está', 'itens estão')} com o preço de referência do app (a conferir). Confira em Preços.`);
     if (!q.client.name) warn.push('Falta o nome do cliente.');
     if (!q.items.length) warn.push('Nenhum item lançado.');
     if (!daysOk(q)) warn.push(prazoProblema(q) === 'retro' ? 'Há datas que já passaram: escolha um novo início.' : 'Os dias marcados não conferem com o prazo.');
@@ -3238,6 +3295,7 @@ function quoteMessage(q, c, mode = docMode(q)) {
   if (c.travel) L.push(`Deslocamento${q.trip ? ` (${tripShort(q.trip)})` : ''}: ${BRL(c.travel)}`);
   if (c.discount) L.push(`Desconto: −${BRL(c.discount)}`);
   L.push(`*Total: ${BRL(c.total)}*`, '', `*Pagamento:* ${payText(q, c)}`);
+  if (outrasTxt(q)) L.push(`*Ou, se preferir:* ${capFirst(outrasTxt(q))}`);
   if (!rep && schedText(q)) L.push(`*Execução:* ${schedText(q)}`);
   if (!rep && prazoDoc(q)) L.push(`*Prazo:* ${prazoDoc(q)}`);
   if (q.warranty) L.push(`*Garantia:* ${rep && q.doneAt ? `${plural(q.warranty, 'dia', 'dias')}, até ${fmtDate(q.doneAt + q.warranty * DAY)}` : plural(q.warranty, 'dia', 'dias')}`);
@@ -3539,7 +3597,7 @@ async function buildQuotePDF(q, mode = docMode(q)) {
   y = Math.max(y + 11.5, px && qr ? top + Math.max(totH, 32) : 0) + 7.5;
 
   // condições
-  const conds = [rep && ['Execução', capFirst(execText(q))], rep && approvalText(q) && ['Aprovação', approvalText(q)], ['Pagamento', payText(q, c)], !rep && schedText(q) && ['Execução', schedText(q)], !rep && prazoDoc(q) && ['Prazo de execução', prazoDoc(q)], q.warranty && ['Garantia', warrantyText(q, mode)], !rep && q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
+  const conds = [rep && ['Execução', capFirst(execText(q))], rep && approvalText(q) && ['Aprovação', approvalText(q)], ['Pagamento', payText(q, c)], !rep && outrasTxt(q) && ['Ou, se preferir', capFirst(outrasTxt(q))], !rep && schedText(q) && ['Execução', schedText(q)], !rep && prazoDoc(q) && ['Prazo de execução', prazoDoc(q)], q.warranty && ['Garantia', warrantyText(q, mode)], !rep && q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
   need(14); label(rep ? 'Informações' : 'Condições', M, y); y += 5.6;
   conds.forEach(([l, v]) => {
     const L = wrap(v, CW - 42, 9.5);
@@ -3734,7 +3792,8 @@ function priceListHTML() {
   const list = prices.filter(p => p.kind === priceKind && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
   if (!list.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum item encontrado', texto: 'Confira o nome do item ou da categoria.' } : { titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo item</b> para cadastrar.' });
   return groupByCat(list).map(([cat, L]) => panel(`pr:${priceKind}:${cat}`, '', esc(cat), qf ? null : L.slice(0, 3).map(p => p.name).join(' · ') + (L.length > 3 ? '…' : ''),
-    `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${inStock(p) ? ` · ${stockTxt(p)}` : ''}</small></span><span class="prow-price">${BRL(p.price)}</span></button>`).join('')}</div>`,
+    (L.some(p => p.ref) ? `<div class="ref-bar"><span>${refTag()} ${plural(L.filter(p => p.ref).length, 'preço do app nesta categoria', 'preços do app nesta categoria')}</span><button class="btn sm ghost" data-ref-cat="${esc(cat)}">${I.check}Confirmar todos</button></div>` : '')
+    + `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${inStock(p) ? ` · ${stockTxt(p)}` : ''}${p.ref ? ' ' + refTag() : ''}</small></span><span class="prow-price">${BRL(p.price)}</span></button>`).join('')}</div>`,
     { multi: true, right: `<span class="card-sum">${L.length}</span>`, force: qf ? true : undefined })).join('');
 }
 VIEWS.prices = {
@@ -3743,16 +3802,25 @@ VIEWS.prices = {
     return `${barraTopo()}
     <main class="page">
       ${KitFacil.ui.cabecalho({ titulo: 'Tabela de preços', acoes: `<button class="btn sm ghost" data-adjust>${I.percent}Reajustar</button>`, criar: { rotulo: 'Novo item', attrs: 'data-new-price' } })}
+      ${prices.some(p => p.ref) ? `<div class="banner b-tip"><p>${refTag()} <b>${plural(prices.filter(p => p.ref).length, 'preço ainda é', 'preços ainda são')} do app.</b> Confira os que você usa: mude o valor ou confirme.</p></div>` : ''}
       <div class="seg" role="group" aria-label="Tipo"><button data-k="svc" aria-pressed="${priceKind === 'svc'}">Mão de obra · ${n('svc')}</button><button data-k="mat" aria-pressed="${priceKind === 'mat'}">Material · ${n('mat')}</button></div>
       <label class="search">${I.search}<input type="search" id="pr-q" placeholder="Buscar item ou categoria" value="${esc(priceQuery)}" aria-label="Buscar na tabela"></label>
       <div id="pr-list" style="display:flex;flex-direction:column;gap:10px">${priceListHTML()}</div>
-      <p class="foot-note">Os preços que vêm com o app são só uma referência. Toque em um item para colocar o seu valor.</p>
+      <p class="foot-note">Os preços que vêm com o app têm a etiqueta "a conferir": são só uma referência. Toque em um item para colocar o seu valor ou confirmar o de referência.</p>
     </main>`;
   },
   bind(v) {
     $$('[data-k]', v).forEach(b => b.onclick = () => { priceKind = b.dataset.k; rerender(); });
     const sq = $('#pr-q', v); sq.addEventListener('input', () => { priceQuery = sq.value; $('#pr-list').innerHTML = priceListHTML(); });
-    $('#pr-list', v).addEventListener('click', e => { const b = e.target.closest('[data-pid]'); if (b) priceSheet(prices.find(p => p.id === b.dataset.pid)); });
+    $('#pr-list', v).addEventListener('click', e => {
+      const rc = e.target.closest('[data-ref-cat]');
+      if (rc) {
+        const L = prices.filter(p => p.ref && p.kind === priceKind && (p.cat || 'Outros') === rc.dataset.refCat);
+        L.forEach(p => { p.ref = false; }); savePrices(); rerender();
+        return toast(`${plural(L.length, 'preço confirmado', 'preços confirmados')}.`, { label: 'Desfazer', run: () => { L.forEach(p => { p.ref = true; }); savePrices(); rerender(); } });
+      }
+      const b = e.target.closest('[data-pid]'); if (b) priceSheet(prices.find(p => p.id === b.dataset.pid));
+    });
     $('[data-new-price]', v).onclick = () => priceSheet(null);
     $('[data-adjust]', v).onclick = adjustSheet;
   },
@@ -3774,6 +3842,7 @@ function priceSheet(p) {
         <div class="field"><label for="pp-unit">Cobrado por</label><select id="pp-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === it.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       </div>
       </div>
+      ${p && p.ref ? `<div class="ref-box"><p>${refTag()} Este preço veio com o app. Mude o valor ou confirme que ele vale para você.</p><button class="btn sm ghost" data-ref-ok>${I.check}Confirmar preço</button></div>` : ''}
       ${p && inStock(p) ? `<p class="hint">No estoque: ${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}${p.cost ? `, custo ${BRL(p.cost)}` : ''}. O preço daqui é o repasse ao cliente. Altere a quantidade e o custo em Gestão.</p>` : ''}`,
     foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
     onMount: s => {
@@ -3782,6 +3851,7 @@ function priceSheet(p) {
       cs.addEventListener('change', () => { const nv = cs.value === '__nova'; cn.hidden = !nv; if (nv) cn.focus(); $('#pp-resto', s).hidden = !cs.value; if (cs.value && !nv && !isTouch) $('#pp-name', s).focus(); });
       $$('[data-ik]', s).forEach(b => b.onclick = () => { it.kind = b.dataset.ik; $$('[data-ik]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); cs.innerHTML = catOpts(it.kind); cs.dispatchEvent(new Event('change')); });
       $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
+      $('[data-ref-ok]', s)?.addEventListener('click', () => { p.ref = false; savePrices(); closeSheet(true); rerender(); toast('Preço confirmado.'); });
       $('[data-del]', s)?.addEventListener('click', () => {
         const idx = prices.findIndex(x => x.id === p.id); if (idx < 0) return;
         const [gone] = prices.splice(idx, 1); savePrices(); closeSheet(true); rerender();
@@ -3794,8 +3864,9 @@ function priceSheet(p) {
         if (!name) return toast('Escreva a descrição do item.');
         if (price === null) return toast('Informe o preço.');
         const data = { kind: it.kind, name, price, unit: $('#pp-unit', s).value, cat };
-        if (isNew) prices.push({ id: uid(), ...data }); else Object.assign(p, data);
-        savePrices(); priceKind = it.kind; closeSheet(true); rerender(); toast(isNew ? `${name} adicionado.` : 'Preço salvo.');
+        const mudou = !isNew && p.price !== price;
+        if (isNew) prices.push({ id: uid(), ...data }); else { Object.assign(p, data); if (mudou) p.ref = false; }
+        savePrices(); priceKind = it.kind; closeSheet(true); rerender(); toast(isNew ? `${name} adicionado.` : mudou ? 'Preço salvo e conferido.' : 'Item salvo.');
       };
     } });
 }
@@ -3859,7 +3930,7 @@ function stockListHTML() {
   const L = (f === 'estoque' ? est : f === 'repor' ? rep : mats).filter(bate);
   const linha = p => {
     let sub = '', dir = '';
-    if (f === 'catalogo') { sub = `repasse ${BRL(p.price)} por ${unitName(p.unit)}`; dir = inStock(p) ? `<span class="t-tem">${I.check}${fmtQty(p.stock)}</span>` : p.repor ? `<span class="t-quero">${I.cart}</span>` : ''; }
+    if (f === 'catalogo') { sub = `repasse ${BRL(p.price)} por ${unitName(p.unit)}${p.ref ? ' · a conferir' : ''}`; dir = inStock(p) ? `<span class="t-tem">${I.check}${fmtQty(p.stock)}</span>` : p.repor ? `<span class="t-quero">${I.cart}</span>` : ''; }
     else if (f === 'repor') { sub = p.repor && !stockLow(p) ? `marcado para repor ${fmtQty(p.reporQtd || 1)} ${unitTxt(p.reporQtd || 1, p.unit)}` : p.stock <= 0 ? 'em falta' : `tem ${fmtQty(p.stock)}${p.min ? `, mínimo ${fmtQty(p.min)}` : ''}`; dir = `<span class="g-zero">${I.warn}</span>`; }
     else { sub = lotesTxt(p) || 'Sem marca'; dir = p.stock <= 0 ? `<span class="g-zero">${I.warn}Em falta</span>` : `<span class="${stockLow(p) ? 'g-zero' : ''}">${stockLow(p) ? I.warn : ''}${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}</span>`; }
     return `<button class="prow" data-mat="${p.id}"><span><b>${hl(p.name, qf)}</b><small>${esc(sub)}</small></span><span class="prow-price">${dir}</span></button>`;
@@ -3889,6 +3960,7 @@ function matSheet(p) {
         <div class="field"><label for="mt-price">Repasse ao cliente (por ${unitName(p.unit)})</label><input id="mt-price" type="text" inputmode="numeric" data-money value="${BRL(p.price)}"></div>
         <div class="field"><label for="mt-min">Avisar quando chegar a (opcional)</label><input id="mt-min" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${p.min ? fmtQty(p.min) : ''}"></div>
       </div>
+      ${p.ref ? `<div class="ref-box" id="mt-ref"><p>${refTag()} O repasse veio com o app. Mude o valor ou confirme.</p><button class="btn sm ghost" data-ref-ok>${I.check}Confirmar repasse</button></div>` : ''}
       <p class="g-margin" id="mt-margin" aria-live="polite">${margemHTML(p.cost || 0, p.price)}</p>
       <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos.${stockLow(p) ? ' Chegou ao mínimo: já está em Repor.' : ''}</p>
       <label class="switch-row" for="mt-repor"><span><b>Preciso repor</b><small>Entra na lista de compras${stockLow(p) ? ', além do aviso de mínimo' : ''}.</small></span><input type="checkbox" class="sw" id="mt-repor" ${p.repor ? 'checked' : ''}></label>
@@ -3901,11 +3973,12 @@ function matSheet(p) {
       s.addEventListener('click', e => {
         const lt = e.target.closest('[data-lote]'); if (lt) return loteSheet(p, (p.lotes || []).find(l => l.id === lt.dataset.lote));
         if (e.target.closest('[data-novo-lote]')) return loteSheet(p, null);
+        if (e.target.closest('[data-ref-ok]')) { p.ref = false; savePrices(); $('#mt-ref', s)?.remove(); return toast('Repasse confirmado.'); }
         if (e.target.closest('[data-comprei-mat]')) return loteSheet(p, null, parseQty($('#mt-rq', s).value) || 1);
         const rq = e.target.closest('[data-rq]'); if (rq) { p.reporQtd = Math.max(1, Math.round(((parseQty($('#mt-rq', s).value) || 1) + +rq.dataset.rq) * 100) / 100); $('#mt-rq', s).value = fmtQty(p.reporQtd); savePrices(); }
       });
       s.addEventListener('input', e => {
-        if (e.target.id === 'mt-price') { const v = parseMoney(e.target.value); if (v !== null) { p.price = v; savePrices(); $('#mt-margin', s).innerHTML = margemHTML(p.cost || 0, p.price); } }
+        if (e.target.id === 'mt-price') { const v = parseMoney(e.target.value); if (v !== null) { if (v !== p.price) p.ref = false; p.price = v; savePrices(); $('#mt-margin', s).innerHTML = margemHTML(p.cost || 0, p.price); const rb = $('#mt-ref', s); if (rb && !p.ref) rb.remove(); } }
         if (e.target.id === 'mt-min') { p.min = Math.max(0, parseQty(e.target.value) || 0); savePrices(); }
       });
       s.addEventListener('change', e => {
@@ -4026,7 +4099,7 @@ function stockSheet(p) {
           if (price === null) return toast('Informe o preço de repasse ao cliente.');
           p = prices.find(y => y.kind === 'mat' && norm(y.name) === norm(name));
           if (!p) { p = { id: uid(), kind: 'mat', cat, name, unit: $('#st-unit', s).value, price }; prices.push(p); }
-        } else { const pr = parseMoney($('#st-price', s).value); if (pr !== null) p.price = pr; }
+        } else { const pr = parseMoney($('#st-price', s).value); if (pr !== null && pr !== p.price) { p.price = pr; p.ref = false; } }
         if (modo === 'repor') { p.repor = true; p.reporQtd = Math.max(1, qty || 1); }
         else {
           const brand = $('#st-brand', s).value.trim().replace(/\s+/g, ' '), cost = parseMoney($('#st-cost', s).value) || 0;
@@ -4215,12 +4288,33 @@ function comprasSheet() {
       ${f.length ? `<div class="pk-cat">Ferramentas para comprar · ${f.length}</div>${f.map(([x, i]) => row(x, i)).join('')}` : ''}`;
   };
   openSheet({ title: 'Lista de compras', tall: true, body: `<div id="cp-list">${corpo()}</div>`,
-    foot: L.length ? `<button class="btn ghost" data-cp-copy>${I.copy}Copiar</button><a class="btn wa" data-cp-wa href="#" target="_blank" rel="noopener">${I.wa}Enviar pelo WhatsApp</a>` : '',
+    foot: L.length ? `<div class="cp-pe"><button class="btn ghost" data-cp-copy>${I.copy}Copiar</button><a class="btn wa" data-cp-wa href="#" target="_blank" rel="noopener">${I.wa}WhatsApp</a></div><button class="btn ok block" data-cp-tudo>${I.check}Comprei tudo</button>` : '',
     onMount: s => {
       const pinta = () => { const st = $('.kf-dlg-corpo', s)?.scrollTop; $('#cp-list', s).innerHTML = corpo(); if (st != null) $('.kf-dlg-corpo', s).scrollTop = st; };
       s.addEventListener('click', e => {
         const b = e.target.closest('[data-cq]');
         if (b) { const x = L[+b.dataset.i]; x.qtd = Math.max(1, Math.round((x.qtd + +b.dataset.cq) * 100) / 100); pinta(); return; }
+        if (e.target.closest('[data-cp-tudo]')) {
+          const M = L.filter(x => x.on); if (!M.length) return toast('Marque ao menos um item.');
+          const antes = { prices: JSON.stringify(prices), tools: JSON.stringify(tools) };
+          M.forEach(x => {
+            if (x.k === 'm') {
+              const p = prices.find(y => y.id === x.id); if (!p) return;
+              acertaLotes(p); p.lotes = p.lotes || [];
+              // sem marca: soma no lote sem marca (ou cria um, com o custo médio de hoje)
+              const l = p.lotes.find(y => !y.brand) || (p.lotes.push({ id: uid(), brand: '', qty: 0, cost: p.cost || 0 }), p.lotes[p.lotes.length - 1]);
+              l.qty = Math.round((l.qty + x.qtd) * 100) / 100; p.repor = false; acertaLotes(p);
+            } else {
+              const t = tools.find(y => y.id === x.id); if (!t) return;
+              const it = itensDe(t.id).find(y => !y.brand && !y.model);
+              if (it) it.qty = Math.min(999, it.qty + Math.round(x.qtd)); else tools.push(fixItem({ id: uid(), tipo: t.id, qty: Math.round(x.qtd) }));
+              t.quero = false;
+            }
+          });
+          savePrices(); saveTools(); closeSheet(true); rerender();
+          toast(`${plural(M.length, 'item comprado', 'itens comprados')}: o material entrou no estoque e as ferramentas, nas suas.`, { label: 'Desfazer', run: () => { prices = JSON.parse(antes.prices); tools = JSON.parse(antes.tools); savePrices(); saveTools(); rerender(); } });
+          return;
+        }
         if (e.target.closest('[data-cp-copy]')) { if (!L.some(x => x.on)) return toast('Marque ao menos um item.'); copyText(texto(), 'Lista copiada.'); return; }
         const wa = e.target.closest('[data-cp-wa]');
         if (wa) { if (!L.some(x => x.on)) { e.preventDefault(); return toast('Marque ao menos um item.'); } wa.href = waLink('', texto()); }
@@ -4343,7 +4437,7 @@ function settingsSums() {
     conta: [s.company || s.name, s.phone ? fmtPhone(s.phone) : ''].filter(Boolean).join(' · ') || undefined,
     pix: s.pix || 'Nenhuma chave cadastrada',
     deslocamento: s.kmPerL || s.fuelPrice ? [s.kmPerL && `${fmtQty(s.kmPerL)} km/l`, s.fuelPrice && `combustível ${BRL(s.fuelPrice)}`].filter(Boolean).join(' · ') : 'Consumo do veículo e preço do combustível',
-    adicionais: `Urgência ${s.surUrgent}% · noturno ${s.surNight}% · fim de semana ${s.surWeekend}%`,
+    adicionais: `Urgência ${s.surUrgent}% · noturno ${s.surNight}% · fim de semana ${s.surWeekend}%${s.refAdic ? ' · a conferir' : ''}`,
     padrao: `Prazo ${prazoTxt({ n: Math.max(1, s.prazoN || 1), u: PRAZO_U[s.prazoU] ? s.prazoU : 'uteis' })} · validade ${s.validity} dias · garantia ${s.warranty} dias · ${payShort({ mode: s.payMode, entryPct: s.entryPct, installments: s.installments }).toLowerCase()}`,
     textos: 'Termo de aceite e condições da garantia',
   };
@@ -4430,7 +4524,8 @@ VIEWS.settings = {
               ${money('minVisit', 'Mínimo por visita', 'Opcional')}
               <p class="kf-ajuda">O desgaste cobre pneus, óleo e manutenção. A hora entra quando você informa o tempo de viagem. O mínimo protege as obras muito perto.</p>`) },
           { id: 'adicionais', titulo: 'Adicionais', icone: ICONES_AJ.adicionais, resumo: S.adicionais, html: bloco('Adicionais sobre a mão de obra', `<p class="kf-ajuda">Percentual usado quando você marca o adicional no orçamento. Se marcar mais de um, eles se somam.</p>
-              <div class="grid3">${pct('surUrgent', 'Urgência')}${pct('surNight', 'Noturno')}${pct('surWeekend', 'Fim de sem.')}</div>`) },
+              <div class="grid3">${pct('surUrgent', 'Urgência')}${pct('surNight', 'Noturno')}${pct('surWeekend', 'Fim de sem.')}</div>
+              ${s.refAdic ? `<div class="ref-box" id="aj-ref-adic"><p>${refTag()} Percentuais que vieram com o app. Mude ou confirme.</p><button class="btn sm ghost" data-ref-adic>${I.check}Confirmar percentuais</button></div>` : ''}`) },
           { id: 'padrao', titulo: 'Orçamento novo', icone: ICONES_AJ.padrao, resumo: S.padrao, html: bloco('Padrão de cada orçamento novo', `<p class="kf-ajuda">Dá para mudar em cada orçamento.</p>
               <div class="grid2">
                 ${f('validity', 'Validade (dias)', '15', 'text', 'inputmode="numeric" data-int')}
@@ -4465,7 +4560,7 @@ VIEWS.settings = {
         else if (i.hasAttribute('data-money')) val = parseMoney(val) || 0;
         else if (i.hasAttribute('data-dec')) val = parseQty(val) || 0;
         else if (i.tagName === 'INPUT') val = val.trim();
-        settings[k] = val; clearTimeout(t); t = setTimeout(saveSettings, 250);
+        settings[k] = val; if (['surUrgent', 'surNight', 'surWeekend'].includes(k)) { settings.refAdic = false; $('#aj-ref-adic', v)?.remove(); } clearTimeout(t); t = setTimeout(saveSettings, 250);
       };
       i.addEventListener('input', save);
       i.addEventListener('change', () => {
@@ -4476,6 +4571,7 @@ VIEWS.settings = {
       });
     });
     $$('[data-pm]', v).forEach(b => b.onclick = () => { settings.payMode = b.dataset.pm; saveSettings(); rerender(); });
+    $('[data-ref-adic]', v)?.addEventListener('click', () => { settings.refAdic = false; saveSettings(); $('#aj-ref-adic', v)?.remove(); pintarResumos(); toast('Percentuais confirmados.'); });
     $$('[data-aj-jur]', v).forEach(b => b.onclick = () => { settings.cardJuros = b.dataset.ajJur; saveSettings(); rerender(); });
     $$('[data-aj-paga]', v).forEach(b => b.onclick = () => { settings.cardPaga = b.dataset.ajPaga; saveSettings(); rerender(); });
     $$('[data-rate]', v).forEach(i => {

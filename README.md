@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.15.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 2.16.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -12,7 +12,8 @@ Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fá
 - Monte o orçamento escolhendo serviços e materiais da sua tabela de preços
 - Separe por ambiente (sala, cozinha, quartos…) e confira o total de cada item, também em PDF
 - Defina o prazo (dias úteis, dias corridos, semanas ou meses; o padrão fica em Ajustes) e toque no início: o app marca os dias no calendário, pulando fins de semana e feriados, e confere se fecha; o orçamento não aceita datas passadas
-- Pagamento à vista (com desconto à vista), com entrada, no cartão (sem juros, taxa da maquininha ou juros ao mês; sem juros até N×; débito) ou a combinar
+- Preços do app com a etiqueta "a conferir" até você mudar ou confirmar
+- Pagamento à vista (com desconto à vista), com entrada, no cartão (sem juros, taxa da maquininha ou juros ao mês; sem juros até N×; débito) ou a combinar; outras formas que o cliente pode escolher aparecem na proposta
 - Calcule o deslocamento pela distância, consumo do veículo e preço do combustível
 - Aplique adicionais de urgência, período noturno e fim de semana sobre a mão de obra
 - Envie a proposta em PDF (folha A4) ou pelo WhatsApp, com QR code do Pix da entrada

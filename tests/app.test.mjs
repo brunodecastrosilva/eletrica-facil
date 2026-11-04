@@ -569,3 +569,47 @@ test('pagamento: juros do cartão (taxa da maquininha, juros ao mês, sem juros 
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
+
+test('2.16: outras formas na proposta, alerta de margem, Comprei tudo e etiqueta "a conferir"', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  // etiqueta: os preços do app vêm "a conferir"; mudar ou confirmar tira a etiqueta; reajuste não tira
+  const r = await p.evaluate(() => {
+    const L = prices.filter(x => x.ref), x0 = L[0], x1 = L[1];
+    const antes = L.length;
+    return { antes, total: prices.length, adic: settings.refAdic, id0: x0.id, id1: x1.id, cat1: x1.cat, kind1: x1.kind };
+  });
+  assert.equal(r.antes, r.total, 'todos os preços do app começam a conferir');
+  assert.equal(r.adic, true);
+  await p.evaluate(() => go('/precos'));
+  assert.match(await p.textContent('#app'), /a conferir/);
+  await p.click(`[data-pid="${r.id0}"]`).catch(async () => { await p.click(`details[data-panel^="pr:"] > summary`); await p.click(`[data-pid="${r.id0}"]`); });
+  await p.click('.kf-dlg [data-ref-ok]');
+  assert.equal(await p.evaluate(id => prices.find(x => x.id === id).ref, r.id0), false);
+  await p.evaluate(() => { prices.forEach(x => { x.price = Math.round(x.price * 1.1); }); savePrices(); });
+  assert.equal(await p.evaluate(id => prices.find(x => x.id === id).ref, r.id1), true, 'reajuste não confirma');
+  // outras formas na proposta
+  const id = await criarOrcamento(p, 'Cliente Formas', 'Troca de tomada');
+  await p.evaluate(id => { const q = getQ(id); q.payment.mode = 'avista'; q.payment.avista = { mode: 'pct', pct: 5, value: 0 }; touch(q); go('/q/' + id); }, id);
+  await abrirPainel(p, `q:${id}:cond`);
+  await p.click('[data-outra="parcelado"]');
+  assert.equal(await p.locator('#pay-sum-parcelado').count(), 1);
+  assert.match(await p.evaluate(id => outrasTxt(getQ(id)), id), /cartão/i);
+  await p.evaluate(id => go('/q/' + id + '/proposta'), id);
+  assert.match(await p.textContent('#app'), /Ou, se preferir/);
+  assert.match(await p.evaluate(id => quoteMessage(getQ(id), compute(getQ(id))), id), /\*Ou, se preferir:\*/);
+  // alerta de margem: material lançado abaixo do custo médio do estoque
+  const am = await p.evaluate(() => {
+    const m = prices.find(x => x.kind === 'mat'); m.lotes = [{ id: 'l1', brand: 'X', qty: 10, cost: m.price + 500 }]; acertaLotes(m); savePrices();
+    const q = blankQuote(); q.items = [{ id: 'i', kind: 'mat', name: m.name, unit: m.unit, qty: 1, price: m.price, room: '' }];
+    return abaixoCusto(q, q.items[0]) === m.cost;
+  });
+  assert.equal(am, true);
+  // Comprei tudo: soma o material ao estoque e passa as ferramentas para Minhas
+  const ct = await p.evaluate(() => { const m = prices.find(x => x.kind === 'mat'); m.repor = true; m.reporQtd = 4; savePrices(); const t = tools.find(x => x.id === 'ft-escada-de-6-degraus'); t.quero = true; t.queroQtd = 1; saveTools(); go('/gestao'); return m.stock; });
+  await p.click('[data-compras]');
+  await p.click('.kf-dlg [data-cp-tudo]');
+  assert.deepEqual(await p.evaluate(() => { const m = prices.find(x => x.kind === 'mat'); return [m.stock, m.repor, tools.find(x => x.id === 'ft-escada-de-6-degraus').quero, itensDe('ft-escada-de-6-degraus').length]; }), [ct + 4, false, false, 1]);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});

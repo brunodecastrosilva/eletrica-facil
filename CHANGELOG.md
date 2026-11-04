@@ -2,6 +2,22 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.16.0 · 2026-11-03
+
+- **Valores de referência com etiqueta "a conferir" (cinza):** todo preço que vem com o app (mão de obra e material) e
+  os percentuais padrão dos adicionais. A etiqueta sai quando você muda o valor ou confirma: no item (Confirmar
+  preço), na caixa do material (Confirmar repasse), na categoria inteira (Confirmar todos) ou nos Ajustes
+  (Confirmar percentuais). O reajuste em massa não confirma. A etiqueta aparece em Preços, no catálogo de
+  Materiais, ao escolher itens e nos itens do orçamento; antes de enviar, a proposta avisa (só para você) quantos
+  itens estão com preço de referência. Quem já usa o app tem a etiqueta só nos itens com o preço de fábrica.
+- **Outras formas de pagamento na proposta:** além da forma principal, marque no orçamento as que o cliente também
+  pode escolher (à vista, entrada, cartão), cada uma com os seus ajustes. Elas aparecem na proposta, no PDF e no
+  WhatsApp em "Ou, se preferir".
+- **Alerta de margem:** o material lançado no orçamento com valor abaixo do seu custo médio no estoque mostra um aviso.
+- **Comprei tudo:** na lista de compras, os itens marcados entram no estoque (material) e nas suas ferramentas, com
+  Desfazer.
+- **Correção:** no celular pequeno, "Combinar" encostava na borda da escolha da forma de pagamento.
+
 ## 2.15.0 · 2026-11-03
 
 - **Cartão com juros:** três jeitos de cobrar o parcelado: **Sem juros**, **Taxa da maquininha** e **Juros ao mês**
