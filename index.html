@@ -128,16 +128,37 @@ svg.bolt{fill:currentColor;stroke:currentColor;stroke-width:.8}
 .search{position:relative}
 .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);width:20px;height:20px}
 .search input[type=search]{padding-left:44px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chips.scroll{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
-.chips.scroll::-webkit-scrollbar{display:none}
-.chip{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);border-radius:99px;min-height:38px;padding:0 14px;font-size:14.5px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;flex:none}
-.chip .n{color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
-.chip[aria-pressed="true"]{background:var(--graphite);border-color:var(--graphite);color:var(--graphite-ink)}
-.chip[aria-pressed="true"] .n{color:inherit;opacity:.75}
-.chip:disabled{opacity:.4;cursor:default}
-.chips.row5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
-.chips.row5 .chip{justify-content:center;padding:0 4px}
+/* linhas de escolha (no lugar dos botões lado a lado): bolinha = uma escolha, caixa = várias, seta = abre, + = acrescenta */
+.lins{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 14px}
+details.fold .lins,.vrows .lins{background:none;border:0;border-radius:0;padding:0}
+.lin{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);text-align:left;font-size:15.5px;font-weight:500;cursor:pointer}
+.lins>.lin:first-child{border-top:0}
+.lin .lt{flex:1;min-width:0}
+.lin .lt small{display:block;color:var(--muted);font-size:13.5px;font-weight:400}
+.lin .lr{color:var(--muted);font-variant-numeric:tabular-nums;font-size:14.5px;white-space:nowrap}
+.lin .lc{display:flex;color:var(--muted)}
+.lin .lc svg{width:18px;height:18px}
+.lin .mk{flex:none;width:22px;height:22px;border:2px solid var(--line-2);border-radius:6px;display:grid;place-items:center;color:var(--graphite-ink)}
+.lin.um .mk{border-radius:50%}
+.lin[aria-pressed="true"] .mk{border-color:var(--graphite);background:var(--graphite)}
+.lin.um[aria-pressed="true"] .mk{box-shadow:inset 0 0 0 4px var(--surface)}
+.lin.varios[aria-pressed="true"] .mk::after{content:"";width:10px;height:5px;border:solid currentColor;border-width:0 0 2.5px 2.5px;transform:translateY(-1px) rotate(-45deg)}
+.lin[aria-pressed="true"] .lr{color:var(--ink);font-weight:600}
+.lin.mais .mk{border:0;color:var(--volt-text)}
+.lin.mais .mk svg{width:20px;height:20px}
+.lin:disabled{cursor:default}
+.lin:disabled .lt,.lin:disabled .mk{color:var(--faint)}
+.lin:disabled .lt small{color:var(--faint)}
+.seg .n{display:block;font-size:12.5px;font-weight:500;opacity:.8;font-variant-numeric:tabular-nums}
+.seg.filtro{margin:0}
+/* rascunho na tela inicial: arrastar para a esquerda mostra Excluir */
+.qswipe{position:relative;border-radius:16px;overflow:hidden;display:block}
+.qswipe .qcard{position:relative;z-index:1;touch-action:pan-y;transition:transform .28s cubic-bezier(.45,0,.2,1)}
+.qswipe.arrastando .qcard{transition:none}
+.qc-del{position:absolute;inset:0 0 0 auto;width:104px;border:0;background:var(--bad);color:var(--surface);font-weight:700;font-size:14.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.qc-del svg{width:20px;height:20px;color:inherit}
+.qc-del:focus-visible{outline:3px solid var(--ink);outline-offset:-5px}
+@media (prefers-reduced-motion:reduce){.qswipe .qcard{transition:none}}
 .qlist{display:flex;flex-direction:column;gap:8px}
 .grp-h{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 4px 2px}
 .qcard{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:13px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;text-align:left;width:100%;color:var(--ink);align-items:center}
@@ -428,8 +449,8 @@ button.grp-h{width:100%;border:0;background:none;text-align:left;cursor:pointer}
 .conf-row b{font-weight:600}
 .conf-row small{display:block;color:var(--muted);font-size:13px}
 .conf-row .num{font-weight:700;white-space:nowrap}
-.xchips{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 12px;border-top:1px solid var(--line)}
-.xchips .lab{width:100%}
+.xlins{padding:10px 0 4px;border-top:1px solid var(--line)}
+.xlins .lab{display:block;margin-bottom:2px}
 .vrow-free{padding:2px 0 12px}
 .vrow.vbtn{width:100%;border-left:0;border-right:0;border-bottom:0;background:none;padding:6px 0;text-align:left;color:inherit;border-radius:0}
 .vrow.vbtn > span:first-child{display:flex;flex-direction:column;line-height:1.25;font-size:15.5px}
@@ -475,10 +496,7 @@ details.tech > summary .hint{font-size:13.5px}
 details.tech > summary::after{content:"+";font-size:24px;line-height:1;color:var(--muted)}
 details.tech[open] > summary::after{content:"–"}
 .tech-in{display:flex;flex-direction:column;gap:14px;margin-top:14px}
-.chip.sm-ico svg{width:16px;height:16px}
-.tech-chips{margin-bottom:2px}
 .lab-opt{font-weight:500;color:var(--faint);font-size:13px;margin-left:4px}
-.chip.sm{min-height:34px;padding:0 12px;font-size:14px}
 .kf-dlg-pe:has(.tb-prev){flex-wrap:wrap}
 .tb-prev{flex:1 1 100%;display:flex;flex-direction:column;gap:4px}
 .tb-prev label{font-size:13px;font-weight:600;color:var(--muted)}
@@ -632,7 +650,6 @@ body:has(#nav[hidden]) .kf-toast{bottom:calc(96px + env(safe-area-inset-bottom,0
   .bbar{left:var(--kf-trilho-w)}
 }
 /* lei 7: alvos de toque de pelo menos 44 px (revisão de 29/10) */
-.chip{min-height:44px}
 .grp-h{min-height:44px}
 .icon-btn.sm{width:44px;height:44px}
 .qty button,.qty .rm{min-width:44px;min-height:44px}
@@ -661,7 +678,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.18.0';
+const VERSAO = '2.19.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -771,9 +788,11 @@ const I = {
 
 /* ================= tabela inicial de preços (referência para ajustar) ================= */
 const UNITS = [['un', 'Unidade'], ['ponto', 'Ponto'], ['m', 'Metro'], ['m²', 'Metro quadrado'], ['h', 'Hora'], ['vb', 'Verba'],
-  ['pç', 'Peça'], ['par', 'Par'], ['rolo', 'Rolo'], ['cx', 'Caixa'], ['pct', 'Pacote'], ['barra', 'Barra'], ['kg', 'Quilo'], ['l', 'Litro']];
+  ['pç', 'Peça'], ['par', 'Par'], ['rolo', 'Rolo'], ['cx', 'Caixa'], ['pct', 'Pacote'], ['barra', 'Barra'], ['kg', 'Quilo'], ['l', 'Litro'],
+  ['saco', 'Saco'], ['galão', 'Galão'], ['kit', 'Kit']];
 const unitTxt = (q, u) => ({ un: 'un.', ponto: q === 1 ? 'ponto' : 'pontos', m: 'm', 'm²': 'm²', h: 'h', vb: q === 1 ? 'verba' : 'verbas',
-  'pç': q === 1 ? 'peça' : 'peças', par: q === 1 ? 'par' : 'pares', rolo: q === 1 ? 'rolo' : 'rolos', cx: q === 1 ? 'caixa' : 'caixas', pct: q === 1 ? 'pacote' : 'pacotes', barra: q === 1 ? 'barra' : 'barras', kg: 'kg', l: 'L' }[u] || u || 'un.');
+  'pç': q === 1 ? 'peça' : 'peças', par: q === 1 ? 'par' : 'pares', rolo: q === 1 ? 'rolo' : 'rolos', cx: q === 1 ? 'caixa' : 'caixas', pct: q === 1 ? 'pacote' : 'pacotes', barra: q === 1 ? 'barra' : 'barras', kg: 'kg', l: 'L',
+  saco: q === 1 ? 'saco' : 'sacos', 'galão': q === 1 ? 'galão' : 'galões', kit: q === 1 ? 'kit' : 'kits' }[u] || u || 'un.');
 const unitName = u => (UNITS.find(x => x[0] === u) || UNITS[0])[1].toLowerCase();
 const SEED = [
   ['svc', 'Tomadas e interruptores', 'Instalação de tomada ou interruptor', 'un', 4500],
@@ -831,7 +850,7 @@ const SEED = [
   ['mat', 'Iluminação', 'Plafon LED 18 W', 'un', 4500],
   ['mat', 'Diversos', 'Fita isolante', 'un', 800],
   ['mat', 'Diversos', 'Conector de emenda', 'un', 150],
-  ['mat', 'Diversos', 'Abraçadeiras (pacote)', 'un', 1000],
+  ['mat', 'Diversos', 'Abraçadeiras', 'pct', 1000],
   // 2.15: catálogo ampliado de mão de obra e material (preços de referência)
   ['svc', 'Tomadas e interruptores', 'Instalação de tomada USB', 'un', 5500],
   ['svc', 'Tomadas e interruptores', 'Troca de espelho ou placa', 'un', 1500],
@@ -907,9 +926,9 @@ const SEED = [
   ['mat', 'Cabos', 'Cabo solar 6 mm²', 'm', 900],
   ['mat', 'Eletrodutos e caixas', 'Eletroduto corrugado 1"', 'm', 350],
   ['mat', 'Eletrodutos e caixas', 'Eletroduto corrugado 1/2"', 'm', 200],
-  ['mat', 'Eletrodutos e caixas', 'Eletroduto rígido PVC 3/4" (barra 3 m)', 'barra', 1800],
-  ['mat', 'Eletrodutos e caixas', 'Eletroduto rígido PVC 1" (barra 3 m)', 'barra', 2600],
-  ['mat', 'Eletrodutos e caixas', 'Eletroduto metálico 3/4" (barra 3 m)', 'barra', 4500],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto rígido PVC 3/4" de 3 m', 'barra', 1800],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto rígido PVC 1" de 3 m', 'barra', 2600],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto metálico 3/4" de 3 m', 'barra', 4500],
   ['mat', 'Eletrodutos e caixas', 'Curva PVC 3/4"', 'un', 400],
   ['mat', 'Eletrodutos e caixas', 'Luva PVC 3/4"', 'un', 200],
   ['mat', 'Eletrodutos e caixas', 'Bucha e arruela 3/4"', 'un', 150],
@@ -917,8 +936,8 @@ const SEED = [
   ['mat', 'Eletrodutos e caixas', 'Caixa octogonal 4x4 de laje', 'un', 450],
   ['mat', 'Eletrodutos e caixas', 'Caixa de sobrepor 4x2', 'un', 800],
   ['mat', 'Eletrodutos e caixas', 'Condulete 3/4"', 'un', 1200],
-  ['mat', 'Eletrodutos e caixas', 'Canaleta 20 x 10 mm (barra 2 m)', 'barra', 1200],
-  ['mat', 'Eletrodutos e caixas', 'Eletrocalha perfurada 100 x 50 (barra 3 m)', 'barra', 9000],
+  ['mat', 'Eletrodutos e caixas', 'Canaleta 20 x 10 mm de 2 m', 'barra', 1200],
+  ['mat', 'Eletrodutos e caixas', 'Eletrocalha perfurada 100 x 50 de 3 m', 'barra', 9000],
   ['mat', 'Eletrodutos e caixas', 'Caixa de passagem 20 x 20', 'un', 3500],
   ['mat', 'Eletrodutos e caixas', 'Abraçadeira tipo D 3/4"', 'un', 100],
   ['mat', 'Eletrodutos e caixas', 'Fita perfurada', 'm', 200],
@@ -970,7 +989,7 @@ const SEED = [
   ['mat', 'Iluminação', 'Spot direcionável', 'un', 4500],
   ['mat', 'Iluminação', 'Fita de LED 5 m', 'un', 6000],
   ['mat', 'Iluminação', 'Fonte para fita de LED', 'un', 5000],
-  ['mat', 'Iluminação', 'Perfil de alumínio para LED (barra 2 m)', 'barra', 4000],
+  ['mat', 'Iluminação', 'Perfil de alumínio para LED de 2 m', 'barra', 4000],
   ['mat', 'Iluminação', 'Refletor LED 50 W', 'un', 7000],
   ['mat', 'Iluminação', 'Refletor LED 100 W', 'un', 12000],
   ['mat', 'Iluminação', 'Luminária de emergência', 'un', 3500],
@@ -1003,23 +1022,23 @@ const SEED = [
   ['mat', 'Conexões e terminais', 'Conector de emenda Wago (2 vias)', 'un', 250],
   ['mat', 'Conexões e terminais', 'Conector de emenda Wago (3 vias)', 'un', 300],
   ['mat', 'Conexões e terminais', 'Conector de emenda Wago (5 vias)', 'un', 400],
-  ['mat', 'Conexões e terminais', 'Terminal tubular (pacote 100)', 'pct', 1500],
-  ['mat', 'Conexões e terminais', 'Terminal olhal (pacote 100)', 'pct', 2500],
-  ['mat', 'Conexões e terminais', 'Terminal forquilha (pacote 100)', 'pct', 2500],
+  ['mat', 'Conexões e terminais', 'Terminal tubular, 100 peças', 'pct', 1500],
+  ['mat', 'Conexões e terminais', 'Terminal olhal, 100 peças', 'pct', 2500],
+  ['mat', 'Conexões e terminais', 'Terminal forquilha, 100 peças', 'pct', 2500],
   ['mat', 'Conexões e terminais', 'Conector split bolt', 'un', 1200],
   ['mat', 'Conexões e terminais', 'Borne de passagem', 'un', 600],
   ['mat', 'Conexões e terminais', 'Conector de derivação perfurante', 'un', 1500],
-  ['mat', 'Fixação e acabamento', 'Bucha e parafuso 6 mm (pacote 100)', 'pct', 1500],
-  ['mat', 'Fixação e acabamento', 'Bucha e parafuso 8 mm (pacote 100)', 'pct', 2000],
-  ['mat', 'Fixação e acabamento', 'Abraçadeira de nylon (pacote 100)', 'pct', 1200],
-  ['mat', 'Fixação e acabamento', 'Abraçadeira com base adesiva (pacote 100)', 'pct', 2500],
+  ['mat', 'Fixação e acabamento', 'Bucha e parafuso 6 mm, 100 peças', 'pct', 1500],
+  ['mat', 'Fixação e acabamento', 'Bucha e parafuso 8 mm, 100 peças', 'pct', 2000],
+  ['mat', 'Fixação e acabamento', 'Abraçadeira de nylon, 100 peças', 'pct', 1200],
+  ['mat', 'Fixação e acabamento', 'Abraçadeira com base adesiva, 100 peças', 'pct', 2500],
   ['mat', 'Fixação e acabamento', 'Espaguete termorretrátil', 'm', 300],
   ['mat', 'Fixação e acabamento', 'Fita isolante de alta fusão', 'un', 2500],
-  ['mat', 'Fixação e acabamento', 'Fita isolante colorida (kit)', 'un', 2500],
+  ['mat', 'Fixação e acabamento', 'Fita isolante colorida', 'kit', 2500],
   ['mat', 'Fixação e acabamento', 'Massa de calafetar', 'un', 1500],
-  ['mat', 'Fixação e acabamento', 'Gesso (saco 1 kg)', 'un', 600],
-  ['mat', 'Fixação e acabamento', 'Massa corrida (galão)', 'un', 4500],
-  ['mat', 'Fixação e acabamento', 'Identificador de cabos (kit)', 'un', 2000],
+  ['mat', 'Fixação e acabamento', 'Gesso 1 kg', 'saco', 600],
+  ['mat', 'Fixação e acabamento', 'Massa corrida', 'galão', 4500],
+  ['mat', 'Fixação e acabamento', 'Identificador de cabos', 'kit', 2000],
 ];
 const catOrder = kind => [...new Set(SEED.filter(s => s[0] === kind).map(s => s[1])), 'Outros'];
 // itens que entraram depois da primeira tabela (são acrescentados em quem já usa o app)
@@ -1067,7 +1086,7 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
+  novidades: [{ versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
     'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
     'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
     'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
@@ -1179,6 +1198,7 @@ function fixQuote(q) {
   q.extras = { urgent: 0, night: 0, weekend: 0, ...(q.extras || {}) };
   q.rooms = (Array.isArray(q.rooms) ? q.rooms : []).filter(r => r && r.id).map(r => ({ id: String(r.id), name: String(r.name || 'Ambiente') }));
   q.useRooms = !!q.useRooms;
+  acertaGeral(q);
   q.trip = q.trip && typeof q.trip === 'object' ? q.trip : null;
   ['diag', 'work', 'recs'].forEach(k => { q[k] = String(q[k] || ''); });
   q.tests = Array.isArray(q.tests) ? q.tests.map(t => TESTS_V1[t] || String(t)).filter(Boolean) : [];
@@ -1322,6 +1342,23 @@ if ((settings.toolSeedV || 0) < 2) {
   settings.toolSeedV = 2; LS.set('tools', tools); saveSettings();
 }
 settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
+// 2.19: a unidade sai do nome do material e fica só no campo de unidade ("Gesso (saco 1 kg)" vira "Gesso 1 kg", por saco)
+const RENOMEIA_V6 = [['Abraçadeiras (pacote)', 'Abraçadeiras', 'un', 'pct'], ['Eletroduto rígido PVC 3/4" (barra 3 m)', 'Eletroduto rígido PVC 3/4" de 3 m'],
+  ['Eletroduto rígido PVC 1" (barra 3 m)', 'Eletroduto rígido PVC 1" de 3 m'], ['Eletroduto metálico 3/4" (barra 3 m)', 'Eletroduto metálico 3/4" de 3 m'],
+  ['Canaleta 20 x 10 mm (barra 2 m)', 'Canaleta 20 x 10 mm de 2 m'], ['Eletrocalha perfurada 100 x 50 (barra 3 m)', 'Eletrocalha perfurada 100 x 50 de 3 m'],
+  ['Perfil de alumínio para LED (barra 2 m)', 'Perfil de alumínio para LED de 2 m'], ['Terminal tubular (pacote 100)', 'Terminal tubular, 100 peças'],
+  ['Terminal olhal (pacote 100)', 'Terminal olhal, 100 peças'], ['Terminal forquilha (pacote 100)', 'Terminal forquilha, 100 peças'],
+  ['Bucha e parafuso 6 mm (pacote 100)', 'Bucha e parafuso 6 mm, 100 peças'], ['Bucha e parafuso 8 mm (pacote 100)', 'Bucha e parafuso 8 mm, 100 peças'],
+  ['Abraçadeira de nylon (pacote 100)', 'Abraçadeira de nylon, 100 peças'], ['Abraçadeira com base adesiva (pacote 100)', 'Abraçadeira com base adesiva, 100 peças'],
+  ['Fita isolante colorida (kit)', 'Fita isolante colorida', 'un', 'kit'], ['Gesso (saco 1 kg)', 'Gesso 1 kg', 'un', 'saco'],
+  ['Massa corrida (galão)', 'Massa corrida', 'un', 'galão'], ['Identificador de cabos (kit)', 'Identificador de cabos', 'un', 'kit']];
+if ((settings.seedV || 0) < 6) {
+  RENOMEIA_V6.forEach(([de, para, u0, u1]) => {
+    const p = prices.find(x => x.kind === 'mat' && norm(x.name) === norm(de));
+    if (!p || prices.some(x => x.kind === 'mat' && norm(x.name) === norm(para))) return;
+    p.name = para; if (u1 && p.unit === u0) p.unit = u1;
+  });
+}
 if ((settings.seedV || 0) < 2) {
   prices.forEach(p => { if (p.name === 'Interruptor paralelo com placa') p.name = 'Interruptor paralelo (three-way) com placa'; });
   SEED.filter(x => SEED_V2.includes(x[2])).forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price }); });
@@ -1344,9 +1381,10 @@ if ((settings.seedV || 0) < 5) {
   prices = prices.filter(p => !(p.ref && p.kind === 'svc' && norm(p.name) === norm('Atendimento de emergência')));
   settings.seedV = 5; savePrices(); saveSettings();
 }
+if ((settings.seedV || 0) < 6) { settings.seedV = 6; savePrices(); saveSettings(); }
 
 const getQ = id => quotes.find(q => q.id === id);
-const touch = q => { q.updatedAt = Date.now(); saveQuotes(); };
+const touch = q => { acertaGeral(q); q.updatedAt = Date.now(); saveQuotes(); };
 const numLabel = q => q.example ? 'Exemplo' : 'Nº ' + String(q.num || 0).padStart(4, '0');
 const isEmptyQuote = q => !q.example && !q.client.name && !q.title && !q.items.length;
 
@@ -1548,13 +1586,24 @@ const tripShort = (t, r = tripCalc(t)) => `${plural(Math.max(1, t.visits || 1), 
 const tripLong = (t, r = tripCalc(t)) => `${plural(Math.max(1, t.visits || 1), 'visita', 'visitas')} à obra, ${fmtQty(r.km)} km no total${t.roundTrip ? ' (ida e volta)' : ''}.`;
 const mapsLink = addr => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}`;
 // ambientes (cômodos)
-const ROOM_CHIPS = ['Sala', 'Cozinha', 'Quarto', 'Banheiro', 'Lavabo', 'Área de serviço', 'Varanda', 'Corredor', 'Escritório', 'Garagem', 'Área externa'];
+const ROOM_CHIPS = ['Geral', 'Sala', 'Cozinha', 'Quarto', 'Banheiro', 'Lavabo', 'Área de serviço', 'Varanda', 'Corredor', 'Escritório', 'Garagem', 'Área externa'];
 const roomOf = (q, i) => i.room && q.rooms.some(r => r.id === i.room) ? i.room : '';
 const roomName = (q, id) => id ? ((q.rooms.find(r => r.id === id) || {}).name || 'Ambiente') : 'Geral';
 function roomList(q) {
   const G = q.rooms.map(r => ({ id: r.id, name: r.name, items: q.items.filter(i => i.room === r.id) }));
-  G.push({ id: '', name: 'Geral', items: q.items.filter(i => !roomOf(q, i)) });
+  const soltos = q.items.filter(i => !roomOf(q, i));
+  if (soltos.length) G.push({ id: '', name: 'Geral', items: soltos });
   return G;
+}
+// Geral é um ambiente como os outros (2.19): item sem ambiente vai para ele, que é criado só quando preciso,
+// com id fixo para sair igual em todo aparelho; pode ser renomeado e excluído
+function acertaGeral(q) {
+  if (!q.useRooms) return;
+  const soltos = q.items.filter(i => !roomOf(q, i));
+  if (!soltos.length) return;
+  let g = q.rooms.find(r => r.id === 'geral') || q.rooms.find(r => norm(r.name) === 'geral');
+  if (!g) { g = { id: 'geral', name: uniqueRoomName(q, 'Geral') }; q.rooms.push(g); }
+  soltos.forEach(i => { i.room = g.id; });
 }
 function uniqueRoomName(q, base) {
   const names = q.rooms.map(r => norm(r.name));
@@ -1862,6 +1911,16 @@ const panelOpen = (key, id, title, sum, o = {}) => `<details class="fold" data-k
 const panelClose = '</div></details>';
 const resumoDe = (L, nome) => L.slice(0, 3).map(nome).filter(Boolean).join(' · ') + (L.length > 3 ? '…' : '');
 const conta = n => `<span class="card-sum">${n}</span>`;
+// linhas de escolha, no lugar dos botões lado a lado: 'um' (bolinha), 'varios' (caixa de marcar), 'ir' (seta: abre algo), 'mais' (acrescenta)
+const linha = (attrs, txt, { tipo = 'ir', on = false, dir = '', sub = '', dis = false } = {}) =>
+  `<button type="button" class="lin ${tipo}" ${attrs}${tipo === 'um' || tipo === 'varios' ? ` aria-pressed="${!!on}"` : ''}${dis ? ' disabled' : ''}>`
+  + (tipo === 'ir' ? '' : `<span class="mk" aria-hidden="true">${tipo === 'mais' ? (dis ? I.check : I.plus) : ''}</span>`)
+  + `<span class="lt">${txt}${sub ? `<small>${sub}</small>` : ''}</span>${dir ? `<span class="lr">${dir}</span>` : ''}${tipo === 'ir' ? `<span class="lc" aria-hidden="true">${I.chev}</span>` : ''}</button>`;
+const linhas = (rows, attrs = '') => `<div class="lins"${attrs}>${rows.join('')}</div>`;
+// linha "mais" que já foi usada: fica marcada e desligada
+const linhaFeita = (b, feita) => { b.disabled = feita; const m = $('.mk', b); if (m) m.innerHTML = feita ? I.check : I.plus; };
+// filtro curto: segmentos com a contagem embaixo
+const filtroSeg = (attr, L, atual, n, rot) => `<div class="seg filtro" role="group" aria-label="${rot}">${L.map(([k, l]) => `<button ${attr}="${k}" aria-pressed="${atual === k}">${l}<span class="n">${n(k)}</span></button>`).join('')}</div>`;
 const panel = (key, id, title, sum, body, o) => panelOpen(key, id, title, sum, o) + body + panelClose;
 function paintSums(root, map) {
   for (const k in map) {
@@ -2055,6 +2114,55 @@ function quoteCard(q) {
     <span class="qc-meta">${q.example ? '<span class="tag-ex">Exemplo</span> · ' : esc(numLabel(q)) + ' · '}${esc(when)}${nudge}</span>
   </button>`;
 }
+// rascunho: arrastar o cartão para a esquerda mostra Excluir (o botão também recebe o foco pelo teclado e pelo leitor de tela)
+const QC_DEL = 104;
+function draftCard(q) {
+  return `<div class="qswipe" data-swipe="${q.id}">${quoteCard(q)}<button class="qc-del" data-del-draft="${q.id}">${I.trash}<span>Excluir</span><span class="sr-only"> rascunho ${esc(q.client.name || q.title || numLabel(q))}</span></button></div>`;
+}
+function excluiRascunho(id) {
+  const q = getQ(id); if (!q) return;
+  const idx = quotes.indexOf(q);
+  quotes = quotes.filter(x => x !== q); saveQuotes(); rerender();
+  toast('Rascunho excluído.', { label: 'Desfazer', run: () => { quotes.splice(Math.max(0, idx), 0, q); saveQuotes(); rerender(); } });
+}
+function bindSwipe(v) {
+  let aberto = null, arrastou = false;
+  const poe = (w, x) => { const c = $('.qcard', w); c.style.transform = x ? `translateX(${x}px)` : ''; };
+  const fecha = () => { if (aberto) { poe(aberto, 0); aberto = null; } };
+  $$('[data-swipe]', v).forEach(w => {
+    const c = $('.qcard', w), del = $('.qc-del', w);
+    let x0 = 0, y0 = 0, dx = 0, base = 0, modo = '', id = null;
+    c.addEventListener('pointerdown', e => {
+      if (e.button) return;
+      if (aberto && aberto !== w) fecha();
+      x0 = e.clientX; y0 = e.clientY; dx = 0; modo = ''; id = e.pointerId; base = aberto === w ? -QC_DEL : 0; arrastou = false;
+    });
+    c.addEventListener('pointermove', e => {
+      if (e.pointerId !== id) return;
+      const mx = e.clientX - x0, my = e.clientY - y0;
+      if (!modo) { if (Math.abs(mx) > 8 && Math.abs(mx) > Math.abs(my)) { modo = 'x'; c.setPointerCapture(id); w.classList.add('arrastando'); } else if (Math.abs(my) > 8) modo = 'y'; }
+      if (modo !== 'x') return;
+      dx = Math.max(-QC_DEL - 24, Math.min(0, base + mx)); poe(w, dx);
+    });
+    const solta = e => {
+      if (e.pointerId !== id) return; id = null;
+      w.classList.remove('arrastando');
+      if (modo !== 'x') return;
+      arrastou = true;
+      if (dx < -QC_DEL / 2) { poe(w, -QC_DEL); aberto = w; } else { poe(w, 0); if (aberto === w) aberto = null; }
+    };
+    c.addEventListener('pointerup', solta); c.addEventListener('pointercancel', solta);
+    // depois de arrastar, o toque não abre o orçamento; com Excluir à mostra, tocar no cartão só fecha
+    c.addEventListener('click', e => {
+      if (!arrastou && aberto !== w) return;
+      e.stopPropagation(); e.preventDefault();
+      if (arrastou) arrastou = false; else fecha();
+    }, true);
+    del.addEventListener('focus', () => { if (aberto && aberto !== w) fecha(); poe(w, -QC_DEL); aberto = w; });
+    del.addEventListener('blur', () => setTimeout(() => { if (aberto === w && document.activeElement !== del) fecha(); }, 0));
+    del.addEventListener('click', () => excluiRascunho(w.dataset.swipe));
+  });
+}
 // Início: os orçamentos em seções (por situação; em Concluídos e Recusados, por mês), como no resto do app
 const HOME_G = [['enviado', 'Aguardando resposta'], ['aprovado', 'Aprovados · a executar'], ['rascunho', 'Rascunhos'], ['concluido', 'Concluídos'], ['recusado', 'Recusados']];
 function homeListHTML() {
@@ -2071,7 +2179,7 @@ function homeListHTML() {
     L.forEach(q => { const d = new Date(quando(q)), k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; if (!meses.has(k)) meses.set(k, []); meses.get(k).push(q); });
     grupos = [...meses].sort((a, b) => b[0].localeCompare(a[0])).map(([k, M]) => [`home:${homeFilter}:${k}`, capFirst(new Date(k + '-15T12:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })), M, '']);
   } else grupos = HOME_G.map(([st, l]) => [`home:${st}`, l, L.filter(q => q.status === st), st]).filter(g => g[2].length);
-  return grupos.map(([key, l, M, st]) => panel(key, '', esc(l), qf ? null : resumoDe(M, q => q.client.name || q.title || numLabel(q)), `<div class="qlist">${M.map(quoteCard).join('')}</div>`,
+  return grupos.map(([key, l, M, st]) => panel(key, '', esc(l), qf ? null : resumoDe(M, q => q.client.name || q.title || numLabel(q)), `<div class="qlist">${M.map(q => q.status === 'rascunho' ? draftCard(q) : quoteCard(q)).join('')}</div>`,
     { right: conta(M.length), force: qf ? true : undefined, attrs: st ? ` id="grp-${st}"` : '' })).join('');
 }
 VIEWS.home = {
@@ -2107,7 +2215,7 @@ VIEWS.home = {
       ${needMe ? `<div class="banner b-tip"><p><b>Seu nome ainda não sai na proposta.</b> Preencha seus dados e chave Pix em Ajustes.</p><div class="banner-act"><button class="btn sm dark" data-aj="conta">Preencher meus dados</button></div></div>` : ''}
       <div class="toolbar">
         ${quotes.length > 4 ? `<label class="search">${I.search}<input type="search" id="h-q" placeholder="Buscar cliente, serviço ou número" value="${esc(homeQuery)}" aria-label="Buscar orçamento"></label>` : ''}
-        <div class="chips scroll" role="group" aria-label="Filtrar">${[['todos', 'Todos'], ['aberto', 'Em aberto'], ['concluido', 'Concluídos'], ['recusado', 'Recusados']].map(([k, l]) => `<button class="chip" data-filter="${k}" aria-pressed="${homeFilter === k}">${l} <span class="n">${cnt(k)}</span></button>`).join('')}</div>
+        ${filtroSeg('data-filter', [['todos', 'Todos'], ['aberto', 'Em aberto'], ['concluido', 'Concluídos'], ['recusado', 'Recusados']], homeFilter, cnt, 'Filtrar')}
         ${KitFacil.ui.criar({ rotulo: 'Novo orçamento', attrs: 'data-new' })}
       </div>
       <div class="qlist" id="q-list">${homeListHTML()}</div>
@@ -2130,7 +2238,8 @@ VIEWS.home = {
       else toast(b.dataset.jump === 'enviado' ? 'Nenhum orçamento aguardando resposta.' : 'Nenhum orçamento aprovado a executar.');
     });
     const sq = $('#h-q', v);
-    if (sq) sq.addEventListener('input', () => { homeQuery = sq.value; $('#q-list').innerHTML = homeListHTML(); });
+    if (sq) sq.addEventListener('input', () => { homeQuery = sq.value; $('#q-list').innerHTML = homeListHTML(); bindSwipe($('#q-list')); });
+    bindSwipe(v);
   },
 };
 
@@ -2273,13 +2382,15 @@ const TECH_TITLE = { diag: 'Diagnóstico', work: 'Serviço realizado', tests: 'T
 function techSheet(q, key, idx, onAdd) {
   const it = TECH[key][idx], rooms = techRooms(q), sel = { o: [], w: [], r: [], v: '' };
   const av = $('.kf-toast'); if (av) av.hidden = true;
-  const chips = (grp, list, one) => `<div class="chips" data-grp="${grp}"${one ? ' data-one' : ''}>${list.map((x, i) => `<button class="chip" data-i="${i}" aria-pressed="false">${esc(x)}</button>`).join('')}</div>`;
+  const grupo = (grp, list, one) => linhas(list.map((x, i) => linha(`data-i="${i}"`, esc(x), { tipo: one ? 'um' : 'varios' })), ` data-grp="${grp}"${one ? ' data-one' : ''}`);
+  // cada escolha numa seção; a primeira (obrigatória) já vem aberta, as opcionais fechadas com o resumo do que foi marcado
+  const secao = (grp, lab, list, one, aberta) => panel(`tb:${grp}`, `tb-${grp}`, esc(lab), aberta ? 'Escolha uma opção' : 'Opcional', grupo(grp, list, one), { force: aberta });
   const body = it.free
     ? `<div class="field"><label for="tb-out">Descreva o teste e o resultado</label><textarea id="tb-out" placeholder="Ex.: Medição da corrente de fuga do chuveiro: dentro do limite."></textarea></div>`
-    : `${it.o ? `<div class="field"><span class="lab">${esc(it.o.lab)}</span>${chips('o', it.o.list.map(x => x[0]), it.o.one)}</div>` : ''}
-      ${it.w ? `<div class="field"><span class="lab">${esc(it.w.lab)} <span class="lab-opt">opcional</span></span>${chips('w', PLACES[it.w.list].map(x => x[0]))}</div>` : ''}
-      ${it.r ? `<div class="field"><span class="lab">Ambiente <span class="lab-opt">opcional</span></span>${chips('r', rooms)}</div>` : ''}
-      ${it.v ? `<div class="field"><label for="tb-v">${esc(it.v.lab)}</label><input id="tb-v" type="text" autocomplete="off"><div class="chips">${it.v.sug.map(x => `<button class="chip sm" data-sug="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>` : ''}
+    : `<div class="stack14">${it.o ? secao('o', it.o.lab, it.o.list.map(x => x[0]), it.o.one, true) : ''}
+      ${it.w ? secao('w', it.w.lab, PLACES[it.w.list].map(x => x[0]), false, !it.o) : ''}
+      ${it.r ? secao('r', 'Ambiente', rooms, false, false) : ''}
+      ${it.v ? `<div class="field"><label for="tb-v">${esc(it.v.lab)}</label><input id="tb-v" type="text" autocomplete="off">${linhas(it.v.sug.map(x => linha(`data-sug="${esc(x)}"`, esc(x), { tipo: 'um' })), ' role="group" aria-label="Sugestões"')}</div>` : ''}</div>
 `;
   openSheet({ title: `${TECH_TITLE[key]}: ${it.l}`, tall: true, body,
     foot: `${it.free ? '' : '<div class="tb-prev"><label for="tb-out">Vai entrar assim</label><textarea id="tb-out" rows="2" placeholder="Escolha as opções acima"></textarea></div>'}<button class="btn ghost" data-no>Cancelar</button><button class="btn primary" data-ok>${I.plus}Adicionar</button>`,
@@ -2295,12 +2406,16 @@ function techSheet(q, key, idx, onAdd) {
         const grp = g.dataset.grp, i = +b.dataset.i, on = !sel[grp].includes(i);
         if (g.hasAttribute('data-one')) { sel[grp] = on ? [i] : []; $$('[data-i]', g).forEach(x => x.setAttribute('aria-pressed', on && +x.dataset.i === i)); }
         else { sel[grp] = on ? [...sel[grp], i] : sel[grp].filter(x => x !== i); b.setAttribute('aria-pressed', on); }
+        const nomes = sel[grp].map(k => $(`[data-i="${k}"] .lt`, g).textContent), sm = $(`[data-sum="tb-${grp}"]`, s);
+        if (sm) sm.textContent = nomes.length ? resumoDe(nomes, x => x) : grp === 'o' ? 'Escolha uma opção' : 'Opcional';
         dirty = false; refresh();
       }));
       const v = $('#tb-v', s);
       if (v) {
         v.addEventListener('input', () => { sel.v = v.value; dirty = false; refresh(); });
-        $$('[data-sug]', s).forEach(b => b.onclick = () => { v.value = sel.v = b.dataset.sug; dirty = false; refresh(); });
+        const marcaSug = () => $$('[data-sug]', s).forEach(x => x.setAttribute('aria-pressed', x.dataset.sug === v.value.trim()));
+        v.addEventListener('input', marcaSug);
+        $$('[data-sug]', s).forEach(b => b.onclick = () => { v.value = sel.v = b.dataset.sug; dirty = false; refresh(); marcaSug(); });
       }
       out.addEventListener('input', () => { dirty = true; ok.disabled = !out.value.trim(); });
       $('[data-no]', s).onclick = () => closeSheet();
@@ -2309,16 +2424,19 @@ function techSheet(q, key, idx, onAdd) {
       if (it.free) setTimeout(() => out.focus(), 60);
     } });
 }
-function techChips(key) {
-  return `<div class="chips tech-chips">${TECH[key].map((it, k) => `<button class="chip sm-ico" data-tc="${key}" data-ti="${k}">${I.plus}${esc(it.l)}</button>`).join('')}</div>`;
+// etapa 1: a lista de textos padrão, numa seção própria; com seta abre a etapa 2, com + entra direto
+function techChips(key, q) {
+  const L = TECH[key];
+  return panel(`q:${q.id}:${key}:pad`, '', 'Textos padrão', resumoDe(L, it => it.l),
+    linhas(L.map((it, k) => linha(`data-tc="${key}" data-ti="${k}"`, esc(it.l), it.s ? { tipo: 'mais', dis: key !== 'tests' && q[key].includes(it.s) } : {}))), { right: conta(L.length) });
 }
 const firstLine = (t, empty) => (String(t || '').trim().split('\n')[0] || empty);
 function techField(q, key, label, ph, extra = '') {
   return panel(`q:${q.id}:${key}`, key, label, firstLine(q[key], 'Toque para preencher'),
-    `${techChips(key)}<textarea id="q-${key}" data-tech="${key}" aria-label="${esc(label)}" placeholder="${esc(ph)}">${esc(q[key])}</textarea>${extra}`, { sub: true });
+    `${techChips(key, q)}<textarea id="q-${key}" data-tech="${key}" aria-label="${esc(label)}" placeholder="${esc(ph)}">${esc(q[key])}</textarea>${extra}`, { sub: true });
 }
 const testsSum = q => q.tests.length ? plural(q.tests.length, 'teste registrado', 'testes registrados') : 'Toque para registrar';
-const testsHTML = q => panel(`q:${q.id}:tests`, 'tests', 'Testes e verificações', testsSum(q), `<p class="hint">Escolha o teste e depois onde foi feito e o resultado.</p>${techChips('tests')}
+const testsHTML = q => panel(`q:${q.id}:tests`, 'tests', 'Testes e verificações', testsSum(q), `<p class="hint">Escolha o teste e depois onde foi feito e o resultado.</p>${techChips('tests', q)}
   <div class="test-list">${q.tests.map((t, k) => `<div class="test-row"><span class="tk">${I.check}</span><span class="tt">${esc(t)}</span><button class="icon-btn sm" data-test-rm="${k}" aria-label="Remover teste">${I.x}</button></div>`).join('')}</div>`, { sub: true });
 function techSum(q) {
   const L = [q.diag.trim() && 'diagnóstico', q.work.trim() && 'serviços', q.tests.length && plural(q.tests.length, 'teste', 'testes'), q.recs.trim() && 'recomendações'].filter(Boolean);
@@ -2399,7 +2517,7 @@ function statusBanner(q, c) {
 function payDetailHTML(q, c, mode) {
   const p = q.payment;
   let detail = '';
-  if (mode === 'entrada') detail = `<div class="field"><span class="lab">Entrada na aprovação</span><div class="chips row5">${[30, 40, 50, 60, 70].map(n => `<button class="chip" data-ep="${n}" aria-pressed="${p.entryPct === n}">${n}%</button>`).join('')}</div></div>`;
+  if (mode === 'entrada') detail = `<div class="field"><span class="lab">Entrada na aprovação</span><div class="seg" role="group" aria-label="Entrada na aprovação">${[30, 40, 50, 60, 70].map(n => `<button data-ep="${n}" aria-pressed="${p.entryPct === n}">${n}%</button>`).join('')}</div></div>`;
   if (mode === 'avista') {
     const a = p.avista;
     detail = `<div class="field"><label for="q-avd">Desconto para pagamento à vista</label><div class="disc"><div class="seg" role="group" aria-label="Tipo de desconto à vista"><button data-avm="pct" aria-pressed="${a.mode === 'pct'}">%</button><button data-avm="value" aria-pressed="${a.mode === 'value'}">R$</button></div>${a.mode === 'value'
@@ -2427,7 +2545,7 @@ function payBlockHTML(q, c) {
   const p = q.payment, outras = ['avista', 'entrada', 'parcelado'].filter(m => m !== p.mode);
   const alts = outrasFormas(q).map(m => { const x = comForma(q, m); return panel(`q:${q.id}:alt:${m}`, '', `${PAY_NOME[m]}, também na proposta`, payText(x.q, x.c).replace(/\.$/, ''), `${payDetailHTML(q, x.c, m)}<div class="pay-sum" id="pay-sum-${m}">${paySumHTML(x.q, x.c)}</div>`); }).join('');
   return payDetailHTML(q, c, p.mode) + `<div class="pay-sum" id="pay-sum">${paySumHTML(q, c)}</div>`
-    + (isReport(q) ? '' : `<div class="field"><span class="lab" id="q-outras-l">O cliente também pode pagar</span><div class="chips" role="group" aria-labelledby="q-outras-l">${outras.map(m => `<button class="chip" data-outra="${m}" aria-pressed="${(p.outras || []).includes(m)}">${(p.outras || []).includes(m) ? I.check : I.plus}${PAY_NOME[m]}</button>`).join('')}</div><span class="hint">As formas marcadas aparecem na proposta, além da principal.</span></div>${alts}`);
+    + (isReport(q) ? '' : `<div class="field"><span class="lab" id="q-outras-l">O cliente também pode pagar</span>${linhas(outras.map(m => linha(`data-outra="${m}"`, PAY_NOME[m], { tipo: 'varios', on: (p.outras || []).includes(m) })), ' role="group" aria-labelledby="q-outras-l"')}<span class="hint">As formas marcadas aparecem na proposta, além da principal.</span></div>${alts}`);
 }
 
 function paySumHTML(q, c) {
@@ -2459,18 +2577,19 @@ function roomsHTML(q, c) {
   const card = g => {
     const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
     const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
-    const sumTxt = g.items.length ? [svc.length && plural(svc.length, 'serviço', 'serviços'), mat.length && plural(mat.length, 'material', 'materiais')].filter(Boolean).join(' · ') : (g.id ? 'Vazio' : 'Quadro, entrada de energia e itens da casa toda');
+    const sumTxt = g.items.length ? [svc.length && plural(svc.length, 'serviço', 'serviços'), mat.length && plural(mat.length, 'material', 'materiais')].filter(Boolean).join(' · ') : (norm(g.name) === 'geral' ? 'Quadro, entrada de energia e itens da casa toda' : 'Vazio');
     const rk = `q:${q.id}:room:${g.id || 'geral'}`;
     return panelOpen(rk, '', esc(g.name), sumTxt, { right: BRL(st), attrs: ` data-room-card="${g.id}"`,
       tool: g.id ? `<button class="icon-btn sm" data-room-menu="${g.id}" aria-label="Opções de ${esc(g.name)}">${I.more}</button>` : '' }) + `
       ${svc.length ? panel(rk + ':svc', '', 'Mão de obra', resumoDe(svc, i => i.name), `<div class="lines">${svc.map(i => lineHTML(q, i)).join('')}</div>`, { right: BRL(sum(svc.map(lineTotal))) }) : ''}
       ${mat.length ? panel(rk + ':mat', '', 'Material', resumoDe(mat, i => i.name), `<div class="lines">${mat.map(i => lineHTML(q, i)).join('')}</div>`, { right: BRL(sum(mat.map(lineTotal))) }) : ''}
-      ${g.items.length ? '' : `<p class="empty-line">${g.id ? 'Toque em adicionar e conte cada tomada, interruptor e luminária.' : 'Nada por aqui ainda.'}</p>`}
+      ${g.items.length ? '' : `<p class="empty-line">Toque em adicionar e conte cada tomada, interruptor e luminária.</p>`}
       <button class="add-btn" data-add-room="${g.id}">${I.plus}Adicionar em ${esc(g.name)}</button>
     ${panelClose}`;
   };
-  const groups = roomList(q), general = groups.pop();
-  return groups.map(card).join('') + `<button class="add-btn room" data-new-room>${I.plus}Novo ambiente</button>` + card(general) + conferenceHTML(q);
+  const groups = roomList(q);
+  return (groups.length ? '' : `<p class="empty-line">Crie o primeiro ambiente: sala, cozinha, quarto ou Geral, para o quadro e a casa toda.</p>`)
+    + groups.map(card).join('') + `<button class="add-btn room" data-new-room>${I.plus}Novo ambiente</button>` + conferenceHTML(q);
 }
 const byText = e => [...e.by.entries()].map(([r, n]) => `${r}: ${fmtQty(n)}`).join(' · ');
 function conferenceHTML(q) {
@@ -2486,7 +2605,7 @@ function valuesHTML(q, c) {
   const d = q.discount, rt = q.trip ? tripCalc(q.trip) : null;
   return `<div class="vrows">
       <div class="vrow"><span>Mão de obra</span><b data-t="labor">${BRL(c.labor)}</b></div>
-      <div class="xchips" role="group" aria-label="Adicionais sobre a mão de obra"><span class="lab">Adicional sobre a mão de obra</span>${EXTRAS.map(([k, l, sk]) => { const on = q.extras[k] > 0; return `<button class="chip" data-x="${k}" aria-pressed="${on}">${l}${on ? ` +${q.extras[k]}%` : settings[sk] ? ` +${settings[sk]}%` : ''}</button>`; }).join('')}</div>
+      <div class="xlins"><span class="lab" id="q-x-l">Adicional sobre a mão de obra</span>${linhas(EXTRAS.map(([k, l, sk]) => { const on = q.extras[k] > 0; return linha(`data-x="${k}"`, l, { tipo: 'varios', on, dir: on ? `+${q.extras[k]}%` : settings[sk] ? `+${settings[sk]}%` : '' }); }), ' role="group" aria-labelledby="q-x-l"')}</div>
       ${c.extra ? `<div class="vrow"><span>Adicionais (+${c.surPct}%)</span><b>${BRL(c.extra)}</b></div>` : ''}
       <div class="vrow"><span>Material</span><b class="${c.matIn ? '' : 'dim'}">${c.matIn ? BRL(c.matTotal) : 'por conta do cliente'}</b></div>
       ${q.useRooms ? `<div class="vrow-free">${matSwitchHTML(q)}</div>` : ''}
@@ -2643,7 +2762,8 @@ VIEWS.quote = {
       ${panelClose}
       ${panelOpen(`q:${q.id}:notes`, 'notes', 'Observações', S.notes)}
         <div class="field"><textarea id="q-notes" aria-label="Observações" placeholder="O que está fora do orçamento, cuidados no dia do serviço…">${esc(q.notes)}</textarea>
-          <div class="chips">${NOTE_CHIPS.map(([l, t], k) => `<button class="chip" data-note="${k}" ${q.notes.includes(t) ? 'disabled' : ''}>${I.plus.replace('class="i"', 'class="i" style="width:16px;height:16px"')}${l}</button>`).join('')}</div></div>
+          </div>
+        <div class="field"><span class="lab" id="q-nt-l">Textos prontos</span>${linhas(NOTE_CHIPS.map(([l, t], k) => linha(`data-note="${k}"`, l, { tipo: 'mais', dis: q.notes.includes(t) })), ' role="group" aria-labelledby="q-nt-l"')}</div>
       ${panelClose}
     </main>
     <div class="bbar"><div class="bbar-in">
@@ -2762,14 +2882,17 @@ VIEWS.quote = {
     });
     $('[data-pix-rest]', v)?.addEventListener('click', () => { const px = pixOf(q, compute(q), 'report'); if (px) pixSheet(px); });
     const nt = $('#q-notes', v);
-    nt.addEventListener('input', () => { q.notes = nt.value; touch(q); $$('[data-note]', v).forEach(c => c.disabled = q.notes.includes(NOTE_CHIPS[+c.dataset.note][1])); });
+    nt.addEventListener('input', () => { q.notes = nt.value; touch(q); $$('[data-note]', v).forEach(c => linhaFeita(c, q.notes.includes(NOTE_CHIPS[+c.dataset.note][1]))); });
     $$('[data-note]', v).forEach(b => b.onclick = () => {
       const t = NOTE_CHIPS[+b.dataset.note][1];
-      q.notes = (q.notes.trim() ? q.notes.trim() + '\n' : '') + t; nt.value = q.notes; autoGrow(nt); touch(q); b.disabled = true;
+      q.notes = (q.notes.trim() ? q.notes.trim() + '\n' : '') + t; nt.value = q.notes; autoGrow(nt); touch(q); linhaFeita(b, true);
     });
 
     // relatório técnico: etapa 1 (botão) abre a etapa 2 (detalhes); a frase entra no fim do campo
-    $$('[data-tech]', v).forEach(t => t.addEventListener('input', () => { q[t.dataset.tech] = t.value; touch(q); }));
+    $$('[data-tech]', v).forEach(t => t.addEventListener('input', () => {
+      const k = t.dataset.tech; q[k] = t.value; touch(q);
+      $$(`[data-tc="${k}"]`, v).forEach(b => { const it = TECH[k][+b.dataset.ti]; if (it.s) linhaFeita(b, q[k].includes(it.s)); });
+    }));
     $$('[data-tc]', v).forEach(b => b.onclick = () => {
       const k = b.dataset.tc, it = TECH[k][+b.dataset.ti];
       const add = txt => {
@@ -2778,7 +2901,7 @@ VIEWS.quote = {
         if (ta) { ta.value = q[k]; autoGrow(ta); }
         toast('Adicionado.');
       };
-      if (it.s) { if (!q[k].includes(it.s)) add(it.s); else toast('Esse texto já está no campo.'); return; }
+      if (it.s) { if (!q[k].includes(it.s)) { add(it.s); linhaFeita(b, true); } else toast('Esse texto já está no campo.'); return; }
       techSheet(q, k, +b.dataset.ti, add);
     });
     $$('[data-test-rm]', v).forEach(b => b.onclick = () => {
@@ -2934,7 +3057,7 @@ function pickerSheet(q, kind, room) {
     } });
 }
 function itemFields(i, withKind, q) {
-  const rooms = q && q.useRooms ? [...q.rooms, { id: '', name: 'Geral' }] : null;
+  const rooms = q && q.useRooms && q.rooms.length ? q.rooms : null;
   return `<div class="field"><label for="it-name">Descrição</label><input id="it-name" type="text" value="${esc(i.name)}" placeholder="Ex.: Instalação de chuveiro elétrico"></div>
     ${withKind ? `<div class="seg" role="group" aria-label="Tipo"><button data-ik="svc" aria-pressed="${i.kind === 'svc'}">Mão de obra</button><button data-ik="mat" aria-pressed="${i.kind === 'mat'}">Material</button></div>` : ''}
     <div class="grid2">
@@ -2998,7 +3121,7 @@ function customItemSheet(q, kind, name, room = '') {
 function roomAddSheet(q) {
   openSheet({ title: 'Novo ambiente', body: `
       <p class="hint">Escolha um cômodo. Em seguida você já adiciona os pontos e o material dele.</p>
-      <div class="chips">${ROOM_CHIPS.map(n => `<button class="chip" data-rn="${esc(n)}">${esc(uniqueRoomName(q, n))}</button>`).join('')}</div>
+      ${linhas(ROOM_CHIPS.filter(n => n !== 'Geral' || !q.rooms.some(r => norm(r.name) === 'geral')).map(n => linha(`data-rn="${esc(n)}"`, esc(uniqueRoomName(q, n)), { sub: n === 'Geral' ? 'Quadro, entrada de energia e itens da casa toda' : '' })))}
       <div class="field"><label for="rm-name">Outro nome</label><input id="rm-name" type="text" autocapitalize="sentences" autocomplete="off" placeholder="Ex.: Suíte, Churrasqueira, Lavanderia"></div>`,
     foot: `<button class="btn primary" data-create>${I.plus}Criar ambiente</button>`,
     onClose: () => rerender(),
@@ -3739,7 +3862,7 @@ function receiptSheet(q) {
   let method = 'Pix';
   openSheet({ title: 'Recibo de pagamento', body: `
       <div class="field"><label for="rc-val">Valor recebido</label><input id="rc-val" type="text" inputmode="numeric" data-money value="${BRL(def)}"></div>
-      <div class="chips" aria-label="Sugestões de valor">${[['Total', c.payTotal], q.payment.mode === 'entrada' ? ['Entrada', c.entry] : null, q.payment.mode === 'entrada' ? ['Restante', c.rest] : null].filter(Boolean).map(([l, v]) => `<button class="chip" data-v="${v}">${l} · ${BRL(v)}</button>`).join('')}</div>
+      ${linhas([['Total', c.payTotal], q.payment.mode === 'entrada' ? ['Entrada', c.entry] : null, q.payment.mode === 'entrada' ? ['Restante', c.rest] : null].filter(Boolean).map(([l, v]) => linha(`data-v="${v}"`, l, { tipo: 'um', on: v === def, dir: BRL(v) })), ' role="group" aria-label="Sugestões de valor"')}
       <div class="field"><label for="rc-ref">Referente a</label><input id="rc-ref" type="text" value="${esc((q.title || 'serviços elétricos').replace(/^./, ch => ch.toLowerCase()))} (${isReport(q) ? 'relatório' : 'orçamento'} ${esc(numLabel(q))})"></div>
       <div class="field"><span class="lab">Forma de pagamento</span><div class="seg" role="group">${['Pix', 'Dinheiro', 'Cartão', 'Transferência'].map(m => `<button data-m="${m}" aria-pressed="${m === method}">${m}</button>`).join('')}</div></div>
       <p class="hint" id="rc-ext"></p>`,
@@ -3747,7 +3870,9 @@ function receiptSheet(q) {
     onMount: s => {
       const vi = $('#rc-val', s), ext = () => { const v = parseMoney(vi.value) || 0; $('#rc-ext', s).textContent = v ? `Por extenso: ${extenso(v)}.` : ''; };
       ext(); vi.addEventListener('input', ext);
-      $$('[data-v]', s).forEach(b => b.onclick = () => { vi.value = BRL(+b.dataset.v); ext(); });
+      const marcaV = () => { const v = parseMoney(vi.value) || 0; $$('[data-v]', s).forEach(x => x.setAttribute('aria-pressed', +x.dataset.v === v)); };
+      vi.addEventListener('input', marcaV);
+      $$('[data-v]', s).forEach(b => b.onclick = () => { vi.value = BRL(+b.dataset.v); ext(); marcaV(); });
       $$('[data-m]', s).forEach(b => b.onclick = () => { method = b.dataset.m; $$('[data-m]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); });
       $('[data-go]', s).onclick = async e => {
         const v = parseMoney(vi.value);
@@ -3926,7 +4051,7 @@ function stockListHTML() {
   const f = matFiltro || (est.length ? 'estoque' : 'catalogo');
   const qf = fold(gestaoQuery);
   const bate = p => !qf || fold([p.name, p.cat, ...(p.lotes || []).map(l => l.brand)].join(' ')).includes(qf);
-  const chips = `<div class="chips scroll" role="group" aria-label="Mostrar">${MAT_FILTROS.map(([k, l]) => `<button class="chip" data-mf="${k}" aria-pressed="${f === k}">${l} <span class="n">${n[k]}</span></button>`).join('')}</div>`;
+  const chips = filtroSeg('data-mf', MAT_FILTROS, f, k => n[k], 'Mostrar');
   const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar material, marca ou categoria" value="${esc(gestaoQuery)}" aria-label="Buscar material"></label>`;
   let resumo = '';
   if (f === 'estoque' && est.length && !qf) {
@@ -4131,7 +4256,7 @@ function toolsListHTML() {
   const f = toolFiltro || (itens.length ? 'minhas' : 'cadastradas');
   const qf = fold(gestaoQuery);
   const bate = (tipo, it) => !qf || fold([tipo.name, tipo.cat, it ? itemTxt(it) : ''].join(' ')).includes(qf);
-  const chips = `<div class="chips scroll" role="group" aria-label="Mostrar">${TOOL_FILTROS.map(([k, l]) => `<button class="chip" data-tf="${k}" aria-pressed="${f === k}">${l} <span class="n">${n[k]}</span></button>`).join('')}</div>`;
+  const chips = filtroSeg('data-tf', TOOL_FILTROS, f, k => n[k], 'Mostrar');
   const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar ferramenta, marca ou modelo" value="${esc(gestaoQuery)}" aria-label="Buscar ferramenta"></label>`;
   const porCat = (L, cat, row) => toolCats().filter(c => L.some(x => cat(x) === c)).map(c => { const M = L.filter(x => cat(x) === c); return panel(`g:tool:${f}:${c}`, '', esc(c), qf ? null : M.slice(0, 3).map(x => (x.name || (tipoDe(x) || {}).name || '')).join(' · ') + (M.length > 3 ? '…' : ''),
       `<div class="plist">${M.map(row).join('')}</div>`, { right: `<span class="card-sum">${M.length}</span>`, force: qf ? true : undefined }); }).join('');
@@ -4538,7 +4663,7 @@ VIEWS.settings = {
               </div>
               <div class="field"><label for="st-prazoN">Prazo de execução</label><div class="prazo-row"><input id="st-prazoN" data-set="prazoN" data-int type="text" inputmode="numeric" value="${s.prazoN || 1}" style="max-width:96px" aria-label="Quantidade do prazo"><select id="st-prazoU" data-set="prazoU" aria-label="Unidade do prazo">${Object.entries(PRAZO_U).map(([k, [pl, sg]]) => `<option value="${k}" ${s.prazoU === k ? 'selected' : ''}>${(s.prazoN || 1) === 1 ? sg : pl}</option>`).join('')}</select></div></div>
               <div class="field"><span class="lab">Pagamento</span><div class="seg" role="group" aria-label="Pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${s.payMode === k}">${l}</button>`).join('')}</div></div>
-              ${s.payMode === 'entrada' ? `<div class="field"><span class="lab">Entrada</span><div class="chips row5" role="group" aria-label="Entrada">${[30, 40, 50, 60, 70].map(n => `<button class="chip" data-ep="${n}" aria-pressed="${s.entryPct === n}">${n}%</button>`).join('')}</div></div>` : ''}
+              ${s.payMode === 'entrada' ? `<div class="field"><span class="lab">Entrada</span><div class="seg" role="group" aria-label="Entrada">${[30, 40, 50, 60, 70].map(n => `<button data-ep="${n}" aria-pressed="${s.entryPct === n}">${n}%</button>`).join('')}</div></div>` : ''}
               ${cartaoAjHTML(s)}
               <div class="field"><label for="st-avistaPct">Desconto para pagamento à vista (%)</label><input id="st-avistaPct" data-set="avistaPct" data-dec type="text" inputmode="decimal" placeholder="0" value="${s.avistaPct ? fmtQty(s.avistaPct) : ''}"><span class="kf-ajuda">Entra em todo orçamento novo à vista. Separado do desconto do serviço.</span></div>
               <div class="field"><label for="st-notes">Observações que sempre vão na proposta</label><textarea id="st-notes" data-set="notes" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.notes)}</textarea></div>`) },

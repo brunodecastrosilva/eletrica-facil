@@ -69,6 +69,7 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 ## Interface
 
 - **Seções:** um só modelo de seção em todo o app (o cartão de `panel()`: título, resumo de uma linha, contador ou valor e seta), em qualquer nível e também nas janelas; cada uma abre e fecha sozinha (`KitFacil.secao`), todas começam fechadas e a busca abre as que têm resultado
+- **Escolhas em linhas:** nada de botões lado a lado; escolhas são linhas (`linha()` / `linhas()`): bolinha para uma, caixa de marcar para várias, seta para o que abre a próxima etapa, + para o que entra direto. Filtros curtos e a entrada em % usam segmentos (`.seg`). Rascunho no Início: arrastar para a esquerda mostra Excluir, com Desfazer
 
 Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
 

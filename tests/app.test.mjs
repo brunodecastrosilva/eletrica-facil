@@ -643,3 +643,78 @@ test('2.16: preços de fábrica em cinza (sem confirmar), outras formas na propo
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
+
+test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar rascunho para excluir e unidade fora do nome', async () => {
+  const a = await aparelho(amb, { viewport: { width: 390, height: 844 } });
+  const p = a.page;
+  await p.locator('.welcome h1').waitFor();
+  // material de fábrica sem unidade entre parênteses no nome
+  const parens = await p.evaluate(() => prices.filter(x => x.kind === 'mat' && /\((pacote|barra|saco|galão|kit)/i.test(x.name)).map(x => x.name));
+  assert.deepEqual(parens, []);
+  assert.deepEqual(await p.evaluate(() => { const g = prices.find(x => x.name === 'Gesso 1 kg'); return [g.unit, unitTxt(2, 'saco'), unitName('galão')]; }), ['saco', 'sacos', 'galão']);
+  // quem já tinha o nome antigo: a migração renomeia e acerta a unidade
+  const mig = await p.evaluate(() => {
+    const ps = JSON.parse(localStorage.getItem('eletricafacil.prices'));
+    ps.push({ id: 'velho', kind: 'mat', cat: 'Diversos', name: 'Massa corrida (galão)', unit: 'un', price: 4500 });
+    const i = ps.findIndex(x => x.name === 'Massa corrida'); if (i >= 0) ps.splice(i, 1);
+    localStorage.setItem('eletricafacil.prices', JSON.stringify(ps));
+    const st = JSON.parse(localStorage.getItem('eletricafacil.settings')); st.seedV = 5; localStorage.setItem('eletricafacil.settings', JSON.stringify(st));
+  });
+  await p.reload(); await p.locator('.welcome h1').waitFor();
+  assert.deepEqual(await p.evaluate(() => { const m = prices.find(x => x.id === 'velho'); return [m.name, m.unit, settings.seedV]; }), ['Massa corrida', 'galão', 6]);
+  // nenhum botão lado a lado sobrou no app
+  const id = await criarOrcamento(p, 'Cliente Linhas', 'Troca de tomada');
+  await p.evaluate(id => go('/q/' + id), id);
+  await p.locator('[data-menu]').waitFor();
+  assert.equal(await p.locator('.chip, .chips').count(), 0);
+  assert.equal(await p.locator('.lin[data-x="urgent"][aria-pressed="false"]').count(), 1);
+  assert.ok(await p.locator('.lin[data-note="0"] .mk').count());
+  // Geral: os itens sem ambiente vão para um ambiente Geral, que tem menu e se exclui com Desfazer
+  await abrirPainel(p, `q:${id}:items`).catch(() => {});
+  await p.evaluate(id => { const q = getQ(id); q.useRooms = true; touch(q); render(); }, id);
+  assert.deepEqual(await p.evaluate(id => getQ(id).rooms.map(r => [r.id, r.name]), id), [['geral', 'Geral']]);
+  await abrirCat(p, '[data-room-menu="geral"]');
+  await p.click('[data-room-menu="geral"]');
+  await p.click('.kf-dlg [data-o="del"]');
+  assert.deepEqual(await p.evaluate(id => [getQ(id).rooms.length, getQ(id).items.length], id), [0, 0]);
+  await p.click('.kf-toast button');
+  assert.deepEqual(await p.evaluate(id => [getQ(id).rooms.length, getQ(id).items.length], id), [1, 1]);
+  // Novo ambiente em linhas, com Geral na lista
+  await p.click('[data-new-room]');
+  // já existe um Geral: a lista não oferece outro; sem Geral, ele vem primeiro
+  assert.equal(await p.locator('.kf-dlg .lin[data-rn]').first().getAttribute('data-rn'), 'Sala');
+  await p.keyboard.press('Escape');
+  await p.evaluate(id => { const q = getQ(id); q.rooms = []; q.items = []; touch(q); render(); }, id);
+  await abrirCat(p, '[data-new-room]');
+  await p.click('[data-new-room]');
+  assert.deepEqual(await p.locator('.kf-dlg .lin[data-rn]').evaluateAll(L => L.slice(0, 2).map(b => b.dataset.rn)), ['Geral', 'Sala']);
+  await p.keyboard.press('Escape');
+  // relatório técnico: textos padrão em linhas; etapa 2 com seções
+  await p.evaluate(id => { const q = getQ(id); setStatus(q, 'concluido'); render(); }, id);
+  await abrirCat(p, '[data-tc="diag"]');
+  await p.click('[data-tc="diag"][data-ti="0"]');
+  await p.locator('.kf-dlg [data-grp]').first().waitFor();
+  assert.ok(await p.locator('.kf-dlg details[data-panel="tb:o"][open], .kf-dlg details[data-panel="tb:w"][open]').count());
+  await p.locator('.kf-dlg [data-grp] .lin').first().click();
+  assert.ok((await p.inputValue('#tb-out')).length > 3);
+  await p.keyboard.press('Escape');
+  // tela inicial: arrastar o rascunho para a esquerda mostra Excluir; Desfazer devolve
+  const rid = await criarOrcamento(p, 'Rascunho Arrastar', 'Troca de tomada');
+  await p.evaluate(() => { homeFilter = 'todos'; PANEL['home:rascunho'] = true; go('/'); });
+  const card = p.locator(`[data-swipe="${rid}"] .qcard`);
+  await card.waitFor();
+  const bx = await card.boundingBox();
+  await p.mouse.move(bx.x + bx.width - 20, bx.y + bx.height / 2); await p.mouse.down();
+  for (let k = 1; k <= 10; k++) await p.mouse.move(bx.x + bx.width - 20 - k * 14, bx.y + bx.height / 2);
+  await p.mouse.up();
+  await p.waitForTimeout(350);
+  assert.ok((await card.boundingBox()).x < bx.x - 80, 'o cartão deveria ter ido para a esquerda');
+  assert.equal(await p.evaluate(() => location.hash.includes('/q/')), false, 'arrastar não abre o orçamento');
+  await p.click(`[data-del-draft="${rid}"]`);
+  assert.equal(await p.evaluate(id => !!getQ(id), rid), false);
+  await p.click('.kf-toast button');
+  assert.equal(await p.evaluate(id => !!getQ(id), rid), true);
+  assert.ok(await semRolagemLateral(p));
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});

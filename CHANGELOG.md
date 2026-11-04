@@ -2,6 +2,22 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.19.0 · 2026-11-04
+
+- **Linhas no lugar dos botões lado a lado:** as escolhas passaram a ser linhas, como em Preços. Bolinha para uma
+  escolha, caixa de marcar para várias, seta para o que abre a próxima etapa e sinal de mais para o que entra direto.
+  Vale para **Novo ambiente**, os textos padrão de **Diagnóstico, Serviços realizados, Testes e Recomendações** (agora numa
+  seção "Textos padrão"), a janela de detalhes de cada texto (cada escolha numa seção), **Observações** (textos
+  prontos), **adicionais** sobre a mão de obra, **outras formas de pagamento** e as sugestões de valor do recibo.
+  Filtros curtos (Início, Materiais e Ferramentas) e a entrada em % viraram segmentos.
+- **Geral é um ambiente como os outros:** aparece só quando você o cria (está na lista de Novo ambiente) ou quando há
+  item sem ambiente, e tem o menu ⋯ para renomear, duplicar e excluir, com Desfazer.
+- **Excluir rascunho na tela inicial:** arraste o cartão do rascunho para a esquerda e toque em Excluir; o aviso tem
+  Desfazer. Pelo teclado, o botão Excluir vem logo depois do cartão.
+- **Unidade fora do nome dos materiais:** "Gesso (saco 1 kg)" virou "Gesso 1 kg", por saco; "(pacote 100)" virou
+  ", 100 peças", por pacote; "(barra 3 m)" virou "de 3 m", por barra. Novas unidades: saco, galão e kit. Quem já tinha
+  esses itens recebe os nomes novos, com o estoque e o preço que já tinha.
+
 ## 2.18.0 · 2026-11-04
 
 - **Seções iguais em todo o app:** toda seção que abre e fecha é o mesmo cartão (título, resumo de uma linha, contador
