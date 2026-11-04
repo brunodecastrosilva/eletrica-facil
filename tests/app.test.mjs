@@ -17,6 +17,7 @@ const abrirPainel = async (p, chave) => { const d = p.locator(`details[data-pane
 /* abre uma guia dos Ajustes (no celular, a lista vira a guia aberta) */
 const guia = async (p, id) => { if (!(await p.locator('[data-kf-aj]').count())) await abrirAjustesPelaNav(p); await p.click(`.kf-aj-lista [data-kf-aj-ir="${id}"]`); await p.locator(`#kf-aj-${id}.kf-aberta, [data-kf-aj][data-ativa="${id}"]`).first().waitFor(); };
 
+const abrirCat = (p, sel) => p.evaluate(sel => { const d = document.querySelector(sel).closest('details'); if (d && !d.open) d.open = true; }, sel);
 const escolher = (p, id, valor) => escolherKit(p, '#' + id, valor);
 /* cria um orçamento usando as próprias funções do app */
 const criarOrcamento = (p, cliente, servico) => p.evaluate(([cliente, servico]) => {
@@ -412,6 +413,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   assert.ok(await p.evaluate(() => tiposTool().filter(t => t.seed).length) >= 40, 'faltam ferramentas pré-cadastradas');
   assert.deepEqual(await p.locator('[data-tf]').evaluateAll(L => L.map(b => b.firstChild.textContent.trim())), ['Minhas ferramentas', 'Quero comprar', 'Catálogo']);
   assert.equal(await p.locator('[data-tst], .tst').count(), 0, 'sem botões de estado na lista');
+  await abrirCat(p, '[data-tipo="ft-multimetro-digital"]');
   await p.click('[data-tipo="ft-multimetro-digital"]');
   await p.click('.kf-dlg [data-novo-item]');
   await p.fill('#it-brand', 'Minipa'); await p.fill('#it-model', 'ET-1002'); await p.click('.kf-dlg [data-save]');
@@ -570,27 +572,40 @@ test('pagamento: juros do cartão (taxa da maquininha, juros ao mês, sem juros 
   await a.fechar();
 });
 
-test('2.16: outras formas na proposta, alerta de margem, Comprei tudo e etiqueta "a conferir"', async () => {
+test('2.16: preços de fábrica em cinza (sem confirmar), outras formas na proposta, alerta de margem e Comprei tudo', async () => {
   const a = await aparelho(amb);
   const p = a.page;
-  // etiqueta: os preços do app vêm "a conferir"; mudar ou confirmar tira a etiqueta; reajuste não tira
-  const r = await p.evaluate(() => {
-    const L = prices.filter(x => x.ref), x0 = L[0], x1 = L[1];
-    const antes = L.length;
-    return { antes, total: prices.length, adic: settings.refAdic, id0: x0.id, id1: x1.id, cat1: x1.cat, kind1: x1.kind };
-  });
-  assert.equal(r.antes, r.total, 'todos os preços do app começam a conferir');
-  assert.equal(r.adic, true);
+  // os preços que vêm com o app ficam em cinza; qualquer mudança (no item ou no reajuste) deixa preto; nada de confirmar
+  const r = await p.evaluate(() => ({ antes: prices.filter(x => x.ref).length, total: prices.length, adic: [settings.surUrgent, settings.surNight, settings.surWeekend], emerg: prices.some(x => /Atendimento de emergência/.test(x.name)), ids: prices.filter(x => x.ref).slice(0, 2).map(x => x.id) }));
+  assert.equal(r.antes, r.total, 'todos os preços do app começam em cinza');
+  assert.deepEqual(r.adic, [0, 0, 0], 'adicionais começam vazios');
+  assert.equal(r.emerg, false, 'sem Atendimento de emergência (o adicional de urgência já cobre)');
   await p.evaluate(() => go('/precos'));
-  assert.ok(await p.locator('.ref-v').count() > 0, 'preços de referência em cinza');
-  assert.equal(await p.locator('.ref-tag, [data-ref-cat], .banner.b-tip').count(), 0, 'sem etiqueta, sem Confirmar todos e sem aviso no topo');
-  assert.match(await p.textContent('.foot-note'), /cinza claro/);
-  assert.match(await p.locator('.ref-v').first().textContent(), /preço de referência, a conferir/, 'o leitor de tela ouve o que o cinza quer dizer');
-  await p.click(`[data-pid="${r.id0}"]`).catch(async () => { await p.click(`details[data-panel^="pr:"] > summary`); await p.click(`[data-pid="${r.id0}"]`); });
-  await p.click('.kf-dlg [data-ref-ok]');
-  assert.equal(await p.evaluate(id => prices.find(x => x.id === id).ref, r.id0), false);
-  await p.evaluate(() => { prices.forEach(x => { x.price = Math.round(x.price * 1.1); }); savePrices(); });
-  assert.equal(await p.evaluate(id => prices.find(x => x.id === id).ref, r.id1), true, 'reajuste não confirma');
+  await abrirCat(p, `[data-pid="${r.ids[0]}"]`);
+  assert.ok(await p.locator('.ref-v').count() > 0, 'preços de fábrica em cinza');
+  assert.equal(await p.locator('.ref-tag, [data-ref-cat], [data-ref-ok], .ref-box, .banner.b-tip').count(), 0, 'sem etiqueta, sem confirmar e sem aviso no topo');
+  assert.match(await p.locator('.ref-v').first().textContent(), /preço que vem com o app/, 'o leitor de tela ouve o que o cinza quer dizer');
+  await p.click(`[data-pid="${r.ids[0]}"]`);
+  assert.equal(await p.locator('.kf-dlg [data-ref-ok], .kf-dlg .ref-box').count(), 0);
+  await p.fill('#pp-price', '99900'); await p.click('.kf-dlg [data-save]');
+  assert.equal(await p.evaluate(id => prices.find(x => x.id === id).ref, r.ids[0]), false, 'preço mudado fica preto');
+  await p.click('[data-adjust]'); await p.click('.kf-dlg [data-go]');
+  assert.equal(await p.evaluate(id => prices.find(x => x.id === id).ref, r.ids[1]), false, 'reajuste também deixa preto');
+  // janela de adicionar itens ao orçamento abre e lista a tabela (com os preços de fábrica em cinza)
+  const qa = await criarOrcamento(p, 'Cliente Adicionar', 'Troca de tomada');
+  await p.evaluate(id => { go('/q/' + id); const d = document.querySelector(`details[data-panel="q:${id}:items"]`); if (!d.open) KitFacil.secao.abrir(d); }, qa);
+  await p.waitForTimeout(700);
+  await p.click('[data-add="mat"]');
+  assert.ok(await p.locator('.kf-dlg .pk-row').count() > 10, 'a lista de materiais abriu');
+  assert.ok(await p.locator('.kf-dlg .pk-row .ref-v').count() > 0);
+  await p.locator('.kf-dlg .pk-row').first().click();
+  await p.click('.kf-dlg [data-done]');
+  assert.equal(await p.evaluate(id => getQ(id).items.filter(i => i.kind === 'mat').length, qa), 1, 'adicionou o material');
+  // adicional sem percentual padrão: pede o valor no orçamento
+  await p.evaluate(id => { const d = document.querySelector(`details[data-panel="q:${id}:val"]`); if (!d.open) KitFacil.secao.abrir(d); }, qa);
+  await p.waitForTimeout(700);
+  await p.click('[data-x="urgent"]'); await p.fill('#ax-pct', '40'); await p.click('.kf-dlg [data-ok]');
+  assert.deepEqual(await p.evaluate(id => [getQ(id).extras.urgent, settings.surUrgent], qa), [40, 40]);
   // outras formas na proposta
   const id = await criarOrcamento(p, 'Cliente Formas', 'Troca de tomada');
   await p.evaluate(id => { const q = getQ(id); q.payment.mode = 'avista'; q.payment.avista = { mode: 'pct', pct: 5, value: 0 }; touch(q); go('/q/' + id); }, id);

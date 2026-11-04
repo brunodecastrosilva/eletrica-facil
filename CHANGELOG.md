@@ -2,6 +2,20 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.16.2 · 2026-11-03
+
+- **Correção:** Adicionar mão de obra e Adicionar material voltaram a abrir a lista (a 2.16.1 deixou a janela travada).
+- **Preços de fábrica:** a única indicação é o cinza claro, agora mais claro. Saíram todas as confirmações (Confirmar
+  preço, Confirmar repasse, Confirmar percentuais) e o aviso de preços de referência antes de enviar a proposta. Mudar
+  o valor deixa o preço em preto, inclusive pelo reajuste em massa (o Desfazer do reajuste volta o cinza).
+- **Gestão:** as categorias de Materiais e Ferramentas abrem e fecham como em Preços (abertas em Em estoque, Repor,
+  Minhas ferramentas e Quero comprar; fechadas no Catálogo; abertas na busca).
+- **Adicionais vazios por padrão** (como Veículo e deslocamento). Quem nunca mudou os de fábrica (50%, 30% e 50%) fica
+  com os campos vazios. No orçamento, marcar um adicional sem percentual pede o valor, com a opção de guardar nos Ajustes.
+- **Tabela:** sai "Atendimento de emergência" de Visita e diagnóstico (o adicional de urgência já cobre). Quem o tinha
+  com o preço de fábrica deixa de vê-lo; se você mudou o preço, ele fica.
+- **Exceção ao padrão (lei 7):** o cinza dos preços de fábrica fica abaixo do contraste AA (veja o README).
+
 ## 2.16.1 · 2026-11-03
 
 - Os preços de referência do app aparecem em **cinza claro**, sem a etiqueta "a conferir" (em Preços, no catálogo de

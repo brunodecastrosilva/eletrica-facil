@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.16.1 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 2.16.2 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -12,7 +12,7 @@ Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fá
 - Monte o orçamento escolhendo serviços e materiais da sua tabela de preços
 - Separe por ambiente (sala, cozinha, quartos…) e confira o total de cada item, também em PDF
 - Defina o prazo (dias úteis, dias corridos, semanas ou meses; o padrão fica em Ajustes) e toque no início: o app marca os dias no calendário, pulando fins de semana e feriados, e confere se fecha; o orçamento não aceita datas passadas
-- Preços do app em cinza claro (de referência) até você mudar ou confirmar, um a um
+- Preços que vêm com o app em cinza claro; ao mudar o valor, ficam em preto
 - Pagamento à vista (com desconto à vista), com entrada, no cartão (sem juros, taxa da maquininha ou juros ao mês; sem juros até N×; débito) ou a combinar; outras formas que o cliente pode escolher aparecem na proposta
 - Calcule o deslocamento pela distância, consumo do veículo e preço do combustível
 - Aplique adicionais de urgência, período noturno e fim de semana sobre a mão de obra
@@ -92,6 +92,15 @@ Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
 | GitHub (gist) | sincronização entre aparelhos | gratuito | nada no projeto; cada pessoa usa a própria conta |
 | Firebase (projeto `conta-facil-2c1f9`, compartilhado pelo projeto) | receber as avaliações | plano gratuito | publicar a regra de [`comum/regras-firestore-feedback.txt`](comum/regras-firestore-feedback.txt) |
 | Google Fonts, cdnjs | fontes, QR code e PDF | gratuito | nada |
+
+## Exceções ao padrão
+
+- **Contraste dos preços de fábrica (lei 7, contraste AA):** os preços que vêm com o app aparecem em cinza claro
+  (`--ref`: `#A6A193` no tema claro, 2,6:1 sobre o branco; `#6E6A5D` no escuro, 3,3:1), abaixo dos 4,5:1 do AA.
+  Justificativa (decisão do Bruno, 03/11/2026): o cinza é a única indicação de que o preço ainda é o de fábrica e precisa
+  se destacar claramente do preto dos preços do usuário; o mais claro que passa no AA ficava escuro demais. Para não
+  depender só da cor: o leitor de tela diz "preço que vem com o app" e a nota no fim de Preços explica o cinza. A levar
+  ao Integrador para registro.
 
 ## Publicação
 
