@@ -17,7 +17,7 @@ const abrirPainel = async (p, chave) => { const d = p.locator(`details[data-pane
 /* abre uma guia dos Ajustes (no celular, a lista vira a guia aberta) */
 const guia = async (p, id) => { if (!(await p.locator('[data-kf-aj]').count())) await abrirAjustesPelaNav(p); await p.click(`.kf-aj-lista [data-kf-aj-ir="${id}"]`); await p.locator(`#kf-aj-${id}.kf-aberta, [data-kf-aj][data-ativa="${id}"]`).first().waitFor(); };
 
-const abrirCat = (p, sel) => p.evaluate(sel => { const d = document.querySelector(sel).closest('details'); if (d && !d.open) d.open = true; }, sel);
+const abrirCat = (p, sel) => p.evaluate(sel => { let d = document.querySelector(sel)?.closest('details'); while (d) { d.open = true; d = d.parentElement.closest('details'); } }, sel);
 const escolher = (p, id, valor) => escolherKit(p, '#' + id, valor);
 /* cria um orçamento usando as próprias funções do app */
 const criarOrcamento = (p, cliente, servico) => p.evaluate(([cliente, servico]) => {
@@ -269,6 +269,7 @@ test('um toque abre um orçamento uma vez só, mesmo depois de a tela ser redese
   await criarOrcamento(p, 'Cliente Histórico', 'Troca de tomada');
   for (let i = 0; i < 4; i++) await p.evaluate(() => rerender());
   const antes = await p.evaluate(() => history.length);
+  await abrirCat(p, '[data-open]');
   await p.click('[data-open]');
   await p.locator('[data-menu]').waitFor();
   assert.equal(await p.evaluate(() => history.length), antes + 1, 'o toque empilhou mais de uma tela no histórico');
@@ -277,18 +278,20 @@ test('um toque abre um orçamento uma vez só, mesmo depois de a tela ser redese
   await a.fechar();
 });
 
-test('orçamento: tocar numa seção abre essa e fecha a outra, com animação, sem passar do fim da página', async () => {
+test('seções: começam fechadas, cada uma abre e fecha sozinha, com animação, sem passar do fim da página', async () => {
   for (const vp of [{ width: 390, height: 844 }, { width: 820, height: 1180 }]) {
     const a = await aparelho(amb, { viewport: vp });
     const p = a.page;
     const id = await criarOrcamento(p, 'Cliente Seções', 'Troca de tomada');
     await p.evaluate(id => go('/q/' + id), id);
     assert.equal(await p.locator('[data-next]').count(), 0, 'o botão Próximo saiu do app');
+    assert.equal(await p.locator('details.fold[open]').count(), 0, 'todas as seções começam fechadas');
+    assert.equal(await p.locator('details.fold.sub').count(), 0, 'seção de dentro usa o mesmo cartão');
     await abrirPainel(p, `q:${id}:cli`);
     await p.waitForTimeout(700);
     await p.click(`details[data-panel="q:${id}:val"] > summary`);
     assert.equal(await p.evaluate(id => document.querySelector(`details[data-panel="q:${id}:val"]`).classList.contains('kf-secao-anim'), id), true, 'a seção deveria abrir com animação');
-    assert.ok(await esperar(() => p.evaluate(id => { const n = document.querySelector(`details[data-panel="q:${id}:val"]`), c = document.querySelector(`details[data-panel="q:${id}:cli"]`); return n.open && !c.open && !n.classList.contains('kf-secao-anim'); }, id)), 'não trocou de seção');
+    assert.ok(await esperar(() => p.evaluate(id => { const n = document.querySelector(`details[data-panel="q:${id}:val"]`), c = document.querySelector(`details[data-panel="q:${id}:cli"]`); return n.open && c.open && !n.classList.contains('kf-secao-anim'); }, id)), 'abrir uma seção não fecha a outra');
     await p.waitForTimeout(150);
     // a rolagem termina onde a página permite: nada de tranco depois da animação
     const pos = await p.evaluate(() => [scrollY, document.documentElement.scrollHeight - innerHeight]);
@@ -360,6 +363,7 @@ test('proposta: Concluir volta para a lista e confirma que foi salvo', async () 
   const a = await aparelho(amb);
   const p = a.page;
   await criarOrcamento(p, 'Cliente Concluir', 'Troca de tomada');
+  await abrirCat(p, '[data-open]');
   await p.click('[data-open]');
   await p.click('.bbar [data-preview]');
   await p.locator('[data-concluir]').click();
@@ -393,7 +397,9 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   assert.deepEqual(await p.evaluate(id => { const x = prices.find(y => y.id === id); return [x.stock, x.cost, x.brand]; }, ref.id), [5, 100, 'Steck']);
   // materiais: Em estoque · Repor · Catálogo; a caixa do material aceita outra marca e o mínimo
   assert.deepEqual(await p.locator('[data-mf]').evaluateAll(L => L.map(b => b.firstChild.textContent.trim())), ['Em estoque', 'Repor', 'Catálogo']);
+  await abrirCat(p, `[data-mat="${ref.id}"]`);
   await p.click(`[data-mat="${ref.id}"]`);
+  await abrirCat(p, '.kf-dlg [data-novo-lote]');
   await p.click('.kf-dlg [data-novo-lote]');
   await p.fill('#lt-brand', 'WEG'); await p.fill('#lt-qty', '3'); await p.fill('#lt-cost', '200');
   await p.click('.kf-dlg [data-save]');
@@ -415,8 +421,10 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   assert.equal(await p.locator('[data-tst], .tst').count(), 0, 'sem botões de estado na lista');
   await abrirCat(p, '[data-tipo="ft-multimetro-digital"]');
   await p.click('[data-tipo="ft-multimetro-digital"]');
+  await abrirCat(p, '.kf-dlg [data-novo-item]');
   await p.click('.kf-dlg [data-novo-item]');
   await p.fill('#it-brand', 'Minipa'); await p.fill('#it-model', 'ET-1002'); await p.click('.kf-dlg [data-save]');
+  await abrirCat(p, '.kf-dlg [data-novo-item]');
   await p.click('.kf-dlg [data-novo-item]');
   await p.fill('#it-brand', 'Fluke'); await p.fill('#it-model', '117'); await p.click('.kf-dlg [data-save]');
   assert.equal(await p.evaluate(() => itensDe('ft-multimetro-digital').length), 2, 'duas unidades do mesmo tipo, de marcas diferentes');
@@ -436,6 +444,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   await p.click('[data-ck-tools]');
   assert.equal(await p.locator('[data-ck]').count(), 1);
   await p.click('[data-g-new]'); await p.fill('#ck-name', 'Fita isolante'); await p.uncheck('#ck-back'); await p.click('.kf-dlg [data-save]');
+  await abrirCat(p, '[data-ck]');
   await p.locator('[data-ck]').first().check();
   assert.match(await p.textContent('.g-prog'), /1 de 2/);
   await p.click('[data-lado="volta"]');
@@ -515,6 +524,7 @@ test('aprovação com o calendário do app (sem datas futuras) e Comprei na caix
   await p.evaluate(() => { const t = tools.find(x => x.id === 'ft-furadeira-de-impacto'); t.quero = true; t.queroQtd = 2; saveTools(); go('/gestao'); });
   await p.click('[data-aba="ferramentas"]');
   await p.click('[data-tf="quero"]');
+  await abrirCat(p, '[data-tipo="ft-furadeira-de-impacto"]');
   await p.click('[data-tipo="ft-furadeira-de-impacto"]');
   await p.click('.kf-dlg [data-comprei]');
   assert.equal(await p.inputValue('#it-qty'), '2', 'traz a quantidade da lista de compras');
@@ -595,9 +605,11 @@ test('2.16: preços de fábrica em cinza (sem confirmar), outras formas na propo
   const qa = await criarOrcamento(p, 'Cliente Adicionar', 'Troca de tomada');
   await p.evaluate(id => { go('/q/' + id); const d = document.querySelector(`details[data-panel="q:${id}:items"]`); if (!d.open) KitFacil.secao.abrir(d); }, qa);
   await p.waitForTimeout(700);
+  await abrirCat(p, '[data-add="mat"]');
   await p.click('[data-add="mat"]');
   assert.ok(await p.locator('.kf-dlg .pk-row').count() > 10, 'a lista de materiais abriu');
   assert.ok(await p.locator('.kf-dlg .pk-row .ref-v').count() > 0);
+  await abrirCat(p, '.kf-dlg .pk-row');
   await p.locator('.kf-dlg .pk-row').first().click();
   await p.click('.kf-dlg [data-done]');
   assert.equal(await p.evaluate(id => getQ(id).items.filter(i => i.kind === 'mat').length, qa), 1, 'adicionou o material');

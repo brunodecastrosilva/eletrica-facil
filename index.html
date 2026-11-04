@@ -397,12 +397,8 @@ details.fold[open]>summary .f-ch{transform:rotate(90deg)}
 .f-in{display:flex;flex-direction:column;gap:12px;padding:0 16px 16px;min-width:0}
 details.fold.kf-secao-fechando>summary .f-ch{transform:none}
 .f-ch{transition:transform .56s cubic-bezier(.45,0,.2,1)}
-details.fold.sub{background:var(--surface-2);border:0;border-radius:14px}
-details.fold.sub>summary{min-height:54px;padding:9px 8px 9px 12px}
-details.fold.sub .f-t b{font-family:var(--f-body);font-weight:700;font-size:15.5px;font-stretch:100%;letter-spacing:0}
-details.fold.sub .f-t small{font-size:13.5px}
-details.fold.sub>.f-in{padding:0 12px 12px}
-details.fold.sub .switch-row{background:var(--surface)}
+/* seção dentro de seção: o mesmo cartão, com a borda para separar do cartão de fora */
+.f-in>details.fold{box-shadow:none}
 .blk{display:flex;flex-direction:column;gap:10px}
 .blk+.blk{border-top:1px solid var(--line);padding-top:14px}
 .blk-h{margin:0;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
@@ -665,7 +661,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.17.0';
+const VERSAO = '2.18.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -1071,7 +1067,7 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
+  novidades: [{ versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
     'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
     'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
     'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
@@ -1859,8 +1855,13 @@ document.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') a
 document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('details')) $$('textarea', e.target).forEach(autoGrow); }, true);
 // seções recolhíveis: mostram uma linha de resumo e abrem quando precisa
 const PANEL = {};
-const panelOpen = (key, id, title, sum, o = {}) => `<details class="fold${o.sub ? ' sub' : ''}${o.multi ? ' multi' : ''}" data-kf-secao="${o.sub || o.multi ? '' : 'grupo'}" data-panel="${esc(key)}"${o.attrs || ''}${(o.force ?? (key in PANEL ? PANEL[key] : !!o.def)) ? ' open' : ''}><summary><span class="f-t"><b>${title}</b>${sum !== null ? `<small${id ? ` data-sum="${id}"` : ''}${o.multi ? '' : ' data-kf-secao-resumo'}>${esc(sum)}</small>` : ''}</span>${o.right != null ? `<span class="f-r"${id ? ` data-sumr="${id}"` : ''}>${o.right}</span>` : ''}${o.tool || ''}<span class="f-ch">${I.chev}</span></summary><div class="f-in">`;
+/* seção: o mesmo cartão em todo o app e em todos os níveis (título, resumo de uma linha, contador ou valor, seta).
+   Cada seção abre e fecha sozinha (as outras ficam como estão); todas começam fechadas, e a busca abre as que têm
+   resultado (force). O app guarda, enquanto está aberto, quais seções você abriu (PANEL). */
+const panelOpen = (key, id, title, sum, o = {}) => `<details class="fold" data-kf-secao data-panel="${esc(key)}"${o.attrs || ''}${(o.force ?? (key in PANEL ? PANEL[key] : false)) ? ' open' : ''}><summary><span class="f-t"><b>${title}</b>${sum !== null ? `<small${id ? ` data-sum="${id}"` : ''} data-kf-secao-resumo>${esc(sum)}</small>` : ''}</span>${o.right != null ? `<span class="f-r"${id ? ` data-sumr="${id}"` : ''}>${o.right}</span>` : ''}${o.tool || ''}<span class="f-ch">${I.chev}</span></summary><div class="f-in">`;
 const panelClose = '</div></details>';
+const resumoDe = (L, nome) => L.slice(0, 3).map(nome).filter(Boolean).join(' · ') + (L.length > 3 ? '…' : '');
+const conta = n => `<span class="card-sum">${n}</span>`;
 const panel = (key, id, title, sum, body, o) => panelOpen(key, id, title, sum, o) + body + panelClose;
 function paintSums(root, map) {
   for (const k in map) {
@@ -2054,23 +2055,24 @@ function quoteCard(q) {
     <span class="qc-meta">${q.example ? '<span class="tag-ex">Exemplo</span> · ' : esc(numLabel(q)) + ' · '}${esc(when)}${nudge}</span>
   </button>`;
 }
+// Início: os orçamentos em seções (por situação; em Concluídos e Recusados, por mês), como no resto do app
+const HOME_G = [['enviado', 'Aguardando resposta'], ['aprovado', 'Aprovados · a executar'], ['rascunho', 'Rascunhos'], ['concluido', 'Concluídos'], ['recusado', 'Recusados']];
 function homeListHTML() {
   const qf = fold(homeQuery);
   const match = q => !qf || fold([q.client.name, q.title, numLabel(q), q.client.address].join(' ')).includes(qf);
   const byDate = (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0);
-  if (homeFilter === 'aberto') {
-    const G = [['enviado', 'Aguardando resposta'], ['aprovado', 'Aprovados · a executar'], ['rascunho', 'Rascunhos']];
-    const html = G.map(([s, l]) => {
-      const L = quotes.filter(q => q.status === s && match(q)).sort(byDate);
-      if (!L.length) return '';
-      const open = qf || (('home:' + s) in PANEL ? PANEL['home:' + s] : s !== 'rascunho' || L.length <= 3);
-      return `<button class="grp-h" id="grp-${s}" data-grp-t="${s}" aria-expanded="${!!open}"><span class="gc">${I.chev}${l}</span><span>${L.length}</span></button>${open ? L.map(quoteCard).join('') : ''}`;
-    }).join('');
-    return html || (qf ? KitFacil.ui.vazio({ titulo: 'Nenhum orçamento encontrado', texto: 'Confira o nome do cliente, o serviço ou o número.' })
-      : KitFacil.ui.vazio({ titulo: 'Nenhum orçamento em aberto', texto: 'Toque em <b>Novo orçamento</b> para começar.' }));
-  }
-  const L = quotes.filter(q => (homeFilter === 'todos' || q.status === homeFilter) && match(q)).sort(byDate);
-  return L.length ? L.map(quoteCard).join('') : KitFacil.ui.vazio(qf ? { titulo: 'Nenhum orçamento encontrado', texto: 'Confira o nome do cliente, o serviço ou o número.' } : { titulo: 'Nada por aqui ainda', texto: 'Os orçamentos com esta situação aparecem aqui.' });
+  const L = quotes.filter(q => (homeFilter === 'todos' || (homeFilter === 'aberto' ? ['rascunho', 'enviado', 'aprovado'].includes(q.status) : q.status === homeFilter)) && match(q)).sort(byDate);
+  if (!L.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum orçamento encontrado', texto: 'Confira o nome do cliente, o serviço ou o número.' }
+    : homeFilter === 'aberto' ? { titulo: 'Nenhum orçamento em aberto', texto: 'Toque em <b>Novo orçamento</b> para começar.' } : { titulo: 'Nada por aqui ainda', texto: 'Os orçamentos com esta situação aparecem aqui.' });
+  let grupos;
+  if (homeFilter === 'concluido' || homeFilter === 'recusado') {
+    const quando = q => homeFilter === 'concluido' ? (q.doneAt || q.updatedAt) : (q.refusedAt || q.updatedAt);
+    const meses = new Map();
+    L.forEach(q => { const d = new Date(quando(q)), k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; if (!meses.has(k)) meses.set(k, []); meses.get(k).push(q); });
+    grupos = [...meses].sort((a, b) => b[0].localeCompare(a[0])).map(([k, M]) => [`home:${homeFilter}:${k}`, capFirst(new Date(k + '-15T12:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })), M, '']);
+  } else grupos = HOME_G.map(([st, l]) => [`home:${st}`, l, L.filter(q => q.status === st), st]).filter(g => g[2].length);
+  return grupos.map(([key, l, M, st]) => panel(key, '', esc(l), qf ? null : resumoDe(M, q => q.client.name || q.title || numLabel(q)), `<div class="qlist">${M.map(quoteCard).join('')}</div>`,
+    { right: conta(M.length), force: qf ? true : undefined, attrs: st ? ` id="grp-${st}"` : '' })).join('');
 }
 VIEWS.home = {
   html() {
@@ -2118,11 +2120,11 @@ VIEWS.home = {
     $$('[data-aj]', v).forEach(b => b.onclick = () => KitFacil.ajustes.ir(b.dataset.aj));
     v.addEventListener('click', e => {
       const b = e.target.closest('[data-open]'); if (b) return go('/q/' + b.dataset.open);
-      const g = e.target.closest('[data-grp-t]'); if (g) { PANEL['home:' + g.dataset.grpT] = g.getAttribute('aria-expanded') !== 'true'; $('#q-list').innerHTML = homeListHTML(); }
     });
     $$('[data-filter]', v).forEach(b => b.onclick = () => { homeFilter = b.dataset.filter; rerender(); });
     $$('[data-jump]', v).forEach(b => b.onclick = () => {
-      if (homeFilter !== 'aberto') { homeFilter = 'aberto'; rerender(); }
+      if (homeFilter !== 'aberto' && homeFilter !== 'todos') homeFilter = 'aberto';
+      PANEL['home:' + b.dataset.jump] = true; rerender();
       const el = $('#grp-' + b.dataset.jump);
       if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
       else toast(b.dataset.jump === 'enviado' ? 'Nenhum orçamento aguardando resposta.' : 'Nenhum orçamento aprovado a executar.');
@@ -2423,7 +2425,7 @@ const comForma = (q, mode) => { const q2 = { ...q, payment: { ...q.payment, mode
 const outrasFormas = q => isReport(q) ? [] : (q.payment.outras || []).filter(m => m !== q.payment.mode);
 function payBlockHTML(q, c) {
   const p = q.payment, outras = ['avista', 'entrada', 'parcelado'].filter(m => m !== p.mode);
-  const alts = outrasFormas(q).map(m => { const x = comForma(q, m); return `<div class="alt-blk"><div class="sublab">${PAY_NOME[m]}, também na proposta</div>${payDetailHTML(q, x.c, m)}<div class="pay-sum" id="pay-sum-${m}">${paySumHTML(x.q, x.c)}</div></div>`; }).join('');
+  const alts = outrasFormas(q).map(m => { const x = comForma(q, m); return panel(`q:${q.id}:alt:${m}`, '', `${PAY_NOME[m]}, também na proposta`, payText(x.q, x.c).replace(/\.$/, ''), `${payDetailHTML(q, x.c, m)}<div class="pay-sum" id="pay-sum-${m}">${paySumHTML(x.q, x.c)}</div>`); }).join('');
   return payDetailHTML(q, c, p.mode) + `<div class="pay-sum" id="pay-sum">${paySumHTML(q, c)}</div>`
     + (isReport(q) ? '' : `<div class="field"><span class="lab" id="q-outras-l">O cliente também pode pagar</span><div class="chips" role="group" aria-labelledby="q-outras-l">${outras.map(m => `<button class="chip" data-outra="${m}" aria-pressed="${(p.outras || []).includes(m)}">${(p.outras || []).includes(m) ? I.check : I.plus}${PAY_NOME[m]}</button>`).join('')}</div><span class="hint">As formas marcadas aparecem na proposta, além da principal.</span></div>${alts}`);
 }
@@ -2445,27 +2447,24 @@ function paySumHTML(q, c) {
 const matSwitchHTML = q => `<label class="switch-row" for="q-matcli"><span><b>O cliente compra o material</b><small>${q.materialBy === 'cliente' ? 'A lista vai na proposta, com valores estimados fora do total.' : 'Desligado: o material entra no total da proposta.'}</small></span><input type="checkbox" class="sw" id="q-matcli" ${q.materialBy === 'cliente' ? 'checked' : ''}></label>`;
 const roomToggleHTML = q => `<label class="switch-row" for="q-rooms"><span><b>Separar por ambiente</b><small>${q.useRooms ? 'Cada cômodo com a sua contagem de pontos e de material.' : 'Sala, cozinha, quartos… para contar e conferir cômodo por cômodo.'}</small></span><input type="checkbox" class="sw" id="q-rooms" ${q.useRooms ? 'checked' : ''}></label>`;
 function kindCardsHTML(q, c) {
-  return `<div class="blk">
-      <div class="card-hr"><h3 class="blk-h">Mão de obra</h3><span class="card-sum" data-t="labor">${BRL(c.labor)}</span></div>
-      ${c.svc.length ? `<div class="lines">${c.svc.map(i => lineHTML(q, i)).join('')}</div>` : '<p class="empty-line">Escolha os serviços na sua tabela de preços.</p>'}
-      <button class="add-btn" data-add="svc">${I.plus}Adicionar mão de obra</button>
-    </div>
-    <div class="blk">
-      <div class="card-hr"><h3 class="blk-h">Material</h3><span class="card-sum" data-t="mat">${BRL(c.matTotal)}</span></div>
-      ${matSwitchHTML(q)}
+  return panel(`q:${q.id}:svc`, '', 'Mão de obra', c.svc.length ? resumoDe(c.svc, i => i.name) : 'Nenhum serviço ainda',
+      `${c.svc.length ? `<div class="lines">${c.svc.map(i => lineHTML(q, i)).join('')}</div>` : '<p class="empty-line">Escolha os serviços na sua tabela de preços.</p>'}
+      <button class="add-btn" data-add="svc">${I.plus}Adicionar mão de obra</button>`, { right: `<span data-t="labor">${BRL(c.labor)}</span>` })
+    + panel(`q:${q.id}:mat`, '', 'Material', c.mat.length ? resumoDe(c.mat, i => i.name) : 'Nenhum material ainda',
+      `${matSwitchHTML(q)}
       ${c.mat.length ? `<div class="lines">${c.mat.map(i => lineHTML(q, i)).join('')}</div>` : ''}
-      <button class="add-btn" data-add="mat">${I.plus}Adicionar material</button>
-    </div>`;
+      <button class="add-btn" data-add="mat">${I.plus}Adicionar material</button>`, { right: `<span data-t="mat">${BRL(c.matTotal)}</span>` });
 }
 function roomsHTML(q, c) {
   const card = g => {
     const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
     const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
     const sumTxt = g.items.length ? [svc.length && plural(svc.length, 'serviço', 'serviços'), mat.length && plural(mat.length, 'material', 'materiais')].filter(Boolean).join(' · ') : (g.id ? 'Vazio' : 'Quadro, entrada de energia e itens da casa toda');
-    return panelOpen(`q:${q.id}:room:${g.id || 'geral'}`, '', esc(g.name), sumTxt, { sub: true, def: !g.items.length && !!g.id, right: BRL(st), attrs: ` data-room-card="${g.id}"`,
+    const rk = `q:${q.id}:room:${g.id || 'geral'}`;
+    return panelOpen(rk, '', esc(g.name), sumTxt, { right: BRL(st), attrs: ` data-room-card="${g.id}"`,
       tool: g.id ? `<button class="icon-btn sm" data-room-menu="${g.id}" aria-label="Opções de ${esc(g.name)}">${I.more}</button>` : '' }) + `
-      ${svc.length ? `<div class="sublab">Mão de obra</div><div class="lines">${svc.map(i => lineHTML(q, i)).join('')}</div>` : ''}
-      ${mat.length ? `<div class="sublab">Material</div><div class="lines">${mat.map(i => lineHTML(q, i)).join('')}</div>` : ''}
+      ${svc.length ? panel(rk + ':svc', '', 'Mão de obra', resumoDe(svc, i => i.name), `<div class="lines">${svc.map(i => lineHTML(q, i)).join('')}</div>`, { right: BRL(sum(svc.map(lineTotal))) }) : ''}
+      ${mat.length ? panel(rk + ':mat', '', 'Material', resumoDe(mat, i => i.name), `<div class="lines">${mat.map(i => lineHTML(q, i)).join('')}</div>`, { right: BRL(sum(mat.map(lineTotal))) }) : ''}
       ${g.items.length ? '' : `<p class="empty-line">${g.id ? 'Toque em adicionar e conte cada tomada, interruptor e luminária.' : 'Nada por aqui ainda.'}</p>`}
       <button class="add-btn" data-add-room="${g.id}">${I.plus}Adicionar em ${esc(g.name)}</button>
     ${panelClose}`;
@@ -2478,10 +2477,10 @@ function conferenceHTML(q) {
   if (!q.items.length || !q.rooms.length) return '';
   const block = (kind, title) => {
     const L = consolidate(q, kind); if (!L.length) return '';
-    return `<div class="sublab">${title}</div><div class="conf">${L.map(e => `<div class="conf-row"><span><b>${esc(e.name)}</b><small>${esc(byText(e))}</small></span><span class="num">${fmtQty(e.qty)} ${unitTxt(e.qty, e.unit)}</span></div>`).join('')}</div>`;
+    return panel(`q:${q.id}:conf:${kind}`, '', title, resumoDe(L, e => e.name), `<div class="conf">${L.map(e => `<div class="conf-row"><span><b>${esc(e.name)}</b><small>${esc(byText(e))}</small></span><span class="num">${fmtQty(e.qty)} ${unitTxt(e.qty, e.unit)}</span></div>`).join('')}</div>`, { right: conta(L.length) });
   };
   return panel(`q:${q.id}:conf`, '', 'Conferência', 'Total de cada item, somando os ambientes', `${block('mat', 'Material')}${block('svc', 'Mão de obra')}
-    <button class="btn ghost" data-conf-pdf>${I.share}PDF da conferência</button>`, { sub: true });
+    <button class="btn ghost" data-conf-pdf>${I.share}PDF da conferência</button>`);
 }
 function valuesHTML(q, c) {
   const d = q.discount, rt = q.trip ? tripCalc(q.trip) : null;
@@ -2617,7 +2616,7 @@ VIEWS.quote = {
     <main class="page bar">
       ${q.example ? `<div class="banner b-tip"><p><b>Este é um orçamento de exemplo.</b> Mexa à vontade para conhecer o app e exclua quando quiser pelo menu ⋯.</p></div>` : ''}
       ${statusBanner(q, c)}
-      ${panelOpen(`q:${q.id}:cli`, 'cli', 'Cliente e serviço', S.cli, { def: !q.client.name })}
+      ${panelOpen(`q:${q.id}:cli`, 'cli', 'Cliente e serviço', S.cli)}
         <div class="field"><label for="q-name">Nome</label><input id="q-name" type="text" autocapitalize="words" autocomplete="off" placeholder="Nome do cliente" value="${esc(q.client.name)}"></div>
         <div class="grid2 stack">
           <div class="field"><label for="q-phone">WhatsApp</label><input id="q-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="(11) 90000-0000" value="${esc(fmtPhone(q.client.phone))}"></div>
@@ -2628,7 +2627,7 @@ VIEWS.quote = {
       ${panelClose}
 
       ${techCardHTML(q)}
-      ${panel(`q:${q.id}:items`, 'items', q.useRooms ? 'Ambientes e itens' : 'Serviços e material', S.items, roomToggleHTML(q) + (q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)), { def: !!q.client.name && !q.items.length, right: S.itemsR })}
+      ${panel(`q:${q.id}:items`, 'items', q.useRooms ? 'Ambientes e itens' : 'Serviços e material', S.items, roomToggleHTML(q) + (q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)), { right: S.itemsR })}
       ${panel(`q:${q.id}:val`, 'val', 'Valores', S.val, valuesHTML(q, c), { right: S.valR })}
 
       ${panelOpen(`q:${q.id}:cond`, 'cond', isReport(q) ? 'Datas, pagamento e garantia' : 'Pagamento, datas e garantia', S.cond, { attrs: ' id="h-cond"' })}
@@ -2907,7 +2906,7 @@ function pickerSheet(q, kind, room) {
     const qf = fold(query);
     const list = prices.filter(p => p.kind === k && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
     const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name) && (!inRoom || roomOf(q, i) === room)).map(i => i.qty));
-    const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}</span><span class="pk-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
+    const rows = groupByCat(list).map(([cat, L]) => { const n0 = sum(L.map(inQuote)); return panel(`pk:${k}:${cat}`, '', esc(cat), qf ? null : resumoDe(L, p => p.name), `<div class="pk-list">${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}</span><span class="pk-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}</div>`, { right: n0 ? `<span class="pk-n">${fmtQty(n0)}</span>` : conta(L.length), force: qf ? true : undefined }); }).join('');
     return (rows || KitFacil.ui.vazio({ titulo: `Nada com “${esc(query)}”`, texto: `na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}. Adicione como item fora da tabela.` }))
       + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}${query ? `Adicionar “${esc(query)}”` : `${k === 'svc' ? 'Serviço' : 'Material'} fora da tabela`}</button>`;
   };
@@ -3809,7 +3808,7 @@ function priceListHTML() {
   if (!list.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum item encontrado', texto: 'Confira o nome do item ou da categoria.' } : { titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo item</b> para cadastrar.' });
   return groupByCat(list).map(([cat, L]) => panel(`pr:${priceKind}:${cat}`, '', esc(cat), qf ? null : L.slice(0, 3).map(p => p.name).join(' · ') + (L.length > 3 ? '…' : ''),
     `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${inStock(p) ? ` · ${stockTxt(p)}` : ''}</small></span><span class="prow-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}</span></button>`).join('')}</div>`,
-    { multi: true, right: `<span class="card-sum">${L.length}</span>`, force: qf ? true : undefined })).join('');
+    { right: conta(L.length), force: qf ? true : undefined })).join('');
 }
 VIEWS.prices = {
   html() {
@@ -3945,7 +3944,7 @@ function stockListHTML() {
   };
   // categorias recolhíveis, como em Preços: abertas no estoque e em Repor, fechadas no catálogo (na busca, todas abertas)
   const lista = L.length ? groupByCat(L).map(([cat, M]) => panel(`g:mat:${f}:${cat}`, '', esc(cat), qf ? null : M.slice(0, 3).map(p => p.name).join(' · ') + (M.length > 3 ? '…' : ''),
-      `<div class="plist">${M.map(linha).join('')}</div>`, { multi: true, def: f !== 'catalogo', right: `<span class="card-sum">${M.length}</span>`, force: qf ? true : undefined })).join('')
+      `<div class="plist">${M.map(linha).join('')}</div>`, { right: `<span class="card-sum">${M.length}</span>`, force: qf ? true : undefined })).join('')
     : KitFacil.ui.vazio(qf ? { titulo: 'Nenhum material encontrado', texto: 'Confira o nome, a marca ou a categoria.' }
       : f === 'estoque' ? { titulo: 'Nenhum material em estoque', texto: 'Toque em <b>Novo material</b>, ou abra um no <b>Catálogo</b> e diga quanto você tem.', icone: I.box }
       : f === 'repor' ? { titulo: 'Nada para repor', texto: 'Aqui entram o material que chegou ao mínimo e o que você marcar como Preciso repor.', icone: I.cart }
@@ -3963,9 +3962,8 @@ function matSheet(p) {
   const corpo = () => {
     const L = p.lotes || [], tem = inStock(p);
     return `<p class="hint">${esc(p.cat || 'Outros')} · cobrado por ${unitName(p.unit)}</p>
-      <div class="pk-cat">Em estoque · ${tem ? `${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}` : 'nada'}</div>
-      ${L.length ? `<div class="plist">${L.map(l => `<button class="prow" data-lote="${l.id}"><span><b>${esc(l.brand || 'Sem marca')}</b><small>${l.cost ? `custo ${BRL(l.cost)}` : 'sem custo'}</small></span><span class="prow-price${l.qty <= 0 ? ' g-zero' : ''}">${fmtQty(l.qty)} ${unitTxt(l.qty, p.unit)}</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem este material no estoque.</p>'}
-      <button class="add-btn" data-novo-lote>${I.plus}${L.length ? 'Adicionar outra marca' : 'Tenho este material'}</button>
+      ${panel(`mt:${p.id}:est`, '', 'Em estoque', tem ? resumoDe(L, l => `${l.brand || 'Sem marca'} ${fmtQty(l.qty)}`) : 'Nada no estoque', `${L.length ? `<div class="plist">${L.map(l => `<button class="prow" data-lote="${l.id}"><span><b>${esc(l.brand || 'Sem marca')}</b><small>${l.cost ? `custo ${BRL(l.cost)}` : 'sem custo'}</small></span><span class="prow-price${l.qty <= 0 ? ' g-zero' : ''}">${fmtQty(l.qty)} ${unitTxt(l.qty, p.unit)}</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem este material no estoque.</p>'}
+      <button class="add-btn" data-novo-lote>${I.plus}${L.length ? 'Adicionar outra marca' : 'Tenho este material'}</button>`, { right: tem ? `${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}` : conta(0) })}
       <div class="grid2">
         <div class="field"><label for="mt-price">Repasse ao cliente (por ${unitName(p.unit)})</label><input id="mt-price" type="text" inputmode="numeric" data-money value="${BRL(p.price)}"></div>
         <div class="field"><label for="mt-min">Avisar quando chegar a (opcional)</label><input id="mt-min" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${p.min ? fmtQty(p.min) : ''}"></div>
@@ -4136,7 +4134,7 @@ function toolsListHTML() {
   const chips = `<div class="chips scroll" role="group" aria-label="Mostrar">${TOOL_FILTROS.map(([k, l]) => `<button class="chip" data-tf="${k}" aria-pressed="${f === k}">${l} <span class="n">${n[k]}</span></button>`).join('')}</div>`;
   const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar ferramenta, marca ou modelo" value="${esc(gestaoQuery)}" aria-label="Buscar ferramenta"></label>`;
   const porCat = (L, cat, row) => toolCats().filter(c => L.some(x => cat(x) === c)).map(c => { const M = L.filter(x => cat(x) === c); return panel(`g:tool:${f}:${c}`, '', esc(c), qf ? null : M.slice(0, 3).map(x => (x.name || (tipoDe(x) || {}).name || '')).join(' · ') + (M.length > 3 ? '…' : ''),
-      `<div class="plist">${M.map(row).join('')}</div>`, { multi: true, def: f !== 'cadastradas', right: `<span class="card-sum">${M.length}</span>`, force: qf ? true : undefined }); }).join('');
+      `<div class="plist">${M.map(row).join('')}</div>`, { right: `<span class="card-sum">${M.length}</span>`, force: qf ? true : undefined }); }).join('');
   let lista = '';
   if (f === 'minhas') {
     const L = itens.filter(it => bate(tipoDe(it), it)).sort((a, b) => tipoDe(a).name.localeCompare(tipoDe(b).name, 'pt-BR') || itemTxt(a).localeCompare(itemTxt(b), 'pt-BR'));
@@ -4156,9 +4154,8 @@ function typeSheet(t) {
   const corpo = () => {
     const its = itensDe(t.id);
     return `<p class="hint">${esc(t.cat)}</p>
-      <div class="pk-cat">Minhas ferramentas · ${sum(its.map(i => i.qty))}</div>
-      ${its.length ? `<div class="plist">${its.map(it => `<button class="prow" data-item="${it.id}"><span><b>${esc(itemTxt(it) || 'Sem marca e modelo')}</b></span><span class="prow-price">${it.qty} un.</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem esta ferramenta cadastrada como sua.</p>'}
-      <button class="add-btn" data-novo-item>${I.plus}${its.length ? 'Adicionar outra marca ou modelo' : 'Tenho esta ferramenta'}</button>
+      ${panel(`tp:${t.id}:minhas`, '', 'Minhas ferramentas', its.length ? resumoDe(its, it => itemTxt(it) || 'Sem marca e modelo') : 'Nenhuma ainda', `${its.length ? `<div class="plist">${its.map(it => `<button class="prow" data-item="${it.id}"><span><b>${esc(itemTxt(it) || 'Sem marca e modelo')}</b></span><span class="prow-price">${it.qty} un.</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem esta ferramenta cadastrada como sua.</p>'}
+      <button class="add-btn" data-novo-item>${I.plus}${its.length ? 'Adicionar outra marca ou modelo' : 'Tenho esta ferramenta'}</button>`, { right: conta(sum(its.map(i => i.qty))) })}
       <label class="switch-row" for="tp-quero"><span><b>Quero comprar</b><small>Entra na lista de compras.</small></span><input type="checkbox" class="sw" id="tp-quero" ${t.quero ? 'checked' : ''}></label>
       <div class="field" id="tp-qq-f" ${t.quero ? '' : 'hidden'}><label for="tp-qq">Quantas quer comprar</label><div class="tp-qq-row"><div class="stepper"><button data-qq="-1" aria-label="Menos">${I.minus}</button><input id="tp-qq" type="text" inputmode="numeric" value="${t.queroQtd}"><button data-qq="1" aria-label="Mais">${I.plus}</button></div><button class="btn ok" data-comprei>${I.check}Comprei</button></div></div>`;
   };
@@ -4293,8 +4290,8 @@ function comprasSheet() {
   const corpo = () => {
     if (!L.length) return KitFacil.ui.vazio({ titulo: 'Nada para comprar agora', texto: 'Aqui entram o material que chegou ao mínimo no estoque e as ferramentas marcadas como Quero comprar.', icone: I.cart });
     const m = L.map((x, i) => [x, i]).filter(([x]) => x.k === 'm'), f = L.map((x, i) => [x, i]).filter(([x]) => x.k === 'f');
-    return `${m.length ? `<div class="pk-cat">Material para repor · ${m.length}</div><p class="hint">Sugestão: o bastante para ficar com o dobro do mínimo. Ajuste à vontade.</p>${m.map(([x, i]) => row(x, i)).join('')}` : ''}
-      ${f.length ? `<div class="pk-cat">Ferramentas para comprar · ${f.length}</div>${f.map(([x, i]) => row(x, i)).join('')}` : ''}`;
+    return `${m.length ? panel('cp:mat', '', 'Material para repor', resumoDe(m, ([x]) => x.nome), `<p class="hint">Sugestão: o bastante para ficar com o dobro do mínimo. Ajuste à vontade.</p>${m.map(([x, i]) => row(x, i)).join('')}`, { right: conta(m.length) }) : ''}
+      ${f.length ? panel('cp:ferr', '', 'Ferramentas para comprar', resumoDe(f, ([x]) => x.nome), f.map(([x, i]) => row(x, i)).join(''), { right: conta(f.length) }) : ''}`;
   };
   openSheet({ title: 'Lista de compras', tall: true, body: `<div id="cp-list">${corpo()}</div>`,
     foot: L.length ? `<div class="cp-pe"><button class="btn ghost" data-cp-copy>${I.copy}Copiar</button><a class="btn wa" data-cp-wa href="#" target="_blank" rel="noopener">${I.wa}WhatsApp</a></div><button class="btn ok block" data-cp-tudo>${I.check}Comprei tudo</button>` : '',
@@ -4345,7 +4342,7 @@ function checklistHTML() {
     <p class="hint">${k === 'ida' ? 'Antes de sair: marque o que já está no carro.' : 'Antes de ir embora: marque o que já recolheu. Só aparecem os itens que voltam.'}</p>
     <div class="g-prog"><div class="g-prog-t"><b>${feitos} de ${tot}</b> conferidos</div><div class="g-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${feitos}" aria-label="Itens conferidos"><span style="width:${pct}%"></span></div></div>
     ${tot && feitos === tot ? `<div class="cal-msg" role="status">${I.check}<span><b>Tudo conferido.</b> ${k === 'ida' ? 'Bom serviço!' : 'Nada ficou para trás.'}</span></div>` : ''}
-    <div class="g-card">${tot ? `<div class="ck-list">${lista.map(c => `<div class="ck-row"><label><input type="checkbox" data-ck="${c.id}" ${c[k] ? 'checked' : ''}><span>${esc(checkNome(c))}${checkLado === 'ida' && !c.back ? '<small>fica na obra</small>' : ''}</span></label><button class="icon-btn sm" data-ck-edit="${c.id}" aria-label="Alterar ${esc(checkNome(c))}">${I.more}</button></div>`).join('')}</div>` : '<p class="hint">Nenhum item volta da obra. Ao alterar um item, ligue "Conferir também na volta".</p>'}</div>
+    ${panel(`ck:${k}`, '', k === 'ida' ? 'Ida para a obra' : 'Volta da obra', `${feitos} de ${tot} conferidos`, `${tot ? `<div class="ck-list">${lista.map(c => `<div class="ck-row"><label><input type="checkbox" data-ck="${c.id}" ${c[k] ? 'checked' : ''}><span>${esc(checkNome(c))}${checkLado === 'ida' && !c.back ? '<small>fica na obra</small>' : ''}</span></label><button class="icon-btn sm" data-ck-edit="${c.id}" aria-label="Alterar ${esc(checkNome(c))}">${I.more}</button></div>`).join('')}</div>` : '<p class="hint">Nenhum item volta da obra. Ao alterar um item, ligue "Conferir também na volta".</p>'}`, { right: conta(tot) })}
     <div class="g-acts">${feitos ? `<button class="btn sm ghost" data-ck-reset>Desmarcar tudo</button>` : ''}${addTools}</div>`;
 }
 function checkSheet(c) {

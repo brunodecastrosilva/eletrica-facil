@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.17.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 2.18.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -67,6 +67,8 @@ Os testes simulam o GitHub (sincronização) e o Firebase (avaliações); nada t
 O modo sem internet (service worker) só funciona em `https`, ou seja, no endereço publicado.
 
 ## Interface
+
+- **Seções:** um só modelo de seção em todo o app (o cartão de `panel()`: título, resumo de uma linha, contador ou valor e seta), em qualquer nível e também nas janelas; cada uma abre e fecha sozinha (`KitFacil.secao`), todas começam fechadas e a busca abre as que têm resultado
 
 Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
 

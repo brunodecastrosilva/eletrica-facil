@@ -2,6 +2,20 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.18.0 · 2026-11-04
+
+- **Seções iguais em todo o app:** toda seção que abre e fecha é o mesmo cartão (título, resumo de uma linha, contador
+  ou valor e a seta), em qualquer nível. Antes havia três jeitos diferentes (cartões brancos, cartões cinza por dentro e
+  títulos soltos em letras maiúsculas).
+- **Onde mudou:** no **Início**, os grupos de orçamentos (Aguardando resposta, Aprovados, Rascunhos, Concluídos,
+  Recusados; em Concluídos e Recusados, um grupo por mês); no **orçamento e no relatório**, as seções do Relatório
+  técnico, **Mão de obra** e **Material**, os ambientes e o que há dentro deles, a Conferência e as outras formas de
+  pagamento; na janela **Adicionar ao orçamento**, as categorias; nas janelas de **material** (Em estoque), de
+  **ferramenta** (Minhas ferramentas) e na **lista de compras**; no **Checklist**.
+- **Regra única:** cada seção abre e fecha sozinha (abrir uma não fecha as outras). Todas começam fechadas; na busca,
+  abrem as que têm resultado. O app lembra, enquanto está aberto, as seções que você abriu.
+- Os números do alto do Início (aguardando resposta, aprovados a executar) abrem a seção e levam até ela.
+
 ## 2.17.0 · 2026-11-03
 
 - **Restaurar padrões de fábrica** (Ajustes › Privacidade e segurança, Kit Fácil 2.9.0): o app volta como novo neste
