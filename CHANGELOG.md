@@ -2,6 +2,17 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.20.0 · 2026-11-04
+
+- **Gestão com hierarquia:** Materiais, Ferramentas e Checklist viraram guias sublinhadas no alto (antes eram duas
+  barras de botões iguais, uma sobre a outra). Embaixo vem um resumo amarelo, no mesmo estilo do Início, com os três
+  números que servem de filtro (em estoque, para repor, no catálogo; minhas, quero comprar, no catálogo). O número
+  escolhido fica marcado com moldura e texto em negrito.
+- **Lista de compras dentro do resumo**, com quantos itens tem, no lugar do botão solto ao lado do título.
+- **Estoque:** o custo e o valor de repasse do estoque aparecem no alto do resumo.
+- **Checklist:** o resumo mostra quanto já foi conferido na ida e na volta; tocar escolhe qual lista conferir. A Lista de compras aparece nas três guias.
+- A linha de apoio fala da Gestão inteira: "Estoque, ferramentas e checklist da obra."
+
 ## 2.19.1 · 2026-11-04
 
 - **Sem parênteses:** nenhum nome do catálogo de fábrica tem parênteses ("Interruptor simples (módulo)" virou "Módulo de

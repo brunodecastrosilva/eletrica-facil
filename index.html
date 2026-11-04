@@ -552,6 +552,20 @@ details.tech[open] > summary::after{content:"–"}
 .g-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px 16px 8px}
 .g-card>.pk-cat{padding:12px 0 6px}
 .g-card>.hint{padding:0 0 8px;margin:0}
+/* Gestão: guias sublinhadas no alto e resumo amarelo, como no Início (os números são os filtros) */
+.g-abas{display:flex;gap:22px;border-bottom:1px solid var(--line-2);overflow-x:auto;scrollbar-width:none}
+.g-abas button{border:0;background:none;color:var(--muted);font-weight:700;font-size:16px;min-height:46px;padding:0 2px;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.g-abas button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--volt)}
+.g-hero{padding:14px 16px 12px;gap:10px;border-radius:20px}
+.g-hero .hero-stats{margin:0 -6px;border-top:0;padding-top:0;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px}
+.g-hero .hero-stats > button,.g-hero .hero-stats > button:first-child{cursor:pointer;min-height:52px;justify-content:center;border:2px solid transparent;border-radius:12px;padding:6px 8px}
+.g-hero .hero-stats button[aria-pressed="true"]{background:rgba(255,255,255,.6);border-color:var(--volt-ink)}
+.g-hero .hero-stats button[aria-pressed="true"] span{font-weight:700}
+.g-hero .hero-top{font-size:13.5px;font-weight:600;opacity:.85}
+.g-cp{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;border:0;border-radius:12px;background:rgba(255,255,255,.55);color:inherit;padding:8px 12px;font-weight:700;font-size:15px;text-align:left}
+.g-cp svg{width:20px;height:20px;flex:none}
+.g-cp .lt{flex:1}
+.g-cp small{font-weight:500;font-size:13.5px}
 .g-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px}
 .g-sum div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .g-sum b{font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -679,7 +693,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.19.1';
+const VERSAO = '2.20.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -1088,7 +1102,7 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.19.1', itens: ['Nenhum nome tem mais parênteses: os itens da tabela, as ferramentas, as categorias e os rótulos dos campos.', 'Os materiais e as ferramentas que vêm com o app agora podem ser alterados na Gestão: nome, categoria e unidade. As ferramentas também podem ser excluídas.', 'As listas de escolha abertas perto do pé da janela rolam até o último item aparecer.', 'O vermelho do Excluir, ao arrastar um rascunho, ficou emendado com o cartão.'] }, { versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
+  novidades: [{ versao: '2.20.0', itens: ['A Gestão ficou mais organizada: Materiais, Ferramentas e Checklist viraram guias no alto, e logo abaixo vem um resumo amarelo, como no Início.', 'No resumo, toque nos números para escolher o que ver (em estoque, para repor, no catálogo). A Lista de compras fica ali, com quantos itens tem.', 'No Checklist, o resumo mostra quanto já foi conferido na ida e na volta.'] }, { versao: '2.19.1', itens: ['Nenhum nome tem mais parênteses: os itens da tabela, as ferramentas, as categorias e os rótulos dos campos.', 'Os materiais e as ferramentas que vêm com o app agora podem ser alterados na Gestão: nome, categoria e unidade. As ferramentas também podem ser excluídas.', 'As listas de escolha abertas perto do pé da janela rolam até o último item aparecer.', 'O vermelho do Excluir, ao arrastar um rascunho, ficou emendado com o cartão.'] }, { versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
     'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
     'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
     'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
@@ -4071,12 +4085,18 @@ const GESTAO = {
   ferramentas: { nome: 'Ferramentas', criar: 'Nova ferramenta', sub: 'As suas ferramentas, as que quer comprar e o catálogo.' },
   checklist: { nome: 'Checklist', criar: 'Novo item', sub: 'Confira o que levar antes de ir e o que trazer antes de voltar da obra.' },
 };
+function gHero(attr, L, atual, n, topo = '', compras = true) {
+  const cn = comprasN();
+  return `<section class="hero g-hero" aria-label="Resumo">${topo ? `<div class="hero-top"><span>${topo}</span></div>` : ''}
+    <div class="hero-stats" role="group" aria-label="Mostrar">${L.map(([k, l]) => `<button ${attr}="${k}" aria-pressed="${atual === k}"><b>${n(k)}</b><span>${l}</span></button>`).join('')}</div>
+    ${compras ? `<button class="g-cp" data-compras>${I.cart}<span class="lt">Lista de compras <small>· ${cn ? plural(cn, 'item', 'itens') : 'vazia'}</small></span>${I.chev}</button>` : ''}</section>`;
+}
 const margem = p => p.cost > 0 ? Math.round((p.price - p.cost) / p.cost * 100) : null;
 const margemTxt = p => { const m = margem(p); return m === null ? '' : m >= 0 ? `margem +${m}%` : `abaixo do custo, ${m}%`; };
 // materiais: três listas, como em Ferramentas — Em estoque (o que você tem, por marca), Repor (chegou ao mínimo ou
 // marcado como Preciso repor) e Catálogo (todos os materiais da tabela de Preços). Cada linha abre a caixa do material.
 let matFiltro = '';
-const MAT_FILTROS = [['estoque', 'Em estoque'], ['repor', 'Repor'], ['catalogo', 'Catálogo']];
+const MAT_FILTROS = [['estoque', 'em estoque'], ['repor', 'para repor'], ['catalogo', 'no catálogo']];
 const precisaRepor = p => p.kind === 'mat' && (stockLow(p) || !!p.repor);
 const lotesTxt = p => (p.lotes || []).map(l => `${l.brand || 'Sem marca'}: ${fmtQty(l.qty)} ${unitTxt(l.qty, p.unit)}`).join(' · ');
 function stockListHTML() {
@@ -4085,13 +4105,13 @@ function stockListHTML() {
   const f = matFiltro || (est.length ? 'estoque' : 'catalogo');
   const qf = fold(gestaoQuery);
   const bate = p => !qf || fold([p.name, p.cat, ...(p.lotes || []).map(l => l.brand)].join(' ')).includes(qf);
-  const chips = filtroSeg('data-mf', MAT_FILTROS, f, k => n[k], 'Mostrar');
+  let topo = '';
   const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar material, marca ou categoria" value="${esc(gestaoQuery)}" aria-label="Buscar material"></label>`;
-  let resumo = '';
-  if (f === 'estoque' && est.length && !qf) {
+  if (est.length) {
     const custo = sum(est.map(p => sum((p.lotes || []).map(l => Math.round(l.qty * (l.cost || 0)))))), repasse = sum(est.map(p => Math.round(p.price * p.stock)));
-    resumo = `<div class="g-sum" role="group" aria-label="Resumo do estoque"><div><b>${est.length}</b><span>${est.length === 1 ? 'material' : 'materiais'}</span></div><div><b>${BRL(custo)}</b><span>de custo</span></div><div><b>${BRL(repasse)}</b><span>no repasse</span></div></div>`;
+    topo = `${BRL(custo)} de custo · ${BRL(repasse)} no repasse`;
   }
+  const chips = gHero('data-mf', MAT_FILTROS, f, k => n[k], topo);
   const L = (f === 'estoque' ? est : f === 'repor' ? rep : mats).filter(bate);
   const linha = p => {
     let sub = '', dir = '';
@@ -4108,7 +4128,7 @@ function stockListHTML() {
       : f === 'estoque' ? { titulo: 'Nenhum material em estoque', texto: 'Toque em <b>Novo material</b>, ou abra um no <b>Catálogo</b> e diga quanto você tem.', icone: I.box }
       : f === 'repor' ? { titulo: 'Nada para repor', texto: 'Aqui entram o material que chegou ao mínimo e o que você marcar como Preciso repor.', icone: I.cart }
       : { titulo: 'Nenhum material no catálogo', texto: 'Toque em <b>Novo material</b> para cadastrar.', icone: I.box });
-  return chips + busca + resumo + `<div id="g-list" class="g-list">${lista}</div>`;
+  return chips + busca + `<div id="g-list" class="g-list">${lista}</div>`;
 }
 const margemHTML = (cost, price) => {
   if (!cost || price === null) return '<span class="hint">Com o custo e o repasse, o app mostra a sua margem.</span>';
@@ -4303,7 +4323,7 @@ function stockSheet(p) {
 // ferramentas: três listas — Minhas ferramentas (as unidades que você tem), Quero comprar e Ferramentas cadastradas
 // (o catálogo). Cada linha abre a caixa da ferramenta, onde você diz se tem (com marca, modelo e quantidade) ou quer comprar
 let toolFiltro = '';
-const TOOL_FILTROS = [['minhas', 'Minhas ferramentas'], ['quero', 'Quero comprar'], ['cadastradas', 'Catálogo']];
+const TOOL_FILTROS = [['minhas', 'minhas'], ['quero', 'quero comprar'], ['cadastradas', 'no catálogo']];
 const toolCats = () => { const usadas = new Set(tiposTool().map(t => t.cat)); return [...TOOL_CATS.filter(c => usadas.has(c)), ...[...usadas].filter(c => !TOOL_CATS.includes(c)).sort((a, b) => a.localeCompare(b, 'pt-BR'))]; };
 function toolsListHTML() {
   const itens = tools.filter(t => t.k === 'item' && tipoDe(t)), quero = tiposTool().filter(t => t.quero), todos = tiposTool();
@@ -4311,7 +4331,7 @@ function toolsListHTML() {
   const f = toolFiltro || (itens.length ? 'minhas' : 'cadastradas');
   const qf = fold(gestaoQuery);
   const bate = (tipo, it) => !qf || fold([tipo.name, tipo.cat, it ? itemTxt(it) : ''].join(' ')).includes(qf);
-  const chips = filtroSeg('data-tf', TOOL_FILTROS, f, k => n[k], 'Mostrar');
+  const chips = gHero('data-tf', TOOL_FILTROS, f, k => n[k]);
   const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar ferramenta, marca ou modelo" value="${esc(gestaoQuery)}" aria-label="Buscar ferramenta"></label>`;
   const porCat = (L, cat, row) => toolCats().filter(c => L.some(x => cat(x) === c)).map(c => { const M = L.filter(x => cat(x) === c); return panel(`g:tool:${f}:${c}`, '', esc(c), qf ? null : M.slice(0, 3).map(x => (x.name || (tipoDe(x) || {}).name || '')).join(' · ') + (M.length > 3 ? '…' : ''),
       `<div class="plist">${M.map(row).join('')}</div>`, { right: `<span class="card-sum">${M.length}</span>`, force: qf ? true : undefined }); }).join('');
@@ -4532,7 +4552,8 @@ function checklistHTML() {
   if (!checks.length) return KitFacil.ui.vazio({ titulo: 'Checklist vazio', texto: 'Monte uma vez a lista do que sempre vai para a obra. Toque em <b>Novo item</b>' + (faltam.length ? ' ou adicione as suas ferramentas de uma vez.' : '.'), icone: I.checklist, acao: addTools });
   const lista = checks.filter(c => checkLado === 'ida' || c.back);
   const k = checkLado, feitos = lista.filter(c => c[k]).length, tot = lista.length, pct = tot ? Math.round(feitos / tot * 100) : 0;
-  return `<div class="seg" role="group" aria-label="Quando conferir"><button data-lado="ida" aria-pressed="${k === 'ida'}">Ida para a obra</button><button data-lado="volta" aria-pressed="${k === 'volta'}">Volta da obra</button></div>
+  const conta2 = lado => { const L = checks.filter(c => lado === 'ida' || c.back); return `${L.filter(c => c[lado]).length} de ${L.length}`; };
+  return `${gHero('data-lado', [['ida', 'conferidos na ida'], ['volta', 'conferidos na volta']], k, conta2)}
     <p class="hint">${k === 'ida' ? 'Antes de sair: marque o que já está no carro.' : 'Antes de ir embora: marque o que já recolheu. Só aparecem os itens que voltam.'}</p>
     <div class="g-prog"><div class="g-prog-t"><b>${feitos} de ${tot}</b> conferidos</div><div class="g-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${feitos}" aria-label="Itens conferidos"><span style="width:${pct}%"></span></div></div>
     ${tot && feitos === tot ? `<div class="cal-msg" role="status">${I.check}<span><b>Tudo conferido.</b> ${k === 'ida' ? 'Bom serviço!' : 'Nada ficou para trás.'}</span></div>` : ''}
@@ -4575,14 +4596,14 @@ VIEWS.gestao = {
     const corpo = gestaoAba === 'estoque' ? stockListHTML() : gestaoAba === 'ferramentas' ? toolsListHTML() : checklistHTML();
     return `${barraTopo()}
     <main class="page">
-      ${KitFacil.ui.cabecalho({ titulo: 'Gestão', sub: esc(G.sub), acoes: `<button class="btn sm ghost" data-compras>${I.cart}Lista de compras${comprasN() ? ` <span class="cp-n">${comprasN()}</span>` : ''}</button>`, criar: { rotulo: G.criar, attrs: 'data-g-new' } })}
-      <div class="seg" role="group" aria-label="Parte da gestão">${Object.entries(GESTAO).map(([k, x]) => `<button data-aba="${k}" aria-pressed="${gestaoAba === k}">${x.nome}</button>`).join('')}</div>
+      ${KitFacil.ui.cabecalho({ titulo: 'Gestão', sub: 'Estoque, ferramentas e checklist da obra.', criar: { rotulo: G.criar, attrs: 'data-g-new' } })}
+      <div class="g-abas" role="tablist" aria-label="Parte da gestão">${Object.entries(GESTAO).map(([k, x]) => `<button role="tab" data-aba="${k}" aria-selected="${gestaoAba === k}">${x.nome}</button>`).join('')}</div>
       <div class="g-body" id="g-body">${corpo}</div>
     </main>`;
   },
   bind(v) {
     $$('[data-aba]', v).forEach(b => b.onclick = () => { if (gestaoAba === b.dataset.aba) return; gestaoAba = b.dataset.aba; gestaoQuery = ''; rerender(); });
-    $('[data-compras]', v).onclick = comprasSheet;
+    $('[data-compras]', v)?.addEventListener('click', comprasSheet);
     $('[data-g-new]', v).onclick = () => gestaoAba === 'estoque' ? stockSheet(null) : gestaoAba === 'ferramentas' ? newToolSheet() : checkSheet(null);
     const sq = $('#g-q', v);
     if (sq) sq.addEventListener('input', () => { gestaoQuery = sq.value; const tmp = document.createElement('div'); tmp.innerHTML = gestaoAba === 'estoque' ? stockListHTML() : toolsListHTML(); $('#g-list', v).replaceWith($('#g-list', tmp)); });

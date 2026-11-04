@@ -396,7 +396,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   await p.click('.kf-dlg [data-save]');
   assert.deepEqual(await p.evaluate(id => { const x = prices.find(y => y.id === id); return [x.stock, x.cost, x.brand]; }, ref.id), [5, 100, 'Steck']);
   // materiais: Em estoque · Repor · Catálogo; a caixa do material aceita outra marca e o mínimo
-  assert.deepEqual(await p.locator('[data-mf]').evaluateAll(L => L.map(b => b.firstChild.textContent.trim())), ['Em estoque', 'Repor', 'Catálogo']);
+  assert.deepEqual(await p.locator('[data-mf]').evaluateAll(L => L.map(b => b.querySelector('span').textContent.trim())), ['em estoque', 'para repor', 'no catálogo']);
   await abrirCat(p, `[data-mat="${ref.id}"]`);
   await p.click(`[data-mat="${ref.id}"]`);
   await abrirCat(p, '.kf-dlg [data-novo-lote]');
@@ -417,7 +417,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   // ferramentas: já vêm cadastradas; cada linha abre a caixa da ferramenta, onde se diz se é sua
   await p.click('[data-aba="ferramentas"]');
   assert.ok(await p.evaluate(() => tiposTool().filter(t => t.seed).length) >= 40, 'faltam ferramentas pré-cadastradas');
-  assert.deepEqual(await p.locator('[data-tf]').evaluateAll(L => L.map(b => b.firstChild.textContent.trim())), ['Minhas ferramentas', 'Quero comprar', 'Catálogo']);
+  assert.deepEqual(await p.locator('[data-tf]').evaluateAll(L => L.map(b => b.querySelector('span').textContent.trim())), ['minhas', 'quero comprar', 'no catálogo']);
   assert.equal(await p.locator('[data-tst], .tst').count(), 0, 'sem botões de estado na lista');
   await abrirCat(p, '[data-tipo="ft-multimetro-digital"]');
   await p.click('[data-tipo="ft-multimetro-digital"]');
