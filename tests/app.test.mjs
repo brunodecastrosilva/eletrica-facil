@@ -582,7 +582,10 @@ test('2.16: outras formas na proposta, alerta de margem, Comprei tudo e etiqueta
   assert.equal(r.antes, r.total, 'todos os preços do app começam a conferir');
   assert.equal(r.adic, true);
   await p.evaluate(() => go('/precos'));
-  assert.match(await p.textContent('#app'), /a conferir/);
+  assert.ok(await p.locator('.ref-v').count() > 0, 'preços de referência em cinza');
+  assert.equal(await p.locator('.ref-tag, [data-ref-cat], .banner.b-tip').count(), 0, 'sem etiqueta, sem Confirmar todos e sem aviso no topo');
+  assert.match(await p.textContent('.foot-note'), /cinza claro/);
+  assert.match(await p.locator('.ref-v').first().textContent(), /preço de referência, a conferir/, 'o leitor de tela ouve o que o cinza quer dizer');
   await p.click(`[data-pid="${r.id0}"]`).catch(async () => { await p.click(`details[data-panel^="pr:"] > summary`); await p.click(`[data-pid="${r.id0}"]`); });
   await p.click('.kf-dlg [data-ref-ok]');
   assert.equal(await p.evaluate(id => prices.find(x => x.id === id).ref, r.id0), false);

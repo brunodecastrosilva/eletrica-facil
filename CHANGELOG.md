@@ -2,6 +2,13 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.16.1 · 2026-11-03
+
+- Os preços de referência do app aparecem em **cinza claro**, sem a etiqueta "a conferir" (em Preços, no catálogo de
+  Materiais, ao escolher itens e nos itens do orçamento). O cinza tem contraste AA, e o leitor de tela diz "preço de
+  referência, a conferir"; a nota no fim de Preços explica o que o cinza quer dizer.
+- Os preços são conferidos **um a um**: saiu o botão Confirmar todos da categoria e o aviso no alto de Preços.
+
 ## 2.16.0 · 2026-11-03
 
 - **Valores de referência com etiqueta "a conferir" (cinza):** todo preço que vem com o app (mão de obra e material) e

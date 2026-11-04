@@ -24,7 +24,7 @@
 :root{
   color-scheme:light;
   --bg:#EFEEE9; --surface:#FFFFFF; --surface-2:#F6F5F1; --line:#E1DED5; --line-2:#CBC7BB;
-  --ink:#17150F; --muted:#666253; --faint:#959081;
+  --ink:#17150F; --muted:#666253; --faint:#959081; --ref:#75705F;
   --volt:#FFC400; --volt-ink:#17150F; --volt-soft:#FFF1C4; --volt-text:#7A5900;
   --graphite:#1D1B15; --graphite-ink:#FFD23A;
   --sent:#1F5FA6; --sent-soft:#E3ECF8; --ok:var(--kf-ok); --ok-soft:var(--kf-ok-soft); --bad:var(--kf-bad); --bad-soft:var(--kf-bad-soft); --warn:var(--kf-warn);
@@ -40,7 +40,7 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0E0D0A; --surface:#191813; --surface-2:#222019; --line:#2F2D25; --line-2:#45423A;
-  --ink:#F3F0E7; --muted:#A8A392; --faint:#7D7869;
+  --ink:#F3F0E7; --muted:#A8A392; --faint:#7D7869; --ref:#8F8A7A;
   --volt:#FFC83A; --volt-ink:#16140E; --volt-soft:#3A300E; --volt-text:#FFD45E;
   --graphite:#F3F0E7; --graphite-ink:#16140E;
   --sent:#86B6EE; --sent-soft:#15253A; --ok:var(--kf-ok); --ok-soft:var(--kf-ok-soft); --bad:var(--kf-bad); --bad-soft:var(--kf-bad-soft); --warn:var(--kf-warn);
@@ -51,7 +51,7 @@
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0E0D0A; --surface:#191813; --surface-2:#222019; --line:#2F2D25; --line-2:#45423A;
-  --ink:#F3F0E7; --muted:#A8A392; --faint:#7D7869;
+  --ink:#F3F0E7; --muted:#A8A392; --faint:#7D7869; --ref:#8F8A7A;
   --volt:#FFC83A; --volt-ink:#16140E; --volt-soft:#3A300E; --volt-text:#FFD45E;
   --graphite:#F3F0E7; --graphite-ink:#16140E;
   --sent:#86B6EE; --sent-soft:#15253A; --ok:var(--kf-ok); --ok-soft:var(--kf-ok-soft); --bad:var(--kf-bad); --bad-soft:var(--kf-bad-soft); --warn:var(--kf-warn);
@@ -586,8 +586,8 @@ details.tech[open] > summary::after{content:"–"}
 .tx-cel{display:flex;flex-direction:column;gap:4px;font-size:13.5px;color:var(--muted)}
 .tx-cel input{min-height:44px;text-align:center}
 .pay-sum .ps-rec{color:var(--muted)}
-.ref-tag{display:inline-block;padding:1px 7px;border-radius:99px;border:1px dashed var(--faint);background:var(--surface-2);color:var(--muted);font-size:12px;font-weight:600;line-height:1.5;white-space:nowrap;vertical-align:1px}
-.ref-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13.5px;color:var(--muted);padding:2px 0 8px}
+.ref-v{color:var(--ref)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .ref-box{display:flex;flex-direction:column;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px dashed var(--line-2)}
 .ref-box p{margin:0;font-size:14.5px}
 .cp-pe{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
@@ -667,7 +667,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.16.0';
+const VERSAO = '2.16.1';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -1033,9 +1033,10 @@ const catOrder = kind => [...new Set(SEED.filter(s => s[0] === kind).map(s => s[
 // 2.15: tudo o que ainda não está na tabela entra (por nome), sem mexer nos itens e preços de quem já usa
 const SEED_V2 = ['Ponto de interruptor paralelo (three-way)', 'Tomada dupla 10 A com placa', 'Interruptor duplo com placa', 'Interruptor paralelo (three-way) com placa', 'Interruptor intermediário (four-way)'];
 const seedPrices = () => SEED.map(([kind, cat, name, unit, price]) => ({ id: uid(), kind, cat, name, unit, price, ref: true }));
-/* valores de referência: os preços que vêm com o app (e os adicionais padrão) têm a etiqueta "a conferir" até você
-   mudar o valor ou confirmar que ele vale para você. Reajuste em massa não confirma. */
-const refTag = () => '<span class="ref-tag" title="Valor de referência do app: confira e confirme">a conferir</span>';
+/* valores de referência: os preços que vêm com o app (e os adicionais padrão) aparecem em cinza claro até você mudar
+   o valor ou confirmar, um a um, que ele vale para você. Reajuste em massa não confirma. O leitor de tela diz
+   "preço de referência, a conferir" e a nota no fim de Preços explica o cinza (informação nunca só pela cor). */
+const refV = v => `<span class="ref-v">${v}<span class="sr-only">, preço de referência, a conferir</span></span>`;
 const refLinha = i => prices.some(p => p.ref && p.kind === i.kind && norm(p.name) === norm(i.name) && p.price === i.price);
 
 /* ================= dados (tudo guardado neste aparelho) ================= */
@@ -1073,8 +1074,7 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.16.0', itens: [
-    'Preços que vêm com o app agora têm a etiqueta "a conferir". Mude o valor ou confirme, um a um ou a categoria inteira, em Preços.',
+  novidades: [{ versao: '2.16.1', itens: ['Os preços de referência do app agora aparecem em cinza claro, sem etiqueta. Confira um a um: toque no item, mude o valor ou confirme.'] }, { versao: '2.16.0', itens: [
     'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
     'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
     'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
@@ -2338,7 +2338,7 @@ function lineHTML(q, i) {
   return `<div class="line${cli ? ' cli' : ''}" data-line="${i.id}">
     <button class="line-main" data-edit="${i.id}" aria-label="Alterar ${esc(i.name)}">
       <span class="line-name">${esc(i.name)}</span>
-      <span class="line-meta">${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)}${refLinha(i) ? ` ${refTag()}` : ''}</span>
+      <span class="line-meta">${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${refLinha(i) ? refV(BRL(i.price)) : BRL(i.price)}</span>
       ${abaixoCusto(q, i) ? `<span class="line-warn">${I.warn}Abaixo do seu custo (${BRL(abaixoCusto(q, i))} por ${unitName(i.unit)})</span>` : ''}
     </button>
     <div class="line-side">
@@ -2889,7 +2889,7 @@ function pickerSheet(q, kind, room) {
     const qf = fold(query);
     const list = prices.filter(p => p.kind === k && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
     const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name) && (!inRoom || roomOf(q, i) === room)).map(i => i.qty));
-    const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}${p.ref ? ' ' + refTag() : ''}</span><span class="pk-price">${BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
+    const rows = groupByCat(list).map(([cat, L]) => `<div class="pk-cat">${esc(cat)}</div>${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}${p.ref ? ' ' + refTag() : ''}</span><span class="pk-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}`).join('');
     return (rows || KitFacil.ui.vazio({ titulo: `Nada com “${esc(query)}”`, texto: `na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}. Adicione como item fora da tabela.` }))
       + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}${query ? `Adicionar “${esc(query)}”` : `${k === 'svc' ? 'Serviço' : 'Material'} fora da tabela`}</button>`;
   };
@@ -3792,8 +3792,7 @@ function priceListHTML() {
   const list = prices.filter(p => p.kind === priceKind && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
   if (!list.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum item encontrado', texto: 'Confira o nome do item ou da categoria.' } : { titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo item</b> para cadastrar.' });
   return groupByCat(list).map(([cat, L]) => panel(`pr:${priceKind}:${cat}`, '', esc(cat), qf ? null : L.slice(0, 3).map(p => p.name).join(' · ') + (L.length > 3 ? '…' : ''),
-    (L.some(p => p.ref) ? `<div class="ref-bar"><span>${refTag()} ${plural(L.filter(p => p.ref).length, 'preço do app nesta categoria', 'preços do app nesta categoria')}</span><button class="btn sm ghost" data-ref-cat="${esc(cat)}">${I.check}Confirmar todos</button></div>` : '')
-    + `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${inStock(p) ? ` · ${stockTxt(p)}` : ''}${p.ref ? ' ' + refTag() : ''}</small></span><span class="prow-price">${BRL(p.price)}</span></button>`).join('')}</div>`,
+    `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${inStock(p) ? ` · ${stockTxt(p)}` : ''}</small></span><span class="prow-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}</span></button>`).join('')}</div>`,
     { multi: true, right: `<span class="card-sum">${L.length}</span>`, force: qf ? true : undefined })).join('');
 }
 VIEWS.prices = {
@@ -3802,23 +3801,16 @@ VIEWS.prices = {
     return `${barraTopo()}
     <main class="page">
       ${KitFacil.ui.cabecalho({ titulo: 'Tabela de preços', acoes: `<button class="btn sm ghost" data-adjust>${I.percent}Reajustar</button>`, criar: { rotulo: 'Novo item', attrs: 'data-new-price' } })}
-      ${prices.some(p => p.ref) ? `<div class="banner b-tip"><p>${refTag()} <b>${plural(prices.filter(p => p.ref).length, 'preço ainda é', 'preços ainda são')} do app.</b> Confira os que você usa: mude o valor ou confirme.</p></div>` : ''}
       <div class="seg" role="group" aria-label="Tipo"><button data-k="svc" aria-pressed="${priceKind === 'svc'}">Mão de obra · ${n('svc')}</button><button data-k="mat" aria-pressed="${priceKind === 'mat'}">Material · ${n('mat')}</button></div>
       <label class="search">${I.search}<input type="search" id="pr-q" placeholder="Buscar item ou categoria" value="${esc(priceQuery)}" aria-label="Buscar na tabela"></label>
       <div id="pr-list" style="display:flex;flex-direction:column;gap:10px">${priceListHTML()}</div>
-      <p class="foot-note">Os preços que vêm com o app têm a etiqueta "a conferir": são só uma referência. Toque em um item para colocar o seu valor ou confirmar o de referência.</p>
+      <p class="foot-note">${prices.some(p => p.ref) ? `Preços em cinza claro são os de referência do app (${plural(prices.filter(p => p.ref).length, 'a conferir', 'a conferir')}). Toque em cada um para colocar o seu valor ou confirmar.` : 'Todos os preços foram conferidos por você.'}</p>
     </main>`;
   },
   bind(v) {
     $$('[data-k]', v).forEach(b => b.onclick = () => { priceKind = b.dataset.k; rerender(); });
     const sq = $('#pr-q', v); sq.addEventListener('input', () => { priceQuery = sq.value; $('#pr-list').innerHTML = priceListHTML(); });
     $('#pr-list', v).addEventListener('click', e => {
-      const rc = e.target.closest('[data-ref-cat]');
-      if (rc) {
-        const L = prices.filter(p => p.ref && p.kind === priceKind && (p.cat || 'Outros') === rc.dataset.refCat);
-        L.forEach(p => { p.ref = false; }); savePrices(); rerender();
-        return toast(`${plural(L.length, 'preço confirmado', 'preços confirmados')}.`, { label: 'Desfazer', run: () => { L.forEach(p => { p.ref = true; }); savePrices(); rerender(); } });
-      }
       const b = e.target.closest('[data-pid]'); if (b) priceSheet(prices.find(p => p.id === b.dataset.pid));
     });
     $('[data-new-price]', v).onclick = () => priceSheet(null);
@@ -3842,7 +3834,7 @@ function priceSheet(p) {
         <div class="field"><label for="pp-unit">Cobrado por</label><select id="pp-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === it.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       </div>
       </div>
-      ${p && p.ref ? `<div class="ref-box"><p>${refTag()} Este preço veio com o app. Mude o valor ou confirme que ele vale para você.</p><button class="btn sm ghost" data-ref-ok>${I.check}Confirmar preço</button></div>` : ''}
+      ${p && p.ref ? `<div class="ref-box"><p>Este é o preço de referência do app. Mude o valor ou confirme que ele vale para você.</p><button class="btn sm ghost" data-ref-ok>${I.check}Confirmar preço</button></div>` : ''}
       ${p && inStock(p) ? `<p class="hint">No estoque: ${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}${p.cost ? `, custo ${BRL(p.cost)}` : ''}. O preço daqui é o repasse ao cliente. Altere a quantidade e o custo em Gestão.</p>` : ''}`,
     foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
     onMount: s => {
@@ -3930,10 +3922,11 @@ function stockListHTML() {
   const L = (f === 'estoque' ? est : f === 'repor' ? rep : mats).filter(bate);
   const linha = p => {
     let sub = '', dir = '';
-    if (f === 'catalogo') { sub = `repasse ${BRL(p.price)} por ${unitName(p.unit)}${p.ref ? ' · a conferir' : ''}`; dir = inStock(p) ? `<span class="t-tem">${I.check}${fmtQty(p.stock)}</span>` : p.repor ? `<span class="t-quero">${I.cart}</span>` : ''; }
+    let subH = '';
+    if (f === 'catalogo') { subH = `repasse ${p.ref ? refV(BRL(p.price)) : BRL(p.price)} por ${esc(unitName(p.unit))}`; dir = inStock(p) ? `<span class="t-tem">${I.check}${fmtQty(p.stock)}</span>` : p.repor ? `<span class="t-quero">${I.cart}</span>` : ''; }
     else if (f === 'repor') { sub = p.repor && !stockLow(p) ? `marcado para repor ${fmtQty(p.reporQtd || 1)} ${unitTxt(p.reporQtd || 1, p.unit)}` : p.stock <= 0 ? 'em falta' : `tem ${fmtQty(p.stock)}${p.min ? `, mínimo ${fmtQty(p.min)}` : ''}`; dir = `<span class="g-zero">${I.warn}</span>`; }
     else { sub = lotesTxt(p) || 'Sem marca'; dir = p.stock <= 0 ? `<span class="g-zero">${I.warn}Em falta</span>` : `<span class="${stockLow(p) ? 'g-zero' : ''}">${stockLow(p) ? I.warn : ''}${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}</span>`; }
-    return `<button class="prow" data-mat="${p.id}"><span><b>${hl(p.name, qf)}</b><small>${esc(sub)}</small></span><span class="prow-price">${dir}</span></button>`;
+    return `<button class="prow" data-mat="${p.id}"><span><b>${hl(p.name, qf)}</b><small>${subH || esc(sub)}</small></span><span class="prow-price">${dir}</span></button>`;
   };
   const lista = L.length ? groupByCat(L).map(([cat, M]) => `<div class="g-card"><div class="pk-cat">${esc(cat)}</div><div class="plist">${M.map(linha).join('')}</div></div>`).join('')
     : KitFacil.ui.vazio(qf ? { titulo: 'Nenhum material encontrado', texto: 'Confira o nome, a marca ou a categoria.' }
@@ -3960,7 +3953,7 @@ function matSheet(p) {
         <div class="field"><label for="mt-price">Repasse ao cliente (por ${unitName(p.unit)})</label><input id="mt-price" type="text" inputmode="numeric" data-money value="${BRL(p.price)}"></div>
         <div class="field"><label for="mt-min">Avisar quando chegar a (opcional)</label><input id="mt-min" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${p.min ? fmtQty(p.min) : ''}"></div>
       </div>
-      ${p.ref ? `<div class="ref-box" id="mt-ref"><p>${refTag()} O repasse veio com o app. Mude o valor ou confirme.</p><button class="btn sm ghost" data-ref-ok>${I.check}Confirmar repasse</button></div>` : ''}
+      ${p.ref ? `<div class="ref-box" id="mt-ref"><p>Este é o repasse de referência do app. Mude o valor ou confirme.</p><button class="btn sm ghost" data-ref-ok>${I.check}Confirmar repasse</button></div>` : ''}
       <p class="g-margin" id="mt-margin" aria-live="polite">${margemHTML(p.cost || 0, p.price)}</p>
       <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos.${stockLow(p) ? ' Chegou ao mínimo: já está em Repor.' : ''}</p>
       <label class="switch-row" for="mt-repor"><span><b>Preciso repor</b><small>Entra na lista de compras${stockLow(p) ? ', além do aviso de mínimo' : ''}.</small></span><input type="checkbox" class="sw" id="mt-repor" ${p.repor ? 'checked' : ''}></label>
@@ -4437,7 +4430,7 @@ function settingsSums() {
     conta: [s.company || s.name, s.phone ? fmtPhone(s.phone) : ''].filter(Boolean).join(' · ') || undefined,
     pix: s.pix || 'Nenhuma chave cadastrada',
     deslocamento: s.kmPerL || s.fuelPrice ? [s.kmPerL && `${fmtQty(s.kmPerL)} km/l`, s.fuelPrice && `combustível ${BRL(s.fuelPrice)}`].filter(Boolean).join(' · ') : 'Consumo do veículo e preço do combustível',
-    adicionais: `Urgência ${s.surUrgent}% · noturno ${s.surNight}% · fim de semana ${s.surWeekend}%${s.refAdic ? ' · a conferir' : ''}`,
+    adicionais: `Urgência ${s.surUrgent}% · noturno ${s.surNight}% · fim de semana ${s.surWeekend}%`,
     padrao: `Prazo ${prazoTxt({ n: Math.max(1, s.prazoN || 1), u: PRAZO_U[s.prazoU] ? s.prazoU : 'uteis' })} · validade ${s.validity} dias · garantia ${s.warranty} dias · ${payShort({ mode: s.payMode, entryPct: s.entryPct, installments: s.installments }).toLowerCase()}`,
     textos: 'Termo de aceite e condições da garantia',
   };
@@ -4525,7 +4518,7 @@ VIEWS.settings = {
               <p class="kf-ajuda">O desgaste cobre pneus, óleo e manutenção. A hora entra quando você informa o tempo de viagem. O mínimo protege as obras muito perto.</p>`) },
           { id: 'adicionais', titulo: 'Adicionais', icone: ICONES_AJ.adicionais, resumo: S.adicionais, html: bloco('Adicionais sobre a mão de obra', `<p class="kf-ajuda">Percentual usado quando você marca o adicional no orçamento. Se marcar mais de um, eles se somam.</p>
               <div class="grid3">${pct('surUrgent', 'Urgência')}${pct('surNight', 'Noturno')}${pct('surWeekend', 'Fim de sem.')}</div>
-              ${s.refAdic ? `<div class="ref-box" id="aj-ref-adic"><p>${refTag()} Percentuais que vieram com o app. Mude ou confirme.</p><button class="btn sm ghost" data-ref-adic>${I.check}Confirmar percentuais</button></div>` : ''}`) },
+              ${s.refAdic ? `<div class="ref-box" id="aj-ref-adic"><p>Estes são os percentuais de referência do app. Mude ou confirme.</p><button class="btn sm ghost" data-ref-adic>${I.check}Confirmar percentuais</button></div>` : ''}`) },
           { id: 'padrao', titulo: 'Orçamento novo', icone: ICONES_AJ.padrao, resumo: S.padrao, html: bloco('Padrão de cada orçamento novo', `<p class="kf-ajuda">Dá para mudar em cada orçamento.</p>
               <div class="grid2">
                 ${f('validity', 'Validade (dias)', '15', 'text', 'inputmode="numeric" data-int')}
