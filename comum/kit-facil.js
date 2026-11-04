@@ -10,13 +10,13 @@
    - novidades de cada versão (uma vez, na primeira abertura depois de atualizar) e boas-vindas no primeiro uso
    - avaliação e feedback: escolha entre "Avaliar o app" e "Relatar um problema", com os mesmos componentes
    - tela de Ajustes em guias: as guias comuns, sempre na mesma ordem, e as guias próprias de cada app
-   - tema claro, escuro ou automático; instalar; cópia de segurança; armazenamento; apagar dados do aparelho
+   - tema claro, escuro ou automático; instalar; cópia de segurança; armazenamento; restaurar os padrões de fábrica
    - sincronização entre aparelhos por um gist secreto e criptografado na conta GitHub do usuário
    - janelas (diálogos) acessíveis e avisos
    - lista de escolha do Kit no lugar da lista do sistema (toda <select>) e seções que abrem e fecham com movimento suave */
 (function (global) {
   'use strict';
-  const VERSAO = '2.8.0';
+  const VERSAO = '2.9.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -105,6 +105,7 @@
     voltar: svg('<path d="m14.5 6-6 6 6 6"/>'),
     baixar: svg('<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/>'),
     subir: svg('<path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9M5 19.5h14"/>'),
+    fabrica: svg('<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v3.7h3.7"/><path d="M12 8.5V12l2.5 1.6"/>'),
     lixo: svg('<path d="M4.5 7h15M10 11v6M14 11v6"/><path d="M6.5 7l.8 12.2A1.5 1.5 0 0 0 8.8 20.5h6.4a1.5 1.5 0 0 0 1.5-1.3L17.5 7M9.5 7V4.5h5V7"/>'),
     atualizar: svg('<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4.5v4.2h-4.2"/>'),
   };
@@ -543,7 +544,7 @@
     $$('[data-kf-instalar-bloco]').forEach(el => { el.outerHTML = instalarHTML(); });
   }
 
-  /* ================= cópia de segurança, armazenamento e apagar dados ================= */
+  /* ================= cópia de segurança, armazenamento e padrões de fábrica ================= */
   /* formato padrão: { formato: 'copia-facil', app, esquema, versaoApp, em, dados } */
   function copiaEnvelope(dados, esquema = 1) {
     return { formato: 'copia-facil', app: C.app, esquema, versaoApp: C.versao, em: new Date().toISOString(), dados };
@@ -588,8 +589,9 @@
   let apagando = false;
   function apagarDadosDoAparelho() {
     const S = syncAtual, nuvem = S && S.ligada();
-    confirmar({ titulo: 'Apagar os dados deste aparelho?', ok: 'Apagar deste aparelho', perigo: true,
-      texto: `Tudo o que o ${C.nome} guardou neste navegador sai daqui${C.exemploDados ? `: ${C.exemploDados}` : ''}, além das preferências. ${nuvem ? 'A cópia na nuvem e os outros aparelhos continuam como estão. Para trazer os dados de volta, conecte a sincronização de novo.' : 'Sem a sincronização ligada, isso não tem volta: baixe uma cópia de segurança antes, se quiser.'}`,
+    /* Restaurar os padrões de fábrica (lei 6, Kit 2.9): o app volta como novo neste aparelho, sem dados nem ajustes. */
+    confirmar({ titulo: 'Restaurar os padrões de fábrica?', ok: 'Restaurar de fábrica', perigo: true,
+      texto: `O ${C.nome} volta como novo neste aparelho: sai tudo o que ele guardou${C.exemploDados ? ` (${C.exemploDados})` : ''}, além do tema, das preferências e dos ajustes. ${nuvem ? 'A cópia na nuvem e os outros aparelhos continuam como estão. Para trazer os dados de volta, conecte a sincronização de novo.' : 'Sem a sincronização ligada, isso não tem volta: baixe uma cópia de segurança antes, se quiser.'}`,
       aoConfirmar: () => {
         apagando = true;
         if (S) S._parar();
@@ -913,7 +915,7 @@
         ? `<p class="kf-ajuda">A chave da sincronização fica guardada só neste aparelho e dá acesso apenas aos gists da sua conta. Não envie a chave nem o link de outro aparelho para outras pessoas.</p><button type="button" class="kf-btn kf-sec" data-kf="sync-sair">Desconectar este aparelho</button>`
         : `<p class="kf-ajuda">Nenhuma conta está conectada neste aparelho. Os dados não saem daqui, a não ser quando você compartilha um arquivo ou envia uma avaliação.</p>`)
       + extra
-      + bloco('Apagar os dados deste aparelho', `<p class="kf-ajuda">Tira deste navegador tudo o que o ${esc(C.nome)} guardou. Útil antes de devolver ou emprestar o aparelho.</p><button type="button" class="kf-btn kf-perigo-sec" data-kf="apagar-aparelho">${IC.lixo}Apagar dados deste aparelho</button>`);
+      + bloco('Restaurar os padrões de fábrica', `<p class="kf-ajuda">O ${esc(C.nome)} volta como novo neste aparelho: saem os dados, o tema, as preferências e os ajustes. Útil para recomeçar do zero ou antes de devolver ou emprestar o aparelho.</p><button type="button" class="kf-btn kf-perigo-sec" data-kf="restaurar-fabrica">${IC.fabrica}Restaurar padrões de fábrica</button>`);
     if (id === 'feedback') return bloco('', `<p class="kf-texto">Sua mensagem vai direto para quem faz o ${esc(C.nome)}. O balão no alto da tela abre as mesmas opções.</p>${escolhasHTML()}`) + extra;
     if (id === 'sobre') return bloco('', sobreHTML()) + extra;
     return extra;
@@ -926,7 +928,7 @@
     let ativa = secaoAtiva();
     if (ativa && !todas.some(s => s.id === ativa)) ativa = '';
     const resumos = { conta: resumoConta(), sincronizacao: resumoSincronizacao(), aparencia: tema.nome(), preferencias: 'Idioma, região e instalação',
-      notificacoes: 'Sem notificações no aparelho', privacidade: 'Seus dados, segurança e apagar dados', feedback: resumoFeedback(), sobre: `Versão ${C.versao}`, ...(o.resumos || {}) };
+      notificacoes: 'Sem notificações no aparelho', privacidade: 'Seus dados, segurança e padrões de fábrica', feedback: resumoFeedback(), sobre: `Versão ${C.versao}`, ...(o.resumos || {}) };
     const item = s => `<li><button type="button" class="kf-aj-item" data-kf-aj-ir="${esc(s.id)}" aria-controls="kf-aj-${esc(s.id)}"${s.id === ativa ? ' aria-current="true"' : ''}>
         <span class="kf-aj-ic"><svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true">${s.icone || P.ajustes}</svg></span>
         <span class="kf-aj-tx"><b>${esc(s.titulo)}</b><small data-kf-aj-resumo="${esc(s.id)}">${esc(s.resumo != null ? s.resumo : resumos[s.id] || '')}</small></span>${IC.chev}</button></li>`;
@@ -1300,6 +1302,7 @@
       // o ouvinte vai direto no campo: se o app redesenhar a tela enquanto o seletor de arquivos está aberto
       // (no celular a página fica escondida), o campo antigo sai da página e o aviso não chegaria ao documento
       'copia-restaurar': () => { const i = b.closest('.kf-bloco') && $('[data-kf-copia-arquivo]', b.closest('.kf-bloco')); if (i) { i.addEventListener('change', aoEscolherCopia); i.click(); } },
+      'restaurar-fabrica': () => apagarDadosDoAparelho(),
       'apagar-aparelho': () => apagarDadosDoAparelho(),
     };
     if (!acoes[a]) return;
@@ -1768,7 +1771,7 @@
     tema,
     instalarHTML,
     copia: { envelope: copiaEnvelope, baixar: baixarCopia, ler: lerCopia },
-    armazenamento: { bytes: () => bytesDe(prefixosApp()), apagar: apagarDadosDoAparelho },
+    armazenamento: { bytes: () => bytesDe(prefixosApp()), apagar: apagarDadosDoAparelho, restaurarFabrica: apagarDadosDoAparelho },
     sync: { criar: criarSync },
   });
 })(window);

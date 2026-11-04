@@ -2,6 +2,12 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.17.0 · 2026-11-03
+
+- **Restaurar padrões de fábrica** (Ajustes › Privacidade e segurança, Kit Fácil 2.9.0): o app volta como novo neste
+  aparelho — saem os dados, o tema, as preferências e os ajustes, e a boas-vindas aparece de novo. Substitui o antigo
+  "Apagar dados deste aparelho". A cópia na nuvem e os outros aparelhos não mudam.
+
 ## 2.16.2 · 2026-11-03
 
 - **Correção:** Adicionar mão de obra e Adicionar material voltaram a abrir a lista (a 2.16.1 deixou a janela travada).

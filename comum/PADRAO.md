@@ -4,7 +4,7 @@ Regras comuns do **Conta Fácil**, do **Elétrica Fácil**, do **Estudo Fácil**
 novo do projeto. Este arquivo fica em `comum/PADRAO.md`, igual em todos os repositórios, junto com o **Kit Fácil** (o
 código comum).
 
-Versão do padrão: 2.6 · Kit Fácil 2.8.0 · novembro de 2026.
+Versão do padrão: 2.7 · Kit Fácil 2.9.0 · novembro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -248,7 +248,11 @@ Lista de guias à esquerda (ou em tela cheia no celular) e a guia aberta à dire
 3. **Aparência** — tema Automático, Claro ou Escuro; o app abre no seu tema de fábrica (Automático, se o app não escolher outro) até a pessoa escolher
 4. **Preferências gerais** — idioma, moeda, data e hora; instalar o app
 5. **Notificações** — o que o app avisa e como (nenhum app envia notificações para o aparelho hoje)
-6. **Privacidade e segurança** — onde ficam os dados, segurança da chave, desconectar, apagar os dados deste aparelho
+6. **Privacidade e segurança** — onde ficam os dados, segurança da chave, desconectar e, por último, **Restaurar padrões
+   de fábrica** (Kit 2.9, igual em todos os apps): o app volta como novo neste aparelho — saem os dados, o tema, as
+   preferências, os ajustes e a conexão da nuvem, e a boas-vindas aparece de novo. A cópia na nuvem e os outros aparelhos
+   não mudam. Para isso funcionar, **tudo o que o app guarda no navegador usa o prefixo do app** (lei 2); chave fora do
+   prefixo não volta de fábrica
 7. **Avaliação e feedback** — as mesmas duas opções do balão
 8. **Sobre o aplicativo** — versão, fase de testes, termos e políticas, novidades desta versão, apoio ao criador, outros apps da família, versão do Kit Fácil
 

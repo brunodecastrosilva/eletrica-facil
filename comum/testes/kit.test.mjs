@@ -324,7 +324,7 @@ test('Ajustes: conteúdo das guias comuns (conta, sincronização, armazenamento
   assert.match(await texto('preferencias'), /Português \(Brasil\)[\s\S]*Real \(R\$\)/);
   assert.match(await texto('notificacoes'), /não envia notificações/);
   const priv = await texto('privacidade');
-  assert.match(priv, /As notas de teste ficam guardadas neste aparelho/); assert.match(priv, /gist secreto/); assert.match(priv, /Apagar dados deste aparelho/);
+  assert.match(priv, /As notas de teste ficam guardadas neste aparelho/); assert.match(priv, /gist secreto/); assert.match(priv, /Restaurar padrões de fábrica/);
   assert.match(await texto('feedback'), /Avaliar o app[\s\S]*Relatar um problema/);
   const sobre = await texto('sobre');
   assert.match(sobre, /Versão 0\.0\.0-teste/); assert.match(sobre, /Termos de uso/); assert.match(sobre, /Kit Fácil \d+\.\d+\.\d+/);
@@ -377,7 +377,8 @@ test('Ajustes: cópia de segurança e apagar os dados deste aparelho', async () 
   const copia = JSON.parse(await readFile(await dl.path(), 'utf8'));
   assert.equal(copia.formato, 'copia-facil'); assert.equal(copia.app, amb.app); assert.equal(copia.dados.notas.length, 2);
   await p.click('[data-kf-aj-ir="privacidade"]');
-  await p.click('[data-kf="apagar-aparelho"]');
+  await p.click('[data-kf="restaurar-fabrica"]');
+  assert.match(await p.textContent('.kf-dlg'), /volta como novo neste aparelho/);
   assert.match(await p.textContent('.kf-dlg'), /A cópia na nuvem e os outros aparelhos continuam/);
   await Promise.all([p.waitForNavigation(), p.click('[data-kf-ok]')]);
   assert.deepEqual(await p.evaluate(() => T.notas()), []);

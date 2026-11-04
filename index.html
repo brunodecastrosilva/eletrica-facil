@@ -665,7 +665,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.16.2';
+const VERSAO = '2.17.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -1071,7 +1071,7 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
+  novidades: [{ versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
     'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
     'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
     'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
