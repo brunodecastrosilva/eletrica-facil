@@ -397,6 +397,7 @@ Regularidade em todas as telas, guias e seções (lei 6). Cada coisa tem **um** 
 |---|---|---|
 | Trocar a parte de uma mesma tela (Materiais · Ferramentas · Checklist; Mão de obra · Material) | **Guias** do Kit: `KitFacil.ui.abas({ itens: [[id, nome, n]], atual, rotulo, dado })` (`kf-abas`) | sublinhado na cor de destaque; setas do teclado andam entre as guias; contagem como "Nome · n". Nenhum app tem guias próprias (`role="tablist"` só no Kit) |
 | Filtrar uma lista ou escolher um valor (Todos · Em aberto; À vista · Entrada) | **Segmento** (`kf-seg` ou o segmento do app nas mesmas medidas) | o escolhido é **claro** (fundo `--kf-seg-on`: branco no tema claro, um tom acima do trilho no escuro; sombra leve), como em Ajustes › Aparência; contagem como "Nome · n" |
+| Escolher várias etiquetas (estilos, dias, filtros múltiplos) | **Etiqueta** (chip) do app | a escolhida fica preenchida com a cor de destaque; canto de pílula |
 | Botão | `kf-btn` (ou o botão do app nas mesmas medidas) | altura `--kf-btn-h` (48 px) ou `--kf-btn-h-p` (40 px), canto `--kf-r-btn` (12 px). **Uma só cor de botão principal: a de destaque**, para a ação principal da tela; o resto é contornado (`kf-sec`) |
 | Aviso dentro da tela | **Faixa** do Kit: `KitFacil.ui.faixa({ tipo, html, acao })` (`kf-faixa`; tipos dica, info, alerta, erro, ok) | no máximo um botão, sempre contornado |
 | Caixa de conteúdo, seção, item de lista | **Cartão** (`kf-cartao`, `kf-bloco` ou o cartão do app nas mesmas medidas) | canto `--kf-r-cartao` (16 px), linha de 1 px |
