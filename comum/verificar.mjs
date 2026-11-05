@@ -159,8 +159,8 @@ else falha('KitFacil.iniciar sem abrirAjustes e emAjustes (o item Ajustes da nav
   const estilos = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(m => m[1]);
   for (const f of (await arquivosDoRepo()).filter(f => f.endsWith('.css') && !f.startsWith('comum/') && !f.startsWith('tests/'))) estilos.push(await ler(f));
   const css = estilos.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/@(media|supports)[^{]*\{/g, '');
-  const COMP = /^\.(btn|seg|card|cartao|banner|faixa|tabs?|abas?|chip)(\.[\w-]+)*(\s+button)?(\[[^\]]*\])?(:[\w-]+)?$/;
-  const medida = v => /^(0|99px|999px|50%|inherit|var\(--kf-[\w-]+\)|calc\(var\(--kf-[\w-]+\)[^;]*\))$/.test(v.trim());
+  const COMP = /^\.(btn|seg|card|cartao|banner|faixa|tabs?|abas?|chip)(\.[\w-]+)*(\s*>?\s*(button|label\s*>\s*span|label\s*>\s*input:checked\s*\+\s*span))?(\[[^\]]*\])?(:[\w-]+)?$/;
+  const medida = v => /^(0|99px|999px|50%|inherit|var\(--kf-[\w-]+\)|calc\(var\(--kf-[\w-]+\)[^;]*\))$/.test(v.replace(/!important\s*$/, '').trim());
   const erros = new Set();
   for (const [, sel, dec] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const comps = sel.split(',').map(x => x.trim()).filter(x => COMP.test(x));
@@ -169,13 +169,15 @@ else falha('KitFacil.iniciar sem abrirAjustes e emAjustes (o item Ajustes da nav
     if (r && !medida(r)) erros.add(`${comps[0]} com canto ${r.trim()} (use var(--kf-r-btn) ou var(--kf-r-cartao))`);
     const h = (dec.match(/(?:^|;)\s*min-height\s*:\s*([^;]+)/) || [])[1];
     if (h && /^\.btn/.test(comps[0]) && !medida(h)) erros.add(`${comps[0]} com altura ${h.trim()} (use var(--kf-btn-h) ou var(--kf-btn-h-p))`);
-    if (comps.some(c => /^\.seg\b.*aria-pressed="?true/.test(c))) {
+    if (comps.some(c => /^\.seg\b.*(aria-pressed="?true|:checked)/.test(c))) {
       const bg = (dec.match(/(?:^|;)\s*background(?:-color)?\s*:\s*([^;]+)/) || [])[1] || '';
       if (bg && !/var\(--kf-seg-on\)/.test(bg)) erros.add(`${comps[0]} com fundo ${bg.trim()}: o segmento escolhido é claro, como o do Kit (var(--kf-seg-on))`);
     }
   }
   // a barra de baixo e o trilho também são role="tablist"; o resto tem de ser a guia do Kit
   const abasProprias = [...codigo.matchAll(/<[a-z]+[^<>]*role="tablist"[^<>]*>/g)].filter(m => !/kf-abas|kf-nav|kf-trilho/.test(m[0] + codigo.slice(m.index + m[0].length, m.index + m[0].length + 300))).length;
+  const classesAbas = (codigo.match(/class="(?:tabs|abas|g-abas|guias)[\s"]/g) || []).length;
+  if (classesAbas) erros.add(`${classesAbas} barra(s) de guias própria(s) (class="tabs"/"abas"): use KitFacil.ui.abas`);
   if (abasProprias > 0) erros.add(`${abasProprias} lista(s) de guias própria(s) (role="tablist"): use KitFacil.ui.abas`);
   if (erros.size) [...erros].forEach(e => falha('componente fora do padrão (Kit 2.10): ' + e)); else ok('botões, segmentos, cartões, faixas e guias nas medidas do Kit (Kit 2.10)');
 }
