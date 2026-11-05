@@ -2,6 +2,17 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.21.2 · 2026-11-04
+
+- **Preços e Gestão sem a linha de apoio** embaixo do título: as guias já dizem o que há na tela. Exceção à lei 6
+  registrada no README, com proposta ao Integrador para valer nos quatro apps.
+- **Menos espaço vazio no fim das telas:** no celular e no tablet, a folga do fim da página é só a necessária para o
+  botão de criar não cobrir o último item; no computador, onde o botão fica no alto, a folga ficou pequena.
+- **Reajustar preços** sem a linha de descrição.
+- **Aviso dos preços em cinza:** discreto, em cinza e sem caixa, com o texto novo: valores ilustrativos, só como
+  referência inicial; não representam preços de mercado, não são recomendação comercial e não vêm de pesquisa de
+  preços; quem define os preços é o eletricista.
+
 ## 2.21.1 · 2026-11-04
 
 - **Aviso dos preços de fábrica:** no fim da tela Preços, um quadro de aviso no lugar da nota em cinza: os preços em

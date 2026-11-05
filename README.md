@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.21.1 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 2.21.2 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -109,6 +109,11 @@ Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
   janela do navegador; dentro de uma janela do app, a lista pode ficar atrás do rodapé (e, na página, atrás das barras de
   baixo). O app completa: depois de abrir, rola o que falta para o último item aparecer (correção em `index.html`, sem
   mexer no `comum/`). A levar ao Integrador como correção do Kit, para os quatro apps.
+
+- **Preços e Gestão sem linha de apoio (lei 6, telas principais com título e uma linha de apoio):** a pedido do Bruno
+  (04/11/2026), as duas telas que trocam de parte por guias não têm a linha de apoio: as guias já dizem o que há na tela,
+  e a linha só empurrava a lista para baixo. Proposta para o Integrador: telas principais com guias não têm linha de
+  apoio, nos quatro apps (o `KitFacil.ui.cabecalho` já aceita `sub` vazio).
 
 ## Publicação
 
