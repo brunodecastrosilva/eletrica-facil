@@ -417,7 +417,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   // ferramentas: já vêm cadastradas; cada linha abre a caixa da ferramenta, onde se diz se é sua
   await p.click('[data-aba="ferramentas"]');
   assert.ok(await p.evaluate(() => tiposTool().filter(t => t.seed).length) >= 40, 'faltam ferramentas pré-cadastradas');
-  assert.deepEqual(await p.locator('[data-tf]').evaluateAll(L => L.map(b => b.querySelector('span').textContent.trim())), ['minhas', 'quero comprar', 'no catálogo']);
+  assert.deepEqual(await p.locator('[data-tf]').evaluateAll(L => L.map(b => b.querySelector('span').textContent.trim())), ['minhas', 'a comprar', 'no catálogo']);
   assert.equal(await p.locator('[data-tst], .tst').count(), 0, 'sem botões de estado na lista');
   await abrirCat(p, '[data-tipo="ft-multimetro-digital"]');
   await p.click('[data-tipo="ft-multimetro-digital"]');

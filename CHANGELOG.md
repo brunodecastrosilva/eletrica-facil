@@ -2,6 +2,17 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.21.1 · 2026-11-04
+
+- **Aviso dos preços de fábrica:** no fim da tela Preços, um quadro de aviso no lugar da nota em cinza: os preços em
+  cinza são só exemplos para começar; não são recomendação de preço, não obrigam o eletricista nem o cliente e não
+  saíram de nenhuma pesquisa de mercado; confira cada valor com os seus custos, a sua região e o seu trabalho.
+- **Reajustar preços** saiu do alto da tela e virou uma linha discreta no fim da lista, antes do aviso.
+- **Ícones novos:** carrinho de compras com cesto e rodas e chave inglesa para as ferramentas.
+- **Gestão:** o resumo não quebra mais linha ao escolher um número ("quero comprar" virou "a comprar", e a escolha não
+  muda a largura do texto); as divisórias curvas entre os números saíram. Os avisos de lista vazia falam em
+  "catálogo", o nome atual.
+
 ## 2.21.0 · 2026-11-04
 
 Padronização pedida pelo Bruno (lei 6 e Kit Fácil 2.10, decisões no Integrador):

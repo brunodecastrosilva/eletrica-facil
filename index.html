@@ -340,6 +340,17 @@ mark{background:var(--volt-soft);color:inherit;border-radius:3px;padding:0 1px}
 .prow b{font-weight:600;font-size:15.5px}
 .prow small{display:block;color:var(--muted);font-size:13.5px}
 .prow-price{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.pr-ajuste{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin-top:6px;padding:10px 14px;border:1px dashed var(--line-2);border-radius:var(--kf-r-md);background:transparent;color:var(--ink);text-align:left}
+.pr-ajuste > svg:first-child{width:20px;height:20px;color:var(--muted);flex:none}
+.pr-ajuste .lt{flex:1;min-width:0}
+.pr-ajuste b{display:block;font-weight:600;font-size:15px}
+.pr-ajuste small{display:block;color:var(--muted);font-size:13.5px}
+.pr-ajuste > svg:last-child{width:18px;height:18px;color:var(--muted)}
+.pr-aviso{display:flex;gap:12px;align-items:flex-start;background:var(--warn-soft,var(--kf-warn-soft));border:1px solid var(--warn);border-radius:var(--kf-r-md);padding:14px;color:var(--ink);font-size:14.5px;line-height:1.45}
+.pr-aviso > svg{width:22px;height:22px;flex:none;color:var(--warn);margin-top:1px}
+.pr-aviso b{display:block;font-size:15.5px;margin-bottom:4px}
+.pr-aviso p{margin:0 0 6px}
+.pr-aviso p:last-child{margin:0}
 .foot-note{color:var(--faint);font-size:13.5px;text-align:center;margin:4px 0 0}
 
 /* ajustes */
@@ -563,9 +574,10 @@ details.tech[open] > summary::after{content:"–"}
 .g-hero{padding:14px 16px 12px;gap:10px;border-radius:var(--kf-r-lg)}
 /* mesmo resumo do Início (números com divisórias); aqui cada número é um filtro e o escolhido ganha moldura */
 .g-hero .hero-stats{margin-top:0;border-top:0;padding-top:0;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
-.g-hero .hero-stats > *,.g-hero .hero-stats > *:first-child{cursor:pointer;min-height:52px;justify-content:center;padding:6px 10px;border-radius:var(--kf-r-sm)}
+.g-hero .hero-stats{gap:4px;margin:0 -6px}
+.g-hero .hero-stats > *,.g-hero .hero-stats > *:first-child{cursor:pointer;min-height:52px;justify-content:center;padding:6px 8px;border:0;border-radius:var(--kf-r-sm)}
+.g-hero .hero-stats span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .g-hero .hero-stats button[aria-pressed="true"]{background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 2px var(--volt-ink)}
-.g-hero .hero-stats button[aria-pressed="true"] span{font-weight:700}
 .g-hero .hero-top{font-size:13.5px;font-weight:600;opacity:.85}
 .g-cp{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;border:0;border-radius:12px;background:rgba(255,255,255,.55);color:inherit;padding:8px 12px;font-weight:700;font-size:15px;text-align:left}
 .g-cp svg{width:20px;height:20px;flex:none}
@@ -698,7 +710,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.21.0';
+const VERSAO = '2.21.1';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -800,10 +812,10 @@ const I = {
   cal: ic('<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
   warn: ic('<path d="M12 3 2 20h20z"/><path d="M12 10v4.5M12 17.5h.01"/>'),
   box: ic('<path d="m3 7.5 9-4.5 9 4.5-9 4.5z"/><path d="M3 7.5V17l9 4.5 9-4.5V7.5M12 12v9.5"/>'),
-  tool: ic('<path d="M14.5 6.5a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8 .5-.5a4 4 0 0 0-5-5L15 3z"/><path d="m3 21 6-6"/>'),
+  tool: ic('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>'),
   checklist: ic('<path d="M10 6h10M10 12h10M10 18h10"/><path d="m3.5 6 1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 11M3.5 18l1.5 1.5 2.5-2.5"/>'),
   left: ic('<path d="m15 6-6 6 6 6"/>'),
-  cart: ic('<circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/><path d="M3 4h2.5l2.2 11h10.6l2-8H6.4"/>'),
+  cart: ic('<circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/><path d="M2.5 3.5h2.6l2.4 11.2a1.6 1.6 0 0 0 1.6 1.3h8.7a1.6 1.6 0 0 0 1.6-1.2l1.6-7.3H6"/><path d="M10 10.5h7"/>'),
 };
 
 /* ================= tabela inicial de preços (referência para ajustar) ================= */
@@ -1107,7 +1119,7 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.21.0', itens: ['Tudo no mesmo padrão: Preços e Gestão trocam de parte pelas mesmas guias sublinhadas, e as escolhas marcam a opção em branco, como em Ajustes › Aparência.', 'No orçamento, o botão ⋯ fica embaixo, ao lado de Ver proposta. Na proposta, Editar está no ⋯.', 'Avisos com botão contornado; o amarelo fica só para a ação principal de cada tela.', 'A tela Preços ganhou uma linha de apoio, e o botão de criar virou Novo preço.'] }, { versao: '2.20.0', itens: ['A Gestão ficou mais organizada: Materiais, Ferramentas e Checklist viraram guias no alto, e logo abaixo vem um resumo amarelo, como no Início.', 'No resumo, toque nos números para escolher o que ver (em estoque, para repor, no catálogo). A Lista de compras fica ali, com quantos itens tem.', 'No Checklist, o resumo mostra quanto já foi conferido na ida e na volta.'] }, { versao: '2.19.1', itens: ['Nenhum nome tem mais parênteses: os itens da tabela, as ferramentas, as categorias e os rótulos dos campos.', 'Os materiais e as ferramentas que vêm com o app agora podem ser alterados na Gestão: nome, categoria e unidade. As ferramentas também podem ser excluídas.', 'As listas de escolha abertas perto do pé da janela rolam até o último item aparecer.', 'O vermelho do Excluir, ao arrastar um rascunho, ficou emendado com o cartão.'] }, { versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
+  novidades: [{ versao: '2.21.1', itens: ['Em Preços, um aviso claro: os preços em cinza são só exemplos, não são recomendação, não obrigam ninguém e não vêm de pesquisa de mercado.', 'Reajustar preços foi para o fim da tela Preços, mais discreto.', 'Ícones novos para a lista de compras e para as ferramentas.', 'Na Gestão, o resumo não quebra mais linha ao escolher a comprar.'] }, { versao: '2.21.0', itens: ['Tudo no mesmo padrão: Preços e Gestão trocam de parte pelas mesmas guias sublinhadas, e as escolhas marcam a opção em branco, como em Ajustes › Aparência.', 'No orçamento, o botão ⋯ fica embaixo, ao lado de Ver proposta. Na proposta, Editar está no ⋯.', 'Avisos com botão contornado; o amarelo fica só para a ação principal de cada tela.', 'A tela Preços ganhou uma linha de apoio, e o botão de criar virou Novo preço.'] }, { versao: '2.20.0', itens: ['A Gestão ficou mais organizada: Materiais, Ferramentas e Checklist viraram guias no alto, e logo abaixo vem um resumo amarelo, como no Início.', 'No resumo, toque nos números para escolher o que ver (em estoque, para repor, no catálogo). A Lista de compras fica ali, com quantos itens tem.', 'No Checklist, o resumo mostra quanto já foi conferido na ida e na volta.'] }, { versao: '2.19.1', itens: ['Nenhum nome tem mais parênteses: os itens da tabela, as ferramentas, as categorias e os rótulos dos campos.', 'Os materiais e as ferramentas que vêm com o app agora podem ser alterados na Gestão: nome, categoria e unidade. As ferramentas também podem ser excluídas.', 'As listas de escolha abertas perto do pé da janela rolam até o último item aparecer.', 'O vermelho do Excluir, ao arrastar um rascunho, ficou emendado com o cartão.'] }, { versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
     'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
     'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
     'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
@@ -3992,11 +4004,14 @@ VIEWS.prices = {
     const n = k => prices.filter(p => p.kind === k).length;
     return `${barraTopo()}
     <main class="page">
-      ${KitFacil.ui.cabecalho({ titulo: 'Preços', sub: 'Mão de obra e material que entram nos seus orçamentos.', acoes: `<button class="btn sm ghost" data-adjust>${I.percent}Reajustar</button>`, criar: { rotulo: 'Novo preço', attrs: 'data-new-price' } })}
+      ${KitFacil.ui.cabecalho({ titulo: 'Preços', sub: 'Mão de obra e material que entram nos seus orçamentos.', criar: { rotulo: 'Novo preço', attrs: 'data-new-price' } })}
       ${KitFacil.ui.abas({ itens: [['svc', 'Mão de obra', n('svc')], ['mat', 'Material', n('mat')]], atual: priceKind, rotulo: 'Tipo de preço', dado: 'k' })}
       <label class="search">${I.search}<input type="search" id="pr-q" placeholder="Buscar item ou categoria" value="${esc(priceQuery)}" aria-label="Buscar na tabela"></label>
       <div id="pr-list" style="display:flex;flex-direction:column;gap:10px">${priceListHTML()}</div>
-      ${prices.some(p => p.ref) ? '<p class="foot-note">Preços em cinza são os que vêm com o app. Ao mudar, ficam em preto.</p>' : ''}
+      ${prices.length ? `<button class="pr-ajuste" data-adjust>${I.percent}<span class="lt"><b>Reajustar preços</b><small>Aumente ou diminua todos de uma vez, em %</small></span>${I.chev}</button>` : ''}
+      ${prices.some(p => p.ref) ? `<aside class="pr-aviso" role="note" aria-label="Sobre os preços em cinza">${I.warn}<div><b>Os preços em cinza são só exemplos.</b>
+        <p>Vêm com o app apenas para você começar. Não são recomendação de preço, não obrigam você nem o cliente e não saíram de nenhuma pesquisa de mercado.</p>
+        <p>Antes de usar num orçamento, confira cada valor com os seus custos, a sua região e o seu trabalho. Ao mudar um preço, ele fica preto.</p></div></aside>` : ''}
     </main>`;
   },
   bind(v) {
@@ -4327,7 +4342,7 @@ function stockSheet(p) {
 // ferramentas: três listas — Minhas ferramentas (as unidades que você tem), Quero comprar e Ferramentas cadastradas
 // (o catálogo). Cada linha abre a caixa da ferramenta, onde você diz se tem (com marca, modelo e quantidade) ou quer comprar
 let toolFiltro = '';
-const TOOL_FILTROS = [['minhas', 'minhas'], ['quero', 'quero comprar'], ['cadastradas', 'no catálogo']];
+const TOOL_FILTROS = [['minhas', 'minhas'], ['quero', 'a comprar'], ['cadastradas', 'no catálogo']];
 const toolCats = () => { const usadas = new Set(tiposTool().map(t => t.cat)); return [...TOOL_CATS.filter(c => usadas.has(c)), ...[...usadas].filter(c => !TOOL_CATS.includes(c)).sort((a, b) => a.localeCompare(b, 'pt-BR'))]; };
 function toolsListHTML() {
   const itens = tools.filter(t => t.k === 'item' && tipoDe(t)), quero = tiposTool().filter(t => t.quero), todos = tiposTool();
@@ -4343,12 +4358,12 @@ function toolsListHTML() {
   if (f === 'minhas') {
     const L = itens.filter(it => bate(tipoDe(it), it)).sort((a, b) => tipoDe(a).name.localeCompare(tipoDe(b).name, 'pt-BR') || itemTxt(a).localeCompare(itemTxt(b), 'pt-BR'));
     lista = L.length ? porCat(L, it => tipoDe(it).cat, it => `<button class="prow" data-item="${it.id}"><span><b>${hl(tipoDe(it).name, qf)}</b><small>${esc(itemTxt(it) || 'Sem marca e modelo')}</small></span><span class="prow-price">${it.qty} un.</span></button>`)
-      : KitFacil.ui.vazio(qf ? { titulo: 'Nenhuma ferramenta encontrada', texto: 'Confira o nome, a marca ou o modelo.' } : { titulo: 'Nenhuma ferramenta sua ainda', texto: 'Toque em <b>Nova ferramenta</b>, ou abra uma em Ferramentas cadastradas e diga que é sua.', icone: I.tool });
+      : KitFacil.ui.vazio(qf ? { titulo: 'Nenhuma ferramenta encontrada', texto: 'Confira o nome, a marca ou o modelo.' } : { titulo: 'Nenhuma ferramenta sua ainda', texto: 'Toque em <b>Nova ferramenta</b>, ou abra uma do catálogo e toque em Tenho esta ferramenta.', icone: I.tool });
   } else {
     const L = (f === 'quero' ? quero : todos).filter(t => bate(t)).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
     const estado = t => { const its = itensDe(t.id), q = sum(its.map(i => i.qty)); return [q && `${plural(q, 'minha', 'minhas')}${its.some(itemTxt) ? ': ' + its.map(itemTxt).filter(Boolean).join(', ') : ''}`, t.quero && `quero comprar ${t.queroQtd}`].filter(Boolean).join(' · '); };
     lista = L.length ? porCat(L, t => t.cat, t => `<button class="prow" data-tipo="${t.id}"><span><b>${hl(t.name, qf)}</b>${estado(t) ? `<small>${esc(estado(t))}</small>` : ''}</span><span class="prow-price">${temTool(t) ? `<span class="t-tem">${I.check}Minha</span>` : t.quero ? `<span class="t-quero">${I.cart}</span>` : ''}</span></button>`)
-      : KitFacil.ui.vazio(qf ? { titulo: 'Nenhuma ferramenta encontrada', texto: 'Confira o nome.' } : { titulo: 'Nada na lista de compras', texto: 'Abra uma ferramenta em <b>Ferramentas cadastradas</b> e ligue Quero comprar.', icone: I.cart });
+      : KitFacil.ui.vazio(qf ? { titulo: 'Nenhuma ferramenta encontrada', texto: 'Confira o nome.' } : { titulo: 'Nada na lista de compras', texto: 'Abra uma ferramenta do <b>catálogo</b> e ligue Quero comprar.', icone: I.cart });
   }
   return chips + busca + `<div id="g-list" class="g-list">${lista}</div>`;
 }
@@ -4442,7 +4457,7 @@ function newToolSheet() {
       <div class="field"><label for="nt-cat">1. Categoria</label><select id="nt-cat"><option value="" hidden>Escolha a categoria</option>${toolCats().map(c => `<option>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
         <input id="nt-cat-nova" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
       <div class="field"><label for="nt-tipo">2. Ferramenta</label><select id="nt-tipo" disabled><option value="" hidden>Escolha antes a categoria</option></select></div>
-      <div class="field" id="nt-nome-f" hidden><label for="nt-nome">Nome da ferramenta nova</label><input id="nt-nome" type="text" placeholder="Ex.: Detector de metais" autocomplete="off"><span class="hint">Ela entra também em Ferramentas cadastradas.</span></div>
+      <div class="field" id="nt-nome-f" hidden><label for="nt-nome">Nome da ferramenta nova</label><input id="nt-nome" type="text" placeholder="Ex.: Detector de metais" autocomplete="off"><span class="hint">Ela entra também no catálogo de ferramentas.</span></div>
       <div class="st-resto" id="nt-resto" hidden>
         <div class="seg" role="group" aria-label="Situação"><button data-modo="minha" aria-pressed="true">É minha</button><button data-modo="quero" aria-pressed="false">Quero comprar</button></div>
         <div class="grid2" id="nt-marca">
