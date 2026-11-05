@@ -798,3 +798,32 @@ test('Kit 2.7: campo de hora com as colunas do Kit (o <input> guarda o valor)', 
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
+
+test('Kit 2.10: guias do Kit (setas do teclado), faixa com botão contornado e medidas comuns', async () => {
+  const a = await aparelho(amb, { viewport: CELULAR, caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => {
+    const m = document.getElementById('main');
+    m.insertAdjacentHTML('beforeend', KitFacil.ui.abas({ itens: [['a', 'Materiais', 3], ['b', 'Ferramentas'], ['c', 'Checklist']], atual: 'a', rotulo: 'Parte' })
+      + KitFacil.ui.faixa({ tipo: 'dica', html: '<b>Dica.</b> Texto.', acao: '<button class="kf-btn kf-sec" id="fx">Fazer</button>' })
+      + '<button class="kf-btn kf-pri" id="bp">Principal</button><div class="kf-cartao" id="ct">x</div>');
+    window.ABA = '';
+    m.addEventListener('click', e => { const b = e.target.closest('[data-aba]'); if (!b) return; ABA = b.dataset.aba; b.parentNode.querySelectorAll('[role=tab]').forEach(x => { x.setAttribute('aria-selected', String(x === b)); x.tabIndex = x === b ? 0 : -1; }); });
+  });
+  const abas = p.locator('.kf-abas [role="tab"]');
+  assert.equal(await abas.count(), 3);
+  assert.equal(await p.getAttribute('.kf-abas', 'aria-label'), 'Parte');
+  assert.match(await abas.nth(0).textContent(), /Materiais · 3/);
+  await abas.nth(0).focus(); await p.keyboard.press('ArrowRight');
+  assert.equal(await p.evaluate(() => ABA), 'b');
+  assert.equal(await abas.nth(1).getAttribute('aria-selected'), 'true');
+  await p.keyboard.press('End'); assert.equal(await p.evaluate(() => ABA), 'c');
+  const m = await p.evaluate(() => {
+    const cs = s => getComputedStyle(document.querySelector(s));
+    return { bh: cs('#bp').minHeight, br: cs('#bp').borderTopLeftRadius, cr: cs('#ct').borderTopLeftRadius, fx: cs('#fx').backgroundColor, faixa: document.querySelector('.kf-faixa').className };
+  });
+  assert.equal(m.bh, '48px'); assert.equal(m.br, '12px'); assert.equal(m.cr, '16px');
+  assert.match(m.faixa, /kf-dica/);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});

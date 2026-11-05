@@ -13,10 +13,11 @@
    - tema claro, escuro ou automático; instalar; cópia de segurança; armazenamento; restaurar os padrões de fábrica
    - sincronização entre aparelhos por um gist secreto e criptografado na conta GitHub do usuário
    - janelas (diálogos) acessíveis e avisos
-   - lista de escolha do Kit no lugar da lista do sistema (toda <select>) e seções que abrem e fecham com movimento suave */
+   - lista de escolha do Kit no lugar da lista do sistema (toda <select>) e seções que abrem e fecham com movimento suave
+   - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '2.9.0';
+  const VERSAO = '2.10.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -228,7 +229,7 @@
   function confirmar({ titulo, texto, ok = 'Confirmar', perigo = false, aoConfirmar }) {
     abrirDialogo({ titulo, classe: 'kf-curto',
       corpo: `<p class="kf-texto">${esc(texto)}</p>`,
-      pe: `<button type="button" class="kf-btn kf-sec" data-kf-fechar>Voltar</button><button type="button" class="kf-btn ${perigo ? 'kf-perigo' : 'kf-pri'}" data-kf-ok autofocus>${esc(ok)}</button>`,
+      pe: `<button type="button" class="kf-btn kf-sec" data-kf-fechar>Cancelar</button><button type="button" class="kf-btn ${perigo ? 'kf-perigo' : 'kf-pri'}" data-kf-ok autofocus>${esc(ok)}</button>`,
       aoMontar: d => { $('[data-kf-ok]', d).onclick = () => { fecharDialogo(true); aoConfirmar && aoConfirmar(); }; } });
   }
   async function copiar(texto, msg = 'Copiado.') {
@@ -719,6 +720,26 @@
     const lado = `${acoes || ''}${criar ? criarHTML(criar) : ''}`;
     return `<header class="kf-cab ${esc(classe)}"><div class="kf-cab-tx"><h1 class="kf-titulo">${esc(titulo)}</h1>${sub ? `<p class="kf-cab-sub">${sub}</p>` : ''}</div>${lado ? `<div class="kf-cab-acoes">${lado}</div>` : ''}</header>`;
   }
+  /* Kit 2.10 · guias (partes de uma mesma tela) e faixa de aviso.
+     abas({ itens: [[id, nome, n?]], atual, rotulo, dado = 'aba' }): botões role="tab" com data-<dado>="<id>"; o app
+       liga o clique pelo atributo. As setas do teclado andam entre as guias. n aparece como "Nome · n".
+     faixa({ tipo: 'dica'|'info'|'alerta'|'erro'|'ok', html, acao }): aviso dentro da tela; acao é um botão (HTML) e sai
+       sempre contornado (kf-btn kf-sec). */
+  const contagem = n => n == null || n === '' ? '' : ` <span class="kf-n">· ${esc(String(n))}</span>`;
+  function abasHTML({ itens = [], atual, rotulo = '', dado = 'aba', classe = '' } = {}) {
+    return `<div class="kf-abas ${esc(classe)}" role="tablist"${rotulo ? ` aria-label="${esc(rotulo)}"` : ''}>${itens.map(([id, nome, n]) =>
+      `<button type="button" role="tab" data-${esc(dado)}="${esc(id)}" aria-selected="${String(id) === String(atual)}" tabindex="${String(id) === String(atual) ? 0 : -1}">${esc(nome)}${contagem(n)}</button>`).join('')}</div>`;
+  }
+  function faixaHTML({ tipo = 'info', html = '', acao = '', classe = '' } = {}) {
+    return `<div class="kf-faixa kf-${esc(tipo)} ${esc(classe)}"><p>${html}</p>${acao ? `<div class="kf-faixa-acao">${acao}</div>` : ''}</div>`;
+  }
+  document.addEventListener('keydown', e => {
+    const t = e.target; if (!t || !t.closest || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const lista = t.closest('.kf-abas'); if (!lista || t.getAttribute('role') !== 'tab') return;
+    const abas = [...lista.querySelectorAll(':scope > [role="tab"]')], i = abas.indexOf(t);
+    const j = e.key === 'Home' ? 0 : e.key === 'End' ? abas.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + abas.length) % abas.length;
+    e.preventDefault(); abas[j].focus(); abas[j].click();
+  });
   function vazioHTML({ titulo, texto = '', acao = '', icone = '' } = {}) {
     return `<div class="kf-vazio" role="status">${icone ? `<span class="kf-vazio-ic">${icone}</span>` : ''}<b>${esc(titulo)}</b>${texto ? `<p>${texto}</p>` : ''}${acao ? `<div class="kf-vazio-acao">${acao}</div>` : ''}</div>`;
   }
@@ -1757,7 +1778,7 @@
     sobre: { abrir: abrirSobre },
     topo: { html: topoHTML, atualizar: atualizarTopo, estado: estadoNuvem, ESTADOS },
     nav: { ajustes: navAjustesHTML, organizar: organizarNav, MAX: NAV_MAX },
-    ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML },
+    ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML, abas: abasHTML, faixa: faixaHTML },
     escolha: { ligar: escolhaLigar },
     data: { ligar: dataLigar },
     hora: { ligar: horaLigar },

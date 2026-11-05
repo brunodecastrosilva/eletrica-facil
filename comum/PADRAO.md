@@ -4,7 +4,7 @@ Regras comuns do **Conta Fácil**, do **Elétrica Fácil**, do **Estudo Fácil**
 novo do projeto. Este arquivo fica em `comum/PADRAO.md`, igual em todos os repositórios, junto com o **Kit Fácil** (o
 código comum).
 
-Versão do padrão: 2.7 · Kit Fácil 2.9.0 · novembro de 2026.
+Versão do padrão: 2.8 · Kit Fácil 2.10.0 · novembro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -388,6 +388,24 @@ código e os testes nunca esperam a animação. O app não cria animação próp
 Todo cadastro de item que pertence a uma categoria segue o mesmo caminho: **1. Categoria** (lista de escolha, com
 "Nova categoria…" no fim) e **2. Item** (lista dos itens daquela categoria, com "Outro… desta categoria" no fim); os
 demais campos aparecem depois. Linhas que abrem alguma coisa têm a seta à direita.
+
+### 7.9 Componentes de tela (Kit 2.10)
+
+Regularidade em todas as telas, guias e seções (lei 6). Cada coisa tem **um** jeito, igual nos quatro apps:
+
+| Para | Use | Regra |
+|---|---|---|
+| Trocar a parte de uma mesma tela (Materiais · Ferramentas · Checklist; Mão de obra · Material) | **Guias** do Kit: `KitFacil.ui.abas({ itens: [[id, nome, n]], atual, rotulo, dado })` (`kf-abas`) | sublinhado na cor de destaque; setas do teclado andam entre as guias; contagem como "Nome · n". Nenhum app tem guias próprias (`role="tablist"` só no Kit) |
+| Filtrar uma lista ou escolher um valor (Todos · Em aberto; À vista · Entrada) | **Segmento** (`kf-seg` ou o segmento do app nas mesmas medidas) | o escolhido é **claro** (fundo `--kf-seg-on`: branco no tema claro, um tom acima do trilho no escuro; sombra leve), como em Ajustes › Aparência; contagem como "Nome · n" |
+| Botão | `kf-btn` (ou o botão do app nas mesmas medidas) | altura `--kf-btn-h` (48 px) ou `--kf-btn-h-p` (40 px), canto `--kf-r-btn` (12 px). **Uma só cor de botão principal: a de destaque**, para a ação principal da tela; o resto é contornado (`kf-sec`) |
+| Aviso dentro da tela | **Faixa** do Kit: `KitFacil.ui.faixa({ tipo, html, acao })` (`kf-faixa`; tipos dica, info, alerta, erro, ok) | no máximo um botão, sempre contornado |
+| Caixa de conteúdo, seção, item de lista | **Cartão** (`kf-cartao`, `kf-bloco` ou o cartão do app nas mesmas medidas) | canto `--kf-r-cartao` (16 px), linha de 1 px |
+| Título da tela principal | `KitFacil.ui.cabecalho` | sempre com a linha de apoio; o título é o mesmo nome do item na barra de baixo |
+| Ações da tela interna (⋯, editar) | barra de baixo da tela | a barra de cima das telas internas tem só voltar, título, nuvem e balão |
+| Confirmar antes de apagar | `KitFacil.dialogo.confirmar` | nenhuma janela de confirmação própria |
+
+O `npm run verificar` acusa botão, segmento, cartão, faixa ou guias com canto, altura ou fundo fora dessas medidas, e
+guias próprias (`role="tablist"` fora do Kit).
 
 ## 10. Como mudar o Kit Fácil
 

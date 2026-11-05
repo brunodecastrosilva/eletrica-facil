@@ -2,6 +2,28 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.21.0 · 2026-11-04
+
+Padronização pedida pelo Bruno (lei 6 e Kit Fácil 2.10, decisões no Integrador):
+
+- **Guias iguais para partes de uma tela:** Preços (Mão de obra · Material), Gestão (Materiais · Ferramentas · Checklist),
+  a janela Adicionar ao orçamento e a proposta de relatório (Relatório de serviços · Orçamento original) usam as guias
+  sublinhadas do Kit. Os segmentos ficam só para filtros e escolhas de valor.
+- **Segmento escolhido claro**, como o do Kit em Ajustes › Aparência (antes era preto).
+- **Barra de cima das telas internas só com voltar, título, nuvem e balão:** o ⋯ do orçamento foi para a barra de
+  baixo, ao lado de Ver proposta; o lápis da proposta (que só voltava ao orçamento) virou a opção "Editar o orçamento"
+  no ⋯ da barra de baixo.
+- **Uma cor de botão principal:** os botões das faixas de aviso ficaram contornados (Preencher meus dados, Ativar,
+  Aprovou, Serviço concluído, Gerar recibo) e "Concluir e voltar à lista" também. Registrar aprovação e Comprei ficaram
+  amarelos, como as outras ações principais.
+- **Preços:** título igual ao da barra de baixo, com linha de apoio; o botão de criar virou **Novo preço** (Novo item
+  ficou só no Checklist).
+- **Medidas do Kit:** botões com 48 px e canto de 12, cartões e seções com canto de 16, resumos com 22.
+- **Resumo da Gestão** com as mesmas divisórias do resumo do Início; o número escolhido continua com moldura.
+- O filtro do Início ficou numa linha só, sem as contagens (elas já aparecem no resumo e nas seções).
+- No computador, Novo orçamento fica à direita, como o botão de criar de Preços e Gestão.
+- Confirmações pela janela comum do Kit.
+
 ## 2.20.0 · 2026-11-04
 
 - **Gestão com hierarquia:** Materiais, Ferramentas e Checklist viraram guias sublinhadas no alto (antes eram duas

@@ -8,7 +8,8 @@
    5. regras de acessibilidade da página (idioma e zoom liberado) e se o Kit Fácil está carregado;
    6. a interface comum: fonte da família, moldura (barra, navegação e trilho), área superior com chopp,
       nuvem e balão, Ajustes na navegação (barra de baixo e trilho) e a tela de Ajustes em guias;
-   7. o manifesto do app web: id, start_url e scope do próprio caminho (os três apps dividem o mesmo endereço).
+   7. o manifesto do app web: id, start_url e scope do próprio caminho (os três apps dividem o mesmo endereço);
+   8. componentes (Kit 2.10): botão, segmento, cartão, faixa e guias com as medidas comuns do Kit.
    Para atualizar o manifesto depois de mudar o kit: node comum/verificar.mjs --gerar */
 import { readFile, writeFile, readdir, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -152,6 +153,32 @@ if (/KitFacil\.ajustes\.html\(/.test(codigo) && /KitFacil\.ajustes\.ligar\(/.tes
 else falha('a tela de Ajustes não usa KitFacil.ajustes.html e KitFacil.ajustes.ligar');
 if (/abrirAjustes\s*:/.test(codigo) && /emAjustes\s*:/.test(codigo)) ok('item Ajustes da navegação ligado à tela de Ajustes do app');
 else falha('KitFacil.iniciar sem abrirAjustes e emAjustes (o item Ajustes da navegação não saberia abrir os Ajustes)');
+/* ---------- Kit 2.10: componentes com as medidas comuns (lei 6) ---------- */
+// botão, segmento, cartão, faixa e guias do app usam as medidas do Kit; guias de uma tela são as do Kit (kf-abas)
+{
+  const estilos = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(m => m[1]);
+  for (const f of (await arquivosDoRepo()).filter(f => f.endsWith('.css') && !f.startsWith('comum/') && !f.startsWith('tests/'))) estilos.push(await ler(f));
+  const css = estilos.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/@(media|supports)[^{]*\{/g, '');
+  const COMP = /^\.(btn|seg|card|cartao|banner|faixa|tabs?|abas?|chip)(\.[\w-]+)*(\s+button)?(\[[^\]]*\])?(:[\w-]+)?$/;
+  const medida = v => /^(0|99px|999px|50%|inherit|var\(--kf-[\w-]+\)|calc\(var\(--kf-[\w-]+\)[^;]*\))$/.test(v.trim());
+  const erros = new Set();
+  for (const [, sel, dec] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const comps = sel.split(',').map(x => x.trim()).filter(x => COMP.test(x));
+    if (!comps.length) continue;
+    const r = (dec.match(/(?:^|;)\s*border-radius\s*:\s*([^;]+)/) || [])[1];
+    if (r && !medida(r)) erros.add(`${comps[0]} com canto ${r.trim()} (use var(--kf-r-btn) ou var(--kf-r-cartao))`);
+    const h = (dec.match(/(?:^|;)\s*min-height\s*:\s*([^;]+)/) || [])[1];
+    if (h && /^\.btn/.test(comps[0]) && !medida(h)) erros.add(`${comps[0]} com altura ${h.trim()} (use var(--kf-btn-h) ou var(--kf-btn-h-p))`);
+    if (comps.some(c => /^\.seg\b.*aria-pressed="?true/.test(c))) {
+      const bg = (dec.match(/(?:^|;)\s*background(?:-color)?\s*:\s*([^;]+)/) || [])[1] || '';
+      if (bg && !/var\(--kf-seg-on\)/.test(bg)) erros.add(`${comps[0]} com fundo ${bg.trim()}: o segmento escolhido é claro, como o do Kit (var(--kf-seg-on))`);
+    }
+  }
+  // a barra de baixo e o trilho também são role="tablist"; o resto tem de ser a guia do Kit
+  const abasProprias = [...codigo.matchAll(/<[a-z]+[^<>]*role="tablist"[^<>]*>/g)].filter(m => !/kf-abas|kf-nav|kf-trilho/.test(m[0] + codigo.slice(m.index + m[0].length, m.index + m[0].length + 300))).length;
+  if (abasProprias > 0) erros.add(`${abasProprias} lista(s) de guias própria(s) (role="tablist"): use KitFacil.ui.abas`);
+  if (erros.size) [...erros].forEach(e => falha('componente fora do padrão (Kit 2.10): ' + e)); else ok('botões, segmentos, cartões, faixas e guias nas medidas do Kit (Kit 2.10)');
+}
 if (/aoEstado\s*:/.test(codigo)) aviso('aoEstado no motor de sincronização: o estado da nuvem já é mostrado pelo kit; confira se não há um indicador duplicado');
 
 console.log(falhas.length ? `\n${falhas.length} falha(s).` : `\nTudo certo${avisos.length ? ` (${avisos.length} aviso(s))` : ''}.`);

@@ -239,13 +239,13 @@ test('orçamento de exemplo e cópia de segurança (formato novo e antigo) conti
   // restaura a cópia nova
   await p.evaluate(() => { quotes = []; saveQuotes(); });
   await p.setInputFiles('[data-kf-copia-arquivo]', caminho);
-  await p.click('.kf-dlg [data-ok]');
+  await p.click('.kf-dlg :is([data-ok],[data-kf-ok])');
   assert.ok(await esperar(() => p.evaluate(() => quotes.length === 1)), 'não restaurou a cópia nova');
   // e a cópia no formato antigo (versão 2.5 e anteriores)
   const antigo = caminho + '-antigo.json';
   await writeFile(antigo, JSON.stringify({ app: 'eletrica-facil', v: 2, at: Date.now(), settings: { name: 'Antigo' }, prices: copia.dados.prices, quotes: [] }));
   await p.setInputFiles('[data-kf-copia-arquivo]', antigo);
-  await p.click('.kf-dlg [data-ok]');
+  await p.click('.kf-dlg :is([data-ok],[data-kf-ok])');
   assert.ok(await esperar(() => p.evaluate(() => quotes.length === 0 && settings.name === 'Antigo')), 'não restaurou a cópia antiga');
   assert.deepEqual(a.erros, []);
   await a.fechar();
@@ -404,7 +404,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   await p.fill('#lt-brand', 'WEG'); await p.fill('#lt-qty', '3'); await p.fill('#lt-cost', '200');
   await p.click('.kf-dlg [data-save]');
   await p.fill('#mt-min', '10'); await p.locator('#mt-min').dispatchEvent('change');
-  await p.click('.kf-dlg [data-ok]');
+  await p.click('.kf-dlg :is([data-ok],[data-kf-ok])');
   assert.deepEqual(await p.evaluate(id => { const x = prices.find(y => y.id === id); return [x.stock, x.lotes.map(l => l.brand + ':' + l.qty), x.cost, x.min]; }, ref.id), [8, ['Steck:5', 'WEG:3'], 138, 10]);
   await p.click('[data-mf="repor"]');
   assert.match(await p.textContent('#g-body'), new RegExp(ref.name.replace(/[()]/g, '.')));
@@ -428,7 +428,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   await p.click('.kf-dlg [data-novo-item]');
   await p.fill('#it-brand', 'Fluke'); await p.fill('#it-model', '117'); await p.click('.kf-dlg [data-save]');
   assert.equal(await p.evaluate(() => itensDe('ft-multimetro-digital').length), 2, 'duas unidades do mesmo tipo, de marcas diferentes');
-  await p.click('.kf-dlg [data-ok]');
+  await p.click('.kf-dlg :is([data-ok],[data-kf-ok])');
   // nova ferramenta: categoria, depois ferramenta, depois se é sua ou se quer comprar
   await p.click('[data-g-new]');
   await escolher(p, 'nt-cat', 'Furação e corte');
@@ -485,11 +485,11 @@ test('baixa no estoque ao concluir, devolução ao desfazer e aviso de estoque b
     quotes.push(q); saveQuotes(); go('/q/' + q.id); return q.id;
   });
   await p.click('.banner [data-st="concluido"]');
-  await p.locator('.kf-dlg [data-ok]').waitFor();
+  await p.locator('.kf-dlg :is([data-ok],[data-kf-ok])').waitFor();
   assert.match(await p.textContent('#bx-list'), /12 → 4/);
   assert.match(await p.textContent('#bx-list'), /abaixo do mínimo/);
   await p.click('.kf-dlg [data-bq="-1"]'); // usou 7
-  await p.click('.kf-dlg [data-ok]');
+  await p.click('.kf-dlg :is([data-ok],[data-kf-ok])');
   assert.equal(await p.evaluate(() => prices.find(x => x.kind === 'mat').stock), 5);
   assert.deepEqual(await p.evaluate(id => getQ(id).baixa.map(b => b.qty), id), [7]);
   // estoque baixo aparece na Gestão
@@ -518,7 +518,7 @@ test('aprovação com o calendário do app (sem datas futuras) e Comprei na caix
   const ontemIso = await p.evaluate(() => isoDe(maisDias(hojeTs(), -1))), ontem = await p.evaluate(() => maisDias(hojeTs(), -1));
   if (!(await p.locator(`[data-kf-dia="${ontemIso}"]`).count())) await p.click('.kf-cal [data-kf-mes="-1"]');
   await p.click(`[data-kf-dia="${ontemIso}"]`);
-  await p.click('.kf-dlg [data-ok]');
+  await p.click('.kf-dlg :is([data-ok],[data-kf-ok])');
   assert.equal(await p.evaluate(([id, t]) => getQ(id).approvedAt === t, [id, ontem]), true);
   // Comprei: a ferramenta da lista de compras vai para Minhas ferramentas
   await p.evaluate(() => { const t = tools.find(x => x.id === 'ft-furadeira-de-impacto'); t.quero = true; t.queroQtd = 2; saveTools(); go('/gestao'); });
@@ -616,7 +616,7 @@ test('2.16: preços de fábrica em cinza (sem confirmar), outras formas na propo
   // adicional sem percentual padrão: pede o valor no orçamento
   await p.evaluate(id => { const d = document.querySelector(`details[data-panel="q:${id}:val"]`); if (!d.open) KitFacil.secao.abrir(d); }, qa);
   await p.waitForTimeout(700);
-  await p.click('[data-x="urgent"]'); await p.fill('#ax-pct', '40'); await p.click('.kf-dlg [data-ok]');
+  await p.click('[data-x="urgent"]'); await p.fill('#ax-pct', '40'); await p.click('.kf-dlg :is([data-ok],[data-kf-ok])');
   assert.deepEqual(await p.evaluate(id => [getQ(id).extras.urgent, settings.surUrgent], qa), [40, 40]);
   // outras formas na proposta
   const id = await criarOrcamento(p, 'Cliente Formas', 'Troca de tomada');

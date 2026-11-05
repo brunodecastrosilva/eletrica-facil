@@ -89,16 +89,16 @@ svg.bolt{fill:currentColor;stroke:currentColor;stroke-width:.8}
 .concluir{margin-top:6px}
 .marca-eletrica{background:var(--volt);color:var(--volt-ink)}
 /* título da tela, no corpo da página (a barra de cima mostra a marca) */
-.icon-btn{width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;border-radius:12px;color:var(--ink);flex:none;padding:0}
+.icon-btn{width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;border-radius:var(--kf-r-btn);color:var(--ink);flex:none;padding:0}
 @media (hover:hover){.icon-btn:hover{background:var(--surface-2)}}
-.icon-btn.boxed{box-shadow:inset 0 0 0 1.5px var(--line-2);width:48px;height:48px;border-radius:14px}
+.icon-btn.boxed{box-shadow:inset 0 0 0 1.5px var(--line-2);width:48px;height:48px;border-radius:var(--kf-r-btn)}
 
 /* página */
 .page{max-width:var(--col);margin:0 auto;display:flex;flex-direction:column;gap:14px;padding-top:6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(var(--nav-h) + 100px + env(safe-area-inset-bottom,0px))}
 .page.bar{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
 
 /* resumo do mês */
-.hero{background:var(--volt);color:var(--volt-ink);border-radius:22px;padding:18px 18px 16px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:4px}
+.hero{background:var(--volt);color:var(--volt-ink);border-radius:var(--kf-r-lg);padding:18px 18px 16px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:4px}
 .hero::after{content:"";position:absolute;right:-34px;top:-26px;width:176px;height:176px;opacity:.13;pointer-events:none;background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z' fill='%2317150F'/%3E%3C/svg%3E")}
 .hero > *{position:relative;z-index:1}
 .hero-top{display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:14.5px}
@@ -125,11 +125,13 @@ svg.bolt{fill:currentColor;stroke:currentColor;stroke-width:.8}
 
 /* lista de orçamentos */
 .toolbar{display:flex;flex-direction:column;gap:10px}
+/* computador: o Novo orçamento fica à direita, no mesmo lugar do botão de criar de Preços e Gestão */
+@media (min-width:1024px){.toolbar .kf-criar{align-self:flex-end;order:-1;margin-top:-4px}}
 .search{position:relative}
 .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);width:20px;height:20px}
 .search input[type=search]{padding-left:44px}
 /* linhas de escolha (no lugar dos botões lado a lado): bolinha = uma escolha, caixa = várias, seta = abre, + = acrescenta */
-.lins{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:0 14px}
+.lins{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-btn);padding:0 14px}
 details.fold .lins,.vrows .lins{background:none;border:0;border-radius:0;padding:0}
 .lin{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);text-align:left;font-size:15.5px;font-weight:500;cursor:pointer}
 .lins>.lin:first-child{border-top:0}
@@ -149,20 +151,20 @@ details.fold .lins,.vrows .lins{background:none;border:0;border-radius:0;padding
 .lin:disabled{cursor:default}
 .lin:disabled .lt,.lin:disabled .mk{color:var(--faint)}
 .lin:disabled .lt small{color:var(--faint)}
-.seg .n{display:block;font-size:12.5px;font-weight:500;opacity:.8;font-variant-numeric:tabular-nums}
+.seg .kf-n{white-space:nowrap}
 .seg.filtro{margin:0}
 /* rascunho na tela inicial: arrastar para a esquerda mostra Excluir */
-.qswipe{position:relative;border-radius:16px;overflow:hidden;display:block}
+.qswipe{position:relative;border-radius:var(--kf-r-cartao);overflow:hidden;display:block}
 .qswipe .qcard{position:relative;z-index:1;touch-action:pan-y;transition:transform .28s cubic-bezier(.45,0,.2,1)}
 .qswipe.arrastando .qcard{transition:none}
-.qc-del{position:absolute;inset:0;border:0;border-radius:16px;background:var(--bad);color:var(--surface);font-weight:700;font-size:14.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding-left:calc(100% - 104px);opacity:0}
+.qc-del{position:absolute;inset:0;border:0;border-radius:var(--kf-r-cartao);background:var(--bad);color:var(--surface);font-weight:700;font-size:14.5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding-left:calc(100% - 104px);opacity:0}
 .qswipe.mexe .qc-del{opacity:1}
 .qc-del svg{width:20px;height:20px;color:inherit}
 .qc-del:focus-visible{outline:3px solid var(--ink);outline-offset:-5px}
 @media (prefers-reduced-motion:reduce){.qswipe .qcard{transition:none}}
 .qlist{display:flex;flex-direction:column;gap:8px}
 .grp-h{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 4px 2px}
-.qcard{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:13px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;text-align:left;width:100%;color:var(--ink);align-items:center}
+.qcard{border:1px solid var(--line);background:var(--surface);border-radius:var(--kf-r-cartao);padding:13px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;text-align:left;width:100%;color:var(--ink);align-items:center}
 .qcard:hover{border-color:var(--line-2)}
 .qc-name{font-weight:700;font-size:16.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .qc-total{font-family:var(--f-display);font-weight:750;font-stretch:104%;font-size:16.5px;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
@@ -181,7 +183,7 @@ details.fold .lins,.vrows .lins{background:none;border:0;border-radius:0;padding
 .st-exemplo{background:var(--volt-soft);color:var(--volt-text)}
 
 /* cartões e campos */
-.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-cartao);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .card-h{font-family:var(--f-display);font-weight:800;font-stretch:106%;font-size:17.5px;margin:0;letter-spacing:-.01em}
 .card-hr{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .card-sum{font-variant-numeric:tabular-nums;font-weight:600;color:var(--muted);font-size:15px}
@@ -196,22 +198,21 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width:520px){.grid2.stack{grid-template-columns:1fr}}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;border-radius:14px;border:0;font-weight:700;font-size:16px;text-decoration:none;white-space:nowrap;background:var(--surface-2);color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--kf-btn-h);padding:0 18px;border-radius:var(--kf-r-btn);border:0;font-weight:700;font-size:16px;text-decoration:none;white-space:nowrap;background:var(--surface-2);color:var(--ink)}
 .btn.primary{background:var(--volt);color:var(--volt-ink)}
-.btn.dark{background:var(--graphite);color:var(--graphite-ink)}
 .btn.ghost{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line-2)}
-.btn.ok{background:var(--ok);color:var(--surface)}
+.btn.ok-ic svg{color:var(--ok)}
 .btn.wa{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line-2)}
 .btn.wa svg{color:var(--wa)}
 .btn.danger{background:var(--bad);color:var(--surface)}
 .btn.danger-text{background:transparent;color:var(--bad);box-shadow:inset 0 0 0 1.5px var(--line-2)}
-.btn.sm{min-height:40px;padding:0 14px;font-size:15px;border-radius:12px}
+.btn.sm{min-height:var(--kf-btn-h-p);padding:0 14px;font-size:15px;border-radius:var(--kf-r-btn)}
 .btn.block{width:100%}
 .btn:disabled{opacity:.5;cursor:default}
 
-.seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:3px;gap:3px}
-.seg button{border:0;background:none;border-radius:10px;min-height:40px;font-weight:600;font-size:14.5px;color:var(--muted);padding:4px 6px;line-height:1.15}
-.seg button[aria-pressed="true"]{background:var(--graphite);color:var(--graphite-ink)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--kf-r-btn);padding:3px;gap:3px}
+.seg button{border:0;background:none;border-radius:calc(var(--kf-r-btn) - 3px);min-height:var(--kf-seg-h);font-weight:600;font-size:14.5px;color:var(--muted);padding:4px 6px;line-height:1.15}
+.seg button[aria-pressed="true"]{background:var(--kf-seg-on);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.14)}
 
 .switch-row{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--surface-2);border-radius:12px;padding:11px 12px;cursor:pointer}
 .switch-row b{font-weight:600;font-size:15px}
@@ -231,12 +232,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .line-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .line-total{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .line.cli .line-total{color:var(--faint);font-weight:500}
-.qty{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);height:38px}
+.qty{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:var(--kf-r-campo);background:var(--surface-2);height:38px}
 .qty button{width:38px;height:36px;border:0;background:none;color:var(--ink);display:grid;place-items:center;padding:0}
 .qty button svg{width:18px;height:18px}
 .qty button.rm{color:var(--bad)}
 .qty span{min-width:32px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:15px}
-.add-btn{border:1.5px dashed var(--line-2);background:transparent;border-radius:13px;min-height:48px;font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.add-btn{border:1.5px dashed var(--line-2);background:transparent;border-radius:var(--kf-r-btn);min-height:48px;font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
 .add-btn svg{color:var(--volt-text)}
 .add-btn:hover{border-color:var(--volt-text)}
 .empty-line{color:var(--muted);font-size:14.5px;padding:2px 0}
@@ -256,7 +257,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .vrow.total > span{font-weight:700}
 .vrow.total b{font-family:var(--f-display);font-size:26px;font-weight:850;font-stretch:108%}
 .pay-sum{display:flex;flex-direction:column;gap:6px}
-.pay-sum div{display:flex;justify-content:space-between;gap:10px;background:var(--surface-2);border-radius:11px;padding:9px 12px;font-size:15px}
+.pay-sum div{display:flex;justify-content:space-between;gap:10px;background:var(--surface-2);border-radius:var(--kf-r-btn);padding:9px 12px;font-size:15px}
 .pay-sum b{font-variant-numeric:tabular-nums}
 .stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);height:48px;width:max-content}
 .stepper button{width:48px;height:46px;border:0;background:none;display:grid;place-items:center;padding:0}
@@ -266,7 +267,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .stepper button{flex:none}
 
 /* avisos de situação */
-.banner{border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px;font-size:15.5px}
+.banner{border-radius:var(--kf-r-cartao);padding:14px;display:flex;flex-direction:column;gap:12px;font-size:15.5px}
 .banner p{margin:0}
 .b-sent{background:var(--sent-soft)}
 .b-sent b{color:var(--sent)}
@@ -286,6 +287,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .b-tip b{color:var(--volt-text)}
 .banner-act{display:flex;gap:8px;flex-wrap:wrap}
 .banner-act .btn{flex:1 1 130px}
+/* faixa: botão sempre contornado, sobre o branco do cartão (a cor de destaque fica para a ação principal da tela) */
+.banner-act .btn.ghost{background:var(--surface)}
 .banner a.link,.linkish{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:3px;background:none;border:0;padding:0;font-size:15px;text-align:left;display:inline-flex;align-items:center;gap:6px}
 .banner a.link svg{width:18px;height:18px;color:var(--wa)}
 
@@ -293,8 +296,12 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .bbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .bbar-in{max-width:var(--col);margin:0 auto;display:flex;align-items:center;gap:10px}
 .bb-total{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.1}
+/* orçamento: total, ⋯ e Ver proposta cabem numa linha no celular */
+.bbar-in:not(.acts){gap:8px}
+.bbar-in:not(.acts) > .btn.primary{padding:0 14px}
+@media (max-width:380px){.bbar-in:not(.acts) > .btn.primary{padding:0 12px}.bbar-in:not(.acts) > .btn.primary svg{display:none}.bbar-in:not(.acts) > .icon-btn.boxed{width:44px}}
 .bb-total small{font-size:13px;color:var(--muted);font-weight:600}
-.bb-total b{font-family:var(--f-display);font-weight:850;font-stretch:108%;font-size:23px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bb-total b{font-family:var(--f-display);font-weight:850;font-stretch:108%;font-size:clamp(18px,5.4vw,23px);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bbar .acts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;width:100%}
 .bbar .acts .btn{min-width:0;padding-left:10px;padding-right:10px}
 @media (max-width:380px){.bbar .acts .btn{gap:6px;font-size:15px}}
@@ -305,7 +312,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 @keyframes up{from{transform:translateY(30px);opacity:.3}to{transform:none;opacity:1}}
 @keyframes fade{from{opacity:0}}
 .opts{display:flex;flex-direction:column;gap:8px}
-.opt{display:flex;align-items:center;gap:14px;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:14px;text-align:left;width:100%;font-size:16px;font-weight:600;color:var(--ink)}
+.opt{display:flex;align-items:center;gap:14px;border:1px solid var(--line);background:var(--surface);border-radius:var(--kf-r-cartao);padding:14px;text-align:left;width:100%;font-size:16px;font-weight:600;color:var(--ink)}
 .opt small{display:block;font-weight:400;color:var(--muted);font-size:14px}
 .opt svg{color:var(--muted)}
 .opt.danger,.opt.danger svg{color:var(--bad)}
@@ -314,7 +321,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 /* seletor de itens */
 .pk-tools{display:flex;flex-direction:column;gap:10px;padding:0 18px 6px}
 .pk-cat{font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 2px 0}
-.pk-row{display:grid;grid-template-columns:minmax(0,1fr) auto 30px;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface);border-radius:13px;padding:11px 12px 11px 14px;border:1px solid var(--line);color:var(--ink)}
+.pk-row{display:grid;grid-template-columns:minmax(0,1fr) auto 30px;align-items:center;gap:10px;width:100%;text-align:left;background:var(--surface);border-radius:var(--kf-r-btn);padding:11px 12px 11px 14px;border:1px solid var(--line);color:var(--ink)}
 .pk-row.on{border-color:var(--volt);box-shadow:inset 0 0 0 1px var(--volt)}
 .pk-name{font-weight:600;font-size:15.5px}
 .pk-st{display:block;font-weight:500;font-size:13px;color:var(--muted)}
@@ -337,7 +344,7 @@ mark{background:var(--volt-soft);color:inherit;border-radius:3px;padding:0 1px}
 
 /* ajustes */
 .logo-row{display:flex;align-items:center;gap:14px}
-.logo-pick{width:72px;height:72px;border-radius:16px;border:1.5px dashed var(--line-2);background:var(--surface-2);display:grid;place-items:center;color:var(--muted);flex:none;overflow:hidden;padding:4px}
+.logo-pick{width:72px;height:72px;border-radius:var(--kf-r-cartao);border:1.5px dashed var(--line-2);background:var(--surface-2);display:grid;place-items:center;color:var(--muted);flex:none;overflow:hidden;padding:4px}
 .logo-pick img{max-width:100%;max-height:100%;object-fit:contain}
 .logo-row b{display:block}
 .logo-row small{display:block;color:var(--muted);font-size:13.5px}
@@ -393,21 +400,21 @@ mark{background:var(--volt-soft);color:inherit;border-radius:3px;padding:0 1px}
 
 /* sugestões ao digitar */
 .sg-wrap{position:relative;min-width:0;display:flex;flex-direction:column}
-.sg-box{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:15;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);overflow:hidden;display:flex;flex-direction:column}
+.sg-box{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:15;background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-btn);box-shadow:var(--shadow-lg);overflow:hidden;display:flex;flex-direction:column}
 .sg-item{border:0;background:none;text-align:left;padding:11px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:600;color:var(--ink);min-height:48px;border-top:1px solid var(--line)}
 .sg-item:first-child{border-top:0}
 .sg-item small{font-weight:500;color:var(--muted);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%}
 .sg-item.on,.sg-item:hover{background:var(--surface-2)}
 
-.empty{border:1.5px dashed var(--line-2);border-radius:16px;padding:22px 16px;text-align:center;color:var(--muted);font-size:15px}
+.empty{border:1.5px dashed var(--line-2);border-radius:var(--kf-r-cartao);padding:22px 16px;text-align:center;color:var(--muted);font-size:15px}
 .tag-ex{font-size:12px;font-weight:700;color:var(--volt-text);background:var(--volt-soft);border-radius:6px;padding:1px 6px}
 
 /* ambientes, adicionais e deslocamento */
-.switch-row.solo{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
-details.fold{background:var(--surface);border:1px solid var(--line);border-radius:18px;min-width:0}
+.switch-row.solo{background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-cartao);padding:14px 16px}
+details.fold{background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-cartao);min-width:0}
 details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 12px 12px 16px;min-height:62px;-webkit-tap-highlight-color:transparent}
 details.fold>summary::-webkit-details-marker{display:none}
-details.fold>summary:focus-visible{outline:2px solid var(--volt-text);outline-offset:-2px;border-radius:18px}
+details.fold>summary:focus-visible{outline:2px solid var(--volt-text);outline-offset:-2px;border-radius:var(--kf-r-cartao)}
 .f-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .f-t b{font-family:var(--f-display);font-weight:800;font-stretch:106%;font-size:17px;letter-spacing:-.01em}
 .f-t small{display:block;color:var(--muted);font-size:14px;line-height:20px;max-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -427,7 +434,7 @@ details.fold.kf-secao-fechando>summary .f-ch{transform:none}
 .done-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .done-row input{max-width:190px}
 .kind-pick{display:flex;flex-direction:column;gap:10px}
-.kind-pick button{display:flex;gap:14px;align-items:flex-start;text-align:left;border:1.5px solid var(--line-2);background:var(--surface);border-radius:16px;padding:16px;color:var(--ink)}
+.kind-pick button{display:flex;gap:14px;align-items:flex-start;text-align:left;border:1.5px solid var(--line-2);background:var(--surface);border-radius:var(--kf-r-cartao);padding:16px;color:var(--ink)}
 .kind-pick button:hover{border-color:var(--volt-text)}
 .kind-pick .ki{flex:none;width:44px;height:44px;border-radius:12px;background:var(--volt-soft);color:var(--volt-text);display:grid;place-items:center}
 .kind-pick .ki svg{width:24px;height:24px}
@@ -441,7 +448,7 @@ button.grp-h{width:100%;border:0;background:none;text-align:left;cursor:pointer}
 .room-h{display:flex;flex-direction:column;min-width:0}
 .room-h .hint{font-size:13.5px}
 .room-r{display:flex;align-items:center;gap:2px;flex:none}
-.icon-btn.sm{width:38px;height:38px;border-radius:10px}
+.icon-btn.sm{width:38px;height:38px;border-radius:var(--kf-r-sm)}
 .sublab{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:-6px}
 .add-btn.room{border-style:solid;border-color:var(--volt);background:var(--volt-soft)}
 .conf{display:flex;flex-direction:column}
@@ -460,16 +467,16 @@ button.grp-h{width:100%;border:0;background:none;text-align:left;cursor:pointer}
 .vrow.vbtn .vb-r svg{width:18px;height:18px;color:var(--muted)}
 .vrow.vbtn b.cta{color:var(--volt-text)}
 .stack14{display:flex;flex-direction:column;gap:14px}
-.subcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.subcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-btn);padding:12px;display:flex;flex-direction:column;gap:10px}
 .subcard .card-hr b{display:flex;align-items:center;gap:8px}
 .subcard .card-hr svg{color:var(--volt-text)}
-details.more{border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+details.more{border:1px solid var(--line);border-radius:var(--kf-r-btn);background:var(--surface)}
 details.more summary{list-style:none;cursor:pointer;padding:13px 14px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
 details.more summary::-webkit-details-marker{display:none}
 details.more summary::after{content:"+";font-size:22px;color:var(--muted);line-height:1}
 details.more[open] summary::after{content:"–"}
 details.more .more-in{padding:0 14px 14px;display:flex;flex-direction:column;gap:12px}
-.breakdown{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:2px 14px}
+.breakdown{background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-btn);padding:2px 14px}
 .breakdown div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:15px;align-items:baseline}
 .breakdown div:first-child{border-top:0}
 .breakdown small{display:block;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
@@ -481,7 +488,7 @@ details.more .more-in{padding:0 14px 14px;display:flex;flex-direction:column;gap
 .p-table tr.p-sub td:last-child{color:var(--paper-ink);font-weight:700}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .grid3 label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.doc-seg{margin-bottom:-2px}
+.pk-tools .kf-abas{margin:0}
 .paper{container-type:inline-size;container-name:paper}
 /* título longo (relatório) em tela estreita: o número desce para baixo do cabeçalho */
 @container paper (max-width:480px){
@@ -524,7 +531,7 @@ details.tech[open] > summary::after{content:"–"}
 .bx-w{display:flex;align-items:center;gap:4px;color:var(--bad);font-weight:600}
 .bx-w .i{width:16px;height:16px}
 .bx-row .stepper input{width:60px}
-.g-repor{display:flex;flex-direction:column;background:var(--bad-soft);border-radius:14px;padding:4px 12px 6px}
+.g-repor{display:flex;flex-direction:column;background:var(--bad-soft);border-radius:var(--kf-r-btn);padding:4px 12px 6px}
 .g-repor .g-alert{background:none;padding:8px 0 4px}
 .g-rp{display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:44px;border:0;border-top:1px solid color-mix(in srgb,var(--bad) 18%,transparent);background:none;color:var(--ink);font:inherit;font-size:15px;text-align:left;padding:6px 0}
 .g-rp .num{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--bad)}
@@ -549,24 +556,22 @@ details.tech[open] > summary::after{content:"–"}
 .cp-n{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--bad);color:#fff;font-size:12.5px;font-weight:800;margin-left:2px}
 .g-body{display:flex;flex-direction:column;gap:12px}
 .g-list{display:flex;flex-direction:column;gap:12px}
-.g-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:4px 16px 8px}
+.g-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-cartao);padding:4px 16px 8px}
 .g-card>.pk-cat{padding:12px 0 6px}
 .g-card>.hint{padding:0 0 8px;margin:0}
 /* Gestão: guias sublinhadas no alto e resumo amarelo, como no Início (os números são os filtros) */
-.g-abas{display:flex;gap:22px;border-bottom:1px solid var(--line-2);overflow-x:auto;scrollbar-width:none}
-.g-abas button{border:0;background:none;color:var(--muted);font-weight:700;font-size:16px;min-height:46px;padding:0 2px;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
-.g-abas button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--volt)}
-.g-hero{padding:14px 16px 12px;gap:10px;border-radius:20px}
-.g-hero .hero-stats{margin:0 -6px;border-top:0;padding-top:0;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px}
-.g-hero .hero-stats > button,.g-hero .hero-stats > button:first-child{cursor:pointer;min-height:52px;justify-content:center;border:2px solid transparent;border-radius:12px;padding:6px 8px}
-.g-hero .hero-stats button[aria-pressed="true"]{background:rgba(255,255,255,.6);border-color:var(--volt-ink)}
+.g-hero{padding:14px 16px 12px;gap:10px;border-radius:var(--kf-r-lg)}
+/* mesmo resumo do Início (números com divisórias); aqui cada número é um filtro e o escolhido ganha moldura */
+.g-hero .hero-stats{margin-top:0;border-top:0;padding-top:0;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+.g-hero .hero-stats > *,.g-hero .hero-stats > *:first-child{cursor:pointer;min-height:52px;justify-content:center;padding:6px 10px;border-radius:var(--kf-r-sm)}
+.g-hero .hero-stats button[aria-pressed="true"]{background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 2px var(--volt-ink)}
 .g-hero .hero-stats button[aria-pressed="true"] span{font-weight:700}
 .g-hero .hero-top{font-size:13.5px;font-weight:600;opacity:.85}
 .g-cp{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;border:0;border-radius:12px;background:rgba(255,255,255,.55);color:inherit;padding:8px 12px;font-weight:700;font-size:15px;text-align:left}
 .g-cp svg{width:20px;height:20px;flex:none}
 .g-cp .lt{flex:1}
 .g-cp small{font-weight:500;font-size:13.5px}
-.g-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px}
+.g-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-cartao);padding:12px}
 .g-sum div{display:flex;flex-direction:column;gap:2px;min-width:0}
 .g-sum b{font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .g-sum span{font-size:13px;color:var(--muted)}
@@ -622,7 +627,7 @@ details.tech[open] > summary::after{content:"–"}
 .field > .disc .seg{width:auto;flex:none}
 .field > .disc input{flex:1;min-width:0}
 @media (max-width:380px){.seg button{font-size:13.5px;padding:4px 3px}}
-.alt-blk{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:14px;border:1px dashed var(--line-2)}
+.alt-blk{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:var(--kf-r-btn);border:1px dashed var(--line-2)}
 .line-warn{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--bad)}
 .line-warn .i{width:15px;height:15px}
 .prazo-row .kf-esc{flex:1;min-width:150px;width:auto}
@@ -693,7 +698,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.20.0';
+const VERSAO = '2.21.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
@@ -1102,7 +1107,7 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.20.0', itens: ['A Gestão ficou mais organizada: Materiais, Ferramentas e Checklist viraram guias no alto, e logo abaixo vem um resumo amarelo, como no Início.', 'No resumo, toque nos números para escolher o que ver (em estoque, para repor, no catálogo). A Lista de compras fica ali, com quantos itens tem.', 'No Checklist, o resumo mostra quanto já foi conferido na ida e na volta.'] }, { versao: '2.19.1', itens: ['Nenhum nome tem mais parênteses: os itens da tabela, as ferramentas, as categorias e os rótulos dos campos.', 'Os materiais e as ferramentas que vêm com o app agora podem ser alterados na Gestão: nome, categoria e unidade. As ferramentas também podem ser excluídas.', 'As listas de escolha abertas perto do pé da janela rolam até o último item aparecer.', 'O vermelho do Excluir, ao arrastar um rascunho, ficou emendado com o cartão.'] }, { versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
+  novidades: [{ versao: '2.21.0', itens: ['Tudo no mesmo padrão: Preços e Gestão trocam de parte pelas mesmas guias sublinhadas, e as escolhas marcam a opção em branco, como em Ajustes › Aparência.', 'No orçamento, o botão ⋯ fica embaixo, ao lado de Ver proposta. Na proposta, Editar está no ⋯.', 'Avisos com botão contornado; o amarelo fica só para a ação principal de cada tela.', 'A tela Preços ganhou uma linha de apoio, e o botão de criar virou Novo preço.'] }, { versao: '2.20.0', itens: ['A Gestão ficou mais organizada: Materiais, Ferramentas e Checklist viraram guias no alto, e logo abaixo vem um resumo amarelo, como no Início.', 'No resumo, toque nos números para escolher o que ver (em estoque, para repor, no catálogo). A Lista de compras fica ali, com quantos itens tem.', 'No Checklist, o resumo mostra quanto já foi conferido na ida e na volta.'] }, { versao: '2.19.1', itens: ['Nenhum nome tem mais parênteses: os itens da tabela, as ferramentas, as categorias e os rótulos dos campos.', 'Os materiais e as ferramentas que vêm com o app agora podem ser alterados na Gestão: nome, categoria e unidade. As ferramentas também podem ser excluídas.', 'As listas de escolha abertas perto do pé da janela rolam até o último item aparecer.', 'O vermelho do Excluir, ao arrastar um rascunho, ficou emendado com o cartão.'] }, { versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
     'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
     'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
     'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
@@ -1848,10 +1853,9 @@ function openSheet({ title, body, foot = '', tall = false, wide = false, sub = '
     aoFechar: onClose, aoMontar: sh => { prepFields(sh); onMount && onMount(sh); } });
 }
 function closeSheet(silent) { KitFacil.dialogo.fechar(silent); }
+// confirmação: a janela comum do Kit (lei 6), igual nos quatro apps
 function confirmSheet(title, text, okLabel, onOk, danger = true) {
-  openSheet({ title, body: `<p class="hint" style="font-size:16px">${esc(text)}</p>`,
-    foot: `<button class="btn ghost" data-no>Cancelar</button><button class="btn ${danger ? 'danger' : 'primary'}" data-ok>${esc(okLabel)}</button>`,
-    onMount: s => { $('[data-no]', s).onclick = () => closeSheet(); $('[data-ok]', s).onclick = () => { closeSheet(true); onOk(); }; } });
+  KitFacil.dialogo.confirmar({ titulo: title, texto: text, ok: okLabel, perigo: danger, aoConfirmar: onOk });
 }
 async function copyText(text, okMsg) {
   try { await navigator.clipboard.writeText(text); toast(okMsg); return; } catch {}
@@ -1950,7 +1954,7 @@ const linhas = (rows, attrs = '') => `<div class="lins"${attrs}>${rows.join('')}
 // linha "mais" que já foi usada: fica marcada e desligada
 const linhaFeita = (b, feita) => { b.disabled = feita; const m = $('.mk', b); if (m) m.innerHTML = feita ? I.check : I.plus; };
 // filtro curto: segmentos com a contagem embaixo
-const filtroSeg = (attr, L, atual, n, rot) => `<div class="seg filtro" role="group" aria-label="${rot}">${L.map(([k, l]) => `<button ${attr}="${k}" aria-pressed="${atual === k}">${l}<span class="n">${n(k)}</span></button>`).join('')}</div>`;
+const filtroSeg = (attr, L, atual, n, rot) => `<div class="seg filtro" role="group" aria-label="${rot}">${L.map(([k, l]) => `<button ${attr}="${k}" aria-pressed="${atual === k}">${l}</button>`).join('')}</div>`;
 const panel = (key, id, title, sum, body, o) => panelOpen(key, id, title, sum, o) + body + panelClose;
 function paintSums(root, map) {
   for (const k in map) {
@@ -2259,8 +2263,8 @@ VIEWS.home = {
           <div><b>${s.rate === null ? '–' : s.rate + '%'}</b><span>de aprovação em 90 dias</span></div>
         </div>
       </section>
-      ${!syncOn() && !sync.tipOff && !needMe && quotes.some(q => !q.example) ? `<div class="banner b-tip"><p><b>Usa o app em mais de um aparelho?</b> Ative a sincronização e tenha os mesmos orçamentos no celular e no tablet.</p><div class="banner-act"><button class="btn sm dark" data-kf="sync-ativar">Ativar</button><button class="btn sm ghost" data-tip-off>Agora não</button></div></div>` : ''}
-      ${needMe ? `<div class="banner b-tip"><p><b>Seu nome ainda não sai na proposta.</b> Preencha seus dados e chave Pix em Ajustes.</p><div class="banner-act"><button class="btn sm dark" data-aj="conta">Preencher meus dados</button></div></div>` : ''}
+      ${!syncOn() && !sync.tipOff && !needMe && quotes.some(q => !q.example) ? `<div class="banner b-tip"><p><b>Usa o app em mais de um aparelho?</b> Ative a sincronização e tenha os mesmos orçamentos no celular e no tablet.</p><div class="banner-act"><button class="btn sm ghost" data-kf="sync-ativar">Ativar</button><button class="btn sm ghost" data-tip-off>Agora não</button></div></div>` : ''}
+      ${needMe ? `<div class="banner b-tip"><p><b>Seu nome ainda não sai na proposta.</b> Preencha seus dados e chave Pix em Ajustes.</p><div class="banner-act"><button class="btn sm ghost" data-aj="conta">Preencher meus dados</button></div></div>` : ''}
       <div class="toolbar">
         ${quotes.length > 4 ? `<label class="search">${I.search}<input type="search" id="h-q" placeholder="Buscar cliente, serviço ou número" value="${esc(homeQuery)}" aria-label="Buscar orçamento"></label>` : ''}
         ${filtroSeg('data-filter', [['todos', 'Todos'], ['aberto', 'Em aberto'], ['concluido', 'Concluídos'], ['recusado', 'Recusados']], homeFilter, cnt, 'Filtrar')}
@@ -2540,18 +2544,18 @@ function statusBanner(q, c) {
   const px = pixOf(q, c);
   if (q.status === 'enviado') return `<div class="banner b-sent">
     <p><b>Enviado ${rel(q.sentAt)}.</b> O cliente já respondeu?</p>
-    <div class="banner-act"><button class="btn sm ok" data-st="aprovado">${I.check}Aprovou</button><button class="btn sm ghost" data-st="recusado">Recusou</button></div>
+    <div class="banner-act"><button class="btn sm ghost ok-ic" data-st="aprovado">${I.check}Aprovou</button><button class="btn sm ghost" data-st="recusado">Recusou</button></div>
     <a class="link" href="${waLink(q.client.phone, followMessage(q, c))}" target="_blank" rel="noopener">${I.wa}Lembrar o cliente pelo WhatsApp</a>
   </div>`;
   if (q.status === 'aprovado') return `<div class="banner b-ok">
     <p><b>Aprovado ${rel(q.approvedAt)}.</b> Quando terminar o serviço, marque como concluído para gerar o recibo.</p>
-    <div class="banner-act"><button class="btn sm ok" data-st="concluido">${I.check}Serviço concluído</button>${px ? `<button class="btn sm ghost" data-pix>${I.pix}Pix d${px.what}</button>` : `<button class="btn sm ghost" data-receipt>${I.receipt}Recibo</button>`}</div>
+    <div class="banner-act"><button class="btn sm ghost ok-ic" data-st="concluido">${I.check}Serviço concluído</button>${px ? `<button class="btn sm ghost" data-pix>${I.pix}Pix d${px.what}</button>` : `<button class="btn sm ghost" data-receipt>${I.receipt}Recibo</button>`}</div>
   </div>`;
   if (q.status === 'concluido') {
     const pr = pixOf(q, c, 'report');
     return `<div class="banner b-done">
     <div class="done-row"><p><b>Executado em</b> <span id="q-donetxt">${esc(execText(q))}</span></p><button class="btn sm ghost" data-goto-days>${I.cal}Alterar datas</button></div>
-    <div class="banner-act"><button class="btn sm dark" data-receipt>${I.receipt}Gerar recibo</button>${pr ? `<button class="btn sm ghost" data-pix-rest>${I.pix}Pix d${pr.what}</button>` : ''}</div>
+    <div class="banner-act"><button class="btn sm ghost" data-receipt>${I.receipt}Gerar recibo</button>${pr ? `<button class="btn sm ghost" data-pix-rest>${I.pix}Pix d${pr.what}</button>` : ''}</div>
     <button class="linkish" data-undone style="color:var(--muted);font-size:14px">${q.prevStatus && q.prevStatus !== 'rascunho' ? 'Desfazer conclusão' : 'Transformar em orçamento'}</button>
   </div>`;
   }
@@ -2777,11 +2781,10 @@ VIEWS.quote = {
     return `<header class="kf-barra appbar"><div class="kf-barra-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
       <div class="ab-title"><span class="ab-row"><span class="ab-eyebrow">${q.example ? 'Exemplo' : `<span class="ab-tipo">${isReport(q) ? 'Relatório' : 'Orçamento'} </span>` + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-saved" id="ab-saved" role="status" aria-label="Alterações salvas neste aparelho">${I.check}<span>Salvo</span></span></span><span class="ab-main" id="ab-name">${esc(q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'))}</span></div>
-      <button class="icon-btn" data-menu aria-label="Mais opções">${I.more}</button>
       ${KitFacil.topo.html({ principal: false })}
     </div></header>
     <main class="page bar">
-      ${q.example ? `<div class="banner b-tip"><p><b>Este é um orçamento de exemplo.</b> Mexa à vontade para conhecer o app e exclua quando quiser pelo menu ⋯.</p></div>` : ''}
+      ${q.example ? `<div class="banner b-tip"><p><b>Este é um orçamento de exemplo.</b> Mexa à vontade para conhecer o app e exclua quando quiser pelo botão ⋯, ao lado de Ver proposta.</p></div>` : ''}
       ${statusBanner(q, c)}
       ${panelOpen(`q:${q.id}:cli`, 'cli', 'Cliente e serviço', S.cli)}
         <div class="field"><label for="q-name">Nome</label><input id="q-name" type="text" autocapitalize="words" autocomplete="off" placeholder="Nome do cliente" value="${esc(q.client.name)}"></div>
@@ -2816,6 +2819,7 @@ VIEWS.quote = {
     </main>
     <div class="bbar"><div class="bbar-in">
       <div class="bb-total"><small data-t="paylab">${payLabel(q, c)}</small><b data-t="paytotal">${BRL(c.payTotal)}</b></div>
+      <button class="icon-btn boxed" data-menu aria-label="Mais opções do orçamento">${I.more}</button>
       <button class="btn primary" data-preview>${isReport(q) ? 'Ver relatório' : 'Ver proposta'}${I.arrow}</button>
     </div></div>`;
   },
@@ -3000,7 +3004,7 @@ function approveSheet(q) {
       <div class="opts">${OPTS.map(([k, l, h]) => `<button class="opt" data-via="${k}" aria-pressed="${via === k}"><span>${l}<small>${h}</small></span></button>`).join('')}</div>
       <div class="banner b-tip" id="ap-warn"${via === 'verbal' ? '' : ' hidden'}><p><b>Peça uma confirmação por escrito.</b> Um “De acordo” do cliente no WhatsApp protege você se houver discordância depois.</p></div>
       <div class="field"><label for="ap-date">Data da aprovação</label><input type="date" id="ap-date" required max="${isoDe(hojeTs())}" value="${isoDe(hojeTs())}"></div>`,
-    foot: `<button class="btn ok" data-ok>${I.check}Registrar aprovação</button>`,
+    foot: `<button class="btn primary" data-ok>${I.check}Registrar aprovação</button>`,
     onMount: s => {
       $$('[data-via]', s).forEach(b => b.onclick = () => { via = b.dataset.via; $$('[data-via]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#ap-warn', s).hidden = via !== 'verbal'; });
       $('[data-ok]', s).onclick = () => {
@@ -3087,14 +3091,14 @@ function pickerSheet(q, kind, room) {
     onMount: s => {
       const body = $('.kf-dlg-corpo', s);
       body.insertAdjacentHTML('beforebegin', `<div class="pk-tools">
-        <div class="seg" role="group" aria-label="Tipo"><button data-k="svc" aria-pressed="${k === 'svc'}">Mão de obra</button><button data-k="mat" aria-pressed="${k === 'mat'}">Material</button></div>
+        ${KitFacil.ui.abas({ itens: [['svc', 'Mão de obra'], ['mat', 'Material']], atual: k, rotulo: 'Tipo', dado: 'k' })}
         <label class="search">${I.search}<input type="search" id="pk-q" placeholder="Buscar na sua tabela de preços" aria-label="Buscar"></label>
         ${inRoom ? '<p class="hint">Cada toque soma uma unidade. Toque 3 vezes para 3 tomadas.</p>' : ''}</div>`);
       const paintList = () => { const st = body.scrollTop; $('#pk-list', s).innerHTML = listHTML(); body.scrollTop = st; };
       const qi = $('#pk-q', s);
       if (!isTouch) qi.focus();
       qi.addEventListener('input', () => { query = qi.value.trim(); paintList(); body.scrollTop = 0; });
-      $$('[data-k]', s).forEach(b => b.onclick = () => { k = b.dataset.k; if (inRoom) lastRoomKind = k; $$('[data-k]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); paintList(); body.scrollTop = 0; });
+      $$('[data-k]', s).forEach(b => b.onclick = () => { k = b.dataset.k; if (inRoom) lastRoomKind = k; $$('[data-k]', s).forEach(x => { x.setAttribute('aria-selected', String(x === b)); x.tabIndex = x === b ? 0 : -1; }); paintList(); body.scrollTop = 0; });
       body.addEventListener('click', e => {
         const row = e.target.closest('[data-pid]');
         if (row) { const p = prices.find(x => x.id === row.dataset.pid); if (!p) return; addFromPrice(q, p, room); added++; paintList(); $('.kf-dlg-pe', s).innerHTML = footHTML(); bindDone(); return; }
@@ -3374,15 +3378,14 @@ VIEWS.preview = {
     return `<header class="kf-barra appbar"><div class="kf-barra-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
       <div class="ab-title"><span class="ab-eyebrow">${mode === 'report' ? 'Relatório' : 'Proposta'} · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Cliente sem nome')}</span></div>
-      <button class="icon-btn" data-edit aria-label="Editar orçamento">${ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')}</button>
       ${KitFacil.topo.html({ principal: false })}
     </div></header>
     <main class="page bar">
-      ${warn.length ? `<div class="banner b-tip"><p><b>Antes de enviar:</b> ${esc(warn.join(' '))}</p>${!settings.name && !settings.company ? '<div class="banner-act"><button class="btn sm dark" data-me>Preencher meus dados</button></div>' : ''}</div>` : ''}
-      ${isReport(q) ? `<div class="seg doc-seg" role="group" aria-label="Documento"><button data-doc="report" aria-pressed="${mode === 'report'}">Relatório de serviços</button><button data-doc="quote" aria-pressed="${mode === 'quote'}">Orçamento original</button></div>` : ''}
+      ${warn.length ? `<div class="banner b-tip"><p><b>Antes de enviar:</b> ${esc(warn.join(' '))}</p>${!settings.name && !settings.company ? '<div class="banner-act"><button class="btn sm ghost" data-me>Preencher meus dados</button></div>' : ''}</div>` : ''}
+      ${isReport(q) ? KitFacil.ui.abas({ itens: [['report', 'Relatório de serviços'], ['quote', 'Orçamento original']], atual: mode, rotulo: 'Documento', dado: 'doc' }) : ''}
       ${paperHTML(q, c, mode)}
       <p class="foot-note">O PDF sai em folha A4, com este mesmo conteúdo.</p>
-      <button class="btn dark block concluir" data-concluir>${I.check}Concluir e voltar à lista</button>
+      <button class="btn ghost block concluir" data-concluir>${I.check}Concluir e voltar à lista</button>
       <p class="foot-note">Tudo o que você preencheu já está salvo neste aparelho.</p>
     </main>
     <div class="bbar"><div class="bbar-in acts">
@@ -3396,7 +3399,6 @@ VIEWS.preview = {
     loadJsPDF().catch(() => {});
     fitMark(v);
     $('[data-back]', v).onclick = () => back('/q/' + q.id);
-    $('[data-edit]', v).onclick = () => back('/q/' + q.id);
     $('[data-concluir]', v).onclick = () => {
       saveQuotes();
       const msg = isEmptyQuote(q) ? 'Nada preenchido: o documento vazio foi descartado.' : `${isReport(q) ? 'Relatório' : 'Orçamento'} salvo${syncOn() ? '' : ' neste aparelho'}.`;
@@ -3424,6 +3426,7 @@ async function sharePDF(q, btn) {
 function shareMore(q) {
   const c = compute(q), px = pixOf(q, c);
   openSheet({ title: 'Mais opções', body: `<div class="opts">
+      <button class="opt" data-o="edit">${ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')}<span>Editar ${isReport(q) ? 'o relatório' : 'o orçamento'}<small>Volta para os itens, valores e dados do cliente</small></span></button>
       <button class="opt" data-o="copy">${I.copy}<span>Copiar texto${isReport(q) ? '' : ' da proposta'}<small>Para colar em outro aplicativo</small></span></button>
       ${q.useRooms && q.items.length ? `<button class="opt" data-o="conf">${I.list}<span>PDF da conferência por ambiente<small>Quantidades de cada cômodo, sem preços, para conferir na obra</small></span></button>` : ''}
       ${c.mat.length ? `<a class="opt" data-o="mat" href="${waLink(q.client.phone, materialMessage(q, c))}" target="_blank" rel="noopener">${I.wa}<span>Lista de material pelo WhatsApp<small>Total de cada item, para o cliente comprar</small></span></a>` : ''}
@@ -3432,6 +3435,7 @@ function shareMore(q) {
     </div>`,
     onMount: s => $$('[data-o]', s).forEach(b => b.addEventListener('click', () => {
       const o = b.dataset.o;
+      if (o === 'edit') { closeSheet(true); back('/q/' + q.id); }
       if (o === 'copy') { closeSheet(true); copyText(quoteMessage(q, c), 'Texto copiado.'); markSent(q); }
       if (o === 'conf') { closeSheet(true); shareConference(q); }
       if (o === 'mat') closeSheet(true);
@@ -3978,7 +3982,7 @@ let priceKind = 'svc', priceQuery = '';
 function priceListHTML() {
   const qf = fold(priceQuery);
   const list = prices.filter(p => p.kind === priceKind && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
-  if (!list.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum item encontrado', texto: 'Confira o nome do item ou da categoria.' } : { titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo item</b> para cadastrar.' });
+  if (!list.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum item encontrado', texto: 'Confira o nome do item ou da categoria.' } : { titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo preço</b> para cadastrar.' });
   return groupByCat(list).map(([cat, L]) => panel(`pr:${priceKind}:${cat}`, '', esc(cat), qf ? null : L.slice(0, 3).map(p => p.name).join(' · ') + (L.length > 3 ? '…' : ''),
     `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${inStock(p) ? ` · ${stockTxt(p)}` : ''}</small></span><span class="prow-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}</span></button>`).join('')}</div>`,
     { right: conta(L.length), force: qf ? true : undefined })).join('');
@@ -3988,8 +3992,8 @@ VIEWS.prices = {
     const n = k => prices.filter(p => p.kind === k).length;
     return `${barraTopo()}
     <main class="page">
-      ${KitFacil.ui.cabecalho({ titulo: 'Tabela de preços', acoes: `<button class="btn sm ghost" data-adjust>${I.percent}Reajustar</button>`, criar: { rotulo: 'Novo item', attrs: 'data-new-price' } })}
-      <div class="seg" role="group" aria-label="Tipo"><button data-k="svc" aria-pressed="${priceKind === 'svc'}">Mão de obra · ${n('svc')}</button><button data-k="mat" aria-pressed="${priceKind === 'mat'}">Material · ${n('mat')}</button></div>
+      ${KitFacil.ui.cabecalho({ titulo: 'Preços', sub: 'Mão de obra e material que entram nos seus orçamentos.', acoes: `<button class="btn sm ghost" data-adjust>${I.percent}Reajustar</button>`, criar: { rotulo: 'Novo preço', attrs: 'data-new-price' } })}
+      ${KitFacil.ui.abas({ itens: [['svc', 'Mão de obra', n('svc')], ['mat', 'Material', n('mat')]], atual: priceKind, rotulo: 'Tipo de preço', dado: 'k' })}
       <label class="search">${I.search}<input type="search" id="pr-q" placeholder="Buscar item ou categoria" value="${esc(priceQuery)}" aria-label="Buscar na tabela"></label>
       <div id="pr-list" style="display:flex;flex-direction:column;gap:10px">${priceListHTML()}</div>
       ${prices.some(p => p.ref) ? '<p class="foot-note">Preços em cinza são os que vêm com o app. Ao mudar, ficam em preto.</p>' : ''}
@@ -4011,7 +4015,7 @@ function priceSheet(p) {
   // mesmo padrão do estoque e das ferramentas: 1. categoria, 2. o item
   const cats = k => { const o = catOrder(k); return [...new Set(prices.filter(x => x.kind === k).map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = o.indexOf(a), ib = o.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); }); };
   const catOpts = k => `${isNew ? '<option value="" hidden>Escolha a categoria</option>' : ''}${cats(k).map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option>`;
-  openSheet({ title: isNew ? 'Novo item' : 'Alterar preço', body: `
+  openSheet({ title: isNew ? 'Novo preço' : 'Alterar preço', body: `
       <div class="seg" role="group" aria-label="Tipo"><button data-ik="svc" aria-pressed="${it.kind === 'svc'}">Mão de obra</button><button data-ik="mat" aria-pressed="${it.kind === 'mat'}">Material</button></div>
       <div class="field"><label for="pp-cat-sel">${isNew ? '1. Categoria' : 'Categoria'}</label><select id="pp-cat-sel">${catOpts(it.kind)}</select>
         <input id="pp-cat" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
@@ -4157,7 +4161,7 @@ function matSheet(p) {
       <p class="g-margin" id="mt-margin" aria-live="polite">${margemHTML(p.cost || 0, p.price)}</p>
       <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos.${stockLow(p) ? ' Chegou ao mínimo: já está em Repor.' : ''}</p>
       <label class="switch-row" for="mt-repor"><span><b>Preciso repor</b><small>Entra na lista de compras${stockLow(p) ? ', além do aviso de mínimo' : ''}.</small></span><input type="checkbox" class="sw" id="mt-repor" ${p.repor ? 'checked' : ''}></label>
-      <div class="field" id="mt-rq-f" ${p.repor || stockLow(p) ? '' : 'hidden'}><label for="mt-rq">Quanto quer comprar</label><div class="tp-qq-row"><div class="stepper"><button data-rq="-1" aria-label="Menos">${I.minus}</button><input id="mt-rq" type="text" inputmode="decimal" value="${fmtQty(p.reporQtd || sugestaoCompra(p))}"><button data-rq="1" aria-label="Mais">${I.plus}</button></div><button class="btn ok" data-comprei-mat>${I.check}Comprei</button></div></div>`;
+      <div class="field" id="mt-rq-f" ${p.repor || stockLow(p) ? '' : 'hidden'}><label for="mt-rq">Quanto quer comprar</label><div class="tp-qq-row"><div class="stepper"><button data-rq="-1" aria-label="Menos">${I.minus}</button><input id="mt-rq" type="text" inputmode="decimal" value="${fmtQty(p.reporQtd || sugestaoCompra(p))}"><button data-rq="1" aria-label="Mais">${I.plus}</button></div><button class="btn primary" data-comprei-mat>${I.check}Comprei</button></div></div>`;
   };
   openSheet({ title: p.name, body: `<div id="mt-corpo" class="tp-corpo">${corpo()}</div>`,
     foot: `${inStock(p) ? `<button class="btn danger-text" data-del>${I.trash}Tirar do estoque</button>` : ''}<button class="btn primary${inStock(p) ? '' : ' block'}" data-ok>Pronto</button>`,
@@ -4362,7 +4366,7 @@ function typeSheet(t) {
       ${panel(`tp:${t.id}:minhas`, '', 'Minhas ferramentas', its.length ? resumoDe(its, it => itemTxt(it) || 'Sem marca e modelo') : 'Nenhuma ainda', `${its.length ? `<div class="plist">${its.map(it => `<button class="prow" data-item="${it.id}"><span><b>${esc(itemTxt(it) || 'Sem marca e modelo')}</b></span><span class="prow-price">${it.qty} un.</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem esta ferramenta cadastrada como sua.</p>'}
       <button class="add-btn" data-novo-item>${I.plus}${its.length ? 'Adicionar outra marca ou modelo' : 'Tenho esta ferramenta'}</button>`, { right: conta(sum(its.map(i => i.qty))) })}
       <label class="switch-row" for="tp-quero"><span><b>Quero comprar</b><small>Entra na lista de compras.</small></span><input type="checkbox" class="sw" id="tp-quero" ${t.quero ? 'checked' : ''}></label>
-      <div class="field" id="tp-qq-f" ${t.quero ? '' : 'hidden'}><label for="tp-qq">Quantas quer comprar</label><div class="tp-qq-row"><div class="stepper"><button data-qq="-1" aria-label="Menos">${I.minus}</button><input id="tp-qq" type="text" inputmode="numeric" value="${t.queroQtd}"><button data-qq="1" aria-label="Mais">${I.plus}</button></div><button class="btn ok" data-comprei>${I.check}Comprei</button></div></div>`;
+      <div class="field" id="tp-qq-f" ${t.quero ? '' : 'hidden'}><label for="tp-qq">Quantas quer comprar</label><div class="tp-qq-row"><div class="stepper"><button data-qq="-1" aria-label="Menos">${I.minus}</button><input id="tp-qq" type="text" inputmode="numeric" value="${t.queroQtd}"><button data-qq="1" aria-label="Mais">${I.plus}</button></div><button class="btn primary" data-comprei>${I.check}Comprei</button></div></div>`;
   };
   openSheet({ title: t.name, body: `<div id="tp-corpo" class="tp-corpo">${corpo()}</div>`,
     foot: `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-ok>Pronto</button>`,
@@ -4597,7 +4601,7 @@ VIEWS.gestao = {
     return `${barraTopo()}
     <main class="page">
       ${KitFacil.ui.cabecalho({ titulo: 'Gestão', sub: 'Estoque, ferramentas e checklist da obra.', criar: { rotulo: G.criar, attrs: 'data-g-new' } })}
-      <div class="g-abas" role="tablist" aria-label="Parte da gestão">${Object.entries(GESTAO).map(([k, x]) => `<button role="tab" data-aba="${k}" aria-selected="${gestaoAba === k}">${x.nome}</button>`).join('')}</div>
+      ${KitFacil.ui.abas({ itens: Object.entries(GESTAO).map(([k, x]) => [k, x.nome]), atual: gestaoAba, rotulo: 'Parte da gestão' })}
       <div class="g-body" id="g-body">${corpo}</div>
     </main>`;
   },
