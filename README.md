@@ -2,13 +2,17 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.21.2 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 2.22.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
-Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
+Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
 
 ## O que o app faz
 
+- Impostos ou nota fiscal por orçamento: por fora ou embutido, sobre a mão de obra (ISS) ou o total
+- Material sugerido ao adicionar um serviço (composição editável na tabela de preços)
+- Pagamentos recebidos e o quanto falta receber no resumo do mês; registro profissional nos documentos
+- Apresentação curta ao abrir (desligável em Ajustes) e guia em 3 níveis: essencial, exploração e completo
 - Monte o orçamento escolhendo serviços e materiais da sua tabela de preços
 - Separe por ambiente (sala, cozinha, quartos…) e confira o total de cada item, também em PDF
 - Defina o prazo (dias úteis, dias corridos, semanas ou meses; o padrão fica em Ajustes) e toque no início: o app marca os dias no calendário, pulando fins de semana e feriados, e confere se fecha; o orçamento não aceita datas passadas
@@ -73,7 +77,7 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 
 Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
 
-- **Alto da tela, à direita:** Ajustes, nuvem da sincronização e balão de avaliação, nessa ordem. No orçamento e na
+- **Alto da tela, à direita:** nuvem da sincronização, chopp para o criador e balão de avaliação, nessa ordem; Ajustes fica na barra de baixo (no computador, no pé do menu lateral). No orçamento e na
   proposta, só a nuvem e o balão (o Voltar e o menu do orçamento ficam à esquerda deles)
 - **Navegação:** Orçamentos, Preços e Gestão na barra de baixo (celular e tablet) ou no menu lateral (computador, a partir de 1024 px), com Ajustes por último
 - **Ajustes:** as oito guias comuns e as guias próprias **Pix**, **Veículo e deslocamento**, **Adicionais**,

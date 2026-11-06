@@ -661,7 +661,7 @@ test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar 
     const st = JSON.parse(localStorage.getItem('eletricafacil.settings')); st.seedV = 5; localStorage.setItem('eletricafacil.settings', JSON.stringify(st));
   });
   await p.reload(); await p.locator('.welcome h1').waitFor();
-  assert.deepEqual(await p.evaluate(() => { const m = prices.find(x => x.id === 'velho'); return [m.name, m.unit, settings.seedV]; }), ['Massa corrida', 'galão', 7]);
+  assert.deepEqual(await p.evaluate(() => { const m = prices.find(x => x.id === 'velho'); return [m.name, m.unit, settings.seedV]; }), ['Massa corrida', 'galão', 8]);
   // nenhum botão lado a lado sobrou no app
   const id = await criarOrcamento(p, 'Cliente Linhas', 'Troca de tomada');
   await p.evaluate(id => go('/q/' + id), id);
@@ -764,6 +764,34 @@ test('2.19.1: nenhum parêntese nos nomes e rótulos, itens de fábrica editáve
   await p.focus(`[data-del-draft="${rid}"]`); await p.waitForTimeout(400);
   const g = await p.evaluate(id => { const w = document.querySelector(`[data-swipe="${id}"]`), d = w.querySelector('.qc-del').getBoundingClientRect(), r = w.getBoundingClientRect(); return [Math.round(d.left - r.left), Math.round(r.right - d.right), getComputedStyle(w.querySelector('.qc-del')).opacity]; }, rid);
   assert.deepEqual(g, [0, 0, '1']);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('2.22: quantidade com ponto de milhar, garantia só números, parcelas sem perder centavos, imposto, composição e pagamentos', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  const r = await p.evaluate(() => {
+    const out = {};
+    out.qtd = ['1.000', '2.5', '12,5', '1.000,5', 'abc', '-3', '0'].map(parseQty);
+    const q = fixQuote({ items: [{ kind: 'svc', name: 'A', unit: 'un', qty: 1, price: 155975 }], payment: { mode: 'parcelado', installments: 10, juros: 'taxa', taxaPct: 12, paga: 'cliente', cardTipo: 'credito' } });
+    const c = compute(q); out.recebe = c.card.recebe; out.total = c.total;
+    const q2 = fixQuote({ items: [{ kind: 'svc', name: 'A', unit: 'un', qty: 1, price: 100000 }, { kind: 'mat', name: 'B', unit: 'un', qty: 1, price: 50000 }], tax: { mode: 'fora', pct: 5, base: 'servico' } });
+    out.fora = [compute(q2).taxFora, compute(q2).total];
+    q2.tax = { mode: 'dentro', pct: 5, base: 'servico' }; const c3 = compute(q2);
+    out.dentro = [c3.labor, c3.total, c3.taxFora];
+    out.antigo = fixQuote({ items: [] }).tax.mode;
+    out.comp = (prices.find(x => x.name === 'Ponto novo de tomada com fiação') || {}).comp?.length || 0;
+    out.catalogo = ['Conector de emenda', 'Orçamento no local'].map(n => prices.some(x => x.name === n));
+    return out;
+  });
+  assert.deepEqual(r.qtd, [1000, 2.5, 12.5, 1000.5, null, null, null]);
+  assert.ok(r.recebe >= r.total, `o eletricista recebeu ${r.recebe}, menos que ${r.total}`);
+  assert.deepEqual(r.fora, [5000, 155000]);
+  assert.deepEqual(r.dentro, [105263, 155263, 0]);
+  assert.equal(r.antigo, 'sem', 'orçamento antigo ganhou imposto');
+  assert.ok(r.comp >= 3, 'serviço sem composição de material');
+  assert.deepEqual(r.catalogo, [false, false]);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });

@@ -4,7 +4,7 @@ Regras comuns do **Conta Fácil**, do **Elétrica Fácil**, do **Estudo Fácil**
 novo do projeto. Este arquivo fica em `comum/PADRAO.md`, igual em todos os repositórios, junto com o **Kit Fácil** (o
 código comum).
 
-Versão do padrão: 2.8 · Kit Fácil 2.10.0 · novembro de 2026.
+Versão do padrão: 2.9 · Kit Fácil 2.11.0 · novembro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -190,6 +190,21 @@ se o app tiver, o botão do exemplo (`KitFacil.iniciar({ boasVindas: { novo, pas
 Quem vê as boas-vindas não vê as novidades na mesma abertura. Exceção registrada: o Estudo Fácil tem uma tela própria de
 primeiro uso (escolha do edital e da rotina), que faz esse papel.
 
+**Apresentação ao abrir (Kit 2.11, lei 6).** Toda vez que o app é aberto, o Kit mostra uma janela curta com o nome do app,
+o que ele faz numa linha e três pontos (`KitFacil.iniciar({ apresentacao: { frase, pontos: [[titulo, texto], …], primeiroUso } })`).
+A janela traz **Fazer o guia** e **Começar** e uma caixa "Mostrar esta apresentação ao abrir o app"; a mesma opção fica
+em *Ajustes → Preferências gerais → Ao abrir o app* (chave `kitfacil.<app>.apresentacao`, que volta de fábrica). Na
+primeira vez ela faz o papel das boas-vindas (com o exemplo, se houver), a não ser que o app tenha tela própria de primeiro
+uso (Elétrica Fácil e Estudo Fácil); depois de uma atualização, as novidades aparecem no lugar dela, uma vez.
+
+**Guia do app em 3 níveis (Kit 2.11, lei 6).** Todo app tem um guia interativo que destaca, tela por tela, onde tocar
+(`KitFacil.iniciar({ guia: { passos, preparar, fim, semPassos } })`). Cada passo tem `nivel` 1, 2 ou 3, `ir()` (leva à
+tela), `sel`/`alt` (o que destacar) e, se precisar, `se()` (some da lista antes de começar, para a contagem não pular).
+A pessoa escolhe **Essencial** (só o nível 1, o mínimo para usar hoje), **Exploração** (níveis 1 e 2) ou **Completo**
+(tudo). O guia abre pela apresentação, por *Ajustes → Preferências gerais → Guia do app* e por onde o app quiser
+(`KitFacil.guia.escolher()`); no fim, oferece o nível seguinte. O cartão do guia nunca cobre o destaque: sem espaço acima
+nem abaixo, vai para a ponta oposta da tela.
+
 **Prazo de guarda no Firebase.** Avaliações e relatos ficam 2 anos (campo `enviadoEm`); comandas ao vivo são apagadas
 pelo anfitrião ao encerrar, e as nunca encerradas vencem 30 dias depois de criadas (campo `expiraEm`). Guardar só o
 necessário: dado que perdeu a função sai na hora. No plano gratuito o Firestore não aceita
@@ -246,7 +261,7 @@ Lista de guias à esquerda (ou em tela cheia no celular) e a guia aberta à dire
 1. **Conta e perfil** — sem cadastro; conta GitHub da sincronização, quando ligada; dados do perfil próprios do app
 2. **Sincronização e armazenamento** — estado da nuvem, conta, última sincronização, ações; espaço usado neste aparelho; cópia de segurança
 3. **Aparência** — tema Automático, Claro ou Escuro; o app abre no seu tema de fábrica (Automático, se o app não escolher outro) até a pessoa escolher
-4. **Preferências gerais** — idioma, moeda, data e hora; instalar o app
+4. **Preferências gerais** — idioma, moeda, data e hora; apresentação ao abrir; guia do app em 3 níveis; instalar o app
 5. **Notificações** — o que o app avisa e como (nenhum app envia notificações para o aparelho hoje)
 6. **Privacidade e segurança** — onde ficam os dados, segurança da chave, desconectar e, por último, **Restaurar padrões
    de fábrica** (Kit 2.9, igual em todos os apps): o app volta como novo neste aparelho — saem os dados, o tema, as
@@ -421,4 +436,4 @@ Copiar a pasta `comum/`, o `package.json` (trocando nome e versão), o modelo do
 incluir o app em `FAMILIA` (em `kit-facil.js`) e na regra do Firestore (`app in [...]`, publicada no console); ligar as variáveis `--kf-*`;
 `manifest.webmanifest` com `"id": "/<app>/"`; montar a moldura do item 7.1 com a área superior do 7.2 e o item Ajustes
 na navegação; montar os Ajustes com `KitFacil.ajustes.html` (guias comuns e as guias próprias); chamar
-`KitFacil.iniciar` com nome, versão, `abrirAjustes`, `emAjustes`, `copia`, `novidades`, `boasVindas` e o que o app guarda.
+`KitFacil.iniciar` com nome, versão, `abrirAjustes`, `emAjustes`, `copia`, `novidades`, `boasVindas`, `apresentacao`, `guia` e o que o app guarda.

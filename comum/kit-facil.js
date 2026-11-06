@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '2.10.0';
+  const VERSAO = '2.11.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -32,7 +32,7 @@
      do Firestore (veja comum/regras-firestore-feedback.txt), que só deixam criar avaliações no formato abaixo. */
   const DESTINO_PADRAO = { tipo: 'firestore', projeto: 'conta-facil-2c1f9', chaveApi: 'AIzaSyDKdtdRernEqoaC0BQdMW8P7KiZ-UNcEN0', colecao: 'feedback' };
 
-  /* Apoio ao criador (lei 13): Pix do criador, igual nos três apps. A chave é ALEATÓRIA, de propósito: o repositório é
+  /* Apoio ao criador (lei 13): Pix do criador, igual em todos os apps. A chave é ALEATÓRIA, de propósito: o repositório é
      público e uma chave de CPF, telefone ou e-mail exporia dado pessoal. Nome (até 25 letras) e cidade (até 15) entram no
      código Pix copia e cola, como manda o padrão do Banco Central. Sem chave, o chopp não aparece. */
   // nome não pessoal de propósito (decisão do criador): o banco de quem paga mostra o nome real, vindo do cadastro da chave
@@ -116,7 +116,7 @@
     app: '', nome: '', versao: '', resumo: '', icone: 'icons/icon-192.png', prefixo: '',
     tela: () => '', toast: null, privacidade: [], suporteEmail: '', feedback: { ...DESTINO_PADRAO },
     exemploDados: '', abrirAjustes: null, emAjustes: null, copia: null, textos: {},
-    apoio: { ...APOIO_PADRAO }, novidades: [], boasVindas: null, ocupado: null,
+    apoio: { ...APOIO_PADRAO }, novidades: [], boasVindas: null, ocupado: null, apresentacao: null, guia: null,
   };
   let iniciado = false;
   function iniciar(o) {
@@ -140,7 +140,7 @@
 
   /* ================= avisos (toast) ================= */
   let toastT;
-  /* avisar(msg, acao): aviso rápido, igual nos três apps, acima da barra de baixo.
+  /* avisar(msg, acao): aviso rápido, igual em todos os apps, acima da barra de baixo.
      acao = { label: 'Desfazer', run() {...} } mostra um botão e deixa o aviso mais tempo na tela (6 s). */
   function avisar(msg, acao) {
     if (typeof C.toast === 'function') { try { C.toast(msg, acao); return; } catch {} }
@@ -605,7 +605,7 @@
   }
 
   /* ================= área superior direita: Ajustes, nuvem e balão ================= */
-  /* Estado da nuvem, igual nos três apps: nunca mostra "sincronizado" com alterações pendentes ou com falha. */
+  /* Estado da nuvem, igual em todos os apps: nunca mostra "sincronizado" com alterações pendentes ou com falha. */
   const ESTADOS = {
     sincronizado: { rotulo: 'Sincronizado', selo: '<path d="M3.2 6.3 5.2 8.3 8.9 4.3"/>' },
     sincronizando: { rotulo: 'Sincronizando', selo: '<path d="M9 6a3 3 0 1 1-.9-2.1"/><path d="M8.6 1.6v2.6H6"/>' },
@@ -643,7 +643,7 @@
     const e = estadoNuvem(), r = ESTADOS[e].rotulo;
     return `<button type="button" class="kf-topo-btn kf-nuvem" data-kf="nuvem" data-kf-nuvem data-estado="${e}" aria-label="${esc(`Sincronização: ${r}. Ver detalhes`)}" title="${esc(`Sincronização: ${r}`)}">${iconeNuvem(e)}</button>`;
   }
-  /* Área superior, igual nos três apps: nuvem · chopp · balão.
+  /* Área superior, igual em todos os apps: nuvem · chopp · balão.
      o = { principal: true } nas telas principais (mostra o chopp); { principal: false } nas telas internas (só nuvem e balão).
      Sem a opção, vale como tela principal. Ajustes fica na navegação (KitFacil.nav.ajustes). */
   function topoHTML(o = {}) {
@@ -708,7 +708,7 @@
   }
 
   /* ================= componentes de tela: cabeçalho, botão de criar e estado vazio ================= */
-  /* Iguais nos três apps (lei 6). Devolvem HTML; o app põe onde quiser e liga os cliques como sempre (pelos atributos).
+  /* Iguais em todos os apps (lei 6). Devolvem HTML; o app põe onde quiser e liga os cliques como sempre (pelos atributos).
      cabecalho({ titulo, sub, acoes, criar }): título grande de tela principal (a tela inicial não tem); sub é HTML.
      criar({ rotulo, attrs }): botão de criar. No celular e no tablet flutua acima da barra de baixo (o Kit reserva
        espaço no pé da página para ele não cobrir a lista); no computador fica no cabeçalho, ao lado do título.
@@ -891,14 +891,157 @@
     if ((dialogoAberto() || (C.ocupado && C.ocupado())) && tentativa < 20) { setTimeout(() => primeiraAbertura(tentativa + 1), 1500); return; }
     const visto = ler(chaveVisto(), null);
     gravar(chaveVisto(), C.versao);
-    if (visto === C.versao || dialogoAberto()) return;
+    if (dialogoAberto() || guia.ativo() || (C.guia && C.guia.ocupado && C.guia.ocupado())) return;
+    if (visto === C.versao) { if (C.apresentacao && apresLigada()) abrirApresentacao(); return; }
     let novo = false; try { novo = !!(C.boasVindas && C.boasVindas.novo && C.boasVindas.novo()); } catch {}
-    if (visto === null && novo) { abrirBoasVindas(); return; }
-    if (visto !== null || !novo) abrirNovidades();
+    // primeira vez: a apresentação faz o papel das boas-vindas (o app com tela própria de primeiro uso não ganha janela)
+    if (visto === null && novo) { if (C.apresentacao && (C.apresentacao.primeiroUso || (C.boasVindas && C.boasVindas.exemplo))) abrirApresentacao({ primeiroUso: true }); else abrirBoasVindas(); return; }
+    if ((visto !== null || !novo) && abrirNovidades()) return;
+    if (C.apresentacao && apresLigada() && !guia.ativo()) abrirApresentacao();
   }
 
+  /* ================= Kit 2.11: apresentação ao abrir e guia em 3 níveis =================
+     apresentacao: { frase: 'o que o app faz, numa linha', pontos: [[titulo, texto], …] }
+       Abre toda vez que o app é aberto (uma vez por carregamento da página), depois das janelas do próprio app.
+       A pessoa desliga em Ajustes → Preferências gerais → Ao abrir o app, ou na própria janela.
+       Na primeira vez (boasVindas.novo()), ela faz o papel das boas-vindas, a não ser que o app tenha tela própria
+       de primeiro uso (boasVindas sem passos e sem apresentacao.primeiroUso).
+     guia: { passos: [{ nivel: 1|2|3, t, d, sel, alt, ir: () => {}, se: () => bool }], preparar(nivel), fim(), ocupado() }
+       nivel 1 = Essencial, 2 = Exploração, 3 = Completo; cada nível inclui os passos dos níveis anteriores.
+       ir() leva à tela do passo (o app decide como); se() tira o passo da lista antes de começar (sem internet…). */
+  const NIVEIS = [
+    { n: 1, nome: 'Essencial', sub: 'O mínimo para usar hoje.' },
+    { n: 2, nome: 'Exploração', sub: 'As funções que mais ajudam no dia a dia.' },
+    { n: 3, nome: 'Completo', sub: 'Tudo o que o app faz, tela por tela.' },
+  ];
+  const chaveApres = () => `kitfacil.${C.app}.apresentacao`;
+  const apresLigada = () => ler(chaveApres(), true) !== false;
+  function apresDefinir(sim) { gravar(chaveApres(), !!sim); $$('[data-kf-apres]').forEach(i => { i.checked = !!sim; }); }
+  const passosDoNivel = n => ((C.guia && C.guia.passos) || []).filter(p => p && (p.nivel || 3) <= n && (typeof p.se !== 'function' || (() => { try { return p.se(); } catch { return false; } })()));
+  const minutos = q => Math.max(1, Math.round(q * 15 / 60));
+  function niveisHTML() {
+    if (!C.guia) return '';
+    return `<div class="kf-guia-niveis">${NIVEIS.map(v => { const q = passosDoNivel(v.n).length; return `<button type="button" class="kf-guia-nivel" data-kf="guia-${v.n}"><span class="kf-guia-barras" aria-hidden="true">${[1, 2, 3].map(i => `<i class="${i <= v.n ? 'on' : ''}"></i>`).join('')}</span><b>${v.nome}</b><span>${v.sub}</span><small>${q} ${q === 1 ? 'passo' : 'passos'} · cerca de ${minutos(q)} min</small></button>`; }).join('')}</div>`;
+  }
+  function abrirApresentacao({ primeiroUso = false } = {}) {
+    const a = C.apresentacao; if (!a) return false;
+    const pontos = (a.pontos || []).filter(x => x && x[0]);
+    const b = C.boasVindas || {};
+    abrirDialogo({ titulo: primeiroUso ? `Boas-vindas ao ${C.nome}` : C.nome, classe: 'kf-curto kf-apres', nome: 'apresentacao',
+      corpo: `${a.frase ? `<p class="kf-apres-frase">${esc(a.frase)}</p>` : ''}
+        ${pontos.length ? `<ol class="kf-passos kf-apres-pontos">${pontos.map(([t, d]) => `<li><b>${esc(t)}</b>${d ? `<span>${esc(d)}</span>` : ''}</li>`).join('')}</ol>` : ''}
+        ${primeiroUso ? '<p class="kf-ajuda">Os dados ficam neste aparelho. Para usar no celular, no tablet e no computador, ligue a sincronização no ícone da nuvem.</p>' : ''}
+        <label class="kf-check kf-apres-mostrar"><input type="checkbox" data-kf-apres ${apresLigada() ? 'checked' : ''}><span>Mostrar esta apresentação ao abrir o app</span></label>`,
+      pe: `${C.guia ? '<button type="button" class="kf-btn kf-sec" data-kf-apres-guia>Fazer o guia</button>' : ''}${primeiroUso && b.exemplo ? `<button type="button" class="kf-btn kf-sec" data-kf-exemplo>${esc(b.rotuloExemplo || 'Ver exemplo')}</button>` : ''}<button type="button" class="kf-btn kf-pri" data-kf-fechar autofocus>Começar</button>`,
+      aoMontar: d => {
+        const e = $('[data-kf-exemplo]', d); if (e) e.onclick = () => { fecharDialogo(true); try { b.exemplo(); } catch (x) { console.warn(x); } };
+        const g = $('[data-kf-apres-guia]', d); if (g) g.onclick = () => { fecharDialogo(true); setTimeout(escolherGuia, 60); };
+      } });
+    return true;
+  }
+  function escolherGuia() {
+    if (!C.guia) return false;
+    abrirDialogo({ titulo: 'Guia do app', classe: 'kf-curto', nome: 'guia',
+      corpo: `<p class="kf-ajuda">Escolha até onde quer ir. Dá para parar a qualquer momento.</p>${niveisHTML()}`, pe: '<button type="button" class="kf-btn kf-sec" data-kf-fechar>Agora não</button>' });
+    return true;
+  }
+  const guia = {
+    lista: [], i: -1, nivel: 0, el: null, ligado: false, raf: 0, vigia: 0, chave: '',
+    ativo() { return this.i >= 0 && !!this.el; },
+    async iniciar(nivel = 1) {
+      if (!C.guia) return false;
+      if (dialogoAberto()) fecharDialogo(true);
+      this.parar(true);
+      try { if (C.guia.preparar) await C.guia.preparar(nivel); } catch (x) { console.warn(x); }
+      this.lista = passosDoNivel(nivel); this.nivel = nivel;
+      if (!this.lista.length) { avisar(C.guia.semPassos || 'O guia ainda não tem o que mostrar aqui.'); return false; }
+      this.montar(); await this.mostrar(0); this.vigiar();
+      return true;
+    },
+    parar(semFim) {
+      const estava = this.ativo();
+      this.i = -1; cancelAnimationFrame(this.vigia); this.vigia = 0;
+      if (this.el) { this.el.remove(); this.el = null; }
+      if (estava && !semFim && C.guia && C.guia.fim) { try { C.guia.fim(); } catch (x) { console.warn(x); } }
+    },
+    montar() {
+      if (this.el) return;
+      const el = document.createElement('div'); el.className = 'kf-guia';
+      el.innerHTML = '<div class="kf-guia-furo" hidden></div><div class="kf-guia-cartao" role="dialog" aria-modal="false" aria-live="polite" aria-label="Guia do app"></div>';
+      document.body.appendChild(el); this.el = el;
+      if (!this.ligado) {
+        this.ligado = true;
+        const de = () => { if (this.ativo()) { cancelAnimationFrame(this.raf); this.raf = requestAnimationFrame(() => this.posicionar()); } };
+        global.addEventListener('scroll', de, { passive: true });
+        global.addEventListener('resize', de);
+        document.addEventListener('keydown', e => { if (this.ativo() && e.key === 'Escape' && !dialogoAberto()) { e.preventDefault(); this.parar(); } });
+      }
+    },
+    alvo(p) { const vis = q => { try { return q && $$(q).find(el => el.getClientRects().length); } catch { return null; } }; return (p && (vis(p.sel) || vis(p.alt))) || null; },
+    vigiar() {
+      cancelAnimationFrame(this.vigia); this.chave = '';
+      const tique = () => {
+        if (!this.ativo()) return;
+        const t = this.alvo(this.lista[this.i]), r = t && t.getBoundingClientRect();
+        const k = (r ? [r.left, r.top, r.width, r.height].map(Math.round).join() : '-') + '|' + innerHeight + '|' + innerWidth + '|' + ($('.kf-guia-cartao', this.el)?.offsetHeight || 0);
+        if (k !== this.chave) { this.chave = k; this.posicionar(); }
+        this.vigia = requestAnimationFrame(tique);
+      };
+      this.vigia = requestAnimationFrame(tique);
+    },
+    async mostrar(n) {
+      if (!this.el) return;
+      n = Math.max(0, Math.min(n, this.lista.length - 1));
+      this.i = n;
+      const p = this.lista[n], total = this.lista.length, ultimo = n === total - 1, nv = NIVEIS[this.nivel - 1];
+      try { if (p.ir) await p.ir(); } catch (x) { console.warn(x); }
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      if (!this.el) return;
+      const c = $('.kf-guia-cartao', this.el);
+      c.innerHTML = `<div class="kf-guia-topo"><span class="kf-guia-rot">Guia ${esc(nv ? nv.nome.toLowerCase() : '')} · ${n + 1} de ${total}</span><button type="button" class="kf-guia-x" aria-label="Fechar guia">${IC.x || '×'}</button></div>
+        <div class="kf-guia-barra"><i style="width:${Math.round((n + 1) / total * 100)}%"></i></div>
+        <h3>${esc(p.t)}</h3><p>${esc(p.d)}</p>
+        <div class="kf-guia-acoes">${n ? '<button type="button" class="kf-btn kf-sec kf-p" data-kf-guia="-1">Voltar</button>' : '<span></span>'}<button type="button" class="kf-btn kf-pri kf-p" data-kf-guia="1">${ultimo ? 'Concluir' : 'Próximo'}</button></div>
+        ${ultimo && this.nivel < 3 ? `<button type="button" class="kf-btn kf-link" data-kf="guia-${this.nivel + 1}">Continuar no guia ${esc(NIVEIS[this.nivel].nome.toLowerCase())}</button>` : ''}`;
+      $('.kf-guia-x', c).onclick = () => this.parar();
+      $$('[data-kf-guia]', c).forEach(b => { b.onclick = () => { const d = +b.dataset.kfGuia; if (d > 0 && ultimo) { this.parar(); avisar('Guia concluído. Para rever, vá em Ajustes → Preferências gerais.'); return; } this.mostrar(this.i + d); }; });
+      const t = this.alvo(p);
+      if (t) {
+        const r = t.getBoundingClientRect(), vh = innerHeight;
+        const quer = Math.max(80, Math.min(vh * .18, vh - r.height - 240));
+        global.scrollTo({ top: Math.max(0, global.scrollY + r.top - quer) });
+      }
+      this.posicionar();
+      setTimeout(() => this.posicionar(), 400);
+      const foco = $('[data-kf-guia="1"]', c); if (foco) foco.focus({ preventScroll: true });
+    },
+    posicionar() {
+      if (!this.ativo()) return;
+      const p = this.lista[this.i], furo = $('.kf-guia-furo', this.el), c = $('.kf-guia-cartao', this.el);
+      const t = this.alvo(p), vh = innerHeight, ch = c.offsetHeight, gap = 12, pad = 6;
+      const barra = $$('.kf-barra').find(b => b.getClientRects().length), baixo = $$('.kf-nav').find(b => b.getClientRects().length);
+      const topoLivre = barra ? Math.max(4, barra.getBoundingClientRect().bottom + 2) : 4;
+      let top, lado = 'baixo';
+      if (t) {
+        const r = t.getBoundingClientRect(), naNav = !!(baixo && baixo.contains(t)), naBarra = !!(barra && barra.contains(t));
+        const fundo = baixo && !naNav ? baixo.getBoundingClientRect().top - 2 : vh - 4;
+        const y1 = Math.max(r.top - pad, naBarra || naNav ? 2 : topoLivre), y2 = Math.min(r.bottom + pad, fundo);
+        furo.hidden = y2 - y1 < 8;
+        Object.assign(furo.style, { left: (r.left - pad) + 'px', top: y1 + 'px', width: (r.width + pad * 2) + 'px', height: Math.max(0, y2 - y1) + 'px' });
+        if (!furo.hidden && y2 + gap + ch <= fundo - gap) top = y2 + gap;
+        else if (!furo.hidden && y1 - gap - ch >= topoLivre) top = y1 - gap - ch;
+        // sem espaço acima nem abaixo: o cartão vai para a ponta oposta ao destaque, para não cobri-lo
+        else if (!furo.hidden) lado = (y1 + y2) / 2 > vh / 2 ? 'cima' : 'baixo';
+      } else furo.hidden = true;
+      c.classList.toggle('kf-guia-solto', top === undefined && lado === 'baixo');
+      c.classList.toggle('kf-guia-alto', top === undefined && lado === 'cima');
+      c.style.top = top === undefined ? (lado === 'cima' ? topoLivre + gap + 'px' : '') : top + 'px';
+      this.el.classList.toggle('kf-guia-escuro', !t || furo.hidden);
+    },
+  };
+
   /* ================= tela de Ajustes em guias ================= */
-  /* As guias comuns ficam sempre nesta ordem, com estes nomes e ícones, nos três apps.
+  /* As guias comuns ficam sempre nesta ordem, com estes nomes e ícones, em todos os apps.
      As guias próprias de cada app vêm depois, num grupo com o nome do app. */
   const SECOES = [
     { id: 'conta', titulo: 'Conta e perfil', icone: P.pessoa },
@@ -928,6 +1071,8 @@
     if (id === 'preferencias') {
       let zona = ''; try { zona = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch {}
       return bloco('Idioma e região', `<dl class="kf-dados"><div><dt>Idioma</dt><dd>Português (Brasil)</dd></div><div><dt>Moeda</dt><dd>Real (R$)</dd></div><div><dt>Data e hora</dt><dd>As do aparelho${zona ? ` (${esc(zona.replace(/_/g, ' '))})` : ''}</dd></div></dl><p class="kf-ajuda">Outros idiomas ainda não estão disponíveis.</p>`)
+        + (C.apresentacao ? bloco('Ao abrir o app', `<label class="kf-check"><input type="checkbox" data-kf-apres ${apresLigada() ? 'checked' : ''}><span>Mostrar a apresentação do ${esc(C.nome)} toda vez que o app abrir</span></label><button type="button" class="kf-btn kf-link" data-kf="apresentacao">Ver a apresentação agora</button>`) : '')
+        + (C.guia ? bloco('Guia do app', `<p class="kf-ajuda">Um passeio pelas telas, com o app destacando onde tocar. Escolha o tamanho.</p>${niveisHTML()}`) : '')
         + bloco('Usar como aplicativo', instalarHTML() || `<p class="kf-ajuda">O ${esc(C.nome)} já está instalado neste aparelho e funciona sem internet.</p>`) + extra;
     }
     if (id === 'notificacoes') return bloco('Notificações', `<p class="kf-texto">${esc(C.textos.notificacoes || `O ${C.nome} não envia notificações para o aparelho. Os avisos aparecem na tela enquanto o app está aberto.`)}</p>`) + extra;
@@ -948,7 +1093,7 @@
     const todas = [...SECOES, ...produto];
     let ativa = secaoAtiva();
     if (ativa && !todas.some(s => s.id === ativa)) ativa = '';
-    const resumos = { conta: resumoConta(), sincronizacao: resumoSincronizacao(), aparencia: tema.nome(), preferencias: 'Idioma, região e instalação',
+    const resumos = { conta: resumoConta(), sincronizacao: resumoSincronizacao(), aparencia: tema.nome(), preferencias: C.apresentacao || C.guia ? 'Idioma, apresentação ao abrir e guia do app' : 'Idioma, região e instalação',
       notificacoes: 'Sem notificações no aparelho', privacidade: 'Seus dados, segurança e padrões de fábrica', feedback: resumoFeedback(), sobre: `Versão ${C.versao}`, ...(o.resumos || {}) };
     const item = s => `<li><button type="button" class="kf-aj-item" data-kf-aj-ir="${esc(s.id)}" aria-controls="kf-aj-${esc(s.id)}"${s.id === ativa ? ' aria-current="true"' : ''}>
         <span class="kf-aj-ic"><svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true">${s.icone || P.ajustes}</svg></span>
@@ -1203,7 +1348,7 @@
           <ol class="kf-passos">
             <li><b>Crie uma chave de acesso no GitHub</b><span>Na página que vai abrir, em <b>Expiration</b> escolha <b>No expiration</b>. Deixe marcada só a opção <b>gist</b> e toque em <b>Generate token</b>, no fim da página. Se ainda não tem conta no GitHub, crie uma (é gratuita).</span>
               <a class="kf-btn kf-sec kf-p" href="${TOKEN_URL}" target="_blank" rel="noopener">${IC.externo}Abrir o GitHub</a></li>
-            <li><b>Copie a chave e cole aqui</b><span>Ela começa com <b>ghp_</b>. A mesma chave serve para os três apps do projeto.</span>
+            <li><b>Copie a chave e cole aqui</b><span>Ela começa com <b>ghp_</b>. A mesma chave serve para todos os apps da família Fácil.</span>
               <input id="kf-token" class="kf-entrada" type="text" placeholder="ghp_…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Chave do GitHub"></li>
             <li><b>Nos outros aparelhos</b><span>Depois de conectar, toque em <b>Outro aparelho</b> para mandar um link para você mesmo, ou cole a mesma chave.</span></li>
           </ol>
@@ -1288,6 +1433,7 @@
     return api;
   }
 
+  document.addEventListener('change', e => { const i = e.target && e.target.closest && e.target.closest('[data-kf-apres]'); if (i) apresDefinir(i.checked); });
   /* ================= ações dos botões do kit (data-kf="…") ================= */
   document.addEventListener('click', e => {
     if (!e.target.closest) return;
@@ -1311,6 +1457,9 @@
       },
       apoio: () => abrirApoio(),
       novidades: () => abrirNovidades(),
+      apresentacao: () => abrirApresentacao(),
+      guia: () => escolherGuia(),
+      'guia-1': () => guia.iniciar(1), 'guia-2': () => guia.iniciar(2), 'guia-3': () => guia.iniciar(3),
       'ajustes-sincronizacao': () => { fecharDialogo(true); irAjustes('sincronizacao'); },
       sobre: () => abrirSobre(),
       tema: () => tema.definir(b.dataset.v),
@@ -1787,6 +1936,8 @@
     apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix },
     novidades: { abrir: abrirNovidades, daVersao: novidadesDaVersao },
     boasVindas: { abrir: abrirBoasVindas },
+    apresentacao: { abrir: abrirApresentacao, ligada: apresLigada, definir: apresDefinir },
+    guia: { escolher: escolherGuia, iniciar: n => guia.iniciar(n), parar: () => guia.parar(), ativo: () => guia.ativo(), posicionar: () => guia.posicionar(), passos: passosDoNivel, NIVEIS },
     nuvem: { abrir: abrirDialogoNuvem, estado: estadoNuvem, detalhe: detalheNuvem },
     ajustes: { SECOES, html: ajustesHTML, ligar: ligarAjustes, abrir: abrirSecao, ir: irAjustes, resumo: resumoAjustes },
     tema,

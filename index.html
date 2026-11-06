@@ -105,9 +105,10 @@ svg.bolt{fill:currentColor;stroke:currentColor;stroke-width:.8}
 .hero-num{font-family:var(--f-display);font-weight:850;font-stretch:112%;font-size:clamp(38px,11vw,50px);line-height:1.02;letter-spacing:-.025em;font-variant-numeric:tabular-nums;margin-top:2px}
 .hero-num small{font-size:.4em;font-weight:700;letter-spacing:0;vertical-align:.15em}
 .hero-num small:first-child{margin-right:6px}
-.hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:12px;border-top:1.5px solid rgba(23,21,15,.2);padding-top:12px}
+.hero-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));row-gap:10px;margin-top:12px;border-top:1.5px solid rgba(23,21,15,.2);padding-top:12px}
 .hero-stats > *{display:flex;flex-direction:column;gap:1px;padding:0 0 0 12px;border:0;border-left:1.5px solid rgba(23,21,15,.2);background:none;color:inherit;text-align:left;font:inherit;min-width:0}
-.hero-stats > *:first-child{border-left:0;padding-left:0}
+.hero-stats > *:first-child,.hero-stats > *:nth-child(3){border-left:0;padding-left:0}
+@media (min-width:600px){.hero .hero-stats > *:nth-child(3){border-left:1.5px solid rgba(23,21,15,.2);padding-left:12px}}
 .hero-stats b{font-family:var(--f-display);font-weight:800;font-stretch:108%;font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums}
 .hero-stats span{font-size:13px;line-height:1.2;font-weight:500}
 
@@ -237,6 +238,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--volt-tex
 .qty button svg{width:18px;height:18px}
 .qty button.rm{color:var(--bad)}
 .qty span{min-width:32px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;font-size:15px}
+.pk-cat{display:block;font-size:12.5px;color:var(--muted);font-weight:500}
+.qty button.qty-n{width:auto;min-width:40px;padding:0 4px;font:inherit;font-weight:700;font-variant-numeric:tabular-nums;font-size:15px;text-decoration:underline dotted;text-underline-offset:4px;color:var(--ink)}
 .add-btn{border:1.5px dashed var(--line-2);background:transparent;border-radius:var(--kf-r-btn);min-height:48px;font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
 .add-btn svg{color:var(--volt-text)}
 .add-btn:hover{border-color:var(--volt-text)}
@@ -686,16 +689,43 @@ body:has(#nav[hidden]) .kf-toast{bottom:calc(96px + env(safe-area-inset-bottom,0
 .seg button,.vrow .disc .seg button{min-height:44px;min-width:44px}
 .vrow .disc .seg{width:auto}
 a.link{display:inline-flex;align-items:center;min-height:44px}
+
+/* computador largo: proposta ao vivo ao lado do editor (U11) */
+.q-vivo{display:none}
+@media (min-width:1360px){
+  body:has(.q-vivo) #app{display:grid;grid-template-columns:minmax(0,var(--col)) minmax(420px,600px);column-gap:28px;justify-content:center;align-items:start}
+  body:has(.q-vivo) #app > .appbar{grid-column:1 / -1}
+  body:has(.q-vivo) #app > .page{margin:0;width:100%}
+  .q-vivo{display:block;position:sticky;top:calc(var(--kf-barra-h) + 12px);max-height:calc(100vh - var(--kf-barra-h) - 120px);overflow:auto;padding:6px 4px 24px;scrollbar-width:thin}
+  .q-vivo-cab{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 8px}
+  .q-vivo .paper{font-size:12px;pointer-events:none}
+}
+.tax-row{flex-wrap:wrap;gap:8px}
+.tax-cfg{display:flex;flex-direction:column;gap:10px;padding:4px 0 8px}
+.tax-cfg .field{max-width:160px}
+.sug-list{display:flex;flex-direction:column;gap:6px;margin:6px 0}
+.sug-row{display:grid;grid-template-columns:auto 1fr 76px auto auto;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:var(--surface-2);min-height:44px}
+.sug-row .sug-n{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere;font-size:15px}
+.sug-row .sug-n small{color:var(--muted);font-size:12.5px}
+.sug-row .sug-q{width:76px;text-align:right}
+.sug-row .sug-u{font-size:13px;color:var(--muted);min-width:34px}
+#pp-comp .sug-row{grid-template-columns:1fr 76px auto 44px}
+.sw-check{width:22px;height:22px;accent-color:var(--ink)}
+.pagos{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:12px;background:var(--surface);margin:2px 0}
+.pagos-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-size:14.5px}
+.pagos-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.pagos-lista li{display:grid;grid-template-columns:1fr auto 44px;align-items:center;gap:8px;font-size:14px}
+@media (min-width:600px){.hero .hero-stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style>
 </head>
 <body class="kf-casca">
+<div id="app"></div>
 <aside class="kf-trilho" id="trilho" aria-label="Seções"><div class="kf-marca"><span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span></div>
   <button class="kf-trilho-it" data-nav="/" id="trilho-home"><span class="kf-nav-ic-t"></span>Orçamentos</button>
   <button class="kf-trilho-it" data-nav="/precos" id="trilho-prices"><span class="kf-nav-ic-t"></span>Preços</button>
   <button class="kf-trilho-it" data-nav="/gestao" id="trilho-gestao"><span class="kf-nav-ic-t"></span>Gestão</button>
   <span id="trilho-ajustes"></span>
 </aside>
-<div id="app"></div>
 <nav class="kf-nav" id="nav" aria-label="Seções" hidden>
   <div class="kf-nav-in">
     <button class="kf-nav-it" data-nav="/" id="nav-home"><span class="kf-nav-ic"></span><span class="kf-nav-l">Orçamentos</span></button>
@@ -708,8 +738,35 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 <script src="comum/kit-facil.js"></script>
 <script>
 'use strict';
-const VERSAO = '2.21.2';
+const VERSAO = '2.22.0';
 const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
+/* ================= guia do app em 3 níveis (Kit 2.11): passeia pelo orçamento de exemplo ================= */
+const exemploId = () => (quotes.find(q => q.example) || {}).id;
+const espera = ms => new Promise(r => setTimeout(r, ms));
+async function irPara(path) { if (('#' + path) !== location.hash) { go(path); await espera(120); } }
+async function abrirPainel(chave) {
+  const d = $(`details[data-panel="${chave}"]`);
+  if (d && !KitFacil.secao.aberta(d)) { KitFacil.secao.abrir(d); await espera(KitFacil.movimento.ms + 60); }
+}
+const noExemplo = async (painel) => { const id = exemploId(); if (!id) return; await irPara('/q/' + id); if (painel) await abrirPainel(`q:${id}:${painel}`); };
+const GUIA = [
+  { nivel: 1, ir: () => irPara('/'), sel: '[data-new]', t: 'Novo orçamento', d: 'Comece por aqui. Cada orçamento ganha um número e fica salvo sozinho, mesmo sem internet.' },
+  { nivel: 3, ir: () => irPara('/'), sel: '#h-q', alt: '.kf-abas, .seg', t: 'Lista de orçamentos', d: 'Filtre por situação (em aberto, concluídos, recusados) e busque por cliente, serviço ou número.' },
+  { nivel: 1, ir: () => noExemplo('cli'), sel: '#q-name', alt: 'details[data-panel$=":cli"]', t: 'Cliente e serviço', d: 'Nome, WhatsApp, endereço da obra e o serviço. O WhatsApp é usado para enviar a proposta.' },
+  { nivel: 1, ir: () => noExemplo('items'), sel: 'details[data-panel$=":items"]', t: 'Serviços e material', d: 'Toque em Adicionar e escolha da sua tabela: cada toque soma uma unidade. Para 100 m de cabo, toque no número e digite.' },
+  { nivel: 2, ir: () => noExemplo('val'), sel: 'details[data-panel$=":val"]', t: 'Valores', d: 'Deslocamento pela distância e o combustível, adicionais de urgência, noite ou fim de semana, desconto e impostos.' },
+  { nivel: 2, ir: () => noExemplo('cond'), sel: 'details[data-panel$=":cond"]', t: 'Pagamento, datas e garantia', d: 'À vista, entrada ou cartão (com a taxa repassada ou não), as datas do serviço, a validade da proposta e a garantia.' },
+  { nivel: 3, ir: () => noExemplo('notes'), sel: 'details[data-panel$=":notes"]', t: 'Observações', d: 'O que está fora do orçamento e os cuidados no dia. Os textos prontos entram com um toque.' },
+  { nivel: 2, ir: () => noExemplo(), sel: '.banner.b-sent', alt: '.banner', t: 'A resposta do cliente', d: 'Depois de enviar, marque se o cliente aprovou ou recusou. Dá para lembrar o cliente pelo WhatsApp.' },
+  { nivel: 1, ir: () => noExemplo(), sel: '[data-preview]', t: 'Ver a proposta', d: 'Toque para ver a proposta como o cliente vai receber, em folha A4.' },
+  { nivel: 2, ir: async () => { const id = exemploId(); if (id) await irPara('/q/' + id + '/proposta'); }, sel: '.paper', t: 'A proposta', d: 'Seus dados no alto, os itens por ambiente, o total, o pagamento e o Pix. Seus dados entram em Ajustes, Conta e perfil.' },
+  { nivel: 1, ir: async () => { const id = exemploId(); if (id) await irPara('/q/' + id + '/proposta'); }, sel: '.bbar', t: 'Enviar ao cliente', d: 'Enviar PDF manda o arquivo pelo app que você escolher; WhatsApp abre a conversa com a mensagem pronta.' },
+  { nivel: 2, ir: () => irPara('/precos'), sel: '#pr-q', alt: '#app .page', t: 'Tabela de preços', d: 'Seus preços de mão de obra e material. O app já vem com uma tabela de referência: ajuste aos seus valores.' },
+  { nivel: 3, ir: async () => { gestaoAba = 'estoque'; await irPara('/gestao'); rerender(); }, sel: '#app .page', t: 'Estoque e compras', d: 'O material que você tem, o mínimo de cada um e a lista de compras. Ao concluir um serviço, o app oferece dar baixa.' },
+  { nivel: 3, ir: async () => { gestaoAba = 'ferramentas'; await irPara('/gestao'); rerender(); }, sel: '#app .page', t: 'Ferramentas', d: 'Suas ferramentas, com marca, modelo e o que levar em cada tipo de serviço.' },
+  { nivel: 3, ir: async () => { gestaoAba = 'checklist'; await irPara('/gestao'); rerender(); }, sel: '#app .page', t: 'Checklist', d: 'O que conferir na ida e na volta do serviço, para não esquecer nada.' },
+];
+
 /* ================= utilidades ================= */
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -749,8 +806,16 @@ function parseQty(s) {
   s = String(s ?? '').trim().replace(/\s/g, '');
   if (!s) return null;
   if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ''); // 1.000 = mil (ponto de milhar)
+  if (!/^\d*\.?\d+$/.test(s)) return null; // "abc", "-3", "2x" não são quantidade
   const v = parseFloat(s);
   return isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : null;
+}
+// valores fora do comum pedem confirmação antes de valer (U12): não proíbe casos reais
+const QTD_ALTA = 10000;
+function conferirQtd(qty, nome, seguir) {
+  if (qty <= QTD_ALTA) return seguir();
+  confirmSheet(`Quantidade muito alta`, `${fmtQty(qty)} de ${nome || 'item'} é isso mesmo? Confira se não sobrou um zero.`, 'Manter assim', seguir, false);
 }
 const fmtQty = n => Number(n).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 const fmtDate = ts => new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -839,7 +904,7 @@ const SEED = [
   ['svc', 'Chuveiro e aparelhos', 'Instalação de chuveiro elétrico', 'un', 9000],
   ['svc', 'Chuveiro e aparelhos', 'Troca de resistência do chuveiro', 'un', 5000],
   ['svc', 'Chuveiro e aparelhos', 'Instalação de ventilador de teto', 'un', 15000],
-  ['svc', 'Chuveiro e aparelhos', 'Ponto para ar-condicionado', 'un', 25000],
+  ['svc', 'Chuveiro e aparelhos', 'Ponto e circuito para ar-condicionado', 'un', 25000],
   ['svc', 'Chuveiro e aparelhos', 'Instalação de torneira elétrica', 'un', 8000],
   ['svc', 'Quadro e proteção', 'Instalação ou troca de disjuntor', 'un', 4000],
   ['svc', 'Quadro e proteção', 'Instalação de DR', 'un', 9000],
@@ -871,16 +936,14 @@ const SEED = [
   ['mat', 'Tomadas e interruptores', 'Interruptor paralelo three-way com placa', 'un', 2200],
   ['mat', 'Tomadas e interruptores', 'Interruptor intermediário four-way', 'un', 4500],
   ['mat', 'Proteção', 'Disjuntor monopolar 10 a 32 A', 'un', 2200],
-  ['mat', 'Proteção', 'Disjuntor bipolar', 'un', 7500],
+  ['mat', 'Proteção', 'Disjuntor bipolar 10 a 32 A', 'un', 7500],
   ['mat', 'Proteção', 'DR bipolar 40 A 30 mA', 'un', 16000],
-  ['mat', 'Proteção', 'DPS 275 V', 'un', 5500],
+  ['mat', 'Proteção', 'DPS classe II 275 V 20 kA', 'un', 5500],
   ['mat', 'Proteção', 'Quadro para 12 disjuntores', 'un', 12000],
   ['mat', 'Iluminação', 'Lâmpada LED 9 W', 'un', 1000],
   ['mat', 'Iluminação', 'Spot embutido LED', 'un', 3500],
   ['mat', 'Iluminação', 'Plafon LED 18 W', 'un', 4500],
-  ['mat', 'Diversos', 'Fita isolante', 'un', 800],
-  ['mat', 'Diversos', 'Conector de emenda', 'un', 150],
-  ['mat', 'Diversos', 'Abraçadeiras', 'pct', 1000],
+  ['mat', 'Fixação e acabamento', 'Fita isolante', 'un', 800],
   // 2.15: catálogo ampliado de mão de obra e material (preços de referência)
   ['svc', 'Tomadas e interruptores', 'Instalação de tomada USB', 'un', 5500],
   ['svc', 'Tomadas e interruptores', 'Troca de espelho ou placa', 'un', 1500],
@@ -918,7 +981,7 @@ const SEED = [
   ['svc', 'Fiação e infraestrutura', 'Instalação de canaleta', 'm', 1800],
   ['svc', 'Fiação e infraestrutura', 'Abertura de caixa na alvenaria', 'un', 4000],
   ['svc', 'Fiação e infraestrutura', 'Instalação de eletroduto embutido', 'm', 2500],
-  ['svc', 'Fiação e infraestrutura', 'Ramal de entrada da concessionária', 'un', 45000],
+  ['svc', 'Fiação e infraestrutura', 'Ramal de ligação até o padrão de entrada', 'un', 45000],
   ['svc', 'Fiação e infraestrutura', 'Lançamento de cabo subterrâneo', 'm', 3500],
   ['svc', 'Rede, som e segurança', 'Ponto de rede RJ45', 'ponto', 9000],
   ['svc', 'Rede, som e segurança', 'Ponto de antena ou TV', 'ponto', 8000],
@@ -940,7 +1003,6 @@ const SEED = [
   ['svc', 'Laudos e manutenção', 'Manutenção preventiva de quadro', 'un', 25000],
   ['svc', 'Laudos e manutenção', 'Reaperto de conexões', 'un', 15000],
   ['svc', 'Visita e diagnóstico', 'Diária técnica', 'un', 60000],
-  ['svc', 'Visita e diagnóstico', 'Orçamento no local', 'un', 8000],
   ['mat', 'Cabos', 'Cabo flexível 0,75 mm²', 'm', 180],
   ['mat', 'Cabos', 'Cabo flexível 16 mm²', 'm', 2300],
   ['mat', 'Cabos', 'Cabo flexível 25 mm²', 'm', 3600],
@@ -989,12 +1051,12 @@ const SEED = [
   ['mat', 'Tomadas e interruptores', 'Plugue fêmea 10 A', 'un', 600],
   ['mat', 'Proteção', 'Disjuntor monopolar 40 a 63 A', 'un', 3200],
   ['mat', 'Proteção', 'Disjuntor bipolar 40 a 63 A', 'un', 9500],
-  ['mat', 'Proteção', 'Disjuntor tripolar', 'un', 13000],
+  ['mat', 'Proteção', 'Disjuntor tripolar 10 a 32 A', 'un', 13000],
   ['mat', 'Proteção', 'Disjuntor tripolar 70 a 100 A', 'un', 28000],
   ['mat', 'Proteção', 'DR tetrapolar 40 A 30 mA', 'un', 25000],
   ['mat', 'Proteção', 'DR bipolar 63 A 30 mA', 'un', 22000],
   ['mat', 'Proteção', 'IDR bipolar 25 A', 'un', 18000],
-  ['mat', 'Proteção', 'DPS 175 V', 'un', 5000],
+  ['mat', 'Proteção', 'DPS classe II 175 V 20 kA', 'un', 5000],
   ['mat', 'Proteção', 'Quadro para 6 disjuntores', 'un', 6500],
   ['mat', 'Proteção', 'Quadro para 18 disjuntores', 'un', 18000],
   ['mat', 'Proteção', 'Quadro para 24 disjuntores', 'un', 26000],
@@ -1069,12 +1131,57 @@ const SEED = [
   ['mat', 'Fixação e acabamento', 'Gesso 1 kg', 'saco', 600],
   ['mat', 'Fixação e acabamento', 'Massa corrida', 'galão', 4500],
   ['mat', 'Fixação e acabamento', 'Identificador de cabos', 'kit', 2000],
+  // catálogo 8 (2.22): revisão completa
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de carregador de veículo elétrico', 'un', 90000],
+  ['svc', 'Rede, som e segurança', 'Configuração de interruptor ou tomada inteligente', 'un', 6000],
+  ['svc', 'Laudos e manutenção', 'Inspeção de SPDA e para-raios', 'un', 45000],
+  ['svc', 'Laudos e manutenção', 'Ensaio de resistência de isolamento', 'un', 25000],
+  ['svc', 'Laudos e manutenção', 'Projeto elétrico residencial', 'vb', 150000],
+  ['mat', 'Cabos', 'Cabo flexível 35 mm²', 'm', 5200],
+  ['mat', 'Cabos', 'Cabo flexível 50 mm²', 'm', 7200],
+  ['mat', 'Cabos', 'Cabo flexível 1,5 mm², rolo de 100 m', 'rolo', 17000],
+  ['mat', 'Cabos', 'Cabo flexível 2,5 mm², rolo de 100 m', 'rolo', 25000],
+  ['mat', 'Cabos', 'Cabo flexível 4 mm², rolo de 100 m', 'rolo', 40000],
+  ['mat', 'Cabos', 'Cabo flexível 6 mm², rolo de 100 m', 'rolo', 60000],
+  ['mat', 'Cabos', 'Cabo PP 2 x 2,5 mm²', 'm', 900],
+  ['mat', 'Cabos', 'Cabo solar 4 mm²', 'm', 700],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto corrugado reforçado 3/4"', 'm', 350],
+  ['mat', 'Eletrodutos e caixas', 'Curva PVC 1"', 'un', 600],
+  ['mat', 'Eletrodutos e caixas', 'Luva PVC 1"', 'un', 300],
+  ['mat', 'Proteção', 'DR bipolar 25 A 30 mA', 'un', 15000],
+  ['mat', 'Proteção', 'IDR tetrapolar 40 A 30 mA', 'un', 32000],
+  ['mat', 'Proteção', 'Quadro para 36 disjuntores', 'un', 42000],
+  ['mat', 'Iluminação', 'Painel LED embutido 24 W', 'un', 7000],
+  ['mat', 'Aparelhos', 'Chuveiro elétrico 127 V', 'un', 9000],
+  ['mat', 'Aparelhos', 'Carregador de veículo elétrico 7,4 kW', 'un', 350000],
 ];
 const catOrder = kind => [...new Set(SEED.filter(s => s[0] === kind).map(s => s[1])), 'Outros'];
 // itens que entraram depois da primeira tabela (são acrescentados em quem já usa o app)
 // 2.15: tudo o que ainda não está na tabela entra (por nome), sem mexer nos itens e preços de quem já usa
+/* composição por serviço (F5): o material que costuma ir em cada unidade do serviço. Sugestão editável: o app oferece
+   ao adicionar o serviço e cada um ajusta na tabela de preços. Quantidades médias de obra residencial. */
+const COMPOSICAO = {
+  'Ponto novo de tomada com fiação': [['Caixa 4x2', 1], ['Tomada 10 A com placa', 1], ['Cabo flexível 2,5 mm²', 12], ['Eletroduto corrugado 3/4"', 4]],
+  'Ponto de iluminação novo com fiação': [['Caixa octogonal 4x4 de laje', 1], ['Caixa 4x2', 1], ['Interruptor simples com placa', 1], ['Cabo flexível 1,5 mm²', 12], ['Eletroduto corrugado 3/4"', 4]],
+  'Ponto de interruptor paralelo three-way': [['Caixa 4x2', 2], ['Interruptor paralelo three-way com placa', 2], ['Cabo flexível 1,5 mm²', 15], ['Eletroduto corrugado 3/4"', 6]],
+  'Tomada de uso específico 20 A': [['Tomada 20 A com placa', 1]],
+  'Ponto de tomada externa à prova de tempo': [['Caixa de sobrepor 4x2', 1], ['Tomada 10 A com placa', 1], ['Cabo flexível 2,5 mm²', 10], ['Eletroduto rígido PVC 3/4" de 3 m', 1]],
+  'Ponto e circuito para ar-condicionado': [['Caixa 4x2', 1], ['Tomada 20 A com placa', 1], ['Disjuntor bipolar 10 a 32 A', 1], ['Cabo flexível 4 mm²', 30], ['Eletroduto corrugado 3/4"', 10]],
+  'Instalação de máquina de lavar com ponto exclusivo': [['Caixa 4x2', 1], ['Tomada 20 A com placa', 1], ['Disjuntor monopolar 10 a 32 A', 1], ['Cabo flexível 2,5 mm²', 30], ['Eletroduto corrugado 3/4"', 10]],
+  'Instalação ou troca de disjuntor': [['Disjuntor monopolar 10 a 32 A', 1]],
+  'Instalação de DR': [['DR bipolar 40 A 30 mA', 1]],
+  'Instalação de IDR': [['IDR bipolar 25 A', 1]],
+  'Instalação de DPS': [['DPS classe II 275 V 20 kA', 1], ['Cabo flexível 10 mm²', 1]],
+  'Aterramento com haste e conexões': [['Haste de aterramento 2,4 m', 1], ['Conector para haste', 1], ['Caixa de inspeção de aterramento', 1], ['Cabo de cobre nu 16 mm²', 5]],
+  'Montagem de quadro de distribuição': [['Quadro para 12 disjuntores', 1], ['Barramento pente monopolar', 1], ['Barramento de neutro e terra', 2], ['Disjuntor monopolar 10 a 32 A', 8]],
+  'Troca da fiação de um circuito': [['Cabo flexível 2,5 mm²', 30], ['Conector de emenda Wago de 2 vias', 4]],
+  'Ponto de rede RJ45': [['Caixa 4x2', 1], ['Módulo de tomada RJ45', 1], ['Placa 4x2 de 1 posto', 1], ['Suporte 4x2', 1], ['Cabo de rede UTP Cat6', 20], ['Conector RJ45', 2]],
+  'Ponto de antena ou TV': [['Caixa 4x2', 1], ['Cabo coaxial RG6', 15], ['Conector F para coaxial', 2]],
+  'Instalação de carregador de veículo elétrico': [['Disjuntor bipolar 40 a 63 A', 1], ['DR bipolar 63 A 30 mA', 1], ['Cabo flexível 10 mm²', 30], ['Eletroduto corrugado 1"', 10]],
+};
+const compDe = name => (COMPOSICAO[name] || []).map(([n, q]) => ({ n, q }));
 const SEED_V2 = ['Ponto de interruptor paralelo three-way', 'Tomada dupla 10 A com placa', 'Interruptor duplo com placa', 'Interruptor paralelo three-way com placa', 'Interruptor intermediário four-way'];
-const seedPrices = () => SEED.map(([kind, cat, name, unit, price]) => ({ id: uid(), kind, cat, name, unit, price, ref: true }));
+const seedPrices = () => SEED.map(([kind, cat, name, unit, price]) => ({ id: uid(), kind, cat, name, unit, price, ref: true, ...(kind === 'svc' && COMPOSICAO[name] ? { comp: compDe(name) } : {}) }));
 /* preços de fábrica: os que vêm com o app aparecem em cinza; qualquer mudança no valor (no item, na caixa do material
    ou no reajuste) deixa o preço em preto. O leitor de tela diz "preço que vem com o app" e a nota no fim de Preços
    explica o cinza (informação nunca só pela cor). O cinza não chega ao contraste AA: exceção no README. */
@@ -1090,7 +1197,8 @@ const LS = {
 const ACCEPT_DEFAULT = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita, no WhatsApp ou no e-mail.';
 const ACCEPT_V6 = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita (WhatsApp ou e-mail).';
 const WARRANTY_DEFAULT = 'A garantia cobre falhas no serviço executado. Não cobre: mau uso; alterações feitas por terceiros; sobrecarga causada por equipamentos ligados depois do serviço; surtos de tensão, descargas atmosféricas e falhas da rede da concessionária; e materiais fornecidos pelo cliente, que seguem a garantia do fabricante. Esta garantia não exclui os direitos previstos no Código de Defesa do Consumidor.';
-const DEF = { toolSeedV: 0, name: '', company: '', phone: '', email: '', doc: '', city: '', pix: '', logo: '', logoRatio: 1,
+const DEF = { toolSeedV: 0, name: '', company: '', phone: '', email: '', doc: '', registro: '', city: '', pix: '', logo: '', logoRatio: 1,
+  taxMode: 'sem', taxPct: 5, taxBase: 'servico',
   validity: 15, warranty: 90, prazoN: 1, prazoU: 'uteis', payMode: 'entrada', entryPct: 50, installments: 3, notes: '',
   // cartão: tipo de juros, taxa da maquininha por parcelamento (em %), juros ao mês, sem juros até N× e quem paga a taxa
   cardJuros: 'sem', cardRates: {}, cardMes: 0, cardSemAte: 0, cardPaga: 'cliente', avistaPct: 0, seq: 0,
@@ -1117,7 +1225,7 @@ KitFacil.iniciar({
   tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
   emAjustes: () => route().name === 'settings',
-  novidades: [{ versao: '2.21.2', itens: ['Preços e Gestão ficaram mais limpas: sem a linha embaixo do título e com menos espaço vazio no fim da tela.', 'O aviso sobre os preços em cinza ficou mais discreto e mais claro.'] }, { versao: '2.21.1', itens: ['Em Preços, um aviso claro: os preços em cinza são só exemplos, não são recomendação, não obrigam ninguém e não vêm de pesquisa de mercado.', 'Reajustar preços foi para o fim da tela Preços, mais discreto.', 'Ícones novos para a lista de compras e para as ferramentas.', 'Na Gestão, o resumo não quebra mais linha ao escolher a comprar.'] }, { versao: '2.21.0', itens: ['Tudo no mesmo padrão: Preços e Gestão trocam de parte pelas mesmas guias sublinhadas, e as escolhas marcam a opção em branco, como em Ajustes › Aparência.', 'No orçamento, o botão ⋯ fica embaixo, ao lado de Ver proposta. Na proposta, Editar está no ⋯.', 'Avisos com botão contornado; o amarelo fica só para a ação principal de cada tela.', 'A tela Preços ganhou uma linha de apoio, e o botão de criar virou Novo preço.'] }, { versao: '2.20.0', itens: ['A Gestão ficou mais organizada: Materiais, Ferramentas e Checklist viraram guias no alto, e logo abaixo vem um resumo amarelo, como no Início.', 'No resumo, toque nos números para escolher o que ver (em estoque, para repor, no catálogo). A Lista de compras fica ali, com quantos itens tem.', 'No Checklist, o resumo mostra quanto já foi conferido na ida e na volta.'] }, { versao: '2.19.1', itens: ['Nenhum nome tem mais parênteses: os itens da tabela, as ferramentas, as categorias e os rótulos dos campos.', 'Os materiais e as ferramentas que vêm com o app agora podem ser alterados na Gestão: nome, categoria e unidade. As ferramentas também podem ser excluídas.', 'As listas de escolha abertas perto do pé da janela rolam até o último item aparecer.', 'O vermelho do Excluir, ao arrastar um rascunho, ficou emendado com o cartão.'] }, { versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
+  novidades: [{ versao: '2.22.0', itens: ['Impostos ou nota fiscal no orçamento: por fora (o cliente vê a linha) ou embutido nos preços, só na mão de obra (ISS) ou no total.', 'Material sugerido: ao adicionar um serviço como Ponto novo de tomada, o app oferece a lista de material, que você ajusta.', 'Registre os pagamentos recebidos; o resumo do mês mostra quanto falta receber.', 'Seu registro profissional (CREA, CFT ou NR-10) sai na proposta, no relatório e no recibo.', 'Tabela de preços revisada: carregador de carro elétrico, SPDA, projeto elétrico, cabos de 35 e 50 mm² e rolos de 100 m.', 'No computador largo, a proposta aparece ao lado do orçamento e muda enquanto você edita.'] }, { versao: '2.21.2', itens: ['Preços e Gestão ficaram mais limpas: sem a linha embaixo do título e com menos espaço vazio no fim da tela.', 'O aviso sobre os preços em cinza ficou mais discreto e mais claro.'] }, { versao: '2.21.1', itens: ['Em Preços, um aviso claro: os preços em cinza são só exemplos, não são recomendação, não obrigam ninguém e não vêm de pesquisa de mercado.', 'Reajustar preços foi para o fim da tela Preços, mais discreto.', 'Ícones novos para a lista de compras e para as ferramentas.', 'Na Gestão, o resumo não quebra mais linha ao escolher a comprar.'] }, { versao: '2.21.0', itens: ['Tudo no mesmo padrão: Preços e Gestão trocam de parte pelas mesmas guias sublinhadas, e as escolhas marcam a opção em branco, como em Ajustes › Aparência.', 'No orçamento, o botão ⋯ fica embaixo, ao lado de Ver proposta. Na proposta, Editar está no ⋯.', 'Avisos com botão contornado; o amarelo fica só para a ação principal de cada tela.', 'A tela Preços ganhou uma linha de apoio, e o botão de criar virou Novo preço.'] }, { versao: '2.20.0', itens: ['A Gestão ficou mais organizada: Materiais, Ferramentas e Checklist viraram guias no alto, e logo abaixo vem um resumo amarelo, como no Início.', 'No resumo, toque nos números para escolher o que ver (em estoque, para repor, no catálogo). A Lista de compras fica ali, com quantos itens tem.', 'No Checklist, o resumo mostra quanto já foi conferido na ida e na volta.'] }, { versao: '2.19.1', itens: ['Nenhum nome tem mais parênteses: os itens da tabela, as ferramentas, as categorias e os rótulos dos campos.', 'Os materiais e as ferramentas que vêm com o app agora podem ser alterados na Gestão: nome, categoria e unidade. As ferramentas também podem ser excluídas.', 'As listas de escolha abertas perto do pé da janela rolam até o último item aparecer.', 'O vermelho do Excluir, ao arrastar um rascunho, ficou emendado com o cartão.'] }, { versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
     'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
     'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
     'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
@@ -1165,6 +1273,11 @@ KitFacil.iniciar({
   ] }],
   // a boas-vindas é a própria tela inicial do app (com os passos e o exemplo); o Kit só usa "novo" para não mostrar novidades a quem acabou de chegar
   boasVindas: { novo: () => PRIMEIRO_USO && !(quotes || []).some(q => !q.example) },
+  apresentacao: { frase: 'Orçamentos de elétrica com cara de profissional, prontos em minutos.', pontos: [
+    ['Monte o orçamento', 'Escolha os serviços e o material da sua tabela de preços; o app soma tudo.'],
+    ['Envie ao cliente', 'Proposta em PDF ou pelo WhatsApp, com Pix, prazo e garantia.'],
+    ['Acompanhe até o recibo', 'Marque quando o cliente aprovar e, no fim, gere o relatório e o recibo.'] ] },
+  guia: { get passos() { return GUIA; }, preparar: () => { const ex = quotes.find(q => q.example); if (!ex) createExample(); } },
   copia: { descricao: 'Baixe um arquivo com os orçamentos, a tabela de preços, o estoque, as ferramentas e os ajustes.', baixar: () => baixarCopiaEletrica(), restaurar: f => restaurarCopiaEletrica(f) },
   privacidade: [
     'Os orçamentos, a tabela de preços, o estoque, as ferramentas, os ajustes e os dados dos clientes que você cadastra, como nome, telefone, endereço e CPF ou CNPJ, ficam guardados neste aparelho. Você é responsável por eles perante os seus clientes.',
@@ -1206,7 +1319,8 @@ function blankQuote() {
     validity: settings.validity, deadline: '', prazo: { n: Math.max(1, Math.min(99, settings.prazoN || 1)), u: PRAZO_U[settings.prazoU] ? settings.prazoU : 'uteis' }, warranty: settings.warranty, notes: settings.notes,
     status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false,
     trip: null, extras: { urgent: 0, night: 0, weekend: 0 }, useRooms: false, rooms: [],
-    diag: '', work: '', tests: [], recs: '' };
+    tax: { mode: settings.taxMode || 'sem', pct: settings.taxPct ?? 5, base: settings.taxBase || 'servico' },
+    diag: '', work: '', tests: [], recs: '', pagos: [] };
 }
 function fixQuote(q) {
   const d = blankQuote(), src = q || {};
@@ -1227,6 +1341,9 @@ function fixQuote(q) {
   q.discount = { mode: ds.mode === 'pct' ? 'pct' : 'value', value: ds.enabled === false ? 0 : (ds.value || 0), pct: ds.enabled === false ? 0 : (ds.pct || 0) };
   q.items = (q.items || []).map(i => ({ id: i.id || uid(), kind: i.kind === 'mat' ? 'mat' : 'svc', name: String(i.name || ''), unit: i.unit || 'un', qty: +i.qty || 1, price: Math.max(0, Math.round(+i.price || 0)), room: i.room ? String(i.room) : '' }));
   q.extras = { urgent: 0, night: 0, weekend: 0, ...(q.extras || {}) };
+  q.pagos = (Array.isArray(q.pagos) ? q.pagos : []).filter(x => x && x.v > 0).map(x => ({ id: x.id || uid(), v: Math.round(+x.v), t: +x.t || Date.now() }));
+  // orçamentos de antes do imposto (F6) continuam sem imposto: o total deles não muda
+  q.tax = src.tax ? taxOf(src) : { mode: 'sem', pct: 5, base: 'servico' };
   q.rooms = (Array.isArray(q.rooms) ? q.rooms : []).filter(r => r && r.id).map(r => ({ id: String(r.id), name: String(r.name || 'Ambiente') }));
   q.useRooms = !!q.useRooms;
   acertaGeral(q);
@@ -1427,6 +1544,20 @@ if ((settings.seedV || 0) < 5) {
 }
 if ((settings.seedV || 0) < 6) { settings.seedV = 6; savePrices(); saveSettings(); }
 if ((settings.seedV || 0) < 7) { settings.seedV = 7; savePrices(); saveSettings(); }
+// 2.22: catálogo revisado (F9). Renomeia o que é de fábrica, tira o que sobrava (só se ainda estiver com o preço de fábrica
+// e fora de qualquer orçamento), inclui os itens novos e a composição de material dos serviços (F5)
+const RENOMEIA_V8 = [['Disjuntor bipolar', 'Disjuntor bipolar 10 a 32 A', 'mat'], ['Disjuntor tripolar', 'Disjuntor tripolar 10 a 32 A', 'mat'], ['DPS 275 V', 'DPS classe II 275 V 20 kA', 'mat'],
+  ['DPS 175 V', 'DPS classe II 175 V 20 kA', 'mat'], ['Ponto para ar-condicionado', 'Ponto e circuito para ar-condicionado', 'svc'], ['Ramal de entrada da concessionária', 'Ramal de ligação até o padrão de entrada', 'svc']];
+const SAI_V8 = [['mat', 'Conector de emenda', 150], ['mat', 'Abraçadeiras', 1000], ['svc', 'Orçamento no local', 8000]];
+if ((settings.seedV || 0) < 8) {
+  RENOMEIA_V8.forEach(([de, para, k]) => { const p = prices.find(x => x.kind === k && norm(x.name) === norm(de)); if (p && !prices.some(x => x.kind === k && norm(x.name) === norm(para))) p.name = para; });
+  const usado = (k, n) => quotes.some(q => q.items.some(i => i.kind === k && norm(i.name) === norm(n)));
+  prices = prices.filter(p => !SAI_V8.some(([k, n, pr]) => p.kind === k && norm(p.name) === norm(n) && p.price === pr && p.ref !== false && !p.stock && !usado(k, n)));
+  prices.forEach(p => { if (p.cat === 'Diversos' && p.kind === 'mat') p.cat = 'Fixação e acabamento'; });
+  SEED.forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price, ref: true }); });
+  prices.forEach(p => { if (p.kind === 'svc' && !p.comp && COMPOSICAO[p.name]) p.comp = compDe(p.name); });
+  settings.seedV = 8; savePrices(); saveSettings();
+}
 
 const getQ = id => quotes.find(q => q.id === id);
 const touch = q => { acertaGeral(q); q.updatedAt = Date.now(); saveQuotes(); };
@@ -1538,15 +1669,35 @@ function applyRemote(R) {
 const syncPayload = () => ({ settings, prices, quotes: quotes.filter(q => !q.example && !isEmptyQuote(q)), tools, checks, st: sync.st, del: sync.del });
 snapAll();
 const lineTotal = i => Math.round(i.qty * i.price);
+// imposto do orçamento, sempre num formato válido (orçamentos antigos não têm o campo)
+function taxOf(q) {
+  const t = q.tax || {};
+  return { mode: ['fora', 'dentro'].includes(t.mode) ? t.mode : 'sem', pct: Math.max(0, Math.min(30, +t.pct || 0)), base: t.base === 'total' ? 'total' : 'servico' };
+}
+const TAX_BASE = { servico: 'sobre a mão de obra', total: 'sobre o total' };
+const taxLabel = c => `Impostos (${fmtQty(c.tax.pct)}% ${TAX_BASE[c.tax.base]})`;
+// preço e total de uma linha como o cliente vê (com o imposto embutido, se for o caso)
+const kDe = (c, i) => i.kind === 'svc' ? (c.kSvc || 1) : (c.kMat || 1);
+const lineShow = (c, i) => kDe(c, i) === 1 ? lineTotal(i) : Math.round(lineTotal(i) * kDe(c, i));
+const priceShow = (c, i) => kDe(c, i) === 1 ? i.price : Math.round(i.price * kDe(c, i));
 function compute(q) {
   const svc = q.items.filter(i => i.kind === 'svc'), mat = q.items.filter(i => i.kind === 'mat');
-  const labor = sum(svc.map(lineTotal)), matTotal = sum(mat.map(lineTotal)), matIn = q.materialBy !== 'cliente';
-  const travel = q.travel || 0;
+  // impostos (F6): sem, por fora (linha própria na proposta) ou embutido nos preços (o cliente não vê a linha)
+  const tx = taxOf(q), tp = tx.pct / 100;
+  const kSvc = tx.mode === 'dentro' && tp > 0 ? 1 / (1 - tp) : 1, kMat = tx.base === 'total' ? kSvc : 1;
+  const mostra = (i, k) => k === 1 ? lineTotal(i) : Math.round(lineTotal(i) * k);
+  const labor = sum(svc.map(i => mostra(i, kSvc))), matTotal = sum(mat.map(i => mostra(i, kMat))), matIn = q.materialBy !== 'cliente';
+  const travel = Math.round((q.travel || 0) * kMat);
   const surPct = (q.extras.urgent || 0) + (q.extras.night || 0) + (q.extras.weekend || 0);
   const extra = Math.round(labor * surPct / 100);
   const sub = labor + extra + (matIn ? matTotal : 0) + travel;
   const discount = q.discount.mode === 'pct' ? Math.round(sub * Math.min(100, q.discount.pct || 0) / 100) : Math.min(q.discount.value || 0, sub);
-  const total = sub - discount, p = q.payment;
+  const liquido = sub - discount;
+  // base do imposto depois do desconto: só a mão de obra (ISS) ou o total (Simples Nacional)
+  const baseTax = tx.base === 'total' ? liquido : (sub ? Math.round((labor + extra) * liquido / sub) : 0);
+  const taxFora = tx.mode === 'fora' ? Math.round(baseTax * tp) : 0;
+  const taxDentro = tx.mode === 'dentro' && tp > 0 ? Math.round(baseTax * tp) : 0;
+  const total = liquido + taxFora, p = q.payment;
   const entry = p.mode === 'entrada' ? Math.round(total * p.entryPct / 100) : 0;
   const rest = p.mode === 'entrada' ? total - entry : 0;
   // à vista: desconto que só vale se o cliente pagar à vista (além do desconto do serviço)
@@ -1557,7 +1708,7 @@ function compute(q) {
   const cd = cardCalc(p, total);
   const pixValue = p.mode === 'avista' ? avistaTotal : p.mode === 'entrada' ? entry : 0;
   const payTotal = p.mode === 'avista' ? avistaTotal : p.mode === 'parcelado' ? cd.total : total;
-  return { svc, mat, labor, surPct, extra, matTotal, matIn, travel, sub, discount, total, entry, rest, parts: cd.parts, card: cd, avistaDesc, avistaTotal, payTotal, pixValue, validUntil: q.createdAt + (q.validity || 0) * DAY };
+  return { svc, mat, labor, surPct, extra, matTotal, matIn, travel, sub, discount, tax: tx, taxFora, taxDentro, kSvc, kMat, total, entry, rest, parts: cd.parts, card: cd, avistaDesc, avistaTotal, payTotal, pixValue, validUntil: q.createdAt + (q.validity || 0) * DAY };
 }
 /* cartão: sem juros, taxa da maquininha (repassada ao cliente ou paga por você) ou juros ao mês (parcelas iguais) */
 const parcelasDe = (total, n) => { const base = Math.floor(total / n), L = []; for (let k = 0; k < n; k++) L.push(base + (k < total - base * n ? 1 : 0)); return L; };
@@ -1579,7 +1730,12 @@ function cardCalc(p, total) {
     recebe = cardTotal;
   }
   // com juros, as parcelas ficam iguais (como na maquininha): o total é parcela × número de parcelas
-  if (cardTotal !== total && n > 1) { cardTotal = Math.round(cardTotal / n) * n; if (p.juros === 'taxa') recebe = Math.round(cardTotal * (1 - taxaPct / 100)); else recebe = cardTotal; }
+  // parcelas iguais arredondadas para CIMA quando o cliente paga a taxa: o eletricista nunca recebe menos que o total (E9)
+  if (cardTotal !== total && n > 1) {
+    cardTotal = Math.ceil(cardTotal / n) * n;
+    if (p.juros === 'taxa') { recebe = Math.round(cardTotal * (1 - taxaPct / 100)); while (p.paga === 'cliente' && recebe < total) { cardTotal += n; recebe = Math.round(cardTotal * (1 - taxaPct / 100)); } }
+    else recebe = cardTotal;
+  }
   return { n, deb, semJuros, taxaPct, mesPct: mes * 100, total: cardTotal, juros: cardTotal - total, recebe, parts: parcelasDe(cardTotal, n) };
 }
 // nome do total que o cliente paga, na barra de baixo do orçamento
@@ -1852,6 +2008,7 @@ function stats() {
     won: sum(won.map(q => compute(q).total)), wonN: won.length,
     waitN: waiting.length, waitSum: sum(waiting.map(q => compute(q).total)), todoN: todo.length,
     rate: dec.length ? Math.round(dec.filter(q => q.status !== 'recusado').length / dec.length * 100) : null,
+    receber: sum(real.filter(q => ['aprovado', 'concluido'].includes(q.status)).map(q => falta(q))),
   };
 }
 
@@ -2027,7 +2184,13 @@ function render(opts = {}) {
   // a área da tela é trocada por uma nova a cada desenho: assim os toques ligados pela tela anterior não se acumulam
   const velho = $('#app'), app = velho.cloneNode(false);
   app.innerHTML = V.html(r);
+  // trilho e barra de baixo ficam logo depois da barra de cima: no teclado, barra de cima → menu → conteúdo,
+  // como nos outros apps (U13). São fixos na tela, então o lugar no documento não muda o desenho.
+  const fixos = [$('#trilho'), $('#nav')].filter(Boolean);
+  fixos.forEach(el => document.body.appendChild(el));
   velho.replaceWith(app);
+  const cab = $(':scope > header', app);
+  if (cab) cab.after(...fixos); else app.prepend(...fixos);
   const top = ['home', 'prices', 'gestao', 'settings'].includes(r.name);
   $('#nav').hidden = !top;
   $$('[data-nav]').forEach(b => {
@@ -2271,6 +2434,7 @@ VIEWS.home = {
           <button data-jump="enviado"><b>${s.waitN}</b><span>aguardando resposta</span></button>
           <button data-jump="aprovado"><b>${s.todoN}</b><span>aprovados a executar</span></button>
           <div><b>${s.rate === null ? '–' : s.rate + '%'}</b><span>de aprovação em 90 dias</span></div>
+          <div><b>${s.receber ? BRL(s.receber).replace(/,00$/, '') : 'R$ 0'}</b><span>a receber</span></div>
         </div>
       </section>
       ${!syncOn() && !sync.tipOff && !needMe && quotes.some(q => !q.example) ? `<div class="banner b-tip"><p><b>Usa o app em mais de um aparelho?</b> Ative a sincronização e tenha os mesmos orçamentos no celular e no tablet.</p><div class="banner-act"><button class="btn sm ghost" data-kf="sync-ativar">Ativar</button><button class="btn sm ghost" data-tip-off>Agora não</button></div></div>` : ''}
@@ -2529,7 +2693,7 @@ function lineHTML(q, i) {
     </button>
     <div class="line-side">
       <span class="line-total">${BRL(lineTotal(i))}</span>
-      <div class="qty">${i.qty <= 1 ? `<button class="rm" data-rm="${i.id}" aria-label="Remover">${I.trash}</button>` : `<button data-dq="-1" data-id="${i.id}" aria-label="Menos">${I.minus}</button>`}<span>${fmtQty(i.qty)}</span><button data-dq="1" data-id="${i.id}" aria-label="Mais">${I.plus}</button></div>
+      <div class="qty">${i.qty <= 1 ? `<button class="rm" data-rm="${i.id}" aria-label="Remover ${esc(i.name)}">${I.trash}</button>` : `<button data-dq="-1" data-id="${i.id}" aria-label="Menos 1 em ${esc(i.name)}">${I.minus}</button>`}<button class="qty-n" data-qe="${i.id}" aria-label="Quantidade de ${esc(i.name)}: ${fmtQty(i.qty)}. Toque para digitar">${fmtQty(i.qty)}</button><button data-dq="1" data-id="${i.id}" aria-label="Mais 1 em ${esc(i.name)}">${I.plus}</button></div>
     </div>
   </div>`;
 }
@@ -2537,10 +2701,10 @@ const payShort = p => ({ avista: p.avista && (p.avista.pct || p.avista.value) ? 
 function quoteSums(q, c) {
   const rep = isReport(q), nS = q.items.filter(i => i.kind === 'svc').length, nM = q.items.filter(i => i.kind === 'mat').length;
   const ds = ts => new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-  const val = [c.extra && `adicional +${c.surPct}%`, c.travel && `deslocamento ${BRL(c.travel)}`, c.discount && `desconto ${BRL(c.discount)}`].filter(Boolean);
+  const val = [c.extra && `adicional +${c.surPct}%`, c.travel && `deslocamento ${BRL(c.travel)}`, c.discount && `desconto ${BRL(c.discount)}`, c.taxFora && `impostos ${BRL(c.taxFora)}`, c.taxDentro && 'impostos embutidos'].filter(Boolean);
   return {
     cli: [q.client.name, q.title].filter(Boolean).join(' · ') || 'Nome, WhatsApp, endereço e serviço',
-    items: q.items.length ? [nS && plural(nS, 'serviço', 'serviços'), nM && plural(nM, 'material', 'materiais'), q.useRooms && q.rooms.length && plural(q.rooms.length, 'ambiente', 'ambientes')].filter(Boolean).join(' · ') : 'Nenhum item ainda',
+    items: q.items.length ? [nS && plural(nS, 'serviço', 'serviços'), nM && plural(nM, 'material', 'materiais'), q.useRooms && q.rooms.length && plural(new Set(q.items.map(i => roomOf(q, i) || 'geral')).size, 'ambiente', 'ambientes')].filter(Boolean).join(' · ') : 'Nenhum item ainda',
     itemsR: BRL(c.labor + (c.matIn ? c.matTotal : 0)),
     tech: techSum(q),
     diag: firstLine(q.diag, 'Toque para preencher'), work: firstLine(q.work, 'Toque para preencher'), recs: firstLine(q.recs, 'Toque para preencher'), tests: testsSum(q),
@@ -2549,6 +2713,32 @@ function quoteSums(q, c) {
     cond: [payShort(q.payment), !rep && prazoTxt(q.prazo), (!rep && q.dateTbd) ? 'datas a combinar' : q.dates.length ? (q.dates.length > 1 ? `de ${ds(q.dates[0])} a ${ds(q.dates[q.dates.length - 1])}` : `dia ${ds(q.dates[0])}`) + (daysOk(q) ? '' : ' · confira as datas') : '', q.warranty ? `garantia ${q.warranty} dias` : 'sem garantia'].filter(Boolean).join(' · '),
     notes: firstLine(q.notes, 'Nada anotado'),
   };
+}
+// pagamentos recebidos (F10): o que já entrou e o que falta, por orçamento aprovado ou concluído
+const recebido = q => sum((q.pagos || []).map(x => x.v));
+const falta = (q, c = compute(q)) => Math.max(0, c.payTotal - recebido(q));
+function pagosHTML(q, c) {
+  if (!['aprovado', 'concluido'].includes(q.status)) return '';
+  const r = recebido(q), f = falta(q, c);
+  return `<div class="pagos" id="q-pagos"><div class="pagos-top"><span><b>Recebido ${BRL(r)}</b> de ${BRL(c.payTotal)}${f ? ` · falta <b>${BRL(f)}</b>` : ' · tudo pago'}</span><button class="btn sm ghost" data-pago>${I.plus}Registrar pagamento</button></div>
+    ${(q.pagos || []).length ? `<ul class="pagos-lista">${q.pagos.map(x => `<li><span>${fmtDate(x.t)}</span><b>${BRL(x.v)}</b><button class="icon-btn" data-pago-rm="${x.id}" aria-label="Apagar o pagamento de ${BRL(x.v)} de ${fmtDate(x.t)}">${I.x}</button></li>`).join('')}</ul>` : ''}</div>`;
+}
+function pagoSheet(q) {
+  const c = compute(q), f = falta(q, c), sugestao = !recebido(q) && c.entry ? c.entry : f;
+  openSheet({ title: 'Registrar pagamento', body: `<div class="field"><label for="pg-v">Valor recebido</label><input id="pg-v" type="text" inputmode="numeric" data-money value="${sugestao ? BRL(sugestao) : ''}" placeholder="R$ 0,00"></div>
+      <p class="hint">${f ? `Falta receber ${BRL(f)}${!recebido(q) && c.entry ? `; a entrada combinada é de ${BRL(c.entry)}` : ''}.` : 'Este orçamento já está todo pago.'}</p>`,
+    foot: `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-ok>${I.check}Registrar</button>`,
+    onMount: s2 => {
+      prepFields(s2);
+      $('[data-cancel]', s2).onclick = () => closeSheet();
+      $('[data-ok]', s2).onclick = () => {
+        const v = parseMoney($('#pg-v', s2).value);
+        if (!v) return toast('Informe o valor recebido.');
+        const reg = { id: uid(), v, t: Date.now() };
+        q.pagos = [...(q.pagos || []), reg]; touch(q); closeSheet(true); rerender();
+        toast(`Pagamento de ${BRL(v)} registrado.`, { label: 'Desfazer', run: () => { q.pagos = q.pagos.filter(x => x.id !== reg.id); touch(q); rerender(); } });
+      };
+    } });
 }
 function statusBanner(q, c) {
   const px = pixOf(q, c);
@@ -2559,12 +2749,14 @@ function statusBanner(q, c) {
   </div>`;
   if (q.status === 'aprovado') return `<div class="banner b-ok">
     <p><b>Aprovado ${rel(q.approvedAt)}.</b> Quando terminar o serviço, marque como concluído para gerar o recibo.</p>
+    ${pagosHTML(q, c)}
     <div class="banner-act"><button class="btn sm ghost ok-ic" data-st="concluido">${I.check}Serviço concluído</button>${px ? `<button class="btn sm ghost" data-pix>${I.pix}Pix d${px.what}</button>` : `<button class="btn sm ghost" data-receipt>${I.receipt}Recibo</button>`}</div>
   </div>`;
   if (q.status === 'concluido') {
     const pr = pixOf(q, c, 'report');
     return `<div class="banner b-done">
     <div class="done-row"><p><b>Executado em</b> <span id="q-donetxt">${esc(execText(q))}</span></p><button class="btn sm ghost" data-goto-days>${I.cal}Alterar datas</button></div>
+    ${pagosHTML(q, c)}
     <div class="banner-act"><button class="btn sm ghost" data-receipt>${I.receipt}Gerar recibo</button>${pr ? `<button class="btn sm ghost" data-pix-rest>${I.pix}Pix d${pr.what}</button>` : ''}</div>
     <button class="linkish" data-undone style="color:var(--muted);font-size:14px">${q.prevStatus && q.prevStatus !== 'rascunho' ? 'Desfazer conclusão' : 'Transformar em orçamento'}</button>
   </div>`;
@@ -2675,6 +2867,11 @@ function valuesHTML(q, c) {
       <div class="vrow"><label for="q-disc">Desconto</label><div class="disc"><div class="seg" role="group" aria-label="Tipo de desconto"><button data-dm="value" aria-pressed="${d.mode === 'value'}">R$</button><button data-dm="pct" aria-pressed="${d.mode === 'pct'}">%</button></div>${d.mode === 'value'
         ? `<input id="q-disc" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${d.value ? BRL(d.value) : ''}">`
         : `<input id="q-disc" type="text" inputmode="decimal" placeholder="0" value="${d.pct ? fmtQty(d.pct) : ''}" aria-label="Desconto em porcentagem">`}</div></div>
+      <div class="vrow tax-row"><span class="lab" id="q-tx-l">Impostos ou nota fiscal</span>
+        <div class="seg" role="group" aria-labelledby="q-tx-l"><button data-tx="sem" aria-pressed="${c.tax.mode === 'sem'}">Sem</button><button data-tx="fora" aria-pressed="${c.tax.mode === 'fora'}">Por fora</button><button data-tx="dentro" aria-pressed="${c.tax.mode === 'dentro'}">Embutido</button></div></div>
+      ${c.tax.mode !== 'sem' ? `<div class="tax-cfg"><div class="field"><label for="q-txp">Alíquota (%)</label><input id="q-txp" type="text" inputmode="decimal" value="${fmtQty(c.tax.pct)}" placeholder="5"></div>
+        <div class="seg" role="group" aria-label="Base do imposto"><button data-txb="servico" aria-pressed="${c.tax.base === 'servico'}">Só mão de obra (ISS)</button><button data-txb="total" aria-pressed="${c.tax.base === 'total'}">Total (Simples)</button></div>
+        <p class="hint">${c.tax.mode === 'fora' ? `O cliente vê a linha ${esc(taxLabel(c))}: <b>${BRL(c.taxFora)}</b>.` : `Os preços da proposta já incluem <b>${BRL(c.taxDentro)}</b> de imposto; o cliente não vê a linha. MEI com DAS fixo: use Sem.`}</p></div>` : ''}
       <div class="vrow total"><span>Total</span><b data-t="total">${BRL(c.total)}</b></div>
     </div>`;
 }
@@ -2827,6 +3024,7 @@ VIEWS.quote = {
         <div class="field"><span class="lab" id="q-nt-l">Textos prontos</span>${linhas(NOTE_CHIPS.map(([l, t], k) => linha(`data-note="${k}"`, l, { tipo: 'mais', dis: q.notes.includes(t) })), ' role="group" aria-labelledby="q-nt-l"')}</div>
       ${panelClose}
     </main>
+    <aside class="q-vivo" aria-label="Prévia ${isReport(q) ? 'do relatório' : 'da proposta'}"><div class="q-vivo-in"><div class="q-vivo-cab"><b>Prévia ao vivo</b><span class="hint">Muda enquanto você edita</span></div>${paperHTML(q, c, docMode(q))}</div></aside>
     <div class="bbar"><div class="bbar-in">
       <div class="bb-total"><small data-t="paylab">${payLabel(q, c)}</small><b data-t="paytotal">${BRL(c.payTotal)}</b></div>
       <button class="icon-btn boxed" data-menu aria-label="Mais opções do orçamento">${I.more}</button>
@@ -2882,8 +3080,11 @@ VIEWS.quote = {
     $$('[data-room-menu]', v).forEach(b => b.onclick = () => roomMenu(q, b.dataset.roomMenu));
     $('[data-new-room]', v)?.addEventListener('click', () => roomAddSheet(q));
     $('[data-conf-pdf]', v)?.addEventListener('click', e => shareConference(q, e.currentTarget));
-    $$('[data-dq]', v).forEach(b => b.onclick = () => { const i = q.items.find(x => x.id === b.dataset.id); if (!i) return; i.qty = Math.max(1, Math.round((i.qty + +b.dataset.dq) * 100) / 100); touch(q); rerender(); });
-    $$('[data-rm]', v).forEach(b => b.onclick = () => removeLine(q, b.dataset.rm));
+    $$('[data-dq]', v).forEach(b => b.onclick = () => { const i = q.items.find(x => x.id === b.dataset.id); if (!i) return; i.qty = Math.max(1, Math.round((i.qty + +b.dataset.dq) * 100) / 100); if (+b.dataset.dq < 0) ultimoMenos = { id: i.id, t: Date.now() }; touch(q); rerender(); });
+    // a lixeira aparece no lugar do − quando a quantidade chega a 1: um segundo toque logo em seguida não apaga (U9)
+    $$('[data-rm]', v).forEach(b => b.onclick = () => { if (ultimoMenos.id === b.dataset.rm && Date.now() - ultimoMenos.t < 900) return; removeLine(q, b.dataset.rm); });
+    // tocar no número abre o item com a quantidade pronta para digitar (U8)
+    $$('[data-qe]', v).forEach(b => b.onclick = () => { const i = q.items.find(x => x.id === b.dataset.qe); if (!i) return; lineSheet(q, i); setTimeout(() => { const f = document.getElementById('it-qty'); if (f) { f.focus(); f.select(); } }, 80); });
     $$('[data-edit]', v).forEach(b => b.onclick = () => lineSheet(q, q.items.find(x => x.id === b.dataset.edit)));
     $('#q-matcli', v).addEventListener('change', e => { q.materialBy = e.target.checked ? 'cliente' : 'eu'; touch(q); rerender(); });
 
@@ -2909,6 +3110,13 @@ VIEWS.quote = {
     });
     $('[data-trip]', v).onclick = () => tripSheet(q);
     $$('[data-dm]', v).forEach(b => b.onclick = () => { if (q.discount.mode === b.dataset.dm) return; q.discount.mode = b.dataset.dm; touch(q); rerender(); });
+    $('[data-pago]', v)?.addEventListener('click', () => pagoSheet(q));
+    $$('[data-pago-rm]', v).forEach(b => b.onclick = () => { const x = q.pagos.find(y => y.id === b.dataset.pagoRm); if (!x) return; q.pagos = q.pagos.filter(y => y !== x); touch(q); rerender(); toast(`Pagamento de ${BRL(x.v)} apagado.`, { label: 'Desfazer', run: () => { q.pagos.push(x); q.pagos.sort((a, b) => a.t - b.t); touch(q); rerender(); } }); });
+    // impostos (F6): o modo e a base escolhidos aqui viram o padrão dos próximos orçamentos
+    const lembraTax = () => { settings.taxMode = q.tax.mode; settings.taxPct = q.tax.pct; settings.taxBase = q.tax.base; saveSettings(); };
+    $$('[data-tx]', v).forEach(b => b.onclick = () => { q.tax = { ...taxOf(q), mode: b.dataset.tx }; if (q.tax.mode !== 'sem' && !q.tax.pct) q.tax.pct = 5; lembraTax(); touch(q); rerender(); });
+    $$('[data-txb]', v).forEach(b => b.onclick = () => { q.tax = { ...taxOf(q), base: b.dataset.txb }; lembraTax(); touch(q); rerender(); });
+    $('#q-txp', v)?.addEventListener('change', e => { const x = parseQty(e.target.value); q.tax = { ...taxOf(q), pct: Math.max(0, Math.min(30, x || 0)) }; e.target.value = fmtQty(q.tax.pct); lembraTax(); touch(q); rerender(); });
     $('#q-disc', v).addEventListener('input', e => {
       if (q.discount.mode === 'value') q.discount.value = parseMoney(e.target.value) || 0;
       else q.discount.pct = Math.min(100, parseQty(e.target.value) || 0);
@@ -2930,8 +3138,12 @@ VIEWS.quote = {
     $('#q-taxa', v)?.addEventListener('change', () => rerender());
     $('#q-mes', v)?.addEventListener('input', e => { q.payment.mesPct = Math.max(0, Math.min(20, parseQty(e.target.value) || 0)); touch(q); paint(); });
     $('#q-avd', v)?.addEventListener('input', e => { const a = q.payment.avista; if (a.mode === 'value') a.value = parseMoney(e.target.value) || 0; else a.pct = Math.max(0, Math.min(50, parseQty(e.target.value) || 0)); touch(q); paint(); });
-    $('#q-war', v).addEventListener('input', e => { q.warranty = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
-    $('#q-val', v)?.addEventListener('input', e => { q.validity = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; touch(q); });
+    // só números: o que aparece no campo é o que vale (nada de "-10" na tela e 10 por dentro)
+    const soDigitos = el => { const d = el.value.replace(/\D/g, '').slice(0, 5); if (el.value !== d) el.value = d; return parseInt(d, 10) || 0; };
+    $('#q-war', v).addEventListener('input', e => { q.warranty = soDigitos(e.target); touch(q); });
+    $('#q-war', v).addEventListener('change', e => { if (q.warranty > 1825) confirmSheet('Garantia longa', `${q.warranty} dias são mais de ${Math.floor(q.warranty / 365)} anos. É isso mesmo?`, 'Manter', () => {}, false); });
+    $('#q-val', v)?.addEventListener('input', e => { q.validity = soDigitos(e.target); touch(q); });
+    $('#q-val', v)?.addEventListener('change', e => { if (!q.validity) { q.validity = 1; e.target.value = '1'; touch(q); toast('A validade mínima é de 1 dia: a proposta vale até amanhã.'); } else if (q.validity > 365) confirmSheet('Validade longa', `A proposta valeria por ${q.validity} dias. Preços de material mudam: é isso mesmo?`, 'Manter', () => {}, false); });
     // datas do serviço: dias de serviço e calendário
     bindDays(v, q);
     $('#q-tbd', v)?.addEventListener('change', e => { q.dateTbd = e.target.checked; touch(q); $('#q-cal-area', v).hidden = q.dateTbd; const cdc = $('#q-cdc', v); if (cdc) cdc.hidden = q.dateTbd || !!q.dates.length; requestAnimationFrame(() => paintSums(v, quoteSums(q, compute(q)))); });
@@ -2981,6 +3193,7 @@ VIEWS.quote = {
     $('[data-receipt]', v)?.addEventListener('click', () => receiptSheet(q));
   },
 };
+let ultimoMenos = { id: '', t: 0 };
 function removeLine(q, id) {
   const idx = q.items.findIndex(x => x.id === id); if (idx < 0) return;
   const [gone] = q.items.splice(idx, 1); touch(q); rerender();
@@ -3082,22 +3295,56 @@ function groupByCat(list) {
 }
 const hl = (s, qf) => { if (!qf) return esc(s); const i = fold(s).indexOf(qf); return i < 0 ? esc(s) : esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i, i + qf.length)) + '</mark>' + esc(s.slice(i + qf.length)); };
 let lastRoomKind = null;
+/* F5: depois de adicionar serviços com composição, o app sugere o material (quantidades editáveis, marque o que vai) */
+function sugerirMaterial(q, svcAdd, room = '') {
+  const tot = new Map();
+  Object.entries(svcAdd).forEach(([pid, n]) => { const sv = prices.find(x => x.id === pid); (sv && sv.comp || []).forEach(c => { const m = prices.find(x => x.kind === 'mat' && norm(x.name) === norm(c.n)); if (m) tot.set(m.id, Math.round(((tot.get(m.id) || 0) + c.q * n) * 100) / 100); }); });
+  if (!tot.size || q.materialBy === 'cliente') return;
+  const L = [...tot].map(([id, qtd]) => ({ m: prices.find(x => x.id === id), qtd, on: true }));
+  const nomes = Object.keys(svcAdd).map(id => (prices.find(x => x.id === id) || {}).name).filter(Boolean);
+  openSheet({ title: 'Material sugerido', body: `<p class="hint">Para ${esc(joinPt(nomes.map(n => n.charAt(0).toLowerCase() + n.slice(1))))}. Desmarque o que o cliente já tem e ajuste as quantidades.</p>
+      <div class="sug-list">${L.map((x, k) => `<label class="sug-row"><input type="checkbox" class="sw-check" data-sk="${k}" checked><span class="sug-n">${esc(x.m.name)}<small>${BRL(x.m.price)} por ${unitName(x.m.unit)}</small></span>
+        <input type="text" inputmode="decimal" class="sug-q" data-sq="${k}" value="${fmtQty(x.qtd)}" aria-label="Quantidade de ${esc(x.m.name)}"><span class="sug-u">${unitTxt(x.qtd, x.m.unit)}</span></label>`).join('')}</div>
+      <p class="hint">A sugestão vem da tabela de preços: em Preços, toque no serviço para mudar o material que costuma ir.</p>`,
+    foot: `<button class="btn ghost" data-cancel>Agora não</button><button class="btn primary" data-ok>${I.plus}Adicionar material</button>`,
+    onMount: s2 => {
+      $('[data-cancel]', s2).onclick = () => closeSheet();
+      $('[data-ok]', s2).onclick = () => {
+        let n = 0, alto = 0;
+        L.forEach((x, k) => { if (!$(`[data-sk="${k}"]`, s2).checked) return; const qq = parseQty($(`[data-sq="${k}"]`, s2).value); if (!qq) return; if (qq > QTD_ALTA) alto++;
+          const ex = q.items.find(i => i.kind === 'mat' && norm(i.name) === norm(x.m.name) && i.price === x.m.price && (!q.useRooms || roomOf(q, i) === room));
+          if (ex) ex.qty = Math.round((ex.qty + qq) * 100) / 100; else q.items.push({ id: uid(), kind: 'mat', name: x.m.name, unit: x.m.unit, qty: qq, price: x.m.price, room: q.useRooms ? room : '' });
+          n++; });
+        touch(q); closeSheet(true); rerender();
+        if (n) toast(`${plural(n, 'material adicionado', 'materiais adicionados')}.`);
+      };
+    } });
+}
 function pickerSheet(q, kind, room) {
   const inRoom = q.useRooms;
   room = inRoom ? (room || '') : '';
   let k = inRoom && lastRoomKind ? lastRoomKind : kind, query = '', added = 0;
+  const svcAdd = {}; // serviços adicionados nesta janela: nome → quantidade (para sugerir o material)
   const footHTML = () => `<button class="btn primary block" data-done>${added ? `${I.check}Pronto · ${plural(added, 'item adicionado', 'itens adicionados')}` : 'Fechar'}</button>`;
   const listHTML = () => {
     const qf = fold(query);
     const list = prices.filter(p => p.kind === k && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
     const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name) && (!inRoom || roomOf(q, i) === room)).map(i => i.qty));
+    // com busca: lista única, primeiro a palavra inteira ("DR" acha Instalação de DR antes de "driver" e "quadro") (U10)
+    if (qf) {
+      const rx = new RegExp('(^|[^a-z0-9])' + qf.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z0-9])');
+      const nota = p => { const n = fold(p.name); return rx.test(n) ? 4 : n.startsWith(qf) ? 3 : n.split(/[^a-z0-9]+/).some(w => w.startsWith(qf)) ? 2 : n.includes(qf) ? 1 : 0.5; };
+      const achados = list.map(p => [nota(p), p]).sort((x, y) => y[0] - x[0] || x[1].name.localeCompare(y[1].name, 'pt-BR')).map(x => x[1]);
+      if (achados.length) return `<div class="pk-list">${achados.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}<small class="pk-cat">${esc(p.cat)}</small>${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}</span><span class="pk-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}</div>`
+        + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}Adicionar “${esc(query)}”</button>`;
+    }
     const rows = groupByCat(list).map(([cat, L]) => { const n0 = sum(L.map(inQuote)); return panel(`pk:${k}:${cat}`, '', esc(cat), qf ? null : resumoDe(L, p => p.name), `<div class="pk-list">${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}</span><span class="pk-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}</div>`, { right: n0 ? `<span class="pk-n">${fmtQty(n0)}</span>` : conta(L.length), force: qf ? true : undefined }); }).join('');
     return (rows || KitFacil.ui.vazio({ titulo: `Nada com “${esc(query)}”`, texto: `na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}. Adicione como item fora da tabela.` }))
       + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}${query ? `Adicionar “${esc(query)}”` : `${k === 'svc' ? 'Serviço' : 'Material'} fora da tabela`}</button>`;
   };
   openSheet({ title: inRoom ? `Adicionar em ${roomName(q, room)}` : 'Adicionar ao orçamento', tall: true,
     body: `<div class="pk-list" id="pk-list">${listHTML()}</div>`, foot: footHTML(),
-    onClose: () => rerender(),
+    onClose: () => { rerender(); if (Object.keys(svcAdd).length) setTimeout(() => sugerirMaterial(q, svcAdd, room), 120); },
     onMount: s => {
       const body = $('.kf-dlg-corpo', s);
       body.insertAdjacentHTML('beforebegin', `<div class="pk-tools">
@@ -3111,7 +3358,7 @@ function pickerSheet(q, kind, room) {
       $$('[data-k]', s).forEach(b => b.onclick = () => { k = b.dataset.k; if (inRoom) lastRoomKind = k; $$('[data-k]', s).forEach(x => { x.setAttribute('aria-selected', String(x === b)); x.tabIndex = x === b ? 0 : -1; }); paintList(); body.scrollTop = 0; });
       body.addEventListener('click', e => {
         const row = e.target.closest('[data-pid]');
-        if (row) { const p = prices.find(x => x.id === row.dataset.pid); if (!p) return; addFromPrice(q, p, room); added++; paintList(); $('.kf-dlg-pe', s).innerHTML = footHTML(); bindDone(); return; }
+        if (row) { const p = prices.find(x => x.id === row.dataset.pid); if (!p) return; addFromPrice(q, p, room); added++; if (p.kind === 'svc' && (p.comp || []).length) svcAdd[p.id] = (svcAdd[p.id] || 0) + 1; paintList(); $('.kf-dlg-pe', s).innerHTML = footHTML(); bindDone(); return; }
         if (e.target.closest('[data-custom]')) customItemSheet(q, k, query, room);
       });
       const bindDone = () => { $('[data-done]', s).onclick = () => closeSheet(); };
@@ -3154,7 +3401,7 @@ function lineSheet(q, i) {
         if (!r.name) return toast('Escreva a descrição do item.');
         if (!r.qty) return toast('Quantidade inválida. Use, por exemplo, 2 ou 12,5.');
         if (r.price === null) return toast('Informe o valor unitário.');
-        Object.assign(i, r); touch(q); closeSheet(true); rerender(); toast('Item alterado.');
+        conferirQtd(r.qty, r.name, () => { Object.assign(i, r); touch(q); closeSheet(true); rerender(); toast('Item alterado.'); });
       };
     } });
 }
@@ -3312,8 +3559,8 @@ function tripSheet(q) {
 function paperHTML(q, c, mode = docMode(q)) {
   const s = settings, px = pixOf(q, c, mode), rep = mode === 'report';
   const biz = s.company || s.name;
-  const sub = [s.company && s.name ? s.name : '', s.phone ? fmtPhone(s.phone) : '', s.email, s.doc, s.city].filter(Boolean);
-  const row = (i, dim) => `<tr${dim ? ' class="dim"' : ''}><td>${esc(i.name)}<small>${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)}</small></td><td>${BRL(lineTotal(i))}</td></tr>`;
+  const sub = [s.company && s.name ? s.name : '', s.phone ? fmtPhone(s.phone) : '', s.email, s.doc, s.registro, s.city].filter(Boolean);
+  const row = (i, dim) => `<tr${dim ? ' class="dim"' : ''}><td>${esc(i.name)}<small>${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(priceShow(c, i))}</small></td><td>${BRL(lineShow(c, i))}</td></tr>`;
   let body;
   if (q.useRooms) {
     body = roomList(q).filter(g => g.items.length).map(g => {
@@ -3352,6 +3599,7 @@ function paperHTML(q, c, mode = docMode(q)) {
       ${c.mat.length ? `<div><span>Material${c.matIn ? '' : ' por conta do cliente'}</span><b>${c.matIn ? BRL(c.matTotal) : '—'}</b></div>` : ''}
       ${c.travel ? `<div><span>Deslocamento</span><b>${BRL(c.travel)}</b></div>` : ''}
       ${c.discount ? `<div><span>Desconto${q.discount.mode === 'pct' ? ` de ${fmtQty(q.discount.pct)}%` : ''}</span><b>−${BRL(c.discount)}</b></div>` : ''}
+      ${c.taxFora ? `<div><span>${esc(taxLabel(c))}</span><b>${BRL(c.taxFora)}</b></div>` : ''}
       <div class="p-grand"><span>TOTAL</span><span>${BRL(c.total)}</span></div>
     </div>
     <dl class="p-cond">
@@ -3494,6 +3742,7 @@ function quoteMessage(q, c, mode = docMode(q)) {
   if (c.mat.length && c.matIn) L.push(`Material: ${BRL(c.matTotal)}`);
   if (c.travel) L.push(`Deslocamento${q.trip ? `, ${tripShort(q.trip)}` : ''}: ${BRL(c.travel)}`);
   if (c.discount) L.push(`Desconto: −${BRL(c.discount)}`);
+  if (c.taxFora) L.push(`${taxLabel(c)}: ${BRL(c.taxFora)}`);
   L.push(`*Total: ${BRL(c.total)}*`, '', `*Pagamento:* ${payText(q, c)}`);
   if (outrasTxt(q)) L.push(`*Ou, se preferir:* ${capFirst(outrasTxt(q))}`);
   if (!rep && schedText(q)) L.push(`*Execução:* ${schedText(q)}`);
@@ -3624,7 +3873,7 @@ function pdfHeader(K, kind, num, extra) {
   const { doc, M, CW, txt, wrap } = K, s = settings;
   const top = M;
   // uma informação por linha, como na tela; a logo vai do topo do nome até a base da última linha
-  const subs = [s.company && s.name ? s.name : '', s.phone ? fmtPhone(s.phone) : '', s.email, s.doc, s.city].filter(Boolean);
+  const subs = [s.company && s.name ? s.name : '', s.phone ? fmtPhone(s.phone) : '', s.email, s.doc, s.registro, s.city].filter(Boolean);
   const NS = 13.5, SS = 8.8, NL = 5.6, SL = 4.1, cap = NS * 0.3528 * 0.718;
   const ratio = s.logo ? (s.logoRatio || 1) : 1;
   const names = wrap(s.company || s.name || 'Seu nome ou empresa', CW - Math.min(44, 18 * ratio) - 55, NS, true).slice(0, 2);
@@ -3773,6 +4022,7 @@ async function buildQuotePDF(q, mode = docMode(q)) {
   if (c.mat.length) rows.push([c.matIn ? 'Material' : 'Material por conta do cliente', c.matIn ? BRL(c.matTotal) : '-']);
   if (c.travel) rows.push(['Deslocamento', BRL(c.travel)]);
   if (c.discount) rows.push(['Desconto' + (q.discount.mode === 'pct' ? ` de ${fmtQty(q.discount.pct)}%` : ''), '- ' + BRL(c.discount)]);
+  if (c.taxFora) rows.push([taxLabel(c), BRL(c.taxFora)]);
   const totH = rows.length * 6 + 13;
   need(Math.max(totH, px && qr ? 34 : 0) + 6);
   const bw = 82, bx = M + CW - bw, top = y;
@@ -4023,9 +4273,15 @@ VIEWS.prices = {
     $('[data-adjust]', v).onclick = adjustSheet;
   },
 };
+function compEditorHTML(it) {
+  const C = it.comp || [], mats = prices.filter(x => x.kind === 'mat' && !C.some(c => norm(c.n) === norm(x.name))).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true }));
+  return `<div class="field"><span class="lab">Material que costuma ir, por ${esc(unitName(it.unit || 'un'))}</span>
+    ${C.length ? `<div class="sug-list">${C.map((c, k) => { const m = prices.find(x => x.kind === 'mat' && norm(x.name) === norm(c.n)); return `<div class="sug-row"><span class="sug-n">${esc(c.n)}${m ? '' : '<small>Fora da tabela de material</small>'}</span><input type="text" inputmode="decimal" class="sug-q" data-cq="${k}" value="${fmtQty(c.q)}" aria-label="Quantidade de ${esc(c.n)}"><span class="sug-u">${m ? unitTxt(c.q, m.unit) : ''}</span><button type="button" class="icon-btn" data-crm="${k}" aria-label="Tirar ${esc(c.n)}">${I.x}</button></div>`; }).join('')}</div>` : '<p class="hint">Nenhum. Com material aqui, o app sugere a lista ao adicionar o serviço num orçamento.</p>'}
+    <select id="pp-comp-add" aria-label="Incluir material"><option value="">Incluir material…</option>${mats.map(m => `<option>${esc(m.name)}</option>`).join('')}</select></div>`;
+}
 function priceSheet(p) {
   const isNew = !p;
-  const it = p ? { ...p } : { kind: priceKind, cat: '', name: '', unit: 'un', price: 0 };
+  const it = p ? { ...p, comp: (p.comp || []).map(c => ({ ...c })) } : { kind: priceKind, cat: '', name: '', unit: 'un', price: 0, comp: [] };
   // mesmo padrão do estoque e das ferramentas: 1. categoria, 2. o item
   const cats = k => { const o = catOrder(k); return [...new Set(prices.filter(x => x.kind === k).map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = o.indexOf(a), ib = o.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); }); };
   const catOpts = k => `${isNew ? '<option value="" hidden>Escolha a categoria</option>' : ''}${cats(k).map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option>`;
@@ -4040,13 +4296,21 @@ function priceSheet(p) {
         <div class="field"><label for="pp-unit">Cobrado por</label><select id="pp-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === it.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       </div>
       </div>
+      <div id="pp-comp" ${it.kind === 'svc' ? '' : 'hidden'}>${compEditorHTML(it)}</div>
       ${p && inStock(p) ? `<p class="hint">No estoque: ${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}${p.cost ? `, custo ${BRL(p.cost)}` : ''}. O preço daqui é o repasse ao cliente. Altere a quantidade e o custo em Gestão.</p>` : ''}`,
     foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
     onMount: s => {
       if (!isTouch) $(isNew ? '#pp-cat-sel' : '#pp-price', s).focus();
       const cs = $('#pp-cat-sel', s), cn = $('#pp-cat', s);
       cs.addEventListener('change', () => { const nv = cs.value === '__nova'; cn.hidden = !nv; if (nv) cn.focus(); $('#pp-resto', s).hidden = !cs.value; if (cs.value && !nv && !isTouch) $('#pp-name', s).focus(); });
-      $$('[data-ik]', s).forEach(b => b.onclick = () => { it.kind = b.dataset.ik; $$('[data-ik]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); cs.innerHTML = catOpts(it.kind); cs.dispatchEvent(new Event('change')); });
+      $$('[data-ik]', s).forEach(b => b.onclick = () => { it.kind = b.dataset.ik; $$('[data-ik]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); cs.innerHTML = catOpts(it.kind); cs.dispatchEvent(new Event('change')); $('#pp-comp', s).hidden = it.kind !== 'svc'; });
+      // composição (F5): material por unidade do serviço
+      const compArea = $('#pp-comp', s), pintaComp = () => { compArea.innerHTML = compEditorHTML(it); };
+      compArea.addEventListener('click', e => { const rm = e.target.closest('[data-crm]'); if (rm) { it.comp.splice(+rm.dataset.crm, 1); pintaComp(); } });
+      compArea.addEventListener('change', e => {
+        const qi = e.target.closest('[data-cq]'); if (qi) { const v = parseQty(qi.value); if (v) it.comp[+qi.dataset.cq].q = v; qi.value = fmtQty(it.comp[+qi.dataset.cq].q); }
+        const ad = e.target.closest('#pp-comp-add'); if (ad && ad.value) { it.comp = [...(it.comp || []), { n: ad.value, q: 1 }]; pintaComp(); }
+      });
       $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
       $('[data-del]', s)?.addEventListener('click', () => {
         const idx = prices.findIndex(x => x.id === p.id); if (idx < 0) return;
@@ -4059,7 +4323,8 @@ function priceSheet(p) {
         if (!cat) return toast(cs.value === '__nova' ? 'Escreva o nome da nova categoria.' : 'Escolha a categoria.');
         if (!name) return toast('Escreva a descrição do item.');
         if (price === null) return toast('Informe o preço.');
-        const data = { kind: it.kind, name, price, unit: $('#pp-unit', s).value, cat };
+        const data = { kind: it.kind, name, price, unit: $('#pp-unit', s).value, cat, comp: it.kind === 'svc' ? (it.comp || []).filter(c => c.n && c.q > 0) : undefined };
+        if (!data.comp || !data.comp.length) delete data.comp;
         const mudou = !isNew && p.price !== price;
         if (isNew) prices.push({ id: uid(), ...data }); else { Object.assign(p, data); if (mudou) p.ref = false; }
         savePrices(); priceKind = it.kind; closeSheet(true); rerender(); toast(isNew ? `${name} adicionado.` : mudou ? 'Preço salvo e conferido.' : 'Item salvo.');
@@ -4747,6 +5012,7 @@ VIEWS.settings = {
               ${f('phone', 'WhatsApp', '(11) 90000-0000', 'tel', 'inputmode="tel"')}
               ${f('email', 'E-mail <span class="lab-opt">opcional</span>', 'voce@email.com', 'email', 'autocapitalize="off"')}
               ${f('doc', 'CPF ou CNPJ <span class="lab-opt">opcional</span>', 'Sai no recibo')}
+              ${f('registro', 'Registro profissional <span class="lab-opt">opcional</span>', 'CREA-DF 123456/D, CFT ou NR-10')}
               ${f('city', 'Cidade', 'Ex.: São Paulo', 'text', 'autocapitalize="words"')}
             </div>`),
         },

@@ -2,6 +2,21 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.22.0 · 2026-11-05
+
+- **Impostos (F6):** Sem, Por fora ou Embutido, alíquota e base (só mão de obra, como o ISS, ou o total, como o Simples). Fica como padrão dos próximos orçamentos; orçamentos antigos continuam sem imposto.
+- **Composição por serviço (F5):** 17 serviços vêm com o material que costuma ir; ao adicionar, o app sugere a lista com as quantidades editáveis. Em Preços, cada serviço tem o seu material.
+- **Pagamentos e a receber (F10):** Registrar pagamento nos orçamentos aprovados e concluídos; o resumo do mês ganhou A receber.
+- **Registro profissional (F7)** em Ajustes, Conta e perfil, no cabeçalho dos documentos.
+- **Catálogo revisado (F9):** 22 itens novos, 6 nomes mais precisos e 3 itens repetidos fora (só se ainda estiverem com o preço de fábrica e fora de qualquer orçamento).
+- **Números que mudavam sem avisar (E6, E7, E8, U12):** 1.000 é mil; garantia e validade só aceitam números e o campo mostra o que vale; quantidades acima de 10 mil, garantia acima de 5 anos e validade acima de 1 ano pedem confirmação; validade 0 vira 1 dia.
+- **Cartão (E9):** com a taxa repassada, as parcelas arredondam para cima e você nunca recebe menos que o total.
+- **Ambientes (E10):** a contagem é a mesma antes e depois de aprovar.
+- **Lista de itens (U8, U9, E11):** toque no número para digitar a quantidade; a lixeira não apaga com um segundo toque logo em seguida; − e + dizem o nome do item ao leitor de tela.
+- **Busca (E12, U10):** a palavra inteira vem primeiro, em lista única com a categoria.
+- **Computador (U11, U13):** proposta ao vivo ao lado do editor a partir de 1360 px; no teclado, barra de cima, depois o menu, depois o conteúdo.
+- **Apresentação ao abrir e guia em 3 níveis** (Kit Fácil 2.11).
+
 ## 2.21.2 · 2026-11-04
 
 - **Preços e Gestão sem a linha de apoio** embaixo do título: as guias já dizem o que há na tela. Exceção à lei 6

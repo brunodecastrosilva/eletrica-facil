@@ -1,13 +1,13 @@
 {
-  "kit": "2.10.0",
+  "kit": "2.11.0",
   "arquivos": {
-    "kit-facil.js": "e8cc0b47159a28006d10c2b0d83ff2ae2a5ed9df84051be2de941ce38859f25e",
-    "kit-facil.css": "ed7fc61301e1e7eb9a0c597641a035e2e28a62a67671b3343d19d22eccfd77db",
+    "kit-facil.js": "c2c60400e5b1566d4d05b69cd1690b6b2c4f4d4f904404d3f7c099c6ef3860f9",
+    "kit-facil.css": "ccaa0e591b2c5ba9cb577da1d63317483d4968b5e25f79cbd425be3f25e7d532",
     "regras-firestore-feedback.txt": "ac13fef5c5d9ab9a9c0931ffc04153022eb5bc964c9c5f4cf40bd4352602b7e5",
     "servidor.mjs": "b6cc0deb2154acb2a59d00ad2223d2a69214d40c28680bc05b29777e2b273b57",
     "verificar.mjs": "54e89995cfc324762eb76fb3e0dc13dc556123da5b00eb8e88e3ad4a17cba214",
     "testar.mjs": "53f0ed2efb8b8baaecaabe416fc373b3bc95a574025acf8dd5aec97f68a3642b",
-    "PADRAO.md": "80ad937f46c3968f03ea5302ab98df4ea3e341a28ccd25174a204b9ec25e7659",
+    "PADRAO.md": "015a020f25ab103430266fde84675c31fb466c059d96a3f4e9ea3562b3c3b3d4",
     "LEIAME.md": "738bccb13fba6bf8c7a736c5288bea7ec2d4bceb3218c4b3ecabd957b8f7f682",
     "testes/ambiente.mjs": "548b6c29bb1eb757face04d46c47135b63495f83da8db89e591f404f34ad47ee",
     "testes/kit.test.mjs": "a3b9e05cfc4eec6de8a344963e651b376dee9486630256ba598bd432b61b3607",
