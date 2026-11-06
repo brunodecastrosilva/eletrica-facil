@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '2.11.0';
+  const VERSAO = '2.11.1';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -883,17 +883,21 @@
       aoMontar: d => { const e = $('[data-kf-exemplo]', d); if (e) e.onclick = () => { fecharDialogo(true); try { b.exemplo(); } catch (x) { console.warn(x); } }; } });
     return true;
   }
+  let novoAoAbrir = null;
   function primeiraAbertura(tentativa = 0) {
     if (!C.app) return;
     // nos testes automáticos (navegador controlado) as janelas automáticas só abrem quando o teste pede
     if (navigator.webdriver && !global.KF_TESTE_ABERTURA) return;
+    // Kit 2.11.1: "pessoa nova" é decidido ao abrir, antes da tela de primeiro uso do app cadastrar algo;
+    // assim quem acabou de começar não recebe Novidades logo depois do cadastro
+    if (novoAoAbrir === null) { try { novoAoAbrir = !!(C.boasVindas && C.boasVindas.novo && C.boasVindas.novo()); } catch { novoAoAbrir = false; } }
     // espera o app terminar de abrir as janelas dele (link de conexão, guia, primeiro uso próprio)
     if ((dialogoAberto() || (C.ocupado && C.ocupado())) && tentativa < 20) { setTimeout(() => primeiraAbertura(tentativa + 1), 1500); return; }
     const visto = ler(chaveVisto(), null);
     gravar(chaveVisto(), C.versao);
     if (dialogoAberto() || guia.ativo() || (C.guia && C.guia.ocupado && C.guia.ocupado())) return;
     if (visto === C.versao) { if (C.apresentacao && apresLigada()) abrirApresentacao(); return; }
-    let novo = false; try { novo = !!(C.boasVindas && C.boasVindas.novo && C.boasVindas.novo()); } catch {}
+    const novo = novoAoAbrir;
     // primeira vez: a apresentação faz o papel das boas-vindas (o app com tela própria de primeiro uso não ganha janela)
     if (visto === null && novo) { if (C.apresentacao && (C.apresentacao.primeiroUso || (C.boasVindas && C.boasVindas.exemplo))) abrirApresentacao({ primeiroUso: true }); else abrirBoasVindas(); return; }
     if ((visto !== null || !novo) && abrirNovidades()) return;
@@ -1025,17 +1029,27 @@
       if (t) {
         const r = t.getBoundingClientRect(), naNav = !!(baixo && baixo.contains(t)), naBarra = !!(barra && barra.contains(t));
         const fundo = baixo && !naNav ? baixo.getBoundingClientRect().top - 2 : vh - 4;
-        const y1 = Math.max(r.top - pad, naBarra || naNav ? 2 : topoLivre), y2 = Math.min(r.bottom + pad, fundo);
+        let y1 = Math.max(r.top - pad, naBarra || naNav ? 2 : topoLivre), y2 = Math.min(r.bottom + pad, fundo);
+        const MIN = 44; // o destaque nunca fica menor que um alvo de toque
+        if (y2 - y1 >= 8) {
+          if (y2 + gap + ch <= fundo - gap) top = y2 + gap;
+          else if (y1 - gap - ch >= topoLivre) top = y1 - gap - ch;
+          else {
+            // Kit 2.11.1: destaque alto demais para caber com o cartão. O cartão fica na ponta com mais destaque
+            // visível e o destaque mostra só a parte que sobra: o cartão nunca cobre o que está destacado.
+            const emBaixo = fundo - gap - ch, emCima = topoLivre + gap;
+            const sobraBaixo = Math.min(y2, emBaixo - gap) - y1, sobraCima = y2 - Math.max(y1, emCima + ch + gap);
+            if (sobraBaixo >= MIN && sobraBaixo >= sobraCima) { top = emBaixo; y2 = Math.min(y2, emBaixo - gap); }
+            else if (sobraCima >= MIN) { top = emCima; y1 = Math.max(y1, emCima + ch + gap); }
+            else { top = emBaixo; y2 = y1; } // não sobra nada: escurece a tela e mostra só o cartão
+          }
+        }
         furo.hidden = y2 - y1 < 8;
         Object.assign(furo.style, { left: (r.left - pad) + 'px', top: y1 + 'px', width: (r.width + pad * 2) + 'px', height: Math.max(0, y2 - y1) + 'px' });
-        if (!furo.hidden && y2 + gap + ch <= fundo - gap) top = y2 + gap;
-        else if (!furo.hidden && y1 - gap - ch >= topoLivre) top = y1 - gap - ch;
-        // sem espaço acima nem abaixo: o cartão vai para a ponta oposta ao destaque, para não cobri-lo
-        else if (!furo.hidden) lado = (y1 + y2) / 2 > vh / 2 ? 'cima' : 'baixo';
       } else furo.hidden = true;
       c.classList.toggle('kf-guia-solto', top === undefined && lado === 'baixo');
-      c.classList.toggle('kf-guia-alto', top === undefined && lado === 'cima');
-      c.style.top = top === undefined ? (lado === 'cima' ? topoLivre + gap + 'px' : '') : top + 'px';
+      c.classList.toggle('kf-guia-alto', false);
+      c.style.top = top === undefined ? '' : top + 'px';
       this.el.classList.toggle('kf-guia-escuro', !t || furo.hidden);
     },
   };

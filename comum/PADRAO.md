@@ -4,7 +4,7 @@ Regras comuns do **Conta Fácil**, do **Elétrica Fácil**, do **Estudo Fácil**
 novo do projeto. Este arquivo fica em `comum/PADRAO.md`, igual em todos os repositórios, junto com o **Kit Fácil** (o
 código comum).
 
-Versão do padrão: 2.9 · Kit Fácil 2.11.0 · novembro de 2026.
+Versão do padrão: 2.10 · Kit Fácil 2.11.1 · novembro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -412,7 +412,10 @@ Regularidade em todas as telas, guias e seções (lei 6). Cada coisa tem **um** 
 |---|---|---|
 | Trocar a parte de uma mesma tela (Materiais · Ferramentas · Checklist; Mão de obra · Material) | **Guias** do Kit: `KitFacil.ui.abas({ itens: [[id, nome, n]], atual, rotulo, dado })` (`kf-abas`) | sublinhado na cor de destaque; setas do teclado andam entre as guias; contagem como "Nome · n". Nenhum app tem guias próprias (`role="tablist"` só no Kit) |
 | Filtrar uma lista ou escolher um valor (Todos · Em aberto; À vista · Entrada) | **Segmento** (`kf-seg` ou o segmento do app nas mesmas medidas) | o escolhido é **claro** (fundo `--kf-seg-on`: branco no tema claro, um tom acima do trilho no escuro; sombra leve), como em Ajustes › Aparência; contagem como "Nome · n" |
-| Escolher várias etiquetas (estilos, dias, filtros múltiplos) | **Etiqueta** (chip) do app | a escolhida fica preenchida com a cor de destaque; canto de pílula |
+| Escolher uma opção numa lista de dados (turma, pessoa, quem paga) | **Lista suspensa**: `<select>`, que vira a lista do Kit | nunca chips ou cartões lado a lado (Padrão 2.10) |
+| Marcar várias pessoas ou coisas (quem consumiu, quem faz parte) | **Lista de marcar**: uma linha por item, um embaixo do outro, com a caixa de marcar à esquerda | alvo de 44 px por linha; nunca chips lado a lado |
+| Resumo de valores (consumo, serviço, total) | **Lista vertical**: rótulo à esquerda, valor à direita, uma linha por valor; o total destacado | nunca quadrinhos lado a lado |
+| Grupos de dados (rankings, listas longas) | **Seções que abrem e fecham** (`details data-kf-secao`), uma embaixo da outra, com o resumo visível fechada | nunca cartões lado a lado, nem no computador |
 | Botão | `kf-btn` (ou o botão do app nas mesmas medidas) | altura `--kf-btn-h` (48 px) ou `--kf-btn-h-p` (40 px), canto `--kf-r-btn` (12 px). **Uma só cor de botão principal: a de destaque**, para a ação principal da tela; o resto é contornado (`kf-sec`) |
 | Aviso dentro da tela | **Faixa** do Kit: `KitFacil.ui.faixa({ tipo, html, acao })` (`kf-faixa`; tipos dica, info, alerta, erro, ok) | no máximo um botão, sempre contornado |
 | Caixa de conteúdo, seção, item de lista | **Cartão** (`kf-cartao`, `kf-bloco` ou o cartão do app nas mesmas medidas) | canto `--kf-r-cartao` (16 px), linha de 1 px |
@@ -422,6 +425,13 @@ Regularidade em todas as telas, guias e seções (lei 6). Cada coisa tem **um** 
 
 O `npm run verificar` acusa botão, segmento, cartão, faixa ou guias com canto, altura ou fundo fora dessas medidas, e
 guias próprias (`role="tablist"` fora do Kit).
+
+**Nada lado a lado (Padrão 2.10, lei 6).** Dados nunca ficam em vários cartões, chips ou quadrinhos lado a lado, em
+nenhuma largura de tela: escolha de um item é lista suspensa; marcar vários é lista de marcar; resumo é lista vertical;
+grupos são seções que abrem e fecham. Ficam de fora só os controles: segmento (% · R$; Igual · Por unidade), botões de
+ação no pé (Cancelar · Salvar) e a área superior (nuvem · chopp · balão). Cada app se ajusta na sua vez de revisão
+(Conta Fácil desde 1.13.0); peças do Kit que ainda ficam lado a lado (os 3 níveis do guia em Ajustes) mudam na vez de
+cada app, por decisão do Bruno (05/11/2026).
 
 ## 10. Como mudar o Kit Fácil
 

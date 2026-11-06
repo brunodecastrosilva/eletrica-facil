@@ -123,8 +123,9 @@ export function firestoreFalso({ modo = 'aceitar', regra = 'atual' } = {}) {
 
 /* ---------- abrir o app num "aparelho" (contexto separado do navegador) ---------- */
 const RUIDO = /Failed to load resource|net::ERR_|ERR_INTERNET_DISCONNECTED|ERR_FAILED/;
-export async function aparelho(amb, { github, firestore, viewport = { width: 390, height: 844 }, caminho = '', antes } = {}) {
-  const ctx = await amb.browser.newContext({ viewport, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', serviceWorkers: 'block' });
+export async function aparelho(amb, { github, firestore, viewport = { width: 390, height: 844 }, caminho = '', antes, toque = false } = {}) {
+  // toque: true simula um celular de verdade (tela de toque), para testar segurar e arrastar com o dedo
+  const ctx = await amb.browser.newContext({ viewport, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', serviceWorkers: 'block', ...(toque ? { hasTouch: true, isMobile: true } : {}) });
   await ctx.route('**/*', route => {
     const u = new URL(route.request().url());
     if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return route.continue();

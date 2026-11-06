@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.22.1 · 2026-11-05
+
+- **Guia que não cobre o destaque (Kit Fácil 2.11.1, N6):** quando o destaque é alto demais para caber com o cartão, o cartão vai para a ponta com mais espaço e o destaque mostra só a parte visível.
+- **Padrão 2.10:** regra nova de nada lado a lado (listas suspensas, listas de marcar, resumo em lista vertical); este app se ajusta na vez dele.
+
 ## 2.22.0 · 2026-11-05
 
 - **Impostos (F6):** Sem, Por fora ou Embutido, alíquota e base (só mão de obra, como o ISS, ou o total, como o Simples). Fica como padrão dos próximos orçamentos; orçamentos antigos continuam sem imposto.
