@@ -2,6 +2,10 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.22.2 · 2026-11-06
+
+- **Kit Fácil 2.12.0:** o destaque do guia acompanha a rolagem sem atraso e fica acima das janelas abertas pelo guia; o Kit passa a aceitar níveis de guia definidos pelo app e o guia ao vivo (o Conta Fácil já usa; este app migra na vez dele).
+
 ## 2.22.1 · 2026-11-05
 
 - **Guia que não cobre o destaque (Kit Fácil 2.11.1, N6):** quando o destaque é alto demais para caber com o cartão, o cartão vai para a ponta com mais espaço e o destaque mostra só a parte visível.

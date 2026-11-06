@@ -4,7 +4,7 @@ Regras comuns do **Conta Fácil**, do **Elétrica Fácil**, do **Estudo Fácil**
 novo do projeto. Este arquivo fica em `comum/PADRAO.md`, igual em todos os repositórios, junto com o **Kit Fácil** (o
 código comum).
 
-Versão do padrão: 2.10 · Kit Fácil 2.11.1 · novembro de 2026.
+Versão do padrão: 2.11 · Kit Fácil 2.12.0 · novembro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -204,6 +204,18 @@ A pessoa escolhe **Essencial** (só o nível 1, o mínimo para usar hoje), **Exp
 (tudo). O guia abre pela apresentação, por *Ajustes → Preferências gerais → Guia do app* e por onde o app quiser
 (`KitFacil.guia.escolher()`); no fim, oferece o nível seguinte. O cartão do guia nunca cobre o destaque: sem espaço acima
 nem abaixo, vai para a ponta oposta da tela.
+
+**Guia em dois níveis, com o completo ao vivo (Kit 2.12, lei 6; padrão novo, cada app migra na sua vez).** O app define
+os próprios níveis (`guia.niveis: [{ nome: 'Simplificado' }, { nome: 'Completo' }]`, com `guia.explicacao` acima da
+lista); eles aparecem numa lista, um por linha, só com o nome. O passo com `niveis: [n]` aparece só nesse nível.
+**Simplificado:** poucos passos, só destaque, na comanda/tela de exemplo. **Completo:** cada passo tem `acao: async m => {}`
+e o app faz a ação na tela, ao vivo, enquanto o cartão diz "Acompanhe: o app está fazendo este passo" e o Próximo espera.
+As "mãos" do guia (`m`): `apontar`, `tocar` (com `semClique` quando o efeito é do app), `digitar`, `escolher`, `esperar`,
+`destacar` e `voltar`; um dedo se move até o alvo e mostra o toque. `fim` (seletor ou função) diz o que destacar
+quando a ação termina. O completo roda numa demonstração que não salva nada. Destaque: aponte partes pequenas (campo,
+botão, cabeçalho do cartão), nunca cartões inteiros que não cabem na tela do celular; ele acompanha a rolagem sem
+atraso e, com uma janela aberta pelo guia, fica por cima dela. Fechar o guia no meio de uma ação fecha a janela que ela
+abriu. Movimento reduzido: o dedo não desliza e as esperas ficam curtas.
 
 **Prazo de guarda no Firebase.** Avaliações e relatos ficam 2 anos (campo `enviadoEm`); comandas ao vivo são apagadas
 pelo anfitrião ao encerrar, e as nunca encerradas vencem 30 dias depois de criadas (campo `expiraEm`). Guardar só o
