@@ -478,11 +478,13 @@ details.kf-secao-anim{overflow:hidden}
 .kf-guia.kf-guia-escuro{background:var(--kf-scrim,rgba(12,12,10,.55))}
 .kf-guia-furo{position:fixed;border-radius:14px;box-shadow:0 0 0 2.5px var(--kf-accent,#1F4E3A),0 0 0 9999px var(--kf-scrim,rgba(12,12,10,.55));pointer-events:none}
 /* Kit 2.12: o destaque só desliza na troca de passo; ao rolar a tela ele acompanha o alvo sem atraso */
-.kf-guia.kf-guia-passo .kf-guia-furo{transition:left .25s,top .25s,width .25s,height .25s}
+.kf-guia.kf-guia-passo .kf-guia-furo{transition:left .5s,top .5s,width .5s,height .5s}
 .kf-guia.kf-guia-sobre,.kf-guia.kf-guia-vivo{z-index:90}
 .kf-guia.kf-guia-sobre .kf-guia-furo{box-shadow:0 0 0 3px var(--kf-accent,#1F4E3A),0 0 0 7px color-mix(in srgb,var(--kf-accent,#1F4E3A) 25%,transparent)}
 .kf-guia.kf-guia-sobre.kf-guia-escuro{background:none}
-.kf-guia-dedo{position:fixed;width:34px;height:34px;margin:-6px 0 0 -10px;border-radius:50%;background:color-mix(in srgb,var(--kf-ink,#15140F) 18%,transparent);box-shadow:0 0 0 2px var(--kf-surface,#fff),0 0 0 4px var(--kf-accent,#1F4E3A),0 6px 14px rgba(0,0,0,.25);transition:left .5s cubic-bezier(.45,0,.2,1),top .5s cubic-bezier(.45,0,.2,1);pointer-events:none;z-index:2}
+.kf-guia-dedo{position:fixed;width:34px;height:34px;margin:-6px 0 0 -10px;border-radius:50%;background:color-mix(in srgb,var(--kf-ink,#15140F) 18%,transparent);box-shadow:0 0 0 2px var(--kf-surface,#fff),0 0 0 4px var(--kf-accent,#1F4E3A),0 6px 14px rgba(0,0,0,.25);transition:left .9s cubic-bezier(.45,0,.2,1),top .9s cubic-bezier(.45,0,.2,1),transform .25s;pointer-events:none;z-index:2}
+.kf-guia-dedo.kf-segura{transform:scale(.82);box-shadow:0 0 0 2px var(--kf-surface,#fff),0 0 0 6px var(--kf-accent,#1F4E3A),0 10px 22px rgba(0,0,0,.3)}
+[data-kf-guia-mostrar] svg{width:16px;height:16px;margin-right:6px;fill:currentColor;stroke:none}
 .kf-guia-dedo.kf-toque::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:3px solid var(--kf-accent,#1F4E3A);animation:kf-toque .55s ease-out forwards}
 @keyframes kf-toque{from{transform:scale(.6);opacity:1}to{transform:scale(2.2);opacity:0}}
 .kf-guia-ao-vivo{display:flex;align-items:center;gap:8px;font-size:var(--kf-t-legenda)!important;font-weight:700;color:var(--kf-accent,#1F4E3A)!important}

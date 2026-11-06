@@ -2,6 +2,10 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.22.3 · 2026-11-06
+
+- **Kit Fácil 2.12.1:** no guia ao vivo, a ação só começa depois do toque em Mostrar, num ritmo mais calmo (este app adota o guia ao vivo na vez dele).
+
 ## 2.22.2 · 2026-11-06
 
 - **Kit Fácil 2.12.0:** o destaque do guia acompanha a rolagem sem atraso e fica acima das janelas abertas pelo guia; o Kit passa a aceitar níveis de guia definidos pelo app e o guia ao vivo (o Conta Fácil já usa; este app migra na vez dele).

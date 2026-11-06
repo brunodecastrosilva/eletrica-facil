@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '2.12.0';
+  const VERSAO = '2.12.1';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -85,6 +85,7 @@
     estrela: '<svg class="kf-i kf-estrela" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.2 2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>',
     check: svg('<path d="m5 12.5 4.5 4.5L19 7.5"/>'),
     seta: svg('<path d="m9.5 6 6 6-6 6"/>'),
+    play: svg('<path d="M8 5.5v13l10.5-6.5z"/>'),
     nuvem: svg(P.nuvem),
     balao: svg(P.balao),
     msg: svg(P.balao),
@@ -914,8 +915,9 @@
      guia: { passos: [{ nivel: 1|2|3, niveis?: [n], t, d, sel, alt, ir: () => {}, se: () => bool, acao?: async maos => {}, fim?: seletor | () => elemento }],
              niveis?: [{ nome }], explicacao?, preparar(nivel), fim(), ocupado() }
        niveis: níveis próprios do app (Kit 2.12), mostrados em lista; sem eles, os 3 níveis comuns.
-       acao: guia ao vivo. Recebe as "mãos" (apontar, tocar, digitar, escolher, esperar, destacar, voltar)
-       e executa o passo na tela, com um dedo que se move e toca, enquanto o cartão diz "Acompanhe".
+       acao: guia ao vivo. A pessoa lê o passo e toca em Mostrar; então o passo recebe as "mãos" (apontar,
+       tocar, digitar, escolher, arrastar, esperar, destacar, voltar) e é feito na tela, com um dedo que se move
+       e toca, devagar. Depois, o destaque vai para `fim` e o botão vira Próximo.
        nivel 1 = Essencial, 2 = Exploração, 3 = Completo; cada nível inclui os passos dos níveis anteriores.
        ir() leva à tela do passo (o app decide como); se() tira o passo da lista antes de começar (sem internet…). */
   const NIVEIS = [
@@ -1002,7 +1004,7 @@
     alvoVivo: null,
     alvo(p) {
       if (this.alvoVivo && this.alvoVivo.isConnected && this.alvoVivo.getClientRects().length) return this.alvoVivo;
-      const vis = q => { try { return q && $$(q).find(el => el.getClientRects().length); } catch { return null; } };
+      const vis = q => { try { if (typeof q === 'function') { const el = q(); return el && el.getClientRects().length ? el : null; } return q && $$(q).find(el => el.getClientRects().length); } catch { return null; } };
       return (p && (vis(p.sel) || vis(p.alt))) || null;
     },
     vigiar() {
@@ -1027,37 +1029,44 @@
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
       if (!this.el || vez !== this.vez) return;
       const c = $('.kf-guia-cartao', this.el), acao = typeof p.acao === 'function';
-      const pinta = rodando => {
+      // Kit 2.12.1: no passo ao vivo a pessoa lê primeiro; a ação só começa quando ela toca em Mostrar.
+      // estado: 'ler' (antes), 'rodando' (o app faz o passo) ou 'feito' (depois, com o resultado destacado)
+      const pinta = estado => {
+        const rodando = estado === 'rodando', ler = acao && estado === 'ler';
         c.innerHTML = `<div class="kf-guia-topo"><span class="kf-guia-rot">Guia ${esc(nv ? nv.nome.toLowerCase() : '')} · ${n + 1} de ${total}</span><button type="button" class="kf-guia-x" aria-label="Fechar guia">${IC.x || '×'}</button></div>
           <div class="kf-guia-barra"><i style="width:${Math.round((n + 1) / total * 100)}%"></i></div>
           <h3>${esc(p.t)}</h3><p>${esc(p.d)}</p>
-          ${rodando ? '<p class="kf-guia-ao-vivo" role="status"><span aria-hidden="true"></span>Acompanhe: o app está fazendo este passo</p>' : ''}
-          <div class="kf-guia-acoes">${n ? `<button type="button" class="kf-btn kf-sec kf-p" data-kf-guia="-1" ${rodando || acao ? 'hidden' : ''}>Voltar</button>` : '<span></span>'}<button type="button" class="kf-btn kf-pri kf-p" data-kf-guia="1" ${rodando ? 'disabled' : ''}>${ultimo ? 'Concluir' : 'Próximo'}</button></div>
-          ${!rodando && ultimo && prox ? `<button type="button" class="kf-btn kf-link" data-kf="guia-${this.nivel + 1}">Continuar no guia ${esc(prox.nome.toLowerCase())}</button>` : ''}`;
+          ${rodando ? '<p class="kf-guia-ao-vivo" role="status"><span aria-hidden="true"></span>Acompanhe na tela</p>' : ''}
+          <div class="kf-guia-acoes">${n && !acao ? `<button type="button" class="kf-btn kf-sec kf-p" data-kf-guia="-1">Voltar</button>` : '<span></span>'}${ler
+            ? `<button type="button" class="kf-btn kf-pri kf-p" data-kf-guia-mostrar>${IC.play || ''}Mostrar</button>`
+            : `<button type="button" class="kf-btn kf-pri kf-p" data-kf-guia="1" ${rodando ? 'disabled' : ''}>${ultimo ? 'Concluir' : 'Próximo'}</button>`}</div>
+          ${estado !== 'rodando' && !ler && ultimo && prox ? `<button type="button" class="kf-btn kf-link" data-kf="guia-${this.nivel + 1}">Continuar no guia ${esc(prox.nome.toLowerCase())}</button>` : ''}`;
         $('.kf-guia-x', c).onclick = () => this.parar();
         $$('[data-kf-guia]', c).forEach(b => { b.onclick = () => { const d = +b.dataset.kfGuia; if (d > 0 && ultimo) { this.parar(); avisar('Guia concluído. Para rever, vá em Ajustes → Preferências gerais.'); return; } this.mostrar(this.i + d); }; });
+        const mb = $('[data-kf-guia-mostrar]', c); if (mb) mb.onclick = () => rodar();
       };
-      pinta(acao);
-      this.deslizar();
-      this.rolarAte(this.alvo(p));
-      this.posicionar();
-      setTimeout(() => this.posicionar(), 400);
-      if (acao) {
-        // Kit 2.12: guia ao vivo. O passo executa as ações na tela (dedo, toque, digitação), etapa por etapa
+      const rodar = async () => {
+        if (!this.el || vez !== this.vez) return;
+        pinta('rodando'); this.posicionar();
         this.el.classList.add('kf-guia-vivo');
-        await this.esperar(650, vez).catch(() => {});
-        try { if (this.el && vez === this.vez) await p.acao(this.maos(vez)); } catch (x) { if (x !== PARADO) console.warn(x); }
+        try { await this.esperar(500, vez); await p.acao(this.maos(vez)); } catch (x) { if (x !== PARADO) console.warn(x); }
         if (!this.el || vez !== this.vez) return;
         this.dedo(null); this.el.classList.remove('kf-guia-vivo');
         // depois da ação, o destaque vai para o resultado (p.fim: seletor ou função), ou volta ao alvo do passo
         let fim = null; try { fim = typeof p.fim === 'function' ? p.fim() : p.fim ? $$(p.fim).find(el => el.getClientRects().length) : null; } catch {}
         this.alvoVivo = fim || null;
-        pinta(false); this.deslizar(); this.rolarAte(this.alvo(p)); this.posicionar();
-      }
-      const foco = $('[data-kf-guia="1"]', c); if (foco) foco.focus({ preventScroll: true });
+        pinta('feito'); this.deslizar(); this.rolarAte(this.alvo(p)); this.posicionar();
+        const f = $('[data-kf-guia="1"]', c); if (f) f.focus({ preventScroll: true });
+      };
+      pinta('ler');
+      this.deslizar();
+      this.rolarAte(this.alvo(p));
+      this.posicionar();
+      setTimeout(() => this.posicionar(), 400);
+      const foco = $('[data-kf-guia-mostrar], [data-kf-guia="1"]', c); if (foco) foco.focus({ preventScroll: true });
     },
     vez: 0,
-    deslizar() { if (!this.el) return; this.el.classList.add('kf-guia-passo'); clearTimeout(this.tDesl); this.tDesl = setTimeout(() => this.el && this.el.classList.remove('kf-guia-passo'), 320); },
+    deslizar() { if (!this.el) return; this.el.classList.add('kf-guia-passo'); clearTimeout(this.tDesl); this.tDesl = setTimeout(() => this.el && this.el.classList.remove('kf-guia-passo'), 620); },
     rolarAte(t) {
       if (!t) return;
       const r = t.getBoundingClientRect(), vh = innerHeight;
@@ -1089,26 +1098,35 @@
           // caixa de marcar escondida (interruptor): aponta o rótulo que a pessoa vê
           const ver = (el.offsetWidth < 8 || el.offsetHeight < 8) && el.closest('label') || el;
           if (ver.closest('.kf-ov')) ver.scrollIntoView({ block: 'nearest' }); else g.rolarAte(ver);
-          g.deslizar(); destacar(ver); await g.esperar(80, vez); g.dedo(ver); await g.esperar(520, vez); return el;
+          g.deslizar(); destacar(ver); await g.esperar(250, vez); g.dedo(ver); await g.esperar(1150, vez); return el;
         },
         // semClique: só mostra o toque; o app faz o efeito (para não sair do exemplo, por exemplo)
         async tocar(alvo, { semClique = false } = {}) {
           const el = await this.apontar(alvo); if (!el) return null;
           const d = $('.kf-guia-dedo', g.el); if (d) { d.classList.remove('kf-toque'); void d.offsetWidth; d.classList.add('kf-toque'); }
-          await g.esperar(240, vez); vivo(); if (!semClique) el.click(); await g.esperar(420, vez); return el;
+          await g.esperar(450, vez); vivo(); if (!semClique) el.click(); await g.esperar(1100, vez); return el;
         },
-        async digitar(alvo, texto, { lento = 70 } = {}) {
+        async digitar(alvo, texto, { lento = 150 } = {}) {
           const el = await this.apontar(alvo); if (!el) return null;
           const set = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value').set;
           set.call(el, ''); el.dispatchEvent(new InputEvent('input', { bubbles: true }));
           for (const ch of String(texto)) { await g.esperar(lento, vez); set.call(el, el.value + ch); el.dispatchEvent(new InputEvent('input', { bubbles: true, data: ch, inputType: 'insertText' })); }
           el.dispatchEvent(new Event('change', { bubbles: true }));
-          await g.esperar(300, vez); return el;
+          await g.esperar(700, vez); return el;
         },
         async escolher(alvo, valor) {
           const el = await this.apontar(alvo); if (!el) return null;
           el.value = valor; el.dispatchEvent(new Event('change', { bubbles: true }));
-          await g.esperar(450, vez); return el;
+          await g.esperar(1000, vez); return el;
+        },
+        async arrastar(de, para, efeito) {
+          const a = await this.apontar(de); if (!a) return null;
+          const d = $('.kf-guia-dedo', g.el); if (d) d.classList.add('kf-segura');
+          await g.esperar(900, vez); vivo();
+          const b = achar(para); if (!b) { if (d) d.classList.remove('kf-segura'); return null; }
+          destacar(b); g.dedo(b); await g.esperar(1300, vez); vivo();
+          if (d) { d.classList.remove('kf-segura'); d.classList.remove('kf-toque'); void d.offsetWidth; d.classList.add('kf-toque'); }
+          await g.esperar(300, vez); if (efeito) efeito(); await g.esperar(1100, vez); return b;
         },
         destacar: alvo => { vivo(); const el = achar(alvo); destacar(el || null); return el; },
         // devolve o destaque ao alvo do passo

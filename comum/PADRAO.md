@@ -4,7 +4,7 @@ Regras comuns do **Conta Fácil**, do **Elétrica Fácil**, do **Estudo Fácil**
 novo do projeto. Este arquivo fica em `comum/PADRAO.md`, igual em todos os repositórios, junto com o **Kit Fácil** (o
 código comum).
 
-Versão do padrão: 2.11 · Kit Fácil 2.12.0 · novembro de 2026.
+Versão do padrão: 2.11 · Kit Fácil 2.12.1 · novembro de 2026.
 
 Acima deste padrão estão as **Leis Globais do Projeto Integrador** (projeto Integrador no Claude): se algo aqui contrariar uma lei, vale a lei.
 
@@ -209,8 +209,8 @@ nem abaixo, vai para a ponta oposta da tela.
 os próprios níveis (`guia.niveis: [{ nome: 'Simplificado' }, { nome: 'Completo' }]`, com `guia.explicacao` acima da
 lista); eles aparecem numa lista, um por linha, só com o nome. O passo com `niveis: [n]` aparece só nesse nível.
 **Simplificado:** poucos passos, só destaque, na comanda/tela de exemplo. **Completo:** cada passo tem `acao: async m => {}`
-e o app faz a ação na tela, ao vivo, enquanto o cartão diz "Acompanhe: o app está fazendo este passo" e o Próximo espera.
-As "mãos" do guia (`m`): `apontar`, `tocar` (com `semClique` quando o efeito é do app), `digitar`, `escolher`, `esperar`,
+e o app faz a ação na tela, ao vivo. A pessoa lê o passo primeiro: a ação só começa quando ela toca em **Mostrar** (Kit 2.12.1); durante a ação o cartão diz "Acompanhe na tela"; no fim, o resultado fica destacado e o botão vira Próximo. Ritmo calmo: o dedo leva quase um segundo para chegar, a digitação é letra por letra e há pausa depois de cada toque. Todo passo do completo tem ação, inclusive a troca de tela, feita tocando na barra (ou no Mais), como a pessoa faria.
+As "mãos" do guia (`m`): `apontar`, `tocar` (com `semClique` quando o efeito é do app), `digitar`, `escolher`, `arrastar`, `esperar`,
 `destacar` e `voltar`; um dedo se move até o alvo e mostra o toque. `fim` (seletor ou função) diz o que destacar
 quando a ação termina. O completo roda numa demonstração que não salva nada. Destaque: aponte partes pequenas (campo,
 botão, cabeçalho do cartão), nunca cartões inteiros que não cabem na tela do celular; ele acompanha a rolagem sem
