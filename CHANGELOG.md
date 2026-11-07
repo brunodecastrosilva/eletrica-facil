@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.23.0 · 2026-11-07
+
+- **Sem tela de primeiro uso (Código do Projeto Fácil, Art. 67):** quem abre o app pela primeira vez vê Orçamentos com a lista vazia, o botão Novo orçamento e o atalho Ver um orçamento de exemplo. A janela de boas-vindas do Kit abre ao abrir o app e traz o mesmo atalho.
+- **Kit Fácil 2.13.0:** as Leis Globais e o Padrão viraram o Código do Projeto Fácil (`comum/CODIGO.md`).
+
 ## 2.22.3 · 2026-11-06
 
 - **Kit Fácil 2.12.1:** no guia ao vivo, a ação só começa depois do toque em Mostrar, num ritmo mais calmo (este app adota o guia ao vivo na vez dele).

@@ -19,7 +19,7 @@ import { execFileSync } from 'node:child_process';
 
 const COMUM = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(COMUM, '..');
-const COMPARTILHADOS = ['kit-facil.js', 'kit-facil.css', 'regras-firestore-feedback.txt', 'servidor.mjs', 'verificar.mjs', 'testar.mjs', 'PADRAO.md', 'LEIAME.md',
+const COMPARTILHADOS = ['kit-facil.js', 'kit-facil.css', 'regras-firestore-feedback.txt', 'servidor.mjs', 'verificar.mjs', 'testar.mjs', 'CODIGO.md', 'LEIAME.md',
   'testes/ambiente.mjs', 'testes/kit.test.mjs', 'testes/pagina-kit.html'];
 
 const sha = b => createHash('sha256').update(b).digest('hex');
@@ -140,9 +140,9 @@ try {
 console.log('Interface comum');
 const codigo = (await Promise.all(fontes.map(f => ler(f)))).join('\n');
 if (/fonts\.googleapis\.com\/css2\?[^"']*family=Atkinson\+Hyperlegible\+Next/.test(html)) ok('fonte da família (Atkinson Hyperlegible)');
-else falha('index.html não carrega a fonte comum (Atkinson Hyperlegible Next) — veja o PADRAO.md, item 7');
+else falha('index.html não carrega a fonte comum (Atkinson Hyperlegible Next) — veja o CODIGO.md, Título VI e Anexo II');
 if (/class="kf-casca"/.test(html) && /kf-barra/.test(codigo) && /kf-nav/.test(codigo) && /kf-trilho/.test(codigo)) ok('moldura comum: barra de cima, navegação embaixo e trilho lateral');
-else falha('moldura comum incompleta: use body.kf-casca, kf-barra, kf-nav e kf-trilho (PADRAO.md, item 7)');
+else falha('moldura comum incompleta: use body.kf-casca, kf-barra, kf-nav e kf-trilho (CODIGO.md, Título VI)');
 if (/KitFacil\.topo\.html\(\s*\{\s*principal:\s*true/.test(codigo)) ok('área superior direita: chopp, nuvem e balão (KitFacil.topo)');
 else falha('a tela principal não usa KitFacil.topo.html({ principal: true }) (chopp, nuvem e balão)');
 const navAj = (codigo.match(/KitFacil\.nav\.ajustes\(/g) || []).length;

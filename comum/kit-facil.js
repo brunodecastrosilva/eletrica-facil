@@ -3,7 +3,7 @@
    outras duas e rode `npm run verificar` em cada repositório (o MANIFESTO.json acusa cópias diferentes).
    Sem dependências e sem etapa de build: script clássico que cria window.KitFacil.
 
-   O que tem aqui (veja comum/PADRAO.md):
+   O que tem aqui (veja comum/CODIGO.md, o Código do Projeto Fácil):
    - área superior direita padronizada: nuvem (estado real da sincronização), chopp (apoio ao criador, só nas telas
      principais) e balão (avaliação e feedback); Ajustes fica na navegação (barra de baixo e trilho)
    - apoio ao criador: "Pague um chopp para o criador!", com QR code e código Pix copia e cola
@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '2.12.1';
+  const VERSAO = '2.13.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -861,8 +861,8 @@
   /* novidades: [{ versao: '1.3.0', itens: ['…', '…'] }] em KitFacil.iniciar. A janela aparece uma vez, na primeira
      abertura depois de atualizar; em Sobre o aplicativo a lista fica sempre à mão.
      boasVindas: { novo: () => true se a pessoa nunca usou o app, passos: [[titulo, texto], …], exemplo: () => {…},
-     rotuloExemplo: 'Ver exemplo' }: aparece uma vez, só para quem nunca usou o app. Sem passos, só informa quem é novo
-     (o app tem a própria tela de primeiro uso) e as novidades não aparecem para essa pessoa. */
+     rotuloExemplo: 'Ver exemplo' }: aparece uma vez, só para quem nunca usou o app (quando o app não tem apresentação).
+     Kit 2.13 (Código do Projeto Fácil): nenhum app tem tela própria de primeiro uso; quem chega vê a janela do Kit. */
   const chaveVisto = () => `kitfacil.${C.app}.visto`;
   const novidadesDaVersao = () => { const n = (C.novidades || []).find(x => x && x.versao === C.versao); return n && Array.isArray(n.itens) && n.itens.length ? n : null; };
   const listaNovidades = n => `<ul class="kf-lista kf-novidades">${n.itens.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
@@ -876,7 +876,6 @@
   function abrirBoasVindas() {
     const b = C.boasVindas; if (!b) return false;
     const passos = (b.passos || []).filter(x => x && x[0]);
-    // app com tela própria de primeiro uso (boasVindas só com "novo"): o kit não abre outra janela por cima
     if (!passos.length) return false;
     abrirDialogo({ titulo: `Boas-vindas ao ${C.nome}`, classe: 'kf-curto kf-boas-vindas', nome: 'boas-vindas',
       corpo: `${C.resumo ? `<p class="kf-texto">${esc(C.resumo)}</p>` : ''}${passos.length ? `<ol class="kf-passos">${passos.map(([t, d]) => `<li><b>${esc(t)}</b>${d ? `<span>${esc(d)}</span>` : ''}</li>`).join('')}</ol>` : ''}
@@ -900,8 +899,8 @@
     if (dialogoAberto() || guia.ativo() || (C.guia && C.guia.ocupado && C.guia.ocupado())) return;
     if (visto === C.versao) { if (C.apresentacao && apresLigada()) abrirApresentacao(); return; }
     const novo = novoAoAbrir;
-    // primeira vez: a apresentação faz o papel das boas-vindas (o app com tela própria de primeiro uso não ganha janela)
-    if (visto === null && novo) { if (C.apresentacao && (C.apresentacao.primeiroUso || (C.boasVindas && C.boasVindas.exemplo))) abrirApresentacao({ primeiroUso: true }); else abrirBoasVindas(); return; }
+    // primeira vez: a apresentação faz o papel das boas-vindas, em todos os apps (Kit 2.13: não existe tela própria de primeiro uso)
+    if (visto === null && novo) { if (C.apresentacao) abrirApresentacao({ primeiroUso: true }); else abrirBoasVindas(); return; }
     if ((visto !== null || !novo) && abrirNovidades()) return;
     if (C.apresentacao && apresLigada() && !guia.ativo()) abrirApresentacao();
   }
@@ -910,8 +909,8 @@
      apresentacao: { frase: 'o que o app faz, numa linha', pontos: [[titulo, texto], …] }
        Abre toda vez que o app é aberto (uma vez por carregamento da página), depois das janelas do próprio app.
        A pessoa desliga em Ajustes → Preferências gerais → Ao abrir o app, ou na própria janela.
-       Na primeira vez (boasVindas.novo()), ela faz o papel das boas-vindas, a não ser que o app tenha tela própria
-       de primeiro uso (boasVindas sem passos e sem apresentacao.primeiroUso).
+       Na primeira vez (boasVindas.novo()), ela faz o papel das boas-vindas (título "Boas-vindas ao <app>" e, se o app
+       tiver, o botão do exemplo). Kit 2.13: nenhum app tem tela própria de primeiro uso.
      guia: { passos: [{ nivel: 1|2|3, niveis?: [n], t, d, sel, alt, ir: () => {}, se: () => bool, acao?: async maos => {}, fim?: seletor | () => elemento }],
              niveis?: [{ nome }], explicacao?, preparar(nivel), fim(), ocupado() }
        niveis: níveis próprios do app (Kit 2.12), mostrados em lista; sem eles, os 3 níveis comuns.

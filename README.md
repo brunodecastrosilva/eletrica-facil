@@ -4,8 +4,8 @@ Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no 
 
 **Fase de testes** · versão 2.22.3 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
-Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o padrão comum descrito em
-[`comum/PADRAO.md`](comum/PADRAO.md).
+Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
+[Código do Projeto Fácil](comum/CODIGO.md).
 
 ## O que o app faz
 
@@ -64,7 +64,7 @@ npm start                         # abre em http://localhost:8080/eletrica-facil
 npm install                       # primeira vez: instala o Playwright, usado nos testes
 npx playwright install chromium   # primeira vez: baixa o navegador dos testes
 npm test                          # testes do Kit Fácil e do app, sem internet
-npm run verificar                 # padrão do Projeto Integrador, segredos e versão
+npm run verificar                 # Código do Projeto Fácil, segredos e versão
 ```
 
 Os testes simulam o GitHub (sincronização) e o Firebase (avaliações); nada toca nos dados reais.
@@ -75,7 +75,7 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 - **Seções:** um só modelo de seção em todo o app (o cartão de `panel()`: título, resumo de uma linha, contador ou valor e seta), em qualquer nível e também nas janelas; cada uma abre e fecha sozinha (`KitFacil.secao`), todas começam fechadas e a busca abre as que têm resultado
 - **Escolhas em linhas:** nada de botões lado a lado; escolhas são linhas (`linha()` / `linhas()`): bolinha para uma, caixa de marcar para várias, seta para o que abre a próxima etapa, + para o que entra direto. Filtros curtos e a entrada em % usam segmentos (`.seg`). Rascunho no Início: arrastar para a esquerda mostra Excluir, com Desfazer
 
-Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
+Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
 
 - **Alto da tela, à direita:** nuvem da sincronização, chopp para o criador e balão de avaliação, nessa ordem; Ajustes fica na barra de baixo (no computador, no pé do menu lateral). No orçamento e na
   proposta, só a nuvem e o balão (o Voltar e o menu do orçamento ficam à esquerda deles)

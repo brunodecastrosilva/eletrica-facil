@@ -1,13 +1,13 @@
 # Kit Fácil (pasta `comum/`)
 
-Código e regras comuns aos apps do Projeto Integrador. **Esta pasta é igual no Conta Fácil, no Elétrica Fácil, no
-Estudo Fácil e no Guitarra Fácil.** Não altere só num repositório: siga o item 10 do [PADRAO.md](PADRAO.md) e rode `npm run verificar`.
+Código e regras comuns aos apps do Projeto Fácil. **Esta pasta é igual no Conta Fácil, no Elétrica Fácil, no
+Estudo Fácil e no Guitarra Fácil.** Não altere só num repositório: siga o Art. 30 do [CODIGO.md](CODIGO.md) e rode `npm run verificar`.
 
 | Arquivo | Para quê |
 |---|---|
 | `kit-facil.js` | área superior (Ajustes, nuvem, balão), tela de Ajustes em guias, avaliação e relato de problema, Sobre, tema, instalar, cópia de segurança, apagar dados do aparelho e o motor de sincronização |
 | `kit-facil.css` | sistema de design comum: tokens, moldura (barra, navegação, trilho) e componentes. Usa as variáveis `--kf-*` de cada app |
-| `PADRAO.md` | o padrão do Projeto Integrador (interface, dados, avaliação, segurança) |
+| `CODIGO.md` | o Código do Projeto Fácil, com os anexos técnicos (interface, dados, avaliação, segurança, abertura e guia) |
 | `regras-firestore-feedback.txt` | regra do Firestore que recebe as avaliações (colar no console do Firebase) |
 | `servidor.mjs` | servidor local (`npm start`) |
 | `verificar.mjs` | verificação do padrão (`npm run verificar`) |

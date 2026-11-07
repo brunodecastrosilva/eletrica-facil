@@ -573,6 +573,29 @@ test('boas-vindas: só no primeiro uso, com os passos e o atalho para o exemplo'
   await a.fechar();
 });
 
+test('Kit 2.13: sem tela de primeiro uso; a janela de boas-vindas abre na primeira vez e a apresentação em toda abertura', async () => {
+  const antes = () => { window.KF_TESTE_ABERTURA = true; };
+  const a = await aparelho(amb, { caminho: pagina() + '&novo=1&apres=1', antes });
+  const p = a.page;
+  const dlg = p.locator('[data-kf-dialogo="apresentacao"]');
+  await dlg.waitFor({ timeout: 5000 });
+  assert.match(await dlg.locator('h2, .kf-dlg-titulo, [id$="titulo"]').first().textContent(), /Boas-vindas ao/);
+  assert.equal(await dlg.locator('[data-kf-exemplo]').count(), 1, 'o atalho do exemplo fica na janela de boas-vindas');
+  assert.equal(await dlg.locator('[data-kf-apres]').count(), 1, 'a pessoa pode desligar a janela');
+  await dlg.locator('[data-kf-fechar]').last().click();
+  await p.reload();
+  await dlg.waitFor({ timeout: 5000 });
+  assert.doesNotMatch(await dlg.locator('h2, .kf-dlg-titulo, [id$="titulo"]').first().textContent(), /Boas-vindas/);
+  // desligada, não abre mais
+  await dlg.locator('[data-kf-apres]').uncheck();
+  await dlg.locator('[data-kf-fechar]').last().click();
+  await p.reload();
+  await p.waitForTimeout(1500);
+  assert.equal(await dlg.count(), 0, 'a apresentação desligada abriu de novo');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
 test('Ajustes na navegação: abre os Ajustes, fica marcado e tocar de novo volta para a lista de guias', async () => {
   const a = await aparelho(amb, { caminho: pagina() });
   const p = a.page;

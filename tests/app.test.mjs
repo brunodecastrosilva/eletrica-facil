@@ -31,7 +31,7 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral; topo 
   for (const [viewport, nome] of TELAS) {
     const a = await aparelho(amb, { viewport });
     const p = a.page;
-    await p.locator('.welcome h1').waitFor();
+    await p.locator('.kf-vazio [data-example]').waitFor();
     assert.equal(await p.getAttribute('html', 'lang'), 'pt-BR');
     assert.ok(await semRolagemLateral(p), `rolagem lateral no ${nome}`);
     const topo = await conferirTopo(p);
@@ -647,7 +647,7 @@ test('2.16: preços de fábrica em cinza (sem confirmar), outras formas na propo
 test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar rascunho para excluir e unidade fora do nome', async () => {
   const a = await aparelho(amb, { viewport: { width: 390, height: 844 } });
   const p = a.page;
-  await p.locator('.welcome h1').waitFor();
+  await p.locator('.kf-vazio [data-example]').waitFor();
   // material de fábrica sem unidade entre parênteses no nome
   const parens = await p.evaluate(() => prices.filter(x => x.kind === 'mat' && /\((pacote|barra|saco|galão|kit)/i.test(x.name)).map(x => x.name));
   assert.deepEqual(parens, []);
@@ -660,7 +660,7 @@ test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar 
     localStorage.setItem('eletricafacil.prices', JSON.stringify(ps));
     const st = JSON.parse(localStorage.getItem('eletricafacil.settings')); st.seedV = 5; localStorage.setItem('eletricafacil.settings', JSON.stringify(st));
   });
-  await p.reload(); await p.locator('.welcome h1').waitFor();
+  await p.reload(); await p.locator('.kf-vazio [data-example]').waitFor();
   assert.deepEqual(await p.evaluate(() => { const m = prices.find(x => x.id === 'velho'); return [m.name, m.unit, settings.seedV]; }), ['Massa corrida', 'galão', 8]);
   // nenhum botão lado a lado sobrou no app
   const id = await criarOrcamento(p, 'Cliente Linhas', 'Troca de tomada');
@@ -724,7 +724,7 @@ test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar 
 test('2.19.1: nenhum parêntese nos nomes e rótulos, itens de fábrica editáveis, lista de escolha inteira à vista e Excluir sem emenda', async () => {
   const a = await aparelho(amb, { viewport: { width: 390, height: 844 } });
   const p = a.page;
-  await p.locator('.welcome h1').waitFor();
+  await p.locator('.kf-vazio [data-example]').waitFor();
   // catálogo de fábrica sem parênteses: preços, ferramentas e categorias
   assert.deepEqual(await p.evaluate(() => [...prices.map(x => x.name + x.cat), ...tools.map(t => (t.name || '') + (t.cat || ''))].filter(n => /[()]/.test(n))), []);
   // migração: quem tinha o nome antigo recebe o novo
@@ -734,7 +734,7 @@ test('2.19.1: nenhum parêntese nos nomes e rótulos, itens de fábrica editáve
     localStorage.setItem('eletricafacil.prices', JSON.stringify(ps));
     const st = JSON.parse(localStorage.getItem('eletricafacil.settings')); st.seedV = 6; localStorage.setItem('eletricafacil.settings', JSON.stringify(st));
   });
-  await p.reload(); await p.locator('.welcome h1').waitFor();
+  await p.reload(); await p.locator('.kf-vazio [data-example]').waitFor();
   assert.equal(await p.evaluate(() => prices.some(x => x.name === 'Módulo de interruptor simples') && !prices.some(x => /\(/.test(x.name))), true);
   // material de fábrica: nome, categoria e unidade editáveis na Gestão
   const id = await p.evaluate(() => { const m = prices.find(x => x.ref && x.kind === 'mat'); go('/gestao'); return m.id; });
