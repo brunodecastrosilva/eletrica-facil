@@ -19,7 +19,7 @@ import { execFileSync } from 'node:child_process';
 
 const COMUM = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(COMUM, '..');
-const COMPARTILHADOS = ['kit-facil.js', 'kit-facil.css', 'regras-firestore-feedback.txt', 'servidor.mjs', 'verificar.mjs', 'testar.mjs', 'CODIGO.md', 'ANEXOS.md', 'LEIAME.md',
+const COMPARTILHADOS = ['kit-facil.js', 'kit-facil.css', 'regras-firestore-feedback.txt', 'servidor.mjs', 'verificar.mjs', 'testar.mjs', 'testar-regras.mjs', 'CODIGO.md', 'ANEXOS.md', 'LEIAME.md',
   'testes/ambiente.mjs', 'testes/kit.test.mjs', 'testes/pagina-kit.html'];
 
 const sha = b => createHash('sha256').update(b).digest('hex');
@@ -141,7 +141,7 @@ console.log('Segurança');
 {
   const csp = (html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/) || [])[1] || '';
   if (!csp) falha('index.html sem política de segurança de conteúdo (CSP) — veja o ANEXOS.md, Anexo VIII');
-  else if (/'unsafe-eval'|(^|[ ;])\*[ ;]/.test(csp) || !/object-src 'none'/.test(csp)) falha('CSP fraca: sem unsafe-eval, sem curinga * e com object-src none');
+  else if (/script-src[^;]*'unsafe-inline'/.test(csp) || /<script>/.test(html) || /'unsafe-eval'|(^|[ ;])\*[ ;]/.test(csp) || !/object-src 'none'/.test(csp)) falha('CSP fraca: script só de arquivo (sem unsafe-inline nem <script> dentro do HTML), sem unsafe-eval, sem curinga * e com object-src none');
   else ok('política de segurança de conteúdo (CSP)');
   const todo = html + '\n' + (await Promise.all(fontes.map(f => ler(f)))).join('\n');
   const semSri = [...todo.matchAll(/https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/[^'"`\s]+?\.js(?=['"`])/g)].map(m => m[0])

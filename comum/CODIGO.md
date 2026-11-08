@@ -1,10 +1,13 @@
 # Código do Projeto Fácil
 
-Versão **3.1** · 08/11/2026 · Kit Fácil **2.14.0**
+Versão **0.1 (rascunho)** · 08/11/2026 · Kit Fácil **0.1.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
-Código**. O histórico, as exceções aprovadas, a situação da propagação, as decisões de produto e a correspondência entre
-as numerações ficam no documento **Registros do Código**, no projeto Integrador.
+Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
+do Projeto Fácil**, no projeto Integrador (`claude/painel.md`).
+
+Enquanto a versão começar com `0.`, este Código é rascunho e pode mudar por inteiro; a versão **1.0** será a primeira
+oficial.
 
 Onde fica cada arquivo:
 
@@ -62,7 +65,7 @@ I – na seção "Exceções ao padrão" do README do aplicativo;
 
 II – no CHANGELOG do aplicativo;
 
-III – na lista de exceções aprovadas dos Registros do Código.
+III – na lista de exceções aprovadas do Painel.
 
 **Parágrafo único.** Exceção sem os três registros não vale.
 
@@ -81,13 +84,13 @@ Integrador", dizendo o que mudar, por quê e o impacto em cada aplicativo.
 
 I – o Código atualizado e a versão nova;
 
-II – o registro da mudança nos Registros do Código;
+II – o registro da mudança no Painel;
 
 III – a cópia nova em `comum/CODIGO.md` e `comum/ANEXOS.md` dos quatro repositórios, conforme o Art. 30;
 
 IV – as instruções dos Projetos dos aplicativos atualizadas, mantendo as regras de cada aplicativo;
 
-V – a situação da propagação marcada nos Registros do Código.
+V – a situação da propagação marcada no Painel.
 
 **Art. 9º** Os Projetos dos aplicativos não leem o projeto Integrador nem a memória dele. Tudo o que precisa valer lá
 tem de estar nas instruções deles.
@@ -178,13 +181,14 @@ III – cada aplicativo tem a sua versão e o seu histórico.
 **Art. 19.** Nada de credenciais, chaves, senhas ou dados pessoais reais no repositório.
 
 **Parágrafo único.** A configuração web do Firebase é pública por natureza; a proteção é feita pelas regras do
-Firestore.
+Firestore e pelas proteções do Art. 46.
 
 **Art. 20.** Como os aplicativos dividem o mesmo endereço (`brunodecastrosilva.github.io`):
 
 I – tudo o que o aplicativo guarda no navegador usa o prefixo do aplicativo (Anexo I);
 
-II – o manifesto de cada aplicativo tem identidade, início e escopo na pasta do próprio aplicativo, nunca `./`;
+II – o manifesto de cada aplicativo tem identidade própria, com o nome da pasta do aplicativo (nunca `./`), e início e
+escopo dentro dessa pasta;
 
 III – o service worker de cada aplicativo só apaga e só responde pelo que é dele.
 
@@ -195,6 +199,9 @@ por CDN, com versão fixa, só quando a função é usada.
 
 **Art. 22.** A versão segue o formato `maior.menor.correção` e é igual em quatro lugares: `package.json`, a constante
 `VERSAO` do código, o cache do service worker e o topo do CHANGELOG.
+
+**Parágrafo único.** Versão que começa com `0.` indica fase de testes. Os aplicativos e o Kit recomeçaram em 0.1.0 em
+08/11/2026; o histórico da numeração antiga fica no `HISTORICO.md` de cada repositório.
 
 **Art. 23.** Antes de publicar:
 
@@ -657,8 +664,8 @@ II – o guia em três níveis (Essencial, Exploração e Completo), no lugar do
 
 **Parágrafo único.** O Conta Fácil já cumpre os dois. Na vez de cada aplicativo, o que restar é trocado.
 
-**Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam na revisão geral do Integrador
-(`claude/revisao-geral.md`).
+**Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
+(`claude/painel.md`).
 
-**Art. 95.** Este Código entra em vigor em 07/11/2026, com a redação da versão 3.1 desde 08/11/2026. As Leis Globais
-v2.8 e o Padrão 2.11 passam a ser histórico.
+**Art. 95.** Este Código vale desde 08/11/2026 como rascunho (versão 0.1). Regras e textos anteriores (Leis Globais,
+Padrão, Código 3.x) são histórico.

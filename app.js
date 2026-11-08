@@ -1,0 +1,4358 @@
+/* eletrica-facil · código do app (saiu de dentro do index.html para a política de segurança barrar script injetado: Código, Art. 48) */
+'use strict';
+const VERSAO = '0.1.0';
+const MARCA = '<span class="kf-marca-ic marca-eletrica" aria-hidden="true"><svg class="i bolt" viewBox="0 0 24 24"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg></span><span class="kf-marca-nome">Elétrica Fácil</span>';
+/* ================= guia do app em 3 níveis (Kit 2.11): passeia pelo orçamento de exemplo ================= */
+const exemploId = () => (quotes.find(q => q.example) || {}).id;
+const espera = ms => new Promise(r => setTimeout(r, ms));
+async function irPara(path) { if (('#' + path) !== location.hash) { go(path); await espera(120); } }
+async function abrirPainel(chave) {
+  const d = $(`details[data-panel="${chave}"]`);
+  if (d && !KitFacil.secao.aberta(d)) { KitFacil.secao.abrir(d); await espera(KitFacil.movimento.ms + 60); }
+}
+const noExemplo = async (painel) => { const id = exemploId(); if (!id) return; await irPara('/q/' + id); if (painel) await abrirPainel(`q:${id}:${painel}`); };
+const GUIA = [
+  { nivel: 1, ir: () => irPara('/'), sel: '[data-new]', t: 'Novo orçamento', d: 'Comece por aqui. Cada orçamento ganha um número e fica salvo sozinho, mesmo sem internet.' },
+  { nivel: 3, ir: () => irPara('/'), sel: '#h-q', alt: '.kf-abas, .seg', t: 'Lista de orçamentos', d: 'Filtre por situação (em aberto, concluídos, recusados) e busque por cliente, serviço ou número.' },
+  { nivel: 1, ir: () => noExemplo('cli'), sel: '#q-name', alt: 'details[data-panel$=":cli"]', t: 'Cliente e serviço', d: 'Nome, WhatsApp, endereço da obra e o serviço. O WhatsApp é usado para enviar a proposta.' },
+  { nivel: 1, ir: () => noExemplo('items'), sel: 'details[data-panel$=":items"]', t: 'Serviços e material', d: 'Toque em Adicionar e escolha da sua tabela: cada toque soma uma unidade. Para 100 m de cabo, toque no número e digite.' },
+  { nivel: 2, ir: () => noExemplo('val'), sel: 'details[data-panel$=":val"]', t: 'Valores', d: 'Deslocamento pela distância e o combustível, adicionais de urgência, noite ou fim de semana, desconto e impostos.' },
+  { nivel: 2, ir: () => noExemplo('cond'), sel: 'details[data-panel$=":cond"]', t: 'Pagamento, datas e garantia', d: 'À vista, entrada ou cartão (com a taxa repassada ou não), as datas do serviço, a validade da proposta e a garantia.' },
+  { nivel: 3, ir: () => noExemplo('notes'), sel: 'details[data-panel$=":notes"]', t: 'Observações', d: 'O que está fora do orçamento e os cuidados no dia. Os textos prontos entram com um toque.' },
+  { nivel: 2, ir: () => noExemplo(), sel: '.banner.b-sent', alt: '.banner', t: 'A resposta do cliente', d: 'Depois de enviar, marque se o cliente aprovou ou recusou. Dá para lembrar o cliente pelo WhatsApp.' },
+  { nivel: 1, ir: () => noExemplo(), sel: '[data-preview]', t: 'Ver a proposta', d: 'Toque para ver a proposta como o cliente vai receber, em folha A4.' },
+  { nivel: 2, ir: async () => { const id = exemploId(); if (id) await irPara('/q/' + id + '/proposta'); }, sel: '.paper', t: 'A proposta', d: 'Seus dados no alto, os itens por ambiente, o total, o pagamento e o Pix. Seus dados entram em Ajustes, Conta e perfil.' },
+  { nivel: 1, ir: async () => { const id = exemploId(); if (id) await irPara('/q/' + id + '/proposta'); }, sel: '.bbar', t: 'Enviar ao cliente', d: 'Enviar PDF manda o arquivo pelo app que você escolher; WhatsApp abre a conversa com a mensagem pronta.' },
+  { nivel: 2, ir: () => irPara('/precos'), sel: '#pr-q', alt: '#app .page', t: 'Tabela de preços', d: 'Seus preços de mão de obra e material. O app já vem com uma tabela de referência: ajuste aos seus valores.' },
+  { nivel: 3, ir: async () => { gestaoAba = 'estoque'; await irPara('/gestao'); rerender(); }, sel: '#app .page', t: 'Estoque e compras', d: 'O material que você tem, o mínimo de cada um e a lista de compras. Ao concluir um serviço, o app oferece dar baixa.' },
+  { nivel: 3, ir: async () => { gestaoAba = 'ferramentas'; await irPara('/gestao'); rerender(); }, sel: '#app .page', t: 'Ferramentas', d: 'Suas ferramentas, com marca, modelo e o que levar em cada tipo de serviço.' },
+  { nivel: 3, ir: async () => { gestaoAba = 'checklist'; await irPara('/gestao'); rerender(); }, sel: '#app .page', t: 'Checklist', d: 'O que conferir na ida e na volta do serviço, para não esquecer nada.' },
+];
+
+/* ================= utilidades ================= */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-6);
+const BRL = c => (Math.round(c || 0) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = s => String(s || '').trim().toLocaleLowerCase('pt-BR');
+const fold = s => norm(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+const sum = a => a.reduce((x, y) => x + y, 0);
+const clone = v => JSON.parse(JSON.stringify(v));
+const DAY = 864e5;
+// um dia guardado sempre ao meio-dia, para não mudar de data com o fuso ou o horário de verão
+const dayTs = ts => { if (!ts) return null; const d = new Date(ts); d.setHours(12, 0, 0, 0); return d.getTime(); };
+// prazo de execução: unidade -> [plural, singular]
+const PRAZO_U = { uteis: ['dias úteis', 'dia útil'], corridos: ['dias corridos', 'dia corrido'], semanas: ['semanas', 'semana'], meses: ['meses', 'mês'] };
+const prazoTxt = p => p ? `${p.n} ${PRAZO_U[p.u][p.n === 1 ? 1 : 0]}` : '';
+// lê o texto livre das versões antigas ("2 dias úteis", "1 semana", "No mesmo dia")
+function prazoDeTexto(t) {
+  t = String(t || '').toLowerCase();
+  if (!t.trim()) return null;
+  if (/mesmo dia/.test(t)) return { n: 1, u: 'corridos' };
+  const m = t.match(/(\d+)\s*(dias?\s*[uú]te(?:is|l)|dias?\s*corridos?|dias?|semanas?|m[eê]s(?:es)?)/);
+  if (!m) return null;
+  const u = /[uú]te/.test(m[2]) ? 'uteis' : /semana/.test(m[2]) ? 'semanas' : /m[eê]s/.test(m[2]) ? 'meses' : 'corridos';
+  return { n: +m[1], u };
+}
+const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
+function parseMoney(s) {
+  s = String(s ?? '').replace(/[^\d,.]/g, '');
+  if (!s) return null;
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  const v = parseFloat(s);
+  return isFinite(v) && v >= 0 ? Math.round(v * 100) : null;
+}
+// quantidade aceita decimais: 12,5 m de fio
+function parseQty(s) {
+  s = String(s ?? '').trim().replace(/\s/g, '');
+  if (!s) return null;
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ''); // 1.000 = mil (ponto de milhar)
+  if (!/^\d*\.?\d+$/.test(s)) return null; // "abc", "-3", "2x" não são quantidade
+  const v = parseFloat(s);
+  return isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : null;
+}
+// valores fora do comum pedem confirmação antes de valer (U12): não proíbe casos reais
+const QTD_ALTA = 10000;
+function conferirQtd(qty, nome, seguir) {
+  if (qty <= QTD_ALTA) return seguir();
+  confirmSheet(`Quantidade muito alta`, `${fmtQty(qty)} de ${nome || 'item'} é isso mesmo? Confira se não sobrou um zero.`, 'Manter assim', seguir, false);
+}
+const fmtQty = n => Number(n).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+const fmtDate = ts => new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const fmtShort = ts => new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+const longDate = ts => new Date(ts).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+const phoneDigits = s => String(s || '').replace(/\D/g, '');
+function fmtPhone(s) {
+  const d = phoneDigits(s).replace(/^55(?=\d{10,11}$)/, '');
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return String(s || '').trim();
+}
+const firstName = s => String(s || '').trim().split(/\s+/)[0] || '';
+function rel(ts) {
+  if (!ts) return '';
+  const a = new Date(); a.setHours(0, 0, 0, 0);
+  const b = new Date(ts); b.setHours(0, 0, 0, 0);
+  const n = Math.round((a - b) / DAY);
+  return n <= 0 ? 'hoje' : n === 1 ? 'ontem' : `há ${n} dias`;
+}
+const daysSince = ts => ts ? Math.floor((Date.now() - ts) / DAY) : 0;
+const isTouch = (() => { try { return matchMedia('(pointer: coarse)').matches; } catch { return false; } })();
+
+const ic = d => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+const I = {
+  bolt: '<svg class="i bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z"/></svg>',
+  plus: ic('<path d="M12 5v14M5 12h14"/>'),
+  minus: ic('<path d="M5 12h14"/>'),
+  back: ic('<path d="M15 5l-7 7 7 7"/>'),
+  more: ic('<circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/>'),
+  x: ic('<path d="M18 6 6 18M6 6l12 12"/>'),
+  trash: ic('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
+  search: ic('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
+  doc: ic('<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>'),
+  tag: ic('<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>'),
+  sliders: ic('<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>'),
+  wa: ic('<path d="M3.5 20.5 5 16a8.5 8.5 0 1 1 3 3z"/><path d="M9 9.5c.5 2 2.5 4 4.5 4.5l1.2-1.2 2 1-.4 1.6c-3.6.4-8-4-7.6-7.6l1.6-.4 1 2z"/>'),
+  share: ic('<path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v7h14v-7"/>'),
+  copy: ic('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>'),
+  check: ic('<path d="m5 12 5 5 9-10"/>'),
+  list: ic('<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>'),
+  pix: ic('<path d="m12 3 9 9-9 9-9-9z"/><path d="m8.5 12 3.5-3.5 3.5 3.5-3.5 3.5z"/>'),
+  receipt: ic('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>'),
+  dup: ic('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/>'),
+  flag: ic('<path d="M5 21V4h11l-2 4 2 4H5"/>'),
+  dl: ic('<path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 20h14"/>'),
+  ul: ic('<path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/>'),
+  arrow: ic('<path d="M5 12h14M13 6l6 6-6 6"/>'),
+  image: ic('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>'),
+  percent: ic('<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>'),
+  pin: ic('<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'),
+  chev: ic('<path d="m9 6 6 6-6 6"/>'),
+  up: ic('<path d="M12 19V5M6 11l6-6 6 6"/>'),
+  car: ic('<path d="M5 16v-5l2-5h10l2 5v5"/><path d="M3 16h18v3H3zM7.5 19v1.5M16.5 19v1.5"/>'),
+  phone: ic('<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/>'),
+  cloud: ic('<path d="M7 19a4.5 4.5 0 0 1-.7-8.95A6 6 0 0 1 17.8 8.6 4.6 4.6 0 0 1 17.5 19z"/>'),
+  cal: ic('<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
+  warn: ic('<path d="M12 3 2 20h20z"/><path d="M12 10v4.5M12 17.5h.01"/>'),
+  box: ic('<path d="m3 7.5 9-4.5 9 4.5-9 4.5z"/><path d="M3 7.5V17l9 4.5 9-4.5V7.5M12 12v9.5"/>'),
+  tool: ic('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>'),
+  checklist: ic('<path d="M10 6h10M10 12h10M10 18h10"/><path d="m3.5 6 1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 11M3.5 18l1.5 1.5 2.5-2.5"/>'),
+  left: ic('<path d="m15 6-6 6 6 6"/>'),
+  cart: ic('<circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/><path d="M2.5 3.5h2.6l2.4 11.2a1.6 1.6 0 0 0 1.6 1.3h8.7a1.6 1.6 0 0 0 1.6-1.2l1.6-7.3H6"/><path d="M10 10.5h7"/>'),
+};
+
+/* ================= tabela inicial de preços (referência para ajustar) ================= */
+const UNITS = [['un', 'Unidade'], ['ponto', 'Ponto'], ['m', 'Metro'], ['m²', 'Metro quadrado'], ['h', 'Hora'], ['vb', 'Verba'],
+  ['pç', 'Peça'], ['par', 'Par'], ['rolo', 'Rolo'], ['cx', 'Caixa'], ['pct', 'Pacote'], ['barra', 'Barra'], ['kg', 'Quilo'], ['l', 'Litro'],
+  ['saco', 'Saco'], ['galão', 'Galão'], ['kit', 'Kit']];
+const unitTxt = (q, u) => ({ un: 'un.', ponto: q === 1 ? 'ponto' : 'pontos', m: 'm', 'm²': 'm²', h: 'h', vb: q === 1 ? 'verba' : 'verbas',
+  'pç': q === 1 ? 'peça' : 'peças', par: q === 1 ? 'par' : 'pares', rolo: q === 1 ? 'rolo' : 'rolos', cx: q === 1 ? 'caixa' : 'caixas', pct: q === 1 ? 'pacote' : 'pacotes', barra: q === 1 ? 'barra' : 'barras', kg: 'kg', l: 'L',
+  saco: q === 1 ? 'saco' : 'sacos', 'galão': q === 1 ? 'galão' : 'galões', kit: q === 1 ? 'kit' : 'kits' }[u] || u || 'un.');
+const unitName = u => (UNITS.find(x => x[0] === u) || UNITS[0])[1].toLowerCase();
+const SEED = [
+  ['svc', 'Tomadas e interruptores', 'Instalação de tomada ou interruptor', 'un', 4500],
+  ['svc', 'Tomadas e interruptores', 'Troca de tomada ou interruptor', 'un', 3000],
+  ['svc', 'Tomadas e interruptores', 'Ponto novo de tomada com fiação', 'ponto', 9000],
+  ['svc', 'Tomadas e interruptores', 'Tomada de uso específico 20 A', 'un', 7000],
+  ['svc', 'Tomadas e interruptores', 'Ponto de interruptor paralelo three-way', 'ponto', 12000],
+  ['svc', 'Iluminação', 'Instalação de luminária ou plafon', 'un', 6000],
+  ['svc', 'Iluminação', 'Instalação de lustre ou pendente', 'un', 12000],
+  ['svc', 'Iluminação', 'Instalação de spot embutido', 'un', 3500],
+  ['svc', 'Iluminação', 'Instalação de fita de LED', 'm', 2500],
+  ['svc', 'Iluminação', 'Instalação de sensor de presença', 'un', 7000],
+  ['svc', 'Iluminação', 'Instalação de refletor externo', 'un', 8000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de chuveiro elétrico', 'un', 9000],
+  ['svc', 'Chuveiro e aparelhos', 'Troca de resistência do chuveiro', 'un', 5000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de ventilador de teto', 'un', 15000],
+  ['svc', 'Chuveiro e aparelhos', 'Ponto e circuito para ar-condicionado', 'un', 25000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de torneira elétrica', 'un', 8000],
+  ['svc', 'Quadro e proteção', 'Instalação ou troca de disjuntor', 'un', 4000],
+  ['svc', 'Quadro e proteção', 'Instalação de DR', 'un', 9000],
+  ['svc', 'Quadro e proteção', 'Instalação de DPS', 'un', 7000],
+  ['svc', 'Quadro e proteção', 'Montagem de quadro de distribuição', 'un', 45000],
+  ['svc', 'Quadro e proteção', 'Aterramento com haste e conexões', 'un', 25000],
+  ['svc', 'Quadro e proteção', 'Instalação de padrão de entrada', 'un', 90000],
+  ['svc', 'Fiação e infraestrutura', 'Passagem de fiação', 'm', 800],
+  ['svc', 'Fiação e infraestrutura', 'Troca da fiação de um circuito', 'un', 18000],
+  ['svc', 'Fiação e infraestrutura', 'Eletroduto aparente', 'm', 1500],
+  ['svc', 'Fiação e infraestrutura', 'Rasgo e fechamento na parede', 'm', 2500],
+  ['svc', 'Visita e diagnóstico', 'Visita técnica', 'un', 12000],
+  ['svc', 'Visita e diagnóstico', 'Localização de curto-circuito', 'un', 15000],
+  ['svc', 'Visita e diagnóstico', 'Hora técnica', 'h', 9000],
+  ['mat', 'Cabos', 'Cabo flexível 1,5 mm²', 'm', 250],
+  ['mat', 'Cabos', 'Cabo flexível 2,5 mm²', 'm', 350],
+  ['mat', 'Cabos', 'Cabo flexível 4 mm²', 'm', 550],
+  ['mat', 'Cabos', 'Cabo flexível 6 mm²', 'm', 850],
+  ['mat', 'Cabos', 'Cabo flexível 10 mm²', 'm', 1400],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto corrugado 3/4"', 'm', 250],
+  ['mat', 'Eletrodutos e caixas', 'Caixa 4x2', 'un', 250],
+  ['mat', 'Eletrodutos e caixas', 'Caixa 4x4', 'un', 400],
+  ['mat', 'Eletrodutos e caixas', 'Caixa de passagem', 'un', 1200],
+  ['mat', 'Tomadas e interruptores', 'Tomada 10 A com placa', 'un', 1800],
+  ['mat', 'Tomadas e interruptores', 'Tomada 20 A com placa', 'un', 2200],
+  ['mat', 'Tomadas e interruptores', 'Interruptor simples com placa', 'un', 1600],
+  ['mat', 'Tomadas e interruptores', 'Tomada dupla 10 A com placa', 'un', 2800],
+  ['mat', 'Tomadas e interruptores', 'Interruptor duplo com placa', 'un', 2400],
+  ['mat', 'Tomadas e interruptores', 'Interruptor paralelo three-way com placa', 'un', 2200],
+  ['mat', 'Tomadas e interruptores', 'Interruptor intermediário four-way', 'un', 4500],
+  ['mat', 'Proteção', 'Disjuntor monopolar 10 a 32 A', 'un', 2200],
+  ['mat', 'Proteção', 'Disjuntor bipolar 10 a 32 A', 'un', 7500],
+  ['mat', 'Proteção', 'DR bipolar 40 A 30 mA', 'un', 16000],
+  ['mat', 'Proteção', 'DPS classe II 275 V 20 kA', 'un', 5500],
+  ['mat', 'Proteção', 'Quadro para 12 disjuntores', 'un', 12000],
+  ['mat', 'Iluminação', 'Lâmpada LED 9 W', 'un', 1000],
+  ['mat', 'Iluminação', 'Spot embutido LED', 'un', 3500],
+  ['mat', 'Iluminação', 'Plafon LED 18 W', 'un', 4500],
+  ['mat', 'Fixação e acabamento', 'Fita isolante', 'un', 800],
+  // 2.15: catálogo ampliado de mão de obra e material (preços de referência)
+  ['svc', 'Tomadas e interruptores', 'Instalação de tomada USB', 'un', 5500],
+  ['svc', 'Tomadas e interruptores', 'Troca de espelho ou placa', 'un', 1500],
+  ['svc', 'Tomadas e interruptores', 'Instalação de interruptor com dimmer', 'un', 6500],
+  ['svc', 'Tomadas e interruptores', 'Instalação de campainha', 'un', 8000],
+  ['svc', 'Tomadas e interruptores', 'Instalação de tomada de piso', 'un', 9000],
+  ['svc', 'Tomadas e interruptores', 'Ponto de tomada externa à prova de tempo', 'ponto', 11000],
+  ['svc', 'Iluminação', 'Instalação de perfil de LED', 'm', 4000],
+  ['svc', 'Iluminação', 'Instalação de arandela', 'un', 7000],
+  ['svc', 'Iluminação', 'Instalação de luminária de emergência', 'un', 6000],
+  ['svc', 'Iluminação', 'Instalação de poste ou balizador de jardim', 'un', 15000],
+  ['svc', 'Iluminação', 'Instalação de fotocélula', 'un', 6000],
+  ['svc', 'Iluminação', 'Instalação de trilho eletrificado', 'm', 5000],
+  ['svc', 'Iluminação', 'Troca de reator ou driver', 'un', 5000],
+  ['svc', 'Iluminação', 'Ponto de iluminação novo com fiação', 'ponto', 9000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de cooktop ou forno elétrico', 'un', 15000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação elétrica de aquecedor a gás', 'un', 12000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de exaustor ou coifa', 'un', 12000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de motor de portão', 'un', 30000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de bomba d\'água', 'un', 20000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de aquecedor de passagem elétrico', 'un', 15000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de purificador ou filtro elétrico', 'un', 7000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de máquina de lavar com ponto exclusivo', 'un', 14000],
+  ['svc', 'Chuveiro e aparelhos', 'Instalação elétrica de ar-condicionado split', 'un', 35000],
+  ['svc', 'Quadro e proteção', 'Troca de quadro de distribuição', 'un', 55000],
+  ['svc', 'Quadro e proteção', 'Organização e identificação de quadro', 'un', 25000],
+  ['svc', 'Quadro e proteção', 'Instalação de disjuntor geral', 'un', 8000],
+  ['svc', 'Quadro e proteção', 'Instalação de IDR', 'un', 11000],
+  ['svc', 'Quadro e proteção', 'Balanceamento de fases', 'un', 30000],
+  ['svc', 'Quadro e proteção', 'Instalação de quadro de medição', 'un', 60000],
+  ['svc', 'Quadro e proteção', 'Instalação de contator ou relé', 'un', 12000],
+  ['svc', 'Quadro e proteção', 'Instalação de temporizador', 'un', 9000],
+  ['svc', 'Fiação e infraestrutura', 'Passagem de cabo em eletroduto existente', 'm', 600],
+  ['svc', 'Fiação e infraestrutura', 'Instalação de eletrocalha', 'm', 3500],
+  ['svc', 'Fiação e infraestrutura', 'Instalação de canaleta', 'm', 1800],
+  ['svc', 'Fiação e infraestrutura', 'Abertura de caixa na alvenaria', 'un', 4000],
+  ['svc', 'Fiação e infraestrutura', 'Instalação de eletroduto embutido', 'm', 2500],
+  ['svc', 'Fiação e infraestrutura', 'Ramal de ligação até o padrão de entrada', 'un', 45000],
+  ['svc', 'Fiação e infraestrutura', 'Lançamento de cabo subterrâneo', 'm', 3500],
+  ['svc', 'Rede, som e segurança', 'Ponto de rede RJ45', 'ponto', 9000],
+  ['svc', 'Rede, som e segurança', 'Ponto de antena ou TV', 'ponto', 8000],
+  ['svc', 'Rede, som e segurança', 'Instalação de câmera de segurança', 'un', 15000],
+  ['svc', 'Rede, som e segurança', 'Instalação de interfone ou porteiro eletrônico', 'un', 20000],
+  ['svc', 'Rede, som e segurança', 'Instalação de cerca elétrica', 'm', 3500],
+  ['svc', 'Rede, som e segurança', 'Instalação de alarme', 'un', 40000],
+  ['svc', 'Rede, som e segurança', 'Instalação de sensor de alarme', 'un', 6000],
+  ['svc', 'Rede, som e segurança', 'Instalação de fechadura elétrica', 'un', 15000],
+  ['svc', 'Energia solar e gerador', 'Instalação de inversor', 'un', 60000],
+  ['svc', 'Energia solar e gerador', 'Instalação de string box', 'un', 25000],
+  ['svc', 'Energia solar e gerador', 'Montagem de módulo fotovoltaico', 'un', 12000],
+  ['svc', 'Energia solar e gerador', 'Instalação de chave de transferência de gerador', 'un', 45000],
+  ['svc', 'Energia solar e gerador', 'Instalação de nobreak', 'un', 12000],
+  ['svc', 'Laudos e manutenção', 'Inspeção de instalação elétrica', 'un', 30000],
+  ['svc', 'Laudos e manutenção', 'Laudo técnico com ART', 'un', 80000],
+  ['svc', 'Laudos e manutenção', 'Medição de aterramento', 'un', 20000],
+  ['svc', 'Laudos e manutenção', 'Termografia de quadro', 'un', 35000],
+  ['svc', 'Laudos e manutenção', 'Manutenção preventiva de quadro', 'un', 25000],
+  ['svc', 'Laudos e manutenção', 'Reaperto de conexões', 'un', 15000],
+  ['svc', 'Visita e diagnóstico', 'Diária técnica', 'un', 60000],
+  ['mat', 'Cabos', 'Cabo flexível 0,75 mm²', 'm', 180],
+  ['mat', 'Cabos', 'Cabo flexível 16 mm²', 'm', 2300],
+  ['mat', 'Cabos', 'Cabo flexível 25 mm²', 'm', 3600],
+  ['mat', 'Cabos', 'Cabo PP 2 x 1,5 mm²', 'm', 650],
+  ['mat', 'Cabos', 'Cabo PP 3 x 1,5 mm²', 'm', 900],
+  ['mat', 'Cabos', 'Cabo PP 3 x 2,5 mm²', 'm', 1300],
+  ['mat', 'Cabos', 'Cabo PP 4 x 4 mm²', 'm', 2600],
+  ['mat', 'Cabos', 'Cabo paralelo 2 x 1,5 mm²', 'm', 400],
+  ['mat', 'Cabos', 'Cabo de cobre nu 16 mm²', 'm', 2400],
+  ['mat', 'Cabos', 'Cabo de rede UTP Cat6', 'm', 300],
+  ['mat', 'Cabos', 'Cabo coaxial RG6', 'm', 250],
+  ['mat', 'Cabos', 'Cabo para alarme 4 vias', 'm', 200],
+  ['mat', 'Cabos', 'Cabo solar 6 mm²', 'm', 900],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto corrugado 1"', 'm', 350],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto corrugado 1/2"', 'm', 200],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto rígido PVC 3/4" de 3 m', 'barra', 1800],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto rígido PVC 1" de 3 m', 'barra', 2600],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto metálico 3/4" de 3 m', 'barra', 4500],
+  ['mat', 'Eletrodutos e caixas', 'Curva PVC 3/4"', 'un', 400],
+  ['mat', 'Eletrodutos e caixas', 'Luva PVC 3/4"', 'un', 200],
+  ['mat', 'Eletrodutos e caixas', 'Bucha e arruela 3/4"', 'un', 150],
+  ['mat', 'Eletrodutos e caixas', 'Caixa 4x2 para drywall', 'un', 450],
+  ['mat', 'Eletrodutos e caixas', 'Caixa octogonal 4x4 de laje', 'un', 450],
+  ['mat', 'Eletrodutos e caixas', 'Caixa de sobrepor 4x2', 'un', 800],
+  ['mat', 'Eletrodutos e caixas', 'Condulete 3/4"', 'un', 1200],
+  ['mat', 'Eletrodutos e caixas', 'Canaleta 20 x 10 mm de 2 m', 'barra', 1200],
+  ['mat', 'Eletrodutos e caixas', 'Eletrocalha perfurada 100 x 50 de 3 m', 'barra', 9000],
+  ['mat', 'Eletrodutos e caixas', 'Caixa de passagem 20 x 20', 'un', 3500],
+  ['mat', 'Eletrodutos e caixas', 'Abraçadeira tipo D 3/4"', 'un', 100],
+  ['mat', 'Eletrodutos e caixas', 'Fita perfurada', 'm', 200],
+  ['mat', 'Tomadas e interruptores', 'Tomada USB com placa', 'un', 6500],
+  ['mat', 'Tomadas e interruptores', 'Módulo de tomada 2P+T 10 A', 'un', 900],
+  ['mat', 'Tomadas e interruptores', 'Módulo de tomada 2P+T 20 A', 'un', 1200],
+  ['mat', 'Tomadas e interruptores', 'Módulo de interruptor simples', 'un', 700],
+  ['mat', 'Tomadas e interruptores', 'Módulo de interruptor paralelo', 'un', 1000],
+  ['mat', 'Tomadas e interruptores', 'Placa 4x2 de 1 posto', 'un', 600],
+  ['mat', 'Tomadas e interruptores', 'Placa 4x2 de 2 postos', 'un', 600],
+  ['mat', 'Tomadas e interruptores', 'Placa 4x4', 'un', 1200],
+  ['mat', 'Tomadas e interruptores', 'Suporte 4x2', 'un', 300],
+  ['mat', 'Tomadas e interruptores', 'Dimmer rotativo', 'un', 4500],
+  ['mat', 'Tomadas e interruptores', 'Pulsador de campainha', 'un', 1500],
+  ['mat', 'Tomadas e interruptores', 'Tomada de sobrepor', 'un', 1800],
+  ['mat', 'Tomadas e interruptores', 'Tomada industrial 2P+T 16 A', 'un', 3500],
+  ['mat', 'Tomadas e interruptores', 'Tomada para piso', 'un', 9000],
+  ['mat', 'Tomadas e interruptores', 'Plugue macho 10 A', 'un', 600],
+  ['mat', 'Tomadas e interruptores', 'Plugue fêmea 10 A', 'un', 600],
+  ['mat', 'Proteção', 'Disjuntor monopolar 40 a 63 A', 'un', 3200],
+  ['mat', 'Proteção', 'Disjuntor bipolar 40 a 63 A', 'un', 9500],
+  ['mat', 'Proteção', 'Disjuntor tripolar 10 a 32 A', 'un', 13000],
+  ['mat', 'Proteção', 'Disjuntor tripolar 70 a 100 A', 'un', 28000],
+  ['mat', 'Proteção', 'DR tetrapolar 40 A 30 mA', 'un', 25000],
+  ['mat', 'Proteção', 'DR bipolar 63 A 30 mA', 'un', 22000],
+  ['mat', 'Proteção', 'IDR bipolar 25 A', 'un', 18000],
+  ['mat', 'Proteção', 'DPS classe II 175 V 20 kA', 'un', 5000],
+  ['mat', 'Proteção', 'Quadro para 6 disjuntores', 'un', 6500],
+  ['mat', 'Proteção', 'Quadro para 18 disjuntores', 'un', 18000],
+  ['mat', 'Proteção', 'Quadro para 24 disjuntores', 'un', 26000],
+  ['mat', 'Proteção', 'Quadro de sobrepor', 'un', 9000],
+  ['mat', 'Proteção', 'Barramento pente monopolar', 'un', 2500],
+  ['mat', 'Proteção', 'Barramento de neutro e terra', 'un', 1500],
+  ['mat', 'Proteção', 'Trilho DIN', 'm', 1200],
+  ['mat', 'Proteção', 'Tampa cega para quadro', 'un', 400],
+  ['mat', 'Proteção', 'Caixa de medição monofásica', 'un', 15000],
+  ['mat', 'Proteção', 'Caixa de medição bifásica', 'un', 22000],
+  ['mat', 'Aterramento', 'Haste de aterramento 2,4 m', 'un', 4500],
+  ['mat', 'Aterramento', 'Conector para haste', 'un', 800],
+  ['mat', 'Aterramento', 'Caixa de inspeção de aterramento', 'un', 3000],
+  ['mat', 'Aterramento', 'Barra de equipotencialização BEP', 'un', 6000],
+  ['mat', 'Aterramento', 'Cordoalha de cobre', 'm', 2000],
+  ['mat', 'Iluminação', 'Lâmpada LED 12 W', 'un', 1400],
+  ['mat', 'Iluminação', 'Lâmpada LED 15 W', 'un', 1800],
+  ['mat', 'Iluminação', 'Lâmpada tubular LED 18 W', 'un', 2500],
+  ['mat', 'Iluminação', 'Lâmpada LED bulbo 30 W', 'un', 4500],
+  ['mat', 'Iluminação', 'Plafon LED 24 W', 'un', 6000],
+  ['mat', 'Iluminação', 'Painel LED embutido 18 W', 'un', 5500],
+  ['mat', 'Iluminação', 'Spot direcionável', 'un', 4500],
+  ['mat', 'Iluminação', 'Fita de LED 5 m', 'un', 6000],
+  ['mat', 'Iluminação', 'Fonte para fita de LED', 'un', 5000],
+  ['mat', 'Iluminação', 'Perfil de alumínio para LED de 2 m', 'barra', 4000],
+  ['mat', 'Iluminação', 'Refletor LED 50 W', 'un', 7000],
+  ['mat', 'Iluminação', 'Refletor LED 100 W', 'un', 12000],
+  ['mat', 'Iluminação', 'Luminária de emergência', 'un', 3500],
+  ['mat', 'Iluminação', 'Sensor de presença de teto', 'un', 4000],
+  ['mat', 'Iluminação', 'Relé fotocélula', 'un', 3000],
+  ['mat', 'Iluminação', 'Arandela', 'un', 6000],
+  ['mat', 'Iluminação', 'Soquete E27', 'un', 500],
+  ['mat', 'Iluminação', 'Driver para LED', 'un', 3500],
+  ['mat', 'Aparelhos', 'Chuveiro elétrico 220 V', 'un', 9000],
+  ['mat', 'Aparelhos', 'Resistência para chuveiro', 'un', 2500],
+  ['mat', 'Aparelhos', 'Torneira elétrica', 'un', 15000],
+  ['mat', 'Aparelhos', 'Campainha', 'un', 4000],
+  ['mat', 'Aparelhos', 'Ventilador de teto', 'un', 25000],
+  ['mat', 'Aparelhos', 'Exaustor', 'un', 9000],
+  ['mat', 'Rede, som e segurança', 'Conector RJ45', 'un', 100],
+  ['mat', 'Rede, som e segurança', 'Módulo de tomada RJ45', 'un', 1500],
+  ['mat', 'Rede, som e segurança', 'Conector F para coaxial', 'un', 100],
+  ['mat', 'Rede, som e segurança', 'Câmera de segurança', 'un', 15000],
+  ['mat', 'Rede, som e segurança', 'Fonte 12 V para câmera', 'un', 3000],
+  ['mat', 'Rede, som e segurança', 'Interfone', 'un', 20000],
+  ['mat', 'Rede, som e segurança', 'Sensor de alarme', 'un', 4000],
+  ['mat', 'Automação e comando', 'Contator', 'un', 9000],
+  ['mat', 'Automação e comando', 'Relé de impulso', 'un', 8000],
+  ['mat', 'Automação e comando', 'Temporizador digital', 'un', 9000],
+  ['mat', 'Automação e comando', 'Minuteria', 'un', 4000],
+  ['mat', 'Automação e comando', 'Interruptor inteligente Wi-Fi', 'un', 9000],
+  ['mat', 'Automação e comando', 'Tomada inteligente Wi-Fi', 'un', 7000],
+  ['mat', 'Automação e comando', 'Botoeira liga e desliga', 'un', 4000],
+  ['mat', 'Automação e comando', 'Chave boia', 'un', 4000],
+  ['mat', 'Conexões e terminais', 'Conector de emenda Wago de 2 vias', 'un', 250],
+  ['mat', 'Conexões e terminais', 'Conector de emenda Wago de 3 vias', 'un', 300],
+  ['mat', 'Conexões e terminais', 'Conector de emenda Wago de 5 vias', 'un', 400],
+  ['mat', 'Conexões e terminais', 'Terminal tubular, 100 peças', 'pct', 1500],
+  ['mat', 'Conexões e terminais', 'Terminal olhal, 100 peças', 'pct', 2500],
+  ['mat', 'Conexões e terminais', 'Terminal forquilha, 100 peças', 'pct', 2500],
+  ['mat', 'Conexões e terminais', 'Conector split bolt', 'un', 1200],
+  ['mat', 'Conexões e terminais', 'Borne de passagem', 'un', 600],
+  ['mat', 'Conexões e terminais', 'Conector de derivação perfurante', 'un', 1500],
+  ['mat', 'Fixação e acabamento', 'Bucha e parafuso 6 mm, 100 peças', 'pct', 1500],
+  ['mat', 'Fixação e acabamento', 'Bucha e parafuso 8 mm, 100 peças', 'pct', 2000],
+  ['mat', 'Fixação e acabamento', 'Abraçadeira de nylon, 100 peças', 'pct', 1200],
+  ['mat', 'Fixação e acabamento', 'Abraçadeira com base adesiva, 100 peças', 'pct', 2500],
+  ['mat', 'Fixação e acabamento', 'Espaguete termorretrátil', 'm', 300],
+  ['mat', 'Fixação e acabamento', 'Fita isolante de alta fusão', 'un', 2500],
+  ['mat', 'Fixação e acabamento', 'Fita isolante colorida', 'kit', 2500],
+  ['mat', 'Fixação e acabamento', 'Massa de calafetar', 'un', 1500],
+  ['mat', 'Fixação e acabamento', 'Gesso 1 kg', 'saco', 600],
+  ['mat', 'Fixação e acabamento', 'Massa corrida', 'galão', 4500],
+  ['mat', 'Fixação e acabamento', 'Identificador de cabos', 'kit', 2000],
+  // catálogo 8 (2.22): revisão completa
+  ['svc', 'Chuveiro e aparelhos', 'Instalação de carregador de veículo elétrico', 'un', 90000],
+  ['svc', 'Rede, som e segurança', 'Configuração de interruptor ou tomada inteligente', 'un', 6000],
+  ['svc', 'Laudos e manutenção', 'Inspeção de SPDA e para-raios', 'un', 45000],
+  ['svc', 'Laudos e manutenção', 'Ensaio de resistência de isolamento', 'un', 25000],
+  ['svc', 'Laudos e manutenção', 'Projeto elétrico residencial', 'vb', 150000],
+  ['mat', 'Cabos', 'Cabo flexível 35 mm²', 'm', 5200],
+  ['mat', 'Cabos', 'Cabo flexível 50 mm²', 'm', 7200],
+  ['mat', 'Cabos', 'Cabo flexível 1,5 mm², rolo de 100 m', 'rolo', 17000],
+  ['mat', 'Cabos', 'Cabo flexível 2,5 mm², rolo de 100 m', 'rolo', 25000],
+  ['mat', 'Cabos', 'Cabo flexível 4 mm², rolo de 100 m', 'rolo', 40000],
+  ['mat', 'Cabos', 'Cabo flexível 6 mm², rolo de 100 m', 'rolo', 60000],
+  ['mat', 'Cabos', 'Cabo PP 2 x 2,5 mm²', 'm', 900],
+  ['mat', 'Cabos', 'Cabo solar 4 mm²', 'm', 700],
+  ['mat', 'Eletrodutos e caixas', 'Eletroduto corrugado reforçado 3/4"', 'm', 350],
+  ['mat', 'Eletrodutos e caixas', 'Curva PVC 1"', 'un', 600],
+  ['mat', 'Eletrodutos e caixas', 'Luva PVC 1"', 'un', 300],
+  ['mat', 'Proteção', 'DR bipolar 25 A 30 mA', 'un', 15000],
+  ['mat', 'Proteção', 'IDR tetrapolar 40 A 30 mA', 'un', 32000],
+  ['mat', 'Proteção', 'Quadro para 36 disjuntores', 'un', 42000],
+  ['mat', 'Iluminação', 'Painel LED embutido 24 W', 'un', 7000],
+  ['mat', 'Aparelhos', 'Chuveiro elétrico 127 V', 'un', 9000],
+  ['mat', 'Aparelhos', 'Carregador de veículo elétrico 7,4 kW', 'un', 350000],
+];
+const catOrder = kind => [...new Set(SEED.filter(s => s[0] === kind).map(s => s[1])), 'Outros'];
+// itens que entraram depois da primeira tabela (são acrescentados em quem já usa o app)
+// 2.15: tudo o que ainda não está na tabela entra (por nome), sem mexer nos itens e preços de quem já usa
+/* composição por serviço (F5): o material que costuma ir em cada unidade do serviço. Sugestão editável: o app oferece
+   ao adicionar o serviço e cada um ajusta na tabela de preços. Quantidades médias de obra residencial. */
+const COMPOSICAO = {
+  'Ponto novo de tomada com fiação': [['Caixa 4x2', 1], ['Tomada 10 A com placa', 1], ['Cabo flexível 2,5 mm²', 12], ['Eletroduto corrugado 3/4"', 4]],
+  'Ponto de iluminação novo com fiação': [['Caixa octogonal 4x4 de laje', 1], ['Caixa 4x2', 1], ['Interruptor simples com placa', 1], ['Cabo flexível 1,5 mm²', 12], ['Eletroduto corrugado 3/4"', 4]],
+  'Ponto de interruptor paralelo three-way': [['Caixa 4x2', 2], ['Interruptor paralelo three-way com placa', 2], ['Cabo flexível 1,5 mm²', 15], ['Eletroduto corrugado 3/4"', 6]],
+  'Tomada de uso específico 20 A': [['Tomada 20 A com placa', 1]],
+  'Ponto de tomada externa à prova de tempo': [['Caixa de sobrepor 4x2', 1], ['Tomada 10 A com placa', 1], ['Cabo flexível 2,5 mm²', 10], ['Eletroduto rígido PVC 3/4" de 3 m', 1]],
+  'Ponto e circuito para ar-condicionado': [['Caixa 4x2', 1], ['Tomada 20 A com placa', 1], ['Disjuntor bipolar 10 a 32 A', 1], ['Cabo flexível 4 mm²', 30], ['Eletroduto corrugado 3/4"', 10]],
+  'Instalação de máquina de lavar com ponto exclusivo': [['Caixa 4x2', 1], ['Tomada 20 A com placa', 1], ['Disjuntor monopolar 10 a 32 A', 1], ['Cabo flexível 2,5 mm²', 30], ['Eletroduto corrugado 3/4"', 10]],
+  'Instalação ou troca de disjuntor': [['Disjuntor monopolar 10 a 32 A', 1]],
+  'Instalação de DR': [['DR bipolar 40 A 30 mA', 1]],
+  'Instalação de IDR': [['IDR bipolar 25 A', 1]],
+  'Instalação de DPS': [['DPS classe II 275 V 20 kA', 1], ['Cabo flexível 10 mm²', 1]],
+  'Aterramento com haste e conexões': [['Haste de aterramento 2,4 m', 1], ['Conector para haste', 1], ['Caixa de inspeção de aterramento', 1], ['Cabo de cobre nu 16 mm²', 5]],
+  'Montagem de quadro de distribuição': [['Quadro para 12 disjuntores', 1], ['Barramento pente monopolar', 1], ['Barramento de neutro e terra', 2], ['Disjuntor monopolar 10 a 32 A', 8]],
+  'Troca da fiação de um circuito': [['Cabo flexível 2,5 mm²', 30], ['Conector de emenda Wago de 2 vias', 4]],
+  'Ponto de rede RJ45': [['Caixa 4x2', 1], ['Módulo de tomada RJ45', 1], ['Placa 4x2 de 1 posto', 1], ['Suporte 4x2', 1], ['Cabo de rede UTP Cat6', 20], ['Conector RJ45', 2]],
+  'Ponto de antena ou TV': [['Caixa 4x2', 1], ['Cabo coaxial RG6', 15], ['Conector F para coaxial', 2]],
+  'Instalação de carregador de veículo elétrico': [['Disjuntor bipolar 40 a 63 A', 1], ['DR bipolar 63 A 30 mA', 1], ['Cabo flexível 10 mm²', 30], ['Eletroduto corrugado 1"', 10]],
+};
+const compDe = name => (COMPOSICAO[name] || []).map(([n, q]) => ({ n, q }));
+const SEED_V2 = ['Ponto de interruptor paralelo three-way', 'Tomada dupla 10 A com placa', 'Interruptor duplo com placa', 'Interruptor paralelo three-way com placa', 'Interruptor intermediário four-way'];
+const seedPrices = () => SEED.map(([kind, cat, name, unit, price]) => ({ id: uid(), kind, cat, name, unit, price, ref: true, ...(kind === 'svc' && COMPOSICAO[name] ? { comp: compDe(name) } : {}) }));
+/* preços de fábrica: os que vêm com o app aparecem em cinza; qualquer mudança no valor (no item, na caixa do material
+   ou no reajuste) deixa o preço em preto. O leitor de tela diz "preço que vem com o app" e a nota no fim de Preços
+   explica o cinza (informação nunca só pela cor). O cinza não chega ao contraste AA: exceção no README. */
+const refV = v => `<span class="ref-v">${v}<span class="sr-only">, preço que vem com o app</span></span>`;
+const refLinha = i => prices.some(p => p.ref && p.kind === i.kind && norm(p.name) === norm(i.name) && p.price === i.price);
+
+/* ================= dados (tudo guardado neste aparelho) ================= */
+const KEY = 'eletricafacil.';
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(KEY + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); return true; } catch { return false; } },
+};
+const ACCEPT_DEFAULT = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita, no WhatsApp ou no e-mail.';
+const ACCEPT_V6 = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita (WhatsApp ou e-mail).';
+const WARRANTY_DEFAULT = 'A garantia cobre falhas no serviço executado. Não cobre: mau uso; alterações feitas por terceiros; sobrecarga causada por equipamentos ligados depois do serviço; surtos de tensão, descargas atmosféricas e falhas da rede da concessionária; e materiais fornecidos pelo cliente, que seguem a garantia do fabricante. Esta garantia não exclui os direitos previstos no Código de Defesa do Consumidor.';
+const DEF = { toolSeedV: 0, name: '', company: '', phone: '', email: '', doc: '', registro: '', city: '', pix: '', logo: '', logoRatio: 1,
+  taxMode: 'sem', taxPct: 5, taxBase: 'servico',
+  validity: 15, warranty: 90, prazoN: 1, prazoU: 'uteis', payMode: 'entrada', entryPct: 50, installments: 3, notes: '',
+  // cartão: tipo de juros, taxa da maquininha por parcelamento (em %), juros ao mês, sem juros até N× e quem paga a taxa
+  cardJuros: 'sem', cardRates: {}, cardMes: 0, cardSemAte: 0, cardPaga: 'cliente', avistaPct: 0, seq: 0,
+  kmPerL: 0, fuelPrice: 0, wearPerKm: 0, hourRate: 0, minVisit: 0, roundTrip: true,
+  surUrgent: 0, surNight: 0, surWeekend: 0, seedV: 0,
+  acceptText: ACCEPT_DEFAULT, warrantyTerms: WARRANTY_DEFAULT };
+const TESTS_V1 = { tensao: 'Medição de tensão nas tomadas e no quadro de distribuição.', dr: 'Teste do DR pelo botão de teste.', terra: 'Verificação do aterramento.',
+  func: 'Teste de funcionamento dos circuitos e equipamentos.', aquec: 'Verificação de aquecimento nas conexões.', carga: 'Teste do circuito com carga.', isol: 'Medição de resistência de isolamento.' };
+const STATUS = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado', concluido: 'Concluído', recusado: 'Recusado' };
+
+let settings = { ...DEF, ...LS.get('settings', {}) };
+let prices = LS.get('prices', null);
+let quotes = LS.get('quotes', null);
+// gestão: ferramentas (as que tem e as que quer comprar) e checklist fixo de ida e volta da obra
+// o estoque de material fica na própria tabela de preços (campos stock, cost e brand dos materiais)
+let tools = LS.get('tools', []);
+let checks = LS.get('checks', []);
+// primeiro uso: nada guardado ainda neste aparelho (nem da versão antiga)
+const PRIMEIRO_USO = quotes === null && !LS.get('catalog', null);
+// sincronização entre aparelhos: motor comum do Kit Fácil (a regra de junção dos dados fica mais abaixo)
+KitFacil.iniciar({
+  app: 'eletrica-facil', nome: 'Elétrica Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
+  resumo: 'Orçamentos de elétrica prontos em minutos: serviços e materiais da sua tabela, deslocamento, adicionais, proposta em PDF ou WhatsApp com Pix, relatório e recibo.',
+  tela: () => route().name, exemploDados: 'os orçamentos e os dados dos seus clientes',
+  abrirAjustes: secao => { if (route().name !== 'settings') go('/ajustes'); else if (!secao) back('/'); },
+  emAjustes: () => route().name === 'settings',
+  novidades: [{ versao: '0.1.0', itens: ['Recomeço: o app está em fase de testes, e a numeração das versões recomeçou em 0.1.0.', 'Por dentro: o código do app saiu de dentro da página, e a proteção contra código injetado ficou mais forte.'] }, { versao: '2.24.3', itens: ['Correção: o app voltou a abrir normalmente para quem tem orçamentos com ambientes salvos.'] }, { versao: '2.24.2', itens: ['Avaliações protegidas contra robôs pelo App Check do Firebase, com o reCAPTCHA do Google.'] }, { versao: '2.24.1', itens: ['Por dentro: depois de uma atualização, o app nunca mistura arquivos novos com antigos, e as bibliotecas de fora são sempre conferidas.'] }, { versao: '2.24.0', itens: ['Avaliações mais protegidas: no máximo uma mensagem por minuto e dez por dia em cada aparelho, contra envios automáticos.', 'Sobre o aplicativo mostra o endereço oficial e o final da chave Pix do apoio, para você reconhecer cópias falsas.', 'Por dentro: o app só carrega código dos endereços conhecidos e confere a impressão digital das bibliotecas de fora.'] }, { versao: '2.23.0', itens: ['Sem tela de boas-vindas separada: quem chega já vê Orçamentos, e a janela de boas-vindas traz o atalho do orçamento de exemplo.'] }, { versao: '2.22.3', itens: ['No celular, o destaque do guia acompanha a tela sem atraso.'] }, { versao: '2.22.1', itens: ['O guia do app não cobre mais o que está destacado, nem em telas baixas.'] }, { versao: '2.22.0', itens: ['Impostos ou nota fiscal no orçamento: por fora (o cliente vê a linha) ou embutido nos preços, só na mão de obra (ISS) ou no total.', 'Material sugerido: ao adicionar um serviço como Ponto novo de tomada, o app oferece a lista de material, que você ajusta.', 'Registre os pagamentos recebidos; o resumo do mês mostra quanto falta receber.', 'Seu registro profissional (CREA, CFT ou NR-10) sai na proposta, no relatório e no recibo.', 'Tabela de preços revisada: carregador de carro elétrico, SPDA, projeto elétrico, cabos de 35 e 50 mm² e rolos de 100 m.', 'No computador largo, a proposta aparece ao lado do orçamento e muda enquanto você edita.'] }, { versao: '2.21.2', itens: ['Preços e Gestão ficaram mais limpas: sem a linha embaixo do título e com menos espaço vazio no fim da tela.', 'O aviso sobre os preços em cinza ficou mais discreto e mais claro.'] }, { versao: '2.21.1', itens: ['Em Preços, um aviso claro: os preços em cinza são só exemplos, não são recomendação, não obrigam ninguém e não vêm de pesquisa de mercado.', 'Reajustar preços foi para o fim da tela Preços, mais discreto.', 'Ícones novos para a lista de compras e para as ferramentas.', 'Na Gestão, o resumo não quebra mais linha ao escolher a comprar.'] }, { versao: '2.21.0', itens: ['Tudo no mesmo padrão: Preços e Gestão trocam de parte pelas mesmas guias sublinhadas, e as escolhas marcam a opção em branco, como em Ajustes › Aparência.', 'No orçamento, o botão ⋯ fica embaixo, ao lado de Ver proposta. Na proposta, Editar está no ⋯.', 'Avisos com botão contornado; o amarelo fica só para a ação principal de cada tela.', 'A tela Preços ganhou uma linha de apoio, e o botão de criar virou Novo preço.'] }, { versao: '2.20.0', itens: ['A Gestão ficou mais organizada: Materiais, Ferramentas e Checklist viraram guias no alto, e logo abaixo vem um resumo amarelo, como no Início.', 'No resumo, toque nos números para escolher o que ver (em estoque, para repor, no catálogo). A Lista de compras fica ali, com quantos itens tem.', 'No Checklist, o resumo mostra quanto já foi conferido na ida e na volta.'] }, { versao: '2.19.1', itens: ['Nenhum nome tem mais parênteses: os itens da tabela, as ferramentas, as categorias e os rótulos dos campos.', 'Os materiais e as ferramentas que vêm com o app agora podem ser alterados na Gestão: nome, categoria e unidade. As ferramentas também podem ser excluídas.', 'As listas de escolha abertas perto do pé da janela rolam até o último item aparecer.', 'O vermelho do Excluir, ao arrastar um rascunho, ficou emendado com o cartão.'] }, { versao: '2.19.0', itens: ['Os botões lado a lado viraram linhas, como em Preços: bolinha para uma escolha, caixa para várias e seta para abrir. Vale para Novo ambiente, Diagnóstico, Serviços, Testes, Recomendações, Observações, adicionais e outras formas de pagamento.', 'O Geral virou um ambiente como os outros: só aparece se você criar ou se houver item sem ambiente, e pode ser renomeado e excluído.', 'No Início, arraste um rascunho para a esquerda para excluir. Dá para desfazer.', 'Nos materiais, a unidade saiu do nome e fica só no campo de unidade. Novas unidades: saco, galão e kit.'] }, { versao: '2.18.0', itens: ['Todas as seções do app agora são iguais: um cartão com título, resumo de uma linha, contador ou valor e a seta. Vale para o Início, o orçamento e o relatório, a janela de adicionar itens, a Gestão e as janelas de material, ferramenta e lista de compras.', 'Cada seção abre e fecha sozinha, sem fechar as outras. Todas começam fechadas, e a busca abre as que têm resultado.', 'No Início, Concluídos e Recusados ficam separados por mês.'] }, { versao: '2.17.0', itens: ['Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes.'] }, { versao: '2.16.2', itens: ['Os preços que vêm com o app ficam em cinza claro; quando você muda o valor (ou reajusta), ele fica preto. Não é preciso confirmar nada.', 'Correção: Adicionar mão de obra e Adicionar material voltaram a funcionar.', 'Na Gestão, as categorias de Materiais e Ferramentas abrem e fecham como em Preços.', 'Os adicionais começam vazios: no orçamento, o app pergunta o percentual na primeira vez.'] }, { versao: '2.16.0', itens: [
+    'Na proposta, além da forma de pagamento principal, você marca outras que o cliente pode escolher, como à vista com desconto ou no cartão.',
+    'O orçamento avisa quando um material está abaixo do seu custo médio no estoque.',
+    'Comprei tudo: na lista de compras, um toque põe o material no estoque e as ferramentas nas suas.',
+  ] }, { versao: '2.15.0', itens: [
+    'Cartão com juros: sem juros, taxa da maquininha (cadastre a tabela em Ajustes, Orçamento novo) ou juros ao mês, com sem juros até N×, débito e a escolha de quem paga a taxa. O app mostra quanto você recebe.',
+    'Desconto à vista: um desconto só para quem paga à vista, separado do desconto do serviço.',
+    'Gestão: Estoque virou Materiais, com Em estoque, Repor e Catálogo, como em Ferramentas. Um material pode ter várias marcas, cada uma com quantidade e custo.',
+    'Catálogos maiores: 89 serviços de mão de obra, 155 materiais e 116 ferramentas já vêm no app. Os seus preços não mudam.',
+  ] }, { versao: '2.14.0', itens: ['Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas.', 'O calendário da data de aprovação agora é o calendário comum da família, com Hoje.'] }, { versao: '2.13.0', itens: [
+    'A data da aprovação agora usa o calendário do próprio app, sem datas futuras.',
+    'Comprei: abra uma ferramenta da lista de compras, toque em Comprei e diga a marca e o modelo. Ela vai para Minhas ferramentas.',
+    'A lista de escolha e o movimento das seções agora são os mesmos nos três apps da família.',
+  ] }, { versao: '2.12.0', itens: [
+    'Ferramentas em três listas: Minhas ferramentas, Quero comprar e Ferramentas cadastradas. Toque numa ferramenta para dizer se é sua, com marca, modelo e quantidade, ou se quer comprar.',
+    'Dá para ter várias ferramentas do mesmo tipo, de marcas ou modelos diferentes.',
+    'Nova ferramenta, novo material e novo preço seguem o mesmo caminho: primeiro a categoria, depois o item.',
+    'As listas de escolha agora são do próprio app, iguais no iPhone, no Android e no computador.',
+  ] }, { versao: '2.11.0', itens: [
+    'Seções do orçamento: o botão Próximo saiu. Toque na seção que quer abrir. A animação ficou mais lenta e suave, e no tablet a tela não dá mais o tranco no fim.',
+    'Ferramentas: o app já traz mais de 50 ferramentas de eletricista, por categoria. Toque no estado para marcar Não tenho, Tenho ou Quero comprar.',
+    'Estoque e Preços juntos: ao adicionar material no estoque, escolha a categoria e depois o material da sua tabela de Preços.',
+    'Lista de compras: o material que chegou ao mínimo e as ferramentas que você quer comprar, para copiar ou mandar pelo WhatsApp.',
+    'Prazo padrão: em Ajustes, Orçamento novo, escolha o prazo com que todo orçamento começa.',
+  ] }, { versao: '2.10.0', itens: [
+    'Prazo de execução e datas num lugar só: escolha a quantidade e a unidade (dias úteis, dias corridos, semanas ou meses) e toque no dia de início. O app marca os dias, pulando fins de semana e feriados nacionais nos dias úteis, e você ajusta.',
+    'O orçamento não aceita datas que já passaram.',
+    'Ao concluir um serviço, o app oferece dar baixa no estoque do material usado. Desfazer a conclusão devolve o material.',
+    'Cada material pode ter um mínimo: ao chegar nele, entra na lista Para repor, na Gestão.',
+    'Abrir e fechar as seções do orçamento ficou mais suave, sem saltos no título.',
+  ] }, { versao: '2.9.0', itens: [
+    'Nova guia Gestão, na barra de baixo: estoque de material (com custo, repasse e margem), suas ferramentas e as que quer comprar, e um checklist para conferir tudo na ida e na volta da obra.',
+    'O material do estoque é o mesmo da tabela de Preços: o repasse é o preço que vai no orçamento, e a lista de material mostra quanto você tem guardado.',
+    'Serviço em dias não seguidos: informe quantos dias são e marque cada um no calendário. O app avisa se a conta não fechar.',
+    'Ao ver a proposta, o botão Concluir volta para a lista e confirma que o orçamento foi salvo. No alto do orçamento, "Salvo" mostra que tudo ficou guardado.',
+    'O botão Próximo abre a seção seguinte com uma animação suave, sem pular a tela.',
+    'A lista de orçamentos abre em Todos.',
+    'Correção: a seta Voltar às vezes precisava de vários toques para sair de um orçamento.',
+  ] }, { versao: '2.8.0', itens: ['O botão Novo orçamento (e Novo item, na tabela de preços) não cobre mais o fim da lista. No computador, ele fica no topo da lista.', 'Listas vazias explicam o que aparece ali e o que fazer, no mesmo formato nos três apps.', 'Janelas e avisos iguais aos dos outros apps.', 'Boas-vindas uma vez só: a tela inicial já mostra os passos e o orçamento de exemplo.', 'Botões, filtros e links maiores, mais fáceis de tocar (no mínimo 44 px).'] }, { versao: '2.7.3', itens: ['No alto da tela, a nova ordem é nuvem, chopp e balão, com o chopp na mesma cor dos outros ícones.', 'A janela do chopp ficou mais simples: um só botão, Copiar código Pix.'] }, { versao: '2.7.2', itens: ['Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança.'] }, { versao: '2.7.1', itens: [
+    'O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.',
+    'Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).',
+    'No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps.',
+    'Novo: "Pague um chopp para o criador!", com QR code e Pix copia e cola. É opcional, o app continua gratuito.',
+    'Depois de cada atualização, o app mostra uma vez o que mudou. A lista também fica em Ajustes, Sobre o aplicativo.',
+    'Correção: o Elétrica Fácil agora tem identidade própria na instalação e não se confunde mais com os outros apps no mesmo aparelho.',
+  ] }],
+  // Código do Projeto Fácil: sem tela de primeiro uso; a janela de boas-vindas do Kit traz o atalho do exemplo
+  boasVindas: { novo: () => PRIMEIRO_USO && !(quotes || []).some(q => !q.example), exemplo: () => createExample(), rotuloExemplo: 'Ver um orçamento de exemplo' },
+  apresentacao: { frase: 'Orçamentos de elétrica com cara de profissional, prontos em minutos.', pontos: [
+    ['Monte o orçamento', 'Escolha os serviços e o material da sua tabela de preços; o app soma tudo.'],
+    ['Envie ao cliente', 'Proposta em PDF ou pelo WhatsApp, com Pix, prazo e garantia.'],
+    ['Acompanhe até o recibo', 'Marque quando o cliente aprovar e, no fim, gere o relatório e o recibo.'] ] },
+  guia: { get passos() { return GUIA; }, preparar: () => { const ex = quotes.find(q => q.example); if (!ex) createExample(); } },
+  copia: { descricao: 'Baixe um arquivo com os orçamentos, a tabela de preços, o estoque, as ferramentas e os ajustes.', baixar: () => baixarCopiaEletrica(), restaurar: f => restaurarCopiaEletrica(f) },
+  privacidade: [
+    'Os orçamentos, a tabela de preços, o estoque, as ferramentas, os ajustes e os dados dos clientes que você cadastra, como nome, telefone, endereço e CPF ou CNPJ, ficam guardados neste aparelho. Você é responsável por eles perante os seus clientes.',
+    'Propostas, relatórios e recibos em PDF são feitos aqui no aparelho. Eles só saem quando você compartilha, pelo WhatsApp, por e-mail ou por outro app.',
+  ],
+});
+KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#EFEEE9', escuro: '#0E0D0A' } });
+const SY = KitFacil.sync.criar({
+  app: 'eletrica-facil', nome: 'Elétrica Fácil', chave: 'eletricafacil.sync', dados: 'os mesmos orçamentos, preços, estoque, ferramentas e ajustes',
+  aplicar: R => applyRemote(R), pacote: () => syncPayload(),
+  mesmo: (out, remote) => canon(out) === canon({ settings: remote.settings, prices: remote.prices, quotes: remote.quotes, tools: remote.tools || [], checks: remote.checks || [], st: remote.st, del: remote.del }),
+  redesenhar: () => rerender(),
+  ocupado: () => KitFacil.dialogo.aberto() || !!(document.activeElement && document.activeElement.matches('input,textarea,select')),
+  textoLigada: () => `Sincronização ligada. ${plural(quotes.filter(q => !q.example).length, 'orçamento', 'orçamentos')} neste aparelho.`,
+});
+const sync = SY.estado;
+const saveSync = () => SY.salvar();
+let SNAP = null;
+const saveSettings = () => { stamp('settings'); return LS.set('settings', settings); };
+const savePrices = () => { stamp('prices'); return LS.set('prices', prices); };
+const saveTools = () => { stamp('tools'); if (!LS.set('tools', tools)) toast('Não foi possível salvar: o armazenamento do aparelho está cheio.'); };
+const saveChecks = () => { stamp('checks'); if (!LS.set('checks', checks)) toast('Não foi possível salvar: o armazenamento do aparelho está cheio.'); };
+const saveQuotes = () => { stamp('quotes'); const ok = LS.set('quotes', quotes); if (!ok) toast('Não foi possível salvar: o armazenamento do aparelho está cheio. Apague orçamentos antigos ou ligue a sincronização.'); marcaSalvo(ok); };
+// "Salvo" no alto do orçamento: confirma, a cada mudança, que o que foi digitado ficou guardado no aparelho
+function marcaSalvo(ok) {
+  const el = document.getElementById('ab-saved'); if (!el) return;
+  el.classList.toggle('falhou', !ok);
+  el.innerHTML = ok ? `${I.check}<span>Salvo</span>` : `${I.warn}<span>Não salvo</span>`;
+  el.setAttribute('aria-label', ok ? 'Alterações salvas neste aparelho' : 'Não foi possível salvar');
+  el.classList.remove('agora'); void el.offsetWidth; el.classList.add('agora');
+}
+
+function blankQuote() {
+  return { id: uid(), num: 0, createdAt: Date.now(), updatedAt: Date.now(),
+    client: { name: '', phone: '', address: '', doc: '' }, title: '', items: [], materialBy: 'eu',
+    startAt: null, endAt: null, dateTbd: false, approvedVia: '', days: 1, dates: [],
+    travel: 0, discount: { mode: 'value', value: 0, pct: 0 },
+    payment: { mode: settings.payMode, entryPct: settings.entryPct, installments: settings.installments, cardTipo: 'credito', juros: settings.cardJuros || 'sem', taxaPct: null, mesPct: settings.cardMes || 0, semAte: settings.cardSemAte || 0, paga: settings.cardPaga || 'cliente', avista: { mode: 'pct', pct: settings.avistaPct || 0, value: 0 }, outras: [] },
+    validity: settings.validity, deadline: '', prazo: { n: Math.max(1, Math.min(99, settings.prazoN || 1)), u: PRAZO_U[settings.prazoU] ? settings.prazoU : 'uteis' }, warranty: settings.warranty, notes: settings.notes,
+    status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false,
+    trip: null, extras: { urgent: 0, night: 0, weekend: 0 }, useRooms: false, rooms: [],
+    tax: { mode: settings.taxMode || 'sem', pct: settings.taxPct ?? 5, base: settings.taxBase || 'servico' },
+    diag: '', work: '', tests: [], recs: '', pagos: [] };
+}
+function fixQuote(q) {
+  const d = blankQuote(), src = q || {};
+  q = { ...d, ...src };
+  q.client = { ...d.client, ...(q.client || {}) };
+  q.payment = { ...d.payment, ...(q.payment || {}) };
+  // orçamentos de antes da 2.15: cartão sem juros e sem desconto à vista (o total não muda)
+  if (!src.payment || !('juros' in src.payment)) { q.payment.juros = 'sem'; q.payment.avista = { mode: 'pct', pct: 0, value: 0 }; }
+  const pg = q.payment;
+  pg.cardTipo = pg.cardTipo === 'debito' ? 'debito' : 'credito';
+  pg.juros = ['sem', 'taxa', 'mes'].includes(pg.juros) ? pg.juros : 'sem';
+  pg.paga = pg.paga === 'eu' ? 'eu' : 'cliente';
+  pg.outras = (Array.isArray(pg.outras) ? pg.outras : []).filter(m => ['avista', 'entrada', 'parcelado'].includes(m));
+  pg.installments = Math.max(1, Math.min(18, parseInt(pg.installments, 10) || 1));
+  pg.avista = { mode: pg.avista && pg.avista.mode === 'value' ? 'value' : 'pct', pct: Math.max(0, Math.min(50, +(pg.avista && pg.avista.pct) || 0)), value: Math.max(0, +(pg.avista && pg.avista.value) || 0) };
+  if (typeof q.travel !== 'number') q.travel = q.travel && q.travel.enabled ? (q.travel.value || 0) : 0;
+  const ds = q.discount || {};
+  q.discount = { mode: ds.mode === 'pct' ? 'pct' : 'value', value: ds.enabled === false ? 0 : (ds.value || 0), pct: ds.enabled === false ? 0 : (ds.pct || 0) };
+  q.items = (q.items || []).map(i => ({ id: i.id || uid(), kind: i.kind === 'mat' ? 'mat' : 'svc', name: String(i.name || ''), unit: i.unit || 'un', qty: +i.qty || 1, price: Math.max(0, Math.round(+i.price || 0)), room: i.room ? String(i.room) : '' }));
+  q.extras = { urgent: 0, night: 0, weekend: 0, ...(q.extras || {}) };
+  q.pagos = (Array.isArray(q.pagos) ? q.pagos : []).filter(x => x && x.v > 0).map(x => ({ id: x.id || uid(), v: Math.round(+x.v), t: +x.t || Date.now() }));
+  // orçamentos de antes do imposto (F6) continuam sem imposto: o total deles não muda
+  q.tax = src.tax ? taxOf(src) : { mode: 'sem', pct: 5, base: 'servico' };
+  q.rooms = (Array.isArray(q.rooms) ? q.rooms : []).filter(r => r && r.id).map(r => ({ id: String(r.id), name: String(r.name || 'Ambiente') }));
+  q.useRooms = !!q.useRooms;
+  acertaGeral(q);
+  q.trip = q.trip && typeof q.trip === 'object' ? q.trip : null;
+  ['diag', 'work', 'recs'].forEach(k => { q[k] = String(q[k] || ''); });
+  q.tests = Array.isArray(q.tests) ? q.tests.map(t => TESTS_V1[t] || String(t)).filter(Boolean) : [];
+  if (!STATUS[q.status]) q.status = 'rascunho';
+  // dias de serviço: lista de dias marcados (podem não ser seguidos); versões antigas só tinham início e término
+  q.dates = [...new Set((Array.isArray(q.dates) ? q.dates : []).map(dayTs).filter(Boolean))].sort((a, b) => a - b);
+  if (!q.dates.length && q.startAt) {
+    const a = dayTs(q.startAt), b = dayTs(q.endAt || q.startAt);
+    if (a && b && b >= a && (b - a) / DAY < 62) for (let t = a; t <= b + DAY / 2; t = dayTs(t + DAY)) q.dates.push(t);
+  }
+  if (!q.dates.length && q.status === 'concluido' && q.doneAt) q.dates = [dayTs(q.doneAt)];
+  q.days = Math.max(1, Math.min(99, parseInt(q.days, 10) || q.dates.length || 1));
+  // prazo de execução: quantidade e unidade (versões antigas tinham só o texto livre ou a quantidade de dias)
+  // (a 2.10 gravou 1 dia útil por engano em orçamentos que tinham o prazo em texto: o texto, se diferente, vale)
+  const doTexto = prazoDeTexto(src.deadline), salvo = src.prazo && typeof src.prazo === 'object' ? src.prazo : null;
+  const engano = salvo && salvo.n === 1 && salvo.u === 'uteis' && doTexto && src.deadline !== prazoTxt(salvo);
+  const pz = (!engano && salvo) || doTexto || (q.dates.length > 1 || q.days > 1 ? { n: q.days, u: 'corridos' } : null) || d.prazo;
+  q.prazo = { n: Math.max(1, Math.min(99, parseInt(pz.n, 10) || 1)), u: PRAZO_U[pz.u] ? pz.u : 'uteis' };
+  ['isExample', 'active', 'savedAt', 'closedAt', 'total', 'statusAt'].forEach(k => delete q[k]);
+  return q;
+}
+// ferramentas: tipos (k: 'tipo', do catálogo ou criados pelo usuário) e as unidades que o usuário tem (k: 'item'),
+// cada uma com marca, modelo e quantidade (dá para ter várias do mesmo tipo, de marcas ou modelos diferentes)
+const fixTipo = t => ({ id: String(t.id || uid()), k: 'tipo', name: String(t.name || '').trim(), cat: String(t.cat || 'Outras').trim() || 'Outras', seed: !!t.seed, quero: !!t.quero, queroQtd: Math.max(1, Math.min(999, Math.round(+t.queroQtd || 1))) });
+const fixItem = t => ({ id: String(t.id || uid()), k: 'item', tipo: String(t.tipo || ''), brand: String(t.brand || '').trim(), model: String(t.model || '').trim(), qty: Math.max(1, Math.min(999, Math.round(+t.qty || 1))) });
+// lê a lista em qualquer formato (a 2.9 a 2.11 guardavam uma ferramenta por linha, com st ou wish)
+function normTools(L) {
+  return (Array.isArray(L) ? L : []).flatMap(t => {
+    if (!t) return [];
+    if (t.k === 'tipo') return [fixTipo(t)];
+    if (t.k === 'item') return t.tipo ? [fixItem(t)] : [];
+    const st = ['tenho', 'quero', 'nao'].includes(t.st) ? t.st : t.wish ? 'quero' : 'tenho';
+    const tipo = fixTipo({ ...t, quero: st === 'quero', queroQtd: t.qty });
+    return st === 'tenho' ? [tipo, fixItem({ id: tipo.id + '-1', tipo: tipo.id, brand: t.brand, qty: t.qty })] : [tipo];
+  });
+}
+const tiposTool = () => tools.filter(t => t.k === 'tipo');
+const itensDe = id => tools.filter(t => t.k === 'item' && t.tipo === id);
+const tipoDe = it => tools.find(t => t.k === 'tipo' && t.id === it.tipo);
+const temTool = t => itensDe(t.id).length > 0;
+const itemTxt = it => [it.brand, it.model].filter(Boolean).join(' · ');
+// ferramentas que já vêm no app (ids fixos: o mesmo item em todos os aparelhos sincronizados)
+const TOOL_SEED = [
+  ['Medição e teste', ['Multímetro digital', 'Alicate amperímetro', 'Caneta detectora de tensão', 'Testador de tomadas', 'Megôhmetro', 'Terrômetro', 'Sequencímetro de fase', 'Detector de tensão por aproximação']],
+  ['Alicates', ['Alicate universal', 'Alicate de corte diagonal', 'Alicate de bico', 'Alicate desencapador', 'Alicate crimpador de terminais', 'Alicate para terminal tubular', 'Alicate de pressão']],
+  ['Chaves', ['Jogo de chaves de fenda isoladas', 'Jogo de chaves Phillips isoladas', 'Chave de teste', 'Jogo de chaves Allen', 'Jogo de chaves combinadas', 'Chave inglesa', 'Jogo de chaves Torx']],
+  ['Furação e corte', ['Furadeira de impacto', 'Parafusadeira a bateria', 'Martelete rompedor', 'Jogo de brocas', 'Jogo de serras copo', 'Serra tico-tico', 'Esmerilhadeira', 'Arco de serra', 'Estilete']],
+  ['Passagem de fios', ['Passa-fio de aço', 'Passa-fio de nylon', 'Puxador de cabos']],
+  ['Instalação e acabamento', ['Trena', 'Nível', 'Esquadro', 'Martelo', 'Talhadeira', 'Ponteiro', 'Ferro de solda', 'Soprador térmico', 'Lanterna de cabeça', 'Caixa de ferramentas']],
+  ['Acesso', ['Escada de 6 degraus', 'Escada extensível', 'Andaime']],
+  ['Segurança e EPI', ['Luvas isolantes', 'Óculos de proteção', 'Capacete com jugular', 'Botina de segurança sem metal', 'Cinto de segurança com talabarte', 'Protetor auricular', 'Kit de bloqueio e etiquetagem']],
+  // 2.15: catálogo ampliado
+  ['Medição e teste', ['Alicate wattímetro', 'Analisador de qualidade de energia', 'Termômetro infravermelho', 'Câmera termográfica', 'Luxímetro', 'Testador de DR', 'Detector de cabos na parede', 'Testador de cabo de rede']],
+  ['Alicates', ['Alicate de bico curvo', 'Alicate rebitador', 'Alicate decapador automático', 'Alicate de corte para cabos', 'Alicate crimpador RJ45', 'Alicate prensa-terminal hidráulico']],
+  ['Chaves', ['Chave de boca', 'Jogo de soquetes', 'Chave canhão', 'Chave catraca', 'Chave de fenda de toco', 'Torquímetro']],
+  ['Furação e corte', ['Furadeira de bancada', 'Serra mármore', 'Serra circular', 'Cortador de tubos', 'Jogo de brocas de vídia', 'Jogo de brocas para metal', 'Broca de serra copo para drywall', 'Rasgadeira de parede', 'Tesoura para chapa']],
+  ['Passagem de fios', ['Guia passa-cabos de fibra', 'Lubrificante para passagem de cabos', 'Sonda passa-fio com rolo']],
+  ['Instalação e acabamento', ['Nível a laser', 'Prumo', 'Lima', 'Espátula', 'Desempenadeira', 'Pistola de cola quente', 'Grampeador de pressão', 'Marcador permanente', 'Lápis de carpinteiro', 'Fita métrica de aço longa', 'Bolsa porta-ferramentas', 'Maleta organizadora']],
+  ['Acesso', ['Escada de 8 degraus', 'Escada de fibra isolante', 'Plataforma de trabalho', 'Cavalete']],
+  ['Segurança e EPI', ['Luvas de vaqueta', 'Manga isolante', 'Tapete isolante', 'Protetor facial', 'Máscara contra poeira', 'Vara de manobra', 'Placas de sinalização', 'Detector de tensão por contato']],
+  ['Elétrica e energia', ['Extensão de obra', 'Carretel de extensão', 'Gerador portátil', 'Lanterna recarregável', 'Refletor de obra', 'Carregador de baterias']],
+];
+const TOOL_CATS = [...new Set(TOOL_SEED.map(x => x[0]))];
+const seedTools = () => TOOL_SEED.flatMap(([cat, L]) => L.map(name => fixTipo({ id: 'ft-' + fold(name).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''), name, cat, st: 'nao', seed: true })));
+const fixCheck = c => ({ id: String(c.id || uid()), name: String(c.name || '').trim(), back: c.back !== false, ida: !!c.ida, volta: !!c.volta, toolId: c.toolId ? String(c.toolId) : '' });
+// material do estoque: quantidade, custo e marca ficam no próprio item da tabela de preços
+const inStock = p => p.kind === 'mat' && typeof p.stock === 'number';
+// material em estoque por marca (lotes: { id, brand, qty, cost }); stock, cost e brand do item são o resumo das marcas
+// (stock = soma, cost = média ponderada, brand = a marca com mais), para a tabela, os orçamentos e versões antigas
+function acertaLotes(p) {
+  if (!p || p.kind !== 'mat') return p;
+  if (!Array.isArray(p.lotes) && typeof p.stock === 'number') p.lotes = [{ id: p.id + '-1', brand: p.brand || '', qty: p.stock, cost: p.cost || 0 }];
+  if (!Array.isArray(p.lotes)) return p;
+  // aparelho com versão antiga mudou só a quantidade: com uma marca só, a marca acompanha
+  if (p.lotes.length === 1 && typeof p.stock === 'number' && p.stock !== p.lotes[0].qty && p._st === p.lotes[0].qty) p.lotes[0].qty = p.stock;
+  p.lotes = p.lotes.filter(l => l && typeof l.qty === 'number').map(l => ({ id: String(l.id || uid()), brand: String(l.brand || '').trim(), qty: Math.max(0, Math.round(l.qty * 100) / 100), cost: Math.max(0, Math.round(+l.cost || 0)) }));
+  if (!p.lotes.length) { delete p.lotes; delete p.stock; delete p.cost; delete p.brand; delete p._st; return p; }
+  const tot = sum(p.lotes.map(l => l.qty)), cc = p.lotes.filter(l => l.cost);
+  p.stock = Math.round(tot * 100) / 100;
+  p.cost = cc.length ? Math.round(sum(cc.map(l => l.cost * (l.qty || 1))) / (sum(cc.map(l => l.qty || 1)) || 1)) : 0;
+  const top = [...p.lotes].sort((a, b) => b.qty - a.qty)[0];
+  if (top.brand) p.brand = top.brand; else delete p.brand;
+  p._st = p.stock;
+  return p;
+}
+// estoque baixo: chegou ao mínimo que o usuário escolheu (ou acabou)
+// baixa e devolução por marca: sai primeiro da marca que entrou antes (a primeira da lista)
+function tiraDoEstoque(p, qty) {
+  acertaLotes(p); const partes = []; let falta = qty;
+  (p.lotes || []).forEach(l => { if (falta <= 0 || l.qty <= 0) return; const sai = Math.min(l.qty, falta); l.qty = Math.round((l.qty - sai) * 100) / 100; falta = Math.round((falta - sai) * 100) / 100; partes.push({ id: l.id, qty: sai }); });
+  acertaLotes(p); return partes;
+}
+function devolveAoEstoque(p, b) {
+  if (!p) return;
+  acertaLotes(p);
+  const partes = b.lotes && b.lotes.length ? b.lotes : [{ id: null, qty: b.qty }];
+  partes.forEach(x => { let l = (p.lotes || []).find(y => y.id === x.id); if (!l) { p.lotes = p.lotes || []; l = p.lotes[0] || (p.lotes.push({ id: uid(), brand: '', qty: 0, cost: p.cost || 0 }), p.lotes[0]); } l.qty = Math.round((l.qty + x.qty) * 100) / 100; });
+  acertaLotes(p);
+}
+const stockLow = p => inStock(p) && (p.stock <= 0 || (p.min > 0 && p.stock <= p.min));
+const sugestaoCompra = p => p.min > 0 ? Math.max(1, Math.ceil(p.min * 2 - (p.stock || 0))) : 1;
+const stockTxt = p => !inStock(p) ? '' : p.stock <= 0 ? 'em falta no estoque' : `${fmtQty(p.stock)} em estoque${stockLow(p) ? ' · repor' : ''}`;
+// dados da primeira versão do app (mesmo aparelho ou cópia de segurança antiga)
+function fromV1(cat, bills, draft) {
+  const out = { settings: {}, prices: seedPrices(), quotes: [] };
+  const m = (cat && cat.me) || {};
+  ['name', 'company', 'phone', 'doc', 'pix', 'city'].forEach(k => { if (m[k]) out.settings[k] = m[k]; });
+  if (m.validity) out.settings.validity = m.validity;
+  if (m.warranty !== undefined) out.settings.warranty = m.warranty;
+  ((cat && cat.items) || []).forEach(p => {
+    const ex = out.prices.find(x => norm(x.name) === norm(p.name));
+    if (ex) { ex.price = p.price ?? ex.price; ex.unit = p.unit || ex.unit; }
+    else out.prices.push({ id: uid(), kind: p.kind === 'mat' ? 'mat' : 'svc', cat: 'Outros', name: p.name, unit: p.unit || 'un', price: p.price || 0 });
+  });
+  const conv = b => {
+    const at = b.statusAt || b.closedAt || b.createdAt || Date.now(), st = b.status || 'rascunho';
+    return fixQuote({ ...b, updatedAt: b.savedAt || at, sentAt: st !== 'rascunho' ? at : null,
+      approvedAt: st === 'aprovado' ? at : null, refusedAt: st === 'recusado' ? at : null });
+  };
+  out.quotes = (bills || []).map(conv);
+  if (draft && draft.active && !draft.isExample && (draft.items || []).length && !out.quotes.some(q => q.id === draft.id)) out.quotes.unshift(conv(draft));
+  out.settings.seq = Math.max((cat && cat.seq) || 0, 0, ...out.quotes.map(q => q.num || 0));
+  return out;
+}
+if (!prices || !quotes) {
+  const old = LS.get('catalog', null);
+  if (!quotes && old) {
+    const v = fromV1(old, LS.get('bills', []), LS.get('draft', null));
+    settings = { ...DEF, ...v.settings, ...LS.get('settings', {}) };
+    prices = prices || v.prices; quotes = v.quotes;
+  }
+  prices = prices || seedPrices(); quotes = quotes || [];
+  saveSettings(); savePrices(); saveQuotes();
+}
+quotes = quotes.map(fixQuote);
+prices.forEach(acertaLotes);
+tools = normTools(tools); checks = (Array.isArray(checks) ? checks : []).map(fixCheck);
+// ferramentas pré-cadastradas: entram uma vez, como "não tenho" (quem já tinha uma com o mesmo nome fica com a sua)
+if ((settings.toolSeedV || 0) < 2) {
+  seedTools().forEach(t => { const ja = tools.find(x => x.k === 'tipo' && (x.id === t.id || norm(x.name) === norm(t.name))); if (!ja) tools.push(t); else if (ja.cat === 'Outras') ja.cat = t.cat; });
+  settings.toolSeedV = 2; LS.set('tools', tools); saveSettings();
+}
+settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
+// 2.19.1: nenhum nome de fábrica tem parênteses
+const RENOMEIA_V7 = [['Ponto novo de tomada (com fiação)', 'Ponto novo de tomada com fiação'], ['Ponto de interruptor paralelo (three-way)', 'Ponto de interruptor paralelo three-way'], ['Aterramento (haste e conexões)', 'Aterramento com haste e conexões'], ['Interruptor paralelo (three-way) com placa', 'Interruptor paralelo three-way com placa'], ['Interruptor intermediário (four-way)', 'Interruptor intermediário four-way'], ['Ponto de iluminação novo (com fiação)', 'Ponto de iluminação novo com fiação'], ['Instalação de aquecedor a gás (parte elétrica)', 'Instalação elétrica de aquecedor a gás'], ['Instalação de máquina de lavar (ponto exclusivo)', 'Instalação de máquina de lavar com ponto exclusivo'], ['Instalação de ar-condicionado split (parte elétrica)', 'Instalação elétrica de ar-condicionado split'], ['Ramal de entrada (concessionária)', 'Ramal de entrada da concessionária'], ['Ponto de rede (RJ45)', 'Ponto de rede RJ45'], ['Tomada de embutir 2P+T 10 A (módulo)', 'Módulo de tomada 2P+T 10 A'], ['Tomada de embutir 2P+T 20 A (módulo)', 'Módulo de tomada 2P+T 20 A'], ['Interruptor simples (módulo)', 'Módulo de interruptor simples'], ['Interruptor paralelo (módulo)', 'Módulo de interruptor paralelo'], ['Placa 4x2 (1 posto)', 'Placa 4x2 de 1 posto'], ['Placa 4x2 (2 postos)', 'Placa 4x2 de 2 postos'], ['Barra de equipotencialização (BEP)', 'Barra de equipotencialização BEP'], ['Tomada RJ45 (módulo)', 'Módulo de tomada RJ45'], ['Conector de emenda Wago (2 vias)', 'Conector de emenda Wago de 2 vias'], ['Conector de emenda Wago (3 vias)', 'Conector de emenda Wago de 3 vias'], ['Conector de emenda Wago (5 vias)', 'Conector de emenda Wago de 5 vias'], ['Escada de fibra (isolante)', 'Escada de fibra isolante']];
+const CATS_V7 = [['Segurança (EPI)', 'Segurança e EPI']];
+if ((settings.seedV || 0) < 7) {
+  RENOMEIA_V7.forEach(([de, para]) => {
+    prices.filter(x => norm(x.name) === norm(de)).forEach(p => { if (!prices.some(x => x.kind === p.kind && norm(x.name) === norm(para))) p.name = para; });
+    tools.filter(t => t.k === 'tipo' && norm(t.name) === norm(de)).forEach(t => { t.name = para; });
+    checks.forEach(c => { if (c.name && norm(c.name) === norm(de)) c.name = para; });
+  });
+  CATS_V7.forEach(([de, para]) => { tools.forEach(t => { if (t.cat === de) t.cat = para; }); prices.forEach(p => { if (p.cat === de) p.cat = para; }); });
+  if (settings.acceptText === ACCEPT_V6) settings.acceptText = ACCEPT_DEFAULT;
+  LS.set('tools', tools); LS.set('checks', checks);
+}
+// 2.19: a unidade sai do nome do material e fica só no campo de unidade ("Gesso (saco 1 kg)" vira "Gesso 1 kg", por saco)
+const RENOMEIA_V6 = [['Abraçadeiras (pacote)', 'Abraçadeiras', 'un', 'pct'], ['Eletroduto rígido PVC 3/4" (barra 3 m)', 'Eletroduto rígido PVC 3/4" de 3 m'],
+  ['Eletroduto rígido PVC 1" (barra 3 m)', 'Eletroduto rígido PVC 1" de 3 m'], ['Eletroduto metálico 3/4" (barra 3 m)', 'Eletroduto metálico 3/4" de 3 m'],
+  ['Canaleta 20 x 10 mm (barra 2 m)', 'Canaleta 20 x 10 mm de 2 m'], ['Eletrocalha perfurada 100 x 50 (barra 3 m)', 'Eletrocalha perfurada 100 x 50 de 3 m'],
+  ['Perfil de alumínio para LED (barra 2 m)', 'Perfil de alumínio para LED de 2 m'], ['Terminal tubular (pacote 100)', 'Terminal tubular, 100 peças'],
+  ['Terminal olhal (pacote 100)', 'Terminal olhal, 100 peças'], ['Terminal forquilha (pacote 100)', 'Terminal forquilha, 100 peças'],
+  ['Bucha e parafuso 6 mm (pacote 100)', 'Bucha e parafuso 6 mm, 100 peças'], ['Bucha e parafuso 8 mm (pacote 100)', 'Bucha e parafuso 8 mm, 100 peças'],
+  ['Abraçadeira de nylon (pacote 100)', 'Abraçadeira de nylon, 100 peças'], ['Abraçadeira com base adesiva (pacote 100)', 'Abraçadeira com base adesiva, 100 peças'],
+  ['Fita isolante colorida (kit)', 'Fita isolante colorida', 'un', 'kit'], ['Gesso (saco 1 kg)', 'Gesso 1 kg', 'un', 'saco'],
+  ['Massa corrida (galão)', 'Massa corrida', 'un', 'galão'], ['Identificador de cabos (kit)', 'Identificador de cabos', 'un', 'kit']];
+if ((settings.seedV || 0) < 6) {
+  RENOMEIA_V6.forEach(([de, para, u0, u1]) => {
+    const p = prices.find(x => x.kind === 'mat' && norm(x.name) === norm(de));
+    if (!p || prices.some(x => x.kind === 'mat' && norm(x.name) === norm(para))) return;
+    p.name = para; if (u1 && p.unit === u0) p.unit = u1;
+  });
+}
+if ((settings.seedV || 0) < 2) {
+  prices.forEach(p => { if (p.name === 'Interruptor paralelo com placa') p.name = 'Interruptor paralelo three-way com placa'; });
+  SEED.filter(x => SEED_V2.includes(x[2])).forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price }); });
+  settings.seedV = 2; savePrices(); saveSettings();
+}
+if ((settings.seedV || 0) < 3) {
+  SEED.forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price, ref: true }); });
+  settings.seedV = 3; savePrices(); saveSettings();
+}
+// 2.16: item do app com o preço de fábrica ainda não foi conferido; adicionais com os valores de fábrica também
+if ((settings.seedV || 0) < 4) {
+  prices.forEach(p => { const sd = SEED.find(x => x[0] === p.kind && norm(x[2]) === norm(p.name)); if (sd && p.price === sd[4] && p.ref === undefined) p.ref = true; });
+  settings.seedV = 4; savePrices(); saveSettings();
+}
+// 2.16.2: adicionais começam vazios (quem nunca mudou os de fábrica 50/30/50 fica vazio); sai Atendimento de emergência
+// da tabela (o adicional de urgência já cobre), se ainda estiver com o preço de fábrica
+if ((settings.seedV || 0) < 5) {
+  if (settings.refAdic !== false && settings.surUrgent === 50 && settings.surNight === 30 && settings.surWeekend === 50) { settings.surUrgent = 0; settings.surNight = 0; settings.surWeekend = 0; }
+  delete settings.refAdic;
+  prices = prices.filter(p => !(p.ref && p.kind === 'svc' && norm(p.name) === norm('Atendimento de emergência')));
+  settings.seedV = 5; savePrices(); saveSettings();
+}
+if ((settings.seedV || 0) < 6) { settings.seedV = 6; savePrices(); saveSettings(); }
+if ((settings.seedV || 0) < 7) { settings.seedV = 7; savePrices(); saveSettings(); }
+// 2.22: catálogo revisado (F9). Renomeia o que é de fábrica, tira o que sobrava (só se ainda estiver com o preço de fábrica
+// e fora de qualquer orçamento), inclui os itens novos e a composição de material dos serviços (F5)
+const RENOMEIA_V8 = [['Disjuntor bipolar', 'Disjuntor bipolar 10 a 32 A', 'mat'], ['Disjuntor tripolar', 'Disjuntor tripolar 10 a 32 A', 'mat'], ['DPS 275 V', 'DPS classe II 275 V 20 kA', 'mat'],
+  ['DPS 175 V', 'DPS classe II 175 V 20 kA', 'mat'], ['Ponto para ar-condicionado', 'Ponto e circuito para ar-condicionado', 'svc'], ['Ramal de entrada da concessionária', 'Ramal de ligação até o padrão de entrada', 'svc']];
+const SAI_V8 = [['mat', 'Conector de emenda', 150], ['mat', 'Abraçadeiras', 1000], ['svc', 'Orçamento no local', 8000]];
+if ((settings.seedV || 0) < 8) {
+  RENOMEIA_V8.forEach(([de, para, k]) => { const p = prices.find(x => x.kind === k && norm(x.name) === norm(de)); if (p && !prices.some(x => x.kind === k && norm(x.name) === norm(para))) p.name = para; });
+  const usado = (k, n) => quotes.some(q => q.items.some(i => i.kind === k && norm(i.name) === norm(n)));
+  prices = prices.filter(p => !SAI_V8.some(([k, n, pr]) => p.kind === k && norm(p.name) === norm(n) && p.price === pr && p.ref !== false && !p.stock && !usado(k, n)));
+  prices.forEach(p => { if (p.cat === 'Diversos' && p.kind === 'mat') p.cat = 'Fixação e acabamento'; });
+  SEED.forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price, ref: true }); });
+  prices.forEach(p => { if (p.kind === 'svc' && !p.comp && COMPOSICAO[p.name]) p.comp = compDe(p.name); });
+  settings.seedV = 8; savePrices(); saveSettings();
+}
+
+const getQ = id => quotes.find(q => q.id === id);
+const touch = q => { acertaGeral(q); q.updatedAt = Date.now(); saveQuotes(); };
+const numLabel = q => q.example ? 'Exemplo' : 'Nº ' + String(q.num || 0).padStart(4, '0');
+const isEmptyQuote = q => !q.example && !q.client.name && !q.title && !q.items.length;
+
+/* ================= sincronização entre aparelhos ================= */
+// O motor (conexão, criptografia, gist, avisos e telas) é o do Kit Fácil, comum aos apps do projeto; o arquivo no gist
+// continua o mesmo (eletrica-facil.json, mesmo formato), então aparelhos com a versão anterior seguem sincronizando.
+// Aqui fica só a regra do Elétrica Fácil: cada orçamento, preço e campo dos ajustes guarda quando foi alterado;
+// ao juntar, fica a alteração mais recente.
+const syncOn = () => SY.ligada();
+const scheduleSync = ms => SY.agendar(ms);
+const syncNow = opts => SY.agora(opts);
+const canon = KitFacil.canon;
+function snapAll() {
+  SNAP = { s: {}, p: {}, q: {}, t: {}, c: {} };
+  tools.forEach(t => { SNAP.t[t.id] = JSON.stringify(t); });
+  checks.forEach(c => { SNAP.c[c.id] = JSON.stringify(c); });
+  for (const k in settings) SNAP.s[k] = JSON.stringify(settings[k]);
+  prices.forEach(p => { SNAP.p[p.id] = JSON.stringify(p); });
+  quotes.forEach(q => { if (!q.example) SNAP.q[q.id] = { j: JSON.stringify(q), u: q.updatedAt }; });
+}
+function stamp(kind) {
+  if (!SNAP) return;
+  const now = Date.now(); let ch = false;
+  if (kind === 'settings') {
+    for (const k in settings) { const j = JSON.stringify(settings[k]); if (SNAP.s[k] !== j) { SNAP.s[k] = j; sync.st['s:' + k] = now; ch = true; } }
+  } else if (kind === 'prices' || kind === 'tools' || kind === 'checks') {
+    // listas simples: cada registro guarda quando mudou (p: preços, t: ferramentas, c: checklist)
+    const k = kind[0], L = kind === 'prices' ? prices : kind === 'tools' ? tools : checks, seen = {};
+    L.forEach(p => { seen[p.id] = 1; const j = JSON.stringify(p); if (SNAP[k][p.id] !== j) { SNAP[k][p.id] = j; sync.st[k + ':' + p.id] = now; delete sync.del[p.id]; ch = true; } });
+    for (const id in SNAP[k]) if (!seen[id]) { delete SNAP[k][id]; delete sync.st[k + ':' + id]; sync.del[id] = now; ch = true; }
+  } else {
+    const seen = {};
+    quotes.forEach(q => {
+      if (q.example) return;
+      seen[q.id] = 1;
+      const old = SNAP.q[q.id];
+      let j = JSON.stringify(q);
+      if (old && old.j === j) return;
+      // orçamento que voltou com "Desfazer" ou mudou sem atualizar a data: passa a valer agora
+      if (!old && sync.del[q.id]) { delete sync.del[q.id]; q.updatedAt = Math.max(q.updatedAt || 0, now); j = JSON.stringify(q); }
+      else if (old && old.u === q.updatedAt) { q.updatedAt = now; j = JSON.stringify(q); }
+      SNAP.q[q.id] = { j, u: q.updatedAt }; ch = true;
+    });
+    for (const id in SNAP.q) if (!seen[id]) { delete SNAP.q[id]; sync.del[id] = now; ch = true; }
+  }
+  if (ch) { saveSync(); if (syncOn()) scheduleSync(); }
+}
+
+// junta duas listas por id; a versão mais recente de cada item vence
+function mergeList(L, R, lt, rt, del, onRemote) {
+  const rm = new Map(R.map(x => [x.id, x])), used = new Set(), out = [];
+  L.forEach(x => {
+    used.add(x.id);
+    const r = rm.get(x.id);
+    if (r) {
+      if (del[x.id] >= Math.max(lt(x), rt(r))) return;
+      if (rt(r) > lt(x)) { out.push(r); onRemote && onRemote(r); } else out.push(x);
+    } else if (!(del[x.id] >= lt(x))) out.push(x);
+  });
+  R.forEach(r => { if (!used.has(r.id) && !(del[r.id] >= rt(r))) { out.push(r); onRemote && onRemote(r); } });
+  return out;
+}
+function applyRemote(R) {
+  const first = !sync.lastSync, rs = R.st || {}, del = { ...sync.del }, st = { ...sync.st };
+  for (const k in (R.del || {})) del[k] = Math.max(del[k] || 0, R.del[k]);
+  const cut = Date.now() - 400 * DAY;
+  for (const k in del) if (del[k] < cut) delete del[k];
+  const before = canon([settings, prices, quotes, tools, checks]);
+  // ajustes: campo a campo (na primeira conexão, vale o que já está na nuvem)
+  const S = { ...settings }, RS = R.settings || {};
+  for (const k of Object.keys(RS)) {
+    const rt = rs['s:' + k] || 0, lt = st['s:' + k] || 0;
+    if (first || rt > lt) { S[k] = RS[k]; if (rt) st['s:' + k] = rt; else delete st['s:' + k]; }
+  }
+  S.seedV = Math.max(settings.seedV || 0, RS.seedV || 0);
+  // preços
+  let P;
+  if (first && Array.isArray(R.prices) && R.prices.length) {
+    P = clone(R.prices);
+    Object.keys(st).forEach(k => { if (k.startsWith('p:')) delete st[k]; });
+    Object.keys(rs).forEach(k => { if (k.startsWith('p:')) st[k] = rs[k]; });
+  } else P = mergeList(prices, R.prices || [], p => st['p:' + p.id] || 0, p => rs['p:' + p.id] || 0, del, p => { if (rs['p:' + p.id]) st['p:' + p.id] = rs['p:' + p.id]; });
+  // orçamentos (o exemplo fica só neste aparelho)
+  const mine = new Map(quotes.map(q => [q.id, q]));
+  const Q = mergeList(quotes.filter(q => !q.example), (R.quotes || []).map(fixQuote), q => q.updatedAt || 0, q => q.updatedAt || 0, del)
+    .map(r => { const l = mine.get(r.id); if (l && l !== r) { Object.keys(l).forEach(k => delete l[k]); Object.assign(l, r); return l; } return r; });
+  quotes = [...quotes.filter(q => q.example), ...Q];
+  S.seq = Math.max(settings.seq || 0, RS.seq || 0, 0, ...quotes.map(q => q.num || 0));
+  // orçamentos criados ao mesmo tempo em dois aparelhos podem repetir o número: o mais novo ganha um número novo
+  const used = new Set();
+  [...quotes].filter(q => !q.example && q.num).sort((a, b) => a.createdAt - b.createdAt).forEach(q => {
+    if (used.has(q.num)) { q.num = ++S.seq; q.updatedAt = Date.now(); }
+    used.add(q.num);
+  });
+  // ferramentas e checklist: registro a registro (aparelhos com versões antigas não mandam essas listas)
+  const juntar = (L, R, k) => Array.isArray(R) ? mergeList(L, R, x => st[k + ':' + x.id] || 0, x => rs[k + ':' + x.id] || 0, del, x => { if (rs[k + ':' + x.id]) st[k + ':' + x.id] = rs[k + ':' + x.id]; }) : L;
+  tools = normTools(juntar(tools, R.tools, 't')); checks = juntar(checks, R.checks, 'c').map(fixCheck);
+  settings = { ...DEF, ...S }; prices = P; prices.forEach(acertaLotes);
+  const vivos = new Set([...P, ...tools, ...checks].map(p => p.id));
+  Object.keys(st).forEach(k => { if (/^[ptc]:/.test(k) && !vivos.has(k.slice(2))) delete st[k]; });
+  sync.st = st; sync.del = del;
+  LS.set('settings', settings); LS.set('prices', prices); LS.set('quotes', quotes); LS.set('tools', tools); LS.set('checks', checks);
+  snapAll(); saveSync();
+  return before !== canon([settings, prices, quotes, tools, checks]);
+}
+const syncPayload = () => ({ settings, prices, quotes: quotes.filter(q => !q.example && !isEmptyQuote(q)), tools, checks, st: sync.st, del: sync.del });
+snapAll();
+const lineTotal = i => Math.round(i.qty * i.price);
+// imposto do orçamento, sempre num formato válido (orçamentos antigos não têm o campo)
+function taxOf(q) {
+  const t = q.tax || {};
+  return { mode: ['fora', 'dentro'].includes(t.mode) ? t.mode : 'sem', pct: Math.max(0, Math.min(30, +t.pct || 0)), base: t.base === 'total' ? 'total' : 'servico' };
+}
+const TAX_BASE = { servico: 'sobre a mão de obra', total: 'sobre o total' };
+const taxLabel = c => `Impostos (${fmtQty(c.tax.pct)}% ${TAX_BASE[c.tax.base]})`;
+// preço e total de uma linha como o cliente vê (com o imposto embutido, se for o caso)
+const kDe = (c, i) => i.kind === 'svc' ? (c.kSvc || 1) : (c.kMat || 1);
+const lineShow = (c, i) => kDe(c, i) === 1 ? lineTotal(i) : Math.round(lineTotal(i) * kDe(c, i));
+const priceShow = (c, i) => kDe(c, i) === 1 ? i.price : Math.round(i.price * kDe(c, i));
+function compute(q) {
+  const svc = q.items.filter(i => i.kind === 'svc'), mat = q.items.filter(i => i.kind === 'mat');
+  // impostos (F6): sem, por fora (linha própria na proposta) ou embutido nos preços (o cliente não vê a linha)
+  const tx = taxOf(q), tp = tx.pct / 100;
+  const kSvc = tx.mode === 'dentro' && tp > 0 ? 1 / (1 - tp) : 1, kMat = tx.base === 'total' ? kSvc : 1;
+  const mostra = (i, k) => k === 1 ? lineTotal(i) : Math.round(lineTotal(i) * k);
+  const labor = sum(svc.map(i => mostra(i, kSvc))), matTotal = sum(mat.map(i => mostra(i, kMat))), matIn = q.materialBy !== 'cliente';
+  const travel = Math.round((q.travel || 0) * kMat);
+  const surPct = (q.extras.urgent || 0) + (q.extras.night || 0) + (q.extras.weekend || 0);
+  const extra = Math.round(labor * surPct / 100);
+  const sub = labor + extra + (matIn ? matTotal : 0) + travel;
+  const discount = q.discount.mode === 'pct' ? Math.round(sub * Math.min(100, q.discount.pct || 0) / 100) : Math.min(q.discount.value || 0, sub);
+  const liquido = sub - discount;
+  // base do imposto depois do desconto: só a mão de obra (ISS) ou o total (Simples Nacional)
+  const baseTax = tx.base === 'total' ? liquido : (sub ? Math.round((labor + extra) * liquido / sub) : 0);
+  const taxFora = tx.mode === 'fora' ? Math.round(baseTax * tp) : 0;
+  const taxDentro = tx.mode === 'dentro' && tp > 0 ? Math.round(baseTax * tp) : 0;
+  const total = liquido + taxFora, p = q.payment;
+  const entry = p.mode === 'entrada' ? Math.round(total * p.entryPct / 100) : 0;
+  const rest = p.mode === 'entrada' ? total - entry : 0;
+  // à vista: desconto que só vale se o cliente pagar à vista (além do desconto do serviço)
+  const av = p.avista || { mode: 'pct', pct: 0, value: 0 };
+  const avistaDesc = p.mode === 'avista' ? (av.mode === 'value' ? Math.min(av.value || 0, total) : Math.round(total * Math.min(50, av.pct || 0) / 100)) : 0;
+  const avistaTotal = total - avistaDesc;
+  // cartão
+  const cd = cardCalc(p, total);
+  const pixValue = p.mode === 'avista' ? avistaTotal : p.mode === 'entrada' ? entry : 0;
+  const payTotal = p.mode === 'avista' ? avistaTotal : p.mode === 'parcelado' ? cd.total : total;
+  return { svc, mat, labor, surPct, extra, matTotal, matIn, travel, sub, discount, tax: tx, taxFora, taxDentro, kSvc, kMat, total, entry, rest, parts: cd.parts, card: cd, avistaDesc, avistaTotal, payTotal, pixValue, validUntil: q.createdAt + (q.validity || 0) * DAY };
+}
+/* cartão: sem juros, taxa da maquininha (repassada ao cliente ou paga por você) ou juros ao mês (parcelas iguais) */
+const parcelasDe = (total, n) => { const base = Math.floor(total / n), L = []; for (let k = 0; k < n; k++) L.push(base + (k < total - base * n ? 1 : 0)); return L; };
+// taxa da maquininha para o parcelamento: a do orçamento, se você mudou, ou a da tabela dos Ajustes
+const taxaDaTabela = (tipo, n) => { const R = settings.cardRates || {}; const v = R[tipo === 'debito' ? 'debito' : String(n)]; return typeof v === 'number' ? v : 0; };
+function cardCalc(p, total) {
+  const deb = p.cardTipo === 'debito', n = deb ? 1 : Math.max(1, p.installments || 1);
+  const semJuros = p.juros === 'sem' || (!deb && p.semAte > 0 && n <= p.semAte);
+  const taxa = p.juros === 'taxa' ? (p.taxaPct != null ? p.taxaPct : taxaDaTabela(p.cardTipo, n)) : 0;
+  let cardTotal = total, recebe = total, taxaPct = 0, mes = 0;
+  if (p.juros === 'taxa') {
+    taxaPct = Math.max(0, Math.min(40, taxa));
+    // repassada: o cliente paga o suficiente para você receber o valor cheio depois da taxa
+    if (p.paga === 'cliente' && !semJuros) cardTotal = Math.round(total / (1 - taxaPct / 100));
+    recebe = Math.round(cardTotal * (1 - taxaPct / 100));
+  } else if (p.juros === 'mes' && !semJuros && n > 1) {
+    mes = Math.max(0, Math.min(20, p.mesPct || 0)) / 100;
+    if (mes > 0) { const pmt = total * mes / (1 - Math.pow(1 + mes, -n)); cardTotal = Math.round(pmt * n); }
+    recebe = cardTotal;
+  }
+  // com juros, as parcelas ficam iguais (como na maquininha): o total é parcela × número de parcelas
+  // parcelas iguais arredondadas para CIMA quando o cliente paga a taxa: o eletricista nunca recebe menos que o total (E9)
+  if (cardTotal !== total && n > 1) {
+    cardTotal = Math.ceil(cardTotal / n) * n;
+    if (p.juros === 'taxa') { recebe = Math.round(cardTotal * (1 - taxaPct / 100)); while (p.paga === 'cliente' && recebe < total) { cardTotal += n; recebe = Math.round(cardTotal * (1 - taxaPct / 100)); } }
+    else recebe = cardTotal;
+  }
+  return { n, deb, semJuros, taxaPct, mesPct: mes * 100, total: cardTotal, juros: cardTotal - total, recebe, parts: parcelasDe(cardTotal, n) };
+}
+// nome do total que o cliente paga, na barra de baixo do orçamento
+const payLabel = (q, c) => c.payTotal === c.total ? 'Total' : q.payment.mode === 'avista' ? 'Total à vista' : 'Total no cartão';
+function cardTxt(p, c) {
+  const k = c.card, parc = k.deb ? `no débito: ${BRL(k.total)}` : k.n === 1 ? `no crédito à vista: ${BRL(k.total)}` : partsText(k.parts);
+  const j = k.juros > 0 ? (p.juros === 'mes' ? `, com juros de ${fmtQty(k.mesPct)}% ao mês e total de ${BRL(k.total)}` : `, total de ${BRL(k.total)} com a taxa do cartão`) : (!k.deb && k.n > 1 ? ' sem juros' : '');
+  return { parc, j };
+}
+function partsText(parts) {
+  const n = parts.length; if (!n) return '';
+  const hi = parts[0], lo = parts[n - 1];
+  if (hi === lo) return `${n}× de ${BRL(hi)}`;
+  const k = parts.filter(x => x === hi).length;
+  return `${k}× de ${BRL(hi)} + ${n - k}× de ${BRL(lo)}`;
+}
+// "Ou: à vista, R$ 950,00, com 5% de desconto; parcelado no cartão em 6× de R$ 183,15."
+function outrasTxt(q) {
+  const L = outrasFormas(q).map(m => { const x = comForma(q, m); return payText(x.q, x.c).replace(/\.$/, ''); });
+  return L.length ? L.map(t => t.charAt(0).toLowerCase() + t.slice(1)).join('; ') + '.' : '';
+}
+function payText(q, c) {
+  const p = q.payment;
+  if (p.mode === 'avista') return c.avistaDesc ? `À vista: ${BRL(c.avistaTotal)}, com ${p.avista.mode === 'pct' ? `${fmtQty(p.avista.pct)}% de desconto` : `desconto de ${BRL(c.avistaDesc)}`} para pagamento à vista.` : `À vista: ${BRL(c.total)}.`;
+  if (p.mode === 'entrada') return `Entrada de ${p.entryPct}%, ${BRL(c.entry)}, na aprovação e ${BRL(c.rest)} na conclusão do serviço.`;
+  if (p.mode === 'parcelado') { const t = cardTxt(p, c); return c.card.deb || c.card.n === 1 ? `Cartão ${t.parc}.` : `Parcelado no cartão em ${t.parc}${t.j}.`; }
+  return 'A combinar.';
+}
+// adicionais sobre a mão de obra: [chave, rótulo curto, ajuste padrão, texto na proposta]
+const EXTRAS = [['urgent', 'Urgência', 'surUrgent', 'urgência'], ['night', 'Noturno', 'surNight', 'período noturno'], ['weekend', 'Fim de semana', 'surWeekend', 'fim de semana ou feriado']];
+function extrasText(q) {
+  const L = EXTRAS.filter(([k]) => q.extras[k] > 0).map(([k, , , l]) => `${l} (+${q.extras[k]}%)`);
+  if (!L.length) return '';
+  const s = L.length === 1 ? L[0] : L.slice(0, -1).join(', ') + ' e ' + L[L.length - 1];
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+// deslocamento: combustível + pedágio + tempo de viagem + desgaste, com mínimo por visita
+function tripCalc(t) {
+  const visits = Math.max(1, t.visits || 1), legs = (t.roundTrip ? 2 : 1) * visits;
+  const km = Math.round((t.km || 0) * legs * 10) / 10;
+  const fuel = t.kmPerL > 0 ? Math.round(km / t.kmPerL * (t.fuelPrice || 0)) : 0;
+  const toll = (t.toll || 0) * visits;
+  const wear = Math.round(km * (t.wearPerKm || 0));
+  const time = Math.round((t.minutes || 0) * legs / 60 * (t.hourRate || 0));
+  const min = (t.minVisit || 0) * visits, raw = fuel + toll + wear + time;
+  return { legs, km, fuel, toll, wear, time, min, usedMin: min > raw, total: Math.max(raw, min) };
+}
+const tripShort = (t, r = tripCalc(t)) => `${plural(Math.max(1, t.visits || 1), 'visita', 'visitas')}, ${fmtQty(r.km)} km`;
+const tripLong = (t, r = tripCalc(t)) => `${plural(Math.max(1, t.visits || 1), 'visita', 'visitas')} à obra, ${fmtQty(r.km)} km no total${t.roundTrip ? ' (ida e volta)' : ''}.`;
+const mapsLink = addr => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}`;
+// ambientes (cômodos)
+const ROOM_CHIPS = ['Geral', 'Sala', 'Cozinha', 'Quarto', 'Banheiro', 'Lavabo', 'Área de serviço', 'Varanda', 'Corredor', 'Escritório', 'Garagem', 'Área externa'];
+// declaração de função (vale desde o início do script): os orçamentos salvos são acertados antes desta linha
+function roomOf(q, i) { return i.room && q.rooms.some(r => r.id === i.room) ? i.room : ''; }
+const roomName = (q, id) => id ? ((q.rooms.find(r => r.id === id) || {}).name || 'Ambiente') : 'Geral';
+function roomList(q) {
+  const G = q.rooms.map(r => ({ id: r.id, name: r.name, items: q.items.filter(i => i.room === r.id) }));
+  const soltos = q.items.filter(i => !roomOf(q, i));
+  if (soltos.length) G.push({ id: '', name: 'Geral', items: soltos });
+  return G;
+}
+// Geral é um ambiente como os outros (2.19): item sem ambiente vai para ele, que é criado só quando preciso,
+// com id fixo para sair igual em todo aparelho; pode ser renomeado e excluído
+function acertaGeral(q) {
+  if (!q.useRooms) return;
+  const soltos = q.items.filter(i => !roomOf(q, i));
+  if (!soltos.length) return;
+  let g = q.rooms.find(r => r.id === 'geral') || q.rooms.find(r => norm(r.name) === 'geral');
+  if (!g) { g = { id: 'geral', name: uniqueRoomName(q, 'Geral') }; q.rooms.push(g); }
+  soltos.forEach(i => { i.room = g.id; });
+}
+function uniqueRoomName(q, base) {
+  const names = q.rooms.map(r => norm(r.name));
+  if (!names.includes(norm(base))) return base;
+  let n = 2; while (names.includes(norm(`${base} ${n}`))) n++;
+  return `${base} ${n}`;
+}
+function nextRoomName(q, name) {
+  const base = name.replace(/\s+\d+$/, ''), names = q.rooms.map(r => norm(r.name));
+  let n = 2; while (names.includes(norm(`${base} ${n}`))) n++;
+  return `${base} ${n}`;
+}
+// soma cada item entre os ambientes (mesmo tipo, nome e unidade)
+function consolidate(q, kind) {
+  const m = new Map();
+  q.items.filter(i => !kind || i.kind === kind).forEach(i => {
+    const key = i.kind + '|' + norm(i.name) + '|' + i.unit;
+    const e = m.get(key) || { kind: i.kind, name: i.name, unit: i.unit, qty: 0, total: 0, by: new Map() };
+    e.qty = Math.round((e.qty + i.qty) * 100) / 100; e.total += lineTotal(i);
+    const rn = q.useRooms ? roomName(q, roomOf(q, i)) : '';
+    if (rn) e.by.set(rn, Math.round(((e.by.get(rn) || 0) + i.qty) * 100) / 100);
+    m.set(key, e);
+  });
+  return [...m.values()];
+}
+// antes do serviço o documento é orçamento; depois de concluído, relatório de serviços executados
+const isReport = q => q.status === 'concluido';
+const previewDoc = {};
+const docMode = q => isReport(q) ? (previewDoc[q.id] || 'report') : 'quote';
+const DOC = {
+  quote: { title: 'ORÇAMENTO', name: 'Orçamento', file: 'Orcamento' },
+  report: { title: 'RELATÓRIO DE SERVIÇOS EXECUTADOS', name: 'Relatório', file: 'Relatorio' },
+};
+const dateInput = ts => { const d = new Date(ts || Date.now()); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+// documento do cliente: CPF (11 números) ou CNPJ (14)
+function fmtDoc(v) {
+  const d = phoneDigits(v);
+  if (d.length === 11) return `CPF ${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  if (d.length === 14) return `CNPJ ${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+  return String(v || '').trim();
+}
+function cnpjValid(d) {
+  if (!/^\d{14}$/.test(d) || /^(\d)\1{13}$/.test(d)) return false;
+  const dv = n => { const w = n === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]; const r = w.reduce((a, x, i) => a + x * +d[i], 0) % 11; return r < 2 ? 0 : 11 - r; };
+  return dv(12) === +d[12] && dv(13) === +d[13];
+}
+const parseDay = v => v ? new Date(v + 'T12:00').getTime() : null;
+const sameDay = (a, b) => dateInput(a) === dateInput(b);
+// dias seguidos (sem buraco no calendário)?
+const seguidos = L => L.every((t, k) => !k || Math.round((t - L[k - 1]) / DAY) === 1);
+// "3, 5 e 15/11/2026" (mesmo mês) ou "28/10, 30/10 e 03/11/2026"
+function datesText(L) {
+  if (!L.length) return '';
+  if (L.length === 1) return fmtDate(L[0]);
+  const last = new Date(L[L.length - 1]), y = last.getFullYear();
+  const mesmoAno = L.every(t => new Date(t).getFullYear() === y);
+  if (mesmoAno && L.every(t => new Date(t).getMonth() === last.getMonth())) return joinPt(L.map(t => String(new Date(t).getDate()))) + '/' + String(last.getMonth() + 1).padStart(2, '0') + '/' + y;
+  if (mesmoAno) return joinPt(L.map(fmtShort)) + '/' + y;
+  return joinPt(L.map(fmtDate));
+}
+// feriados nacionais (fixos e Sexta-feira Santa), pulados na contagem de dias úteis
+const FERIADOS = {};
+function feriadosDo(y) {
+  if (FERIADOS[y]) return FERIADOS[y];
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mes = Math.floor((h + l - 7 * m + 114) / 31), dia = ((h + l - 7 * m + 114) % 31) + 1;
+  const sexta = new Date(y, mes - 1, dia - 2, 12);
+  const L = { [dateInput(sexta)]: 'Sexta-feira Santa' };
+  [['01-01', 'Confraternização Universal'], ['04-21', 'Tiradentes'], ['05-01', 'Dia do Trabalho'], ['09-07', 'Independência do Brasil'], ['10-12', 'Nossa Senhora Aparecida'],
+    ['11-02', 'Finados'], ['11-15', 'Proclamação da República'], ['11-20', 'Dia da Consciência Negra'], ['12-25', 'Natal']].forEach(([md, n]) => { L[`${y}-${md}`] = n; });
+  return (FERIADOS[y] = L);
+}
+const feriado = t => feriadosDo(new Date(t).getFullYear())[dateInput(t)] || '';
+const diaUtil = t => { const w = new Date(t).getDay(); return w !== 0 && w !== 6 && !feriado(t); };
+const maisDias = (t, n) => { const d = new Date(t); d.setDate(d.getDate() + n); d.setHours(12, 0, 0, 0); return d.getTime(); };
+const ehDia = p => p.u === 'uteis' || p.u === 'corridos';
+// último dia do prazo, contando a partir do dia de início
+function prazoFim(ini, p) {
+  if (p.u === 'corridos') return maisDias(ini, p.n - 1);
+  if (p.u === 'semanas') return maisDias(ini, p.n * 7 - 1);
+  if (p.u === 'meses') { const d = new Date(ini); d.setMonth(d.getMonth() + p.n); d.setDate(d.getDate() - 1); d.setHours(12, 0, 0, 0); return d.getTime(); }
+  let t = ini, k = diaUtil(ini) ? 1 : 0;
+  while (k < p.n) { t = maisDias(t, 1); if (diaUtil(t)) k++; }
+  return t;
+}
+// dias que o app marca sozinho ao escolher o início: o dia escolhido e os seguintes do prazo (dias úteis pulam fins de semana e feriados)
+function prazoDias(ini, p) {
+  const L = [ini];
+  if (p.u === 'corridos') { for (let k = 1; k < p.n; k++) L.push(maisDias(ini, k)); return L; }
+  const fim = p.u === 'uteis' ? null : prazoFim(ini, p);
+  for (let t = maisDias(ini, 1); p.u === 'uteis' ? L.length < p.n : t <= fim; t = maisDias(t, 1)) if (diaUtil(t)) L.push(t);
+  return L;
+}
+const hojeTs = () => dayTs(Date.now());
+// orçamento não aceita data retroativa (vale enquanto ainda não foi aprovado)
+const retroativo = q => !isReport(q) && !q.dateTbd && ['rascunho', 'enviado'].includes(q.status) && q.dates.some(t => t < hojeTs());
+function prazoProblema(q) {
+  if (isReport(q)) return q.dates.length && q.dates.length !== q.days ? 'conta' : '';
+  if (q.dateTbd || !q.dates.length) return '';
+  if (retroativo(q)) return 'retro';
+  const p = q.prazo;
+  if (ehDia(p)) return q.dates.length !== p.n ? 'conta' : '';
+  return q.dates[q.dates.length - 1] > prazoFim(q.dates[0], p) ? 'fora' : '';
+}
+const daysOk = q => !prazoProblema(q);
+function daysMismatch(q) {
+  const pr = prazoProblema(q), n = q.dates.length;
+  if (!pr) return '';
+  if (pr === 'retro') return 'Há dias marcados que já passaram. O orçamento não aceita data retroativa: escolha um novo início.';
+  const alvo = isReport(q) ? q.days : q.prazo.n, falta = alvo - n;
+  if (pr === 'conta') return `${isReport(q) ? `Você informou ${plural(alvo, 'dia', 'dias')}` : `O prazo é de ${prazoTxt(q.prazo)}`} e há ${plural(n, 'dia marcado', 'dias marcados')}. ${falta > 0 ? `Marque mais ${falta}` : `Desmarque ${-falta}`} ou mude ${isReport(q) ? 'a quantidade' : 'o prazo'} para ${n}.`;
+  return `O prazo de ${prazoTxt(q.prazo)} vai até ${fmtDate(prazoFim(q.dates[0], q.prazo))} e há dias marcados depois disso.`;
+}
+// menor prazo (na mesma unidade) que cobre os dias marcados
+function prazoQueCobre(q) {
+  const p = { ...q.prazo };
+  if (ehDia(p)) { p.n = Math.max(1, q.dates.length); return p; }
+  for (p.n = 1; p.n < 99 && prazoFim(q.dates[0], p) < q.dates[q.dates.length - 1]; p.n++);
+  return p;
+}
+// prazo nos documentos
+const prazoDoc = q => q.prazo ? prazoTxt(q.prazo) + (q.prazo.u === 'uteis' ? ' (sem fins de semana e feriados)' : '') : q.deadline;
+// todos os dias úteis entre o primeiro e o último dia marcados, e só eles?
+function soUteis(L) {
+  if (L.length < 2 || !L.every(diaUtil)) return false;
+  for (let t = L[0], k = 0; t <= L[L.length - 1]; t = maisDias(t, 1)) { if (diaUtil(t)) { if (L[k] !== t) return false; k++; } }
+  return true;
+}
+// resumo dos dias: "de 03/11 a 06/11/2026 (4 dias)", "de 03 a 19/11/2026, em dias úteis (12 dias)" ou a lista
+function diasResumo(L) {
+  if (!L.length) return '';
+  if (L.length === 1) return fmtDate(L[0]);
+  if (seguidos(L)) return `de ${fmtShort(L[0])} a ${fmtDate(L[L.length - 1])}, ${L.length} dias seguidos`;
+  if (soUteis(L)) return `de ${fmtShort(L[0])} a ${fmtDate(L[L.length - 1])}, ${L.length} dias úteis`;
+  return `${datesText(L)}: ${L.length} dias, não seguidos`;
+}
+// cabeçalho do relatório: um dia ou o período
+const execHead = q => q.dates.length > 1 ? `Executado entre ${fmtShort(q.dates[0])} e ${fmtDate(q.dates[q.dates.length - 1])}` : `Executado em ${fmtDate(q.doneAt || q.dates[0])}`;
+// texto da execução nos documentos
+function execText(q) {
+  return q.dates.length ? diasResumo(q.dates) : q.doneAt ? fmtDate(q.doneAt) : '';
+}
+// datas de início e término (o CDC pede no orçamento prévio)
+function schedText(q) {
+  if (q.dateTbd) return 'Datas de início e término a combinar na aprovação do orçamento.';
+  const L = q.dates;
+  if (L.length > 1) return `Início em ${fmtDate(L[0])} e término em ${fmtDate(L[L.length - 1])}. ${seguidos(L) ? `${L.length} dias seguidos.` : soUteis(L) ? `${L.length} dias úteis.` : `${L.length} dias de serviço, não seguidos: ${datesText(L)}.`}`;
+  if (L.length === 1) return `Início e término em ${fmtDate(L[0])}.`;
+  if (!q.startAt && !q.endAt) return '';
+  if (q.startAt && q.endAt && dateInput(q.startAt) !== dateInput(q.endAt)) return `Início em ${fmtDate(q.startAt)} e término em ${fmtDate(q.endAt)}.`;
+  return `Início e término em ${fmtDate(q.startAt || q.endAt)}.`;
+}
+const APPROVAL = { msg: 'por mensagem escrita, no WhatsApp ou no e-mail', sign: 'com assinatura na proposta', verbal: 'pessoalmente' };
+const approvalText = q => q.approvedAt && q.approvedVia ? `Orçamento aprovado pelo cliente em ${fmtDate(q.approvedAt)}, ${APPROVAL[q.approvedVia] || ''}.` : '';
+function warrantyText(q, mode) {
+  const base = `${plural(q.warranty, 'dia', 'dias')} sobre o serviço executado`;
+  return mode === 'report' && q.doneAt ? `${base}, até ${fmtDate(q.doneAt + q.warranty * DAY)}` : base;
+}
+function setStatus(q, st) {
+  const now = Date.now();
+  if (st === 'concluido' && q.status !== 'concluido') q.prevStatus = q.status;
+  // saiu de concluído: o material que tinha baixado volta para o estoque
+  if (st !== 'concluido' && q.baixa && q.baixa.length) {
+    q.baixa.forEach(b => devolveAoEstoque(prices.find(x => x.id === b.id), b));
+    q.baixa = null; savePrices(); setTimeout(() => toast('O material voltou para o estoque.'), 2600);
+  }
+  q.status = st;
+  if (st === 'rascunho') { q.approvedAt = q.doneAt = q.refusedAt = null; }
+  if (st === 'enviado') { q.sentAt = q.sentAt || now; q.approvedAt = q.doneAt = q.refusedAt = null; }
+  if (st === 'aprovado') { q.sentAt = q.sentAt || now; q.approvedAt = now; q.doneAt = q.refusedAt = null; }
+  if (st === 'concluido') {
+    q.sentAt = q.sentAt || now; q.approvedAt = q.approvedAt || now; q.refusedAt = null;
+    // os dias marcados no orçamento valem como dias de execução se já passaram; senão, conta hoje
+    if (!q.dates.length || q.dates[q.dates.length - 1] > dayTs(now)) q.dates = [dayTs(now)];
+    q.days = q.dates.length;
+    q.doneAt = q.dates[q.dates.length - 1];
+  }
+  if (st === 'recusado') { q.sentAt = q.sentAt || now; q.refusedAt = now; q.approvedAt = q.doneAt = null; }
+  touch(q);
+}
+function clientList() {
+  const m = new Map();
+  [...quotes].filter(q => !q.example).sort((a, b) => a.updatedAt - b.updatedAt).forEach(q => {
+    const k = norm(q.client.name); if (!k) return;
+    const prev = m.get(k) || {};
+    m.set(k, { name: q.client.name, phone: q.client.phone || prev.phone || '', address: q.client.address || prev.address || '', doc: q.client.doc || prev.doc || '', last: q.updatedAt, n: (prev.n || 0) + 1 });
+  });
+  return [...m.values()].sort((a, b) => b.last - a.last);
+}
+function stats() {
+  const now = new Date(), M = now.getMonth(), Y = now.getFullYear();
+  const inMonth = ts => { if (!ts) return false; const d = new Date(ts); return d.getMonth() === M && d.getFullYear() === Y; };
+  const real = quotes;
+  const won = real.filter(q => (q.status === 'aprovado' || q.status === 'concluido') && inMonth(q.approvedAt));
+  const waiting = real.filter(q => q.status === 'enviado'), todo = real.filter(q => q.status === 'aprovado');
+  const since = Date.now() - 90 * DAY;
+  const dec = real.filter(q => ['aprovado', 'concluido', 'recusado'].includes(q.status) && (q.approvedAt || q.refusedAt || 0) >= since);
+  return {
+    month: now.toLocaleDateString('pt-BR', { month: 'long' }).replace(/^./, c => c.toUpperCase()),
+    won: sum(won.map(q => compute(q).total)), wonN: won.length,
+    waitN: waiting.length, waitSum: sum(waiting.map(q => compute(q).total)), todoN: todo.length,
+    rate: dec.length ? Math.round(dec.filter(q => q.status !== 'recusado').length / dec.length * 100) : null,
+    receber: sum(real.filter(q => ['aprovado', 'concluido'].includes(q.status)).map(q => falta(q))),
+  };
+}
+
+/* ================= avisos, janelas e campos ================= */
+/* avisos e janelas são os do Kit Fácil (iguais nos três apps); estas funções só traduzem os nomes usados no app */
+function toast(msg, action) { KitFacil.avisar(msg, action); }
+function openSheet({ title, body, foot = '', tall = false, wide = false, sub = '', onMount, onClose }) {
+  return KitFacil.dialogo.abrir({ titulo: title, sub, corpo: body, pe: foot, classe: [tall && 'kf-alto', wide && 'kf-largo'].filter(Boolean).join(' '),
+    aoFechar: onClose, aoMontar: sh => { prepFields(sh); onMount && onMount(sh); } });
+}
+function closeSheet(silent) { KitFacil.dialogo.fechar(silent); }
+// confirmação: a janela comum do Kit (lei 6), igual nos quatro apps
+function confirmSheet(title, text, okLabel, onOk, danger = true) {
+  KitFacil.dialogo.confirmar({ titulo: title, texto: text, ok: okLabel, perigo: danger, aoConfirmar: onOk });
+}
+async function copyText(text, okMsg) {
+  try { await navigator.clipboard.writeText(text); toast(okMsg); return; } catch {}
+  openSheet({ title: 'Copiar texto', body: `<textarea id="cp-t" readonly style="min-height:260px;font-size:14px">${esc(text)}</textarea><p class="hint">Toque e segure no texto e escolha Copiar.</p>`,
+    onMount: s => { const t = $('#cp-t', s); t.focus(); t.select(); } });
+}
+// valor em reais: só números, a vírgula dos centavos entra sozinha
+function maskMoney(el) {
+  const digits = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 10);
+  el.value = digits ? BRL(parseInt(digits, 10)) : '';
+}
+document.addEventListener('input', e => {
+  const el = e.target; if (!el.matches || !el.matches('[data-money]')) return;
+  // o primeiro número digitado depois de tocar no campo substitui o valor que estava lá
+  if (el.dataset.fresh === '1' && e.inputType && e.inputType.startsWith('insert') && e.data && /\d/.test(e.data)) el.value = e.data;
+  el.dataset.fresh = '';
+  maskMoney(el);
+  try { const n = el.value.length; el.setSelectionRange(n, n); } catch {}
+}, true);
+document.addEventListener('focusin', e => {
+  const el = e.target; if (!el.matches || !el.matches('[data-money]')) return;
+  el.dataset.fresh = '1';
+  setTimeout(() => { try { const n = el.value.length; el.setSelectionRange(n, n); } catch {} }, 0);
+});
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  if (e.key !== 'Enter' || !t.matches || !t.matches('input') || t.form) return;
+  e.preventDefault(); t.blur();
+});
+function prepFields(root) { $$('input:not([type=checkbox]):not([type=file])', root).forEach(i => { if (!i.hasAttribute('enterkeyhint')) i.setAttribute('enterkeyhint', i.form ? 'go' : 'done'); }); KitFacil.escolha.ligar(root); }
+// sugestões ao digitar (a lista do navegador não funciona bem no iPhone)
+const lastPress = { target: null, at: 0 };
+document.addEventListener('pointerdown', e => { lastPress.target = e.target; lastPress.at = Date.now(); }, true);
+function attachSuggest(input, getItems, onPick) {
+  if (!input) return;
+  const wrap = document.createElement('div'); wrap.className = 'sg-wrap';
+  input.parentNode.insertBefore(wrap, input); wrap.appendChild(input);
+  const box = document.createElement('div'); box.className = 'sg-box'; box.hidden = true; box.setAttribute('role', 'listbox');
+  wrap.appendChild(box);
+  let items = [], active = -1;
+  const close = () => { box.hidden = true; box.innerHTML = ''; active = -1; };
+  const show = () => {
+    const q = fold(input.value);
+    items = getItems().filter(x => !q || fold(x.label).includes(q)).filter(x => fold(x.label) !== q).slice(0, 5);
+    if (!items.length) return close();
+    box.innerHTML = items.map((x, i) => `<button type="button" class="sg-item${i === active ? ' on' : ''}" data-i="${i}" role="option"><span>${esc(x.label)}</span>${x.right ? `<small>${esc(x.right)}</small>` : ''}</button>`).join('');
+    box.hidden = false;
+  };
+  const pick = i => { const x = items[i]; if (!x) return; input.value = x.label; close(); onPick && onPick(x); };
+  input.addEventListener('input', () => { active = -1; show(); });
+  input.addEventListener('focus', show);
+  input.addEventListener('blur', () => setTimeout(close, 180));
+  input.addEventListener('keydown', e => {
+    if (box.hidden) return;
+    if (e.key === 'ArrowDown') { active = Math.min(items.length - 1, active + 1); show(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { active = Math.max(0, active - 1); show(); e.preventDefault(); }
+    else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); e.stopPropagation(); pick(active); }
+    else if (e.key === 'Escape') { e.stopPropagation(); close(); }
+  });
+  box.addEventListener('pointerdown', e => e.preventDefault());
+  box.addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (b) pick(+b.dataset.i); });
+}
+// logo padrão: o mesmo desenho do ícone do app
+const APP_MARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="5.28" fill="#FFC400"/><path transform="translate(3.6 3.6) scale(.7)" d="M13.5 1.5 3.8 13.6h6.9L9.6 22.5l10.6-13h-7.1z" fill="#17150F"/></svg>';
+function fitMark(root) {
+  const who = $('.p-who', root), mark = $('.p-mark', root); if (!who || !mark) return;
+  const apply = () => {
+    // limite de tamanho: com muitas linhas a logo fica centralizada, sem empurrar o texto
+    const h = who.getBoundingClientRect().height, size = Math.min(72, Math.max(36, Math.round(h)));
+    const img = $('img', mark), r = img ? (settings.logoRatio || 1) : 1;
+    mark.style.height = size + 'px'; mark.style.width = Math.round(Math.min(size * r, size * 2.6)) + 'px';
+    mark.parentNode.classList.toggle('short', h < 36 || h > 72);
+  };
+  apply();
+  try { new ResizeObserver(apply).observe(who); } catch {}
+  document.fonts && document.fonts.ready.then(apply).catch(() => {});
+}
+const autoGrow = t => { if (!t.offsetParent) return; t.style.height = 'auto'; t.style.height = Math.max(88, t.scrollHeight + 2) + 'px'; };
+document.addEventListener('input', e => { if (e.target.tagName === 'TEXTAREA') autoGrow(e.target); });
+document.addEventListener('toggle', e => { if (e.target.matches && e.target.matches('details')) $$('textarea', e.target).forEach(autoGrow); }, true);
+// seções recolhíveis: mostram uma linha de resumo e abrem quando precisa
+const PANEL = {};
+/* seção: o mesmo cartão em todo o app e em todos os níveis (título, resumo de uma linha, contador ou valor, seta).
+   Cada seção abre e fecha sozinha (as outras ficam como estão); todas começam fechadas, e a busca abre as que têm
+   resultado (force). O app guarda, enquanto está aberto, quais seções você abriu (PANEL). */
+const panelOpen = (key, id, title, sum, o = {}) => `<details class="fold" data-kf-secao data-panel="${esc(key)}"${o.attrs || ''}${(o.force ?? (key in PANEL ? PANEL[key] : false)) ? ' open' : ''}><summary><span class="f-t"><b>${title}</b>${sum !== null ? `<small${id ? ` data-sum="${id}"` : ''} data-kf-secao-resumo>${esc(sum)}</small>` : ''}</span>${o.right != null ? `<span class="f-r"${id ? ` data-sumr="${id}"` : ''}>${o.right}</span>` : ''}${o.tool || ''}<span class="f-ch">${I.chev}</span></summary><div class="f-in">`;
+const panelClose = '</div></details>';
+const resumoDe = (L, nome) => L.slice(0, 3).map(nome).filter(Boolean).join(' · ') + (L.length > 3 ? '…' : '');
+const conta = n => `<span class="card-sum">${n}</span>`;
+// linhas de escolha, no lugar dos botões lado a lado: 'um' (bolinha), 'varios' (caixa de marcar), 'ir' (seta: abre algo), 'mais' (acrescenta)
+const linha = (attrs, txt, { tipo = 'ir', on = false, dir = '', sub = '', dis = false } = {}) =>
+  `<button type="button" class="lin ${tipo}" ${attrs}${tipo === 'um' || tipo === 'varios' ? ` aria-pressed="${!!on}"` : ''}${dis ? ' disabled' : ''}>`
+  + (tipo === 'ir' ? '' : `<span class="mk" aria-hidden="true">${tipo === 'mais' ? (dis ? I.check : I.plus) : ''}</span>`)
+  + `<span class="lt">${txt}${sub ? `<small>${sub}</small>` : ''}</span>${dir ? `<span class="lr">${dir}</span>` : ''}${tipo === 'ir' ? `<span class="lc" aria-hidden="true">${I.chev}</span>` : ''}</button>`;
+const linhas = (rows, attrs = '') => `<div class="lins"${attrs}>${rows.join('')}</div>`;
+// linha "mais" que já foi usada: fica marcada e desligada
+const linhaFeita = (b, feita) => { b.disabled = feita; const m = $('.mk', b); if (m) m.innerHTML = feita ? I.check : I.plus; };
+// filtro curto: segmentos com a contagem embaixo
+const filtroSeg = (attr, L, atual, n, rot) => `<div class="seg filtro" role="group" aria-label="${rot}">${L.map(([k, l]) => `<button ${attr}="${k}" aria-pressed="${atual === k}">${l}</button>`).join('')}</div>`;
+const panel = (key, id, title, sum, body, o) => panelOpen(key, id, title, sum, o) + body + panelClose;
+function paintSums(root, map) {
+  for (const k in map) {
+    if (k.endsWith('R')) { const e = $(`[data-sumr="${k.slice(0, -1)}"]`, root); if (e) e.textContent = map[k]; }
+    else { const e = $(`[data-sum="${k}"]`, root); if (e) e.textContent = map[k]; }
+  }
+}
+// seções: abrir e fechar é do Kit (KitFacil.secao, o mesmo movimento nos três apps); aqui só se guarda qual está aberta
+const semMovimento = () => KitFacil.movimento.reduzido();
+document.addEventListener('kf-secao', e => { const d = e.target; if (d.matches && d.matches('details.fold')) PANEL[d.dataset.panel] = e.detail.aberta; });
+document.addEventListener('toggle', e => {
+  const d = e.target; if (!d.matches || !d.matches('details.fold') || d.classList.contains('kf-secao-anim')) return;
+  PANEL[d.dataset.panel] = d.open;
+}, true);
+// botões dentro do título da seção não abrem nem fecham a seção
+document.addEventListener('click', e => { if (e.target.closest('summary button')) e.preventDefault(); }, true);
+const vibrate = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
+
+/* ================= navegação ================= */
+function route() {
+  const h = decodeURIComponent(location.hash.replace(/^#/, '')) || '/';
+  let m;
+  if ((m = h.match(/^\/q\/([\w-]+)\/proposta$/))) return { name: 'preview', id: m[1], key: h };
+  if ((m = h.match(/^\/q\/([\w-]+)$/))) return { name: 'quote', id: m[1], key: h };
+  if (h === '/precos') return { name: 'prices', key: h };
+  if (h === '/gestao') return { name: 'gestao', key: h };
+  if (h === '/ajustes') return { name: 'settings', key: h };
+  return { name: 'home', key: '/' };
+}
+const scrollMem = {};
+let curKey = null, openQuoteId = null, navMode = 'push';
+function go(path, replace) {
+  if (curKey) scrollMem[curKey] = window.scrollY;
+  const d = (history.state && history.state.d) || 0;
+  if (replace) history.replaceState({ d }, '', '#' + path); else history.pushState({ d: d + 1 }, '', '#' + path);
+  navMode = 'push'; closeSheet(true); render();
+}
+function back(fallback = '/') {
+  if (history.state && history.state.d > 0) history.back(); else go(fallback, true);
+}
+let irDepois = null; // destino guardado enquanto o Voltar tira uma guia dos Ajustes do histórico
+window.addEventListener('popstate', () => {
+  if (irDepois) { const d = irDepois; irDepois = null; go(d, true); return; }
+  // voltar de uma guia dos Ajustes para a lista: quem cuida é o Kit Fácil, sem redesenhar a tela
+  if (route().key === curKey && route().name === 'settings' && $('[data-kf-aj]')) return;
+  if (curKey) scrollMem[curKey] = window.scrollY; navMode = 'pop'; closeSheet(true); render();
+});
+
+const VIEWS = {};
+function render(opts = {}) {
+  const r = route();
+  // orçamento novo que ficou vazio some ao sair dele
+  if (openQuoteId && r.id !== openQuoteId) {
+    const q = getQ(openQuoteId);
+    if (q && isEmptyQuote(q)) { quotes = quotes.filter(x => x !== q); saveQuotes(); }
+  }
+  if ((r.name === 'quote' || r.name === 'preview') && !getQ(r.id)) { history.replaceState({ d: 0 }, '', '#/'); return render(); }
+  openQuoteId = r.id || null;
+  const V = VIEWS[r.name];
+  // a área da tela é trocada por uma nova a cada desenho: assim os toques ligados pela tela anterior não se acumulam
+  const velho = $('#app'), app = velho.cloneNode(false);
+  app.innerHTML = V.html(r);
+  // trilho e barra de baixo ficam logo depois da barra de cima: no teclado, barra de cima → menu → conteúdo,
+  // como nos outros apps (U13). São fixos na tela, então o lugar no documento não muda o desenho.
+  const fixos = [$('#trilho'), $('#nav')].filter(Boolean);
+  fixos.forEach(el => document.body.appendChild(el));
+  velho.replaceWith(app);
+  const cab = $(':scope > header', app);
+  if (cab) cab.after(...fixos); else app.prepend(...fixos);
+  const top = ['home', 'prices', 'gestao', 'settings'].includes(r.name);
+  $('#nav').hidden = !top;
+  $$('[data-nav]').forEach(b => {
+    const on = (b.dataset.nav === '/' && (r.name === 'home' || r.name === 'quote' || r.name === 'preview')) || (b.dataset.nav === '/precos' && r.name === 'prices') || (b.dataset.nav === '/gestao' && r.name === 'gestao');
+    b.setAttribute('aria-current', on ? 'page' : 'false');
+  });
+  KitFacil.topo.atualizar();
+  prepFields($('#app'));
+  V.bind($('#app'), r);
+  $$('textarea', $('#app')).forEach(autoGrow);
+  if (!opts.keep) window.scrollTo(0, navMode === 'pop' && top ? (scrollMem[r.key] || 0) : 0);
+  if (r.key !== curKey) KitFacil.movimento.entrar(app, { de: 'tela' }); // troca de tela com o movimento comum
+  curKey = r.key;
+  onScroll();
+}
+function rerender() {
+  const y = window.scrollY, f = document.activeElement && document.activeElement.id;
+  render({ keep: true });
+  window.scrollTo(0, y);
+  if (f) { const el = document.getElementById(f); if (el && el.matches('input,textarea')) el.focus({ preventScroll: true }); }
+}
+function onScroll() { const ab = $('.appbar'); if (ab) ab.classList.toggle('scrolled', window.scrollY > 4); }
+window.addEventListener('scroll', onScroll, { passive: true });
+// lista de escolha, calendário e relógio do Kit abertos perto do pé: rola o que falta para o último item ficar à vista,
+// acima do rodapé da janela ou das barras fixas de baixo. Correção do app até o Kit corrigir (Proposta para o Integrador)
+document.addEventListener('click', e => {
+  const w = e.target.closest('.kf-esc'); if (!w || !e.target.closest('.kf-esc-btn')) return;
+  setTimeout(() => {
+    const el = w.classList.contains('kf-aberta') && $('.kf-esc-lista:not([hidden]), .kf-cal:not([hidden])', w); if (!el) return;
+    const corpo = el.closest('.kf-dlg-corpo');
+    let fundo = corpo ? corpo.getBoundingClientRect().bottom : innerHeight;
+    if (!corpo) $$('.bbar, .kf-nav').forEach(b => { if (b.getClientRects().length) fundo = Math.min(fundo, b.getBoundingClientRect().top); });
+    const falta = el.getBoundingClientRect().bottom + 12 - fundo;
+    if (falta > 0) (corpo || window).scrollBy({ top: falta, behavior: KitFacil.movimento.reduzido() ? 'auto' : 'smooth' });
+  }, KitFacil.movimento.curto + 60);
+});
+$('#nav-home .kf-nav-ic').innerHTML = I.doc; $('#nav-prices .kf-nav-ic').innerHTML = I.tag; $('#nav-gestao .kf-nav-ic').innerHTML = I.box;
+$('#trilho-home .kf-nav-ic-t').outerHTML = I.doc; $('#trilho-prices .kf-nav-ic-t').outerHTML = I.tag; $('#trilho-gestao .kf-nav-ic-t').outerHTML = I.box;
+// Ajustes é o último item da navegação (barra de baixo no celular, pé do trilho no computador)
+$('#nav-ajustes').outerHTML = KitFacil.nav.ajustes('nav', { id: 'nav-ajustes' });
+$('#trilho-ajustes').outerHTML = KitFacil.nav.ajustes('trilho', { id: 'trilho-ajustes' });
+const aoTocarNav = e => {
+  const b = e.target.closest('[data-nav]'); if (!b) return;
+  if (route().key === b.dataset.nav) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  // estando numa guia dos Ajustes (celular), primeiro tira a guia do histórico e depois troca de tela
+  if (history.state && history.state.kfAjPush) { irDepois = b.dataset.nav; history.back(); return; }
+  go(b.dataset.nav, true);
+};
+$('#nav').addEventListener('click', aoTocarNav);
+$('#trilho').addEventListener('click', aoTocarNav);
+// barra de cima das telas principais: marca à esquerda; chopp, nuvem e balão à direita (padrão da família)
+const barraTopo = () => `<header class="kf-barra appbar"><div class="kf-barra-in"><div class="kf-marca">${MARCA}</div>${KitFacil.topo.html({ principal: true })}</div></header>`;
+
+/* ================= criar, duplicar, excluir ================= */
+function createQuote(client) {
+  openSheet({ title: 'O que você vai fazer?', body: `<div class="kind-pick">
+      <button data-kind="quote"><span class="ki">${I.doc}</span><span><b>Orçamento</b><small>Antes do serviço. Proposta com valores, prazos e validade para o cliente aprovar.</small></span></button>
+      <button data-kind="report"><span class="ki">${I.check}</span><span><b>Relatório de serviço</b><small>Serviço já feito. Registra o diagnóstico, o que foi executado, os testes e os valores.</small></span></button>
+    </div>`,
+    onMount: s => $$('[data-kind]', s).forEach(b => b.onclick = () => { closeSheet(true); startQuote(client, b.dataset.kind === 'report'); }) });
+}
+function startQuote(client, report) {
+  const q = blankQuote();
+  settings.seq = (settings.seq || 0) + 1; q.num = settings.seq; saveSettings();
+  if (client) q.client = { name: client.name, phone: client.phone || '', address: client.address || '' };
+  quotes.unshift(q);
+  if (report) { setStatus(q, 'concluido'); q.prevStatus = 'rascunho'; }
+  saveQuotes();
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
+  go('/q/' + q.id);
+  if (!isTouch && !client) setTimeout(() => $('#q-name')?.focus(), 60);
+}
+function createExample() {
+  const ex = quotes.find(q => q.example);
+  if (ex) return go('/q/' + ex.id);
+  const q = blankQuote();
+  const sala = { id: uid(), name: 'Sala' }, coz = { id: uid(), name: 'Cozinha' };
+  const it = (room, kind, name, unit, qty, price) => ({ id: uid(), kind, name, unit, qty, price, room });
+  Object.assign(q, { example: true, status: 'enviado', sentAt: Date.now() - 2 * DAY, createdAt: Date.now() - 2 * DAY,
+    client: { name: 'Mariana Souza', phone: '11912345678', address: 'Rua das Acácias, 120 – Vila Mariana' },
+    title: 'Reforma elétrica da sala e da cozinha', deadline: '2 dias úteis', discount: { mode: 'pct', value: 0, pct: 5 },
+    payment: { mode: 'entrada', entryPct: 50, installments: 3 },
+    trip: { km: 12, roundTrip: true, visits: 2, minutes: 0, toll: 0, kmPerL: 10, fuelPrice: 619, wearPerKm: 40, hourRate: 0, minVisit: 0 },
+    notes: 'Não inclui reparos de alvenaria, gesso ou pintura.\nA energia será desligada durante parte do serviço.',
+    useRooms: true, rooms: [sala, coz],
+    items: [
+      it(sala.id, 'svc', 'Ponto novo de tomada com fiação', 'ponto', 5, 9000),
+      it(sala.id, 'svc', 'Instalação de tomada ou interruptor', 'un', 3, 4500),
+      it(sala.id, 'svc', 'Ponto de interruptor paralelo three-way', 'ponto', 1, 12000),
+      it(sala.id, 'svc', 'Instalação de luminária ou plafon', 'un', 2, 6000),
+      it(sala.id, 'mat', 'Tomada 10 A com placa', 'un', 3, 1800),
+      it(sala.id, 'mat', 'Tomada dupla 10 A com placa', 'un', 2, 2800),
+      it(sala.id, 'mat', 'Interruptor simples com placa', 'un', 3, 1600),
+      it(sala.id, 'mat', 'Interruptor paralelo three-way com placa', 'un', 1, 2200),
+      it(sala.id, 'mat', 'Caixa 4x2', 'un', 9, 250),
+      it(coz.id, 'svc', 'Ponto novo de tomada com fiação', 'ponto', 3, 9000),
+      it(coz.id, 'svc', 'Tomada de uso específico 20 A', 'un', 2, 7000),
+      it(coz.id, 'svc', 'Instalação de luminária ou plafon', 'un', 1, 6000),
+      it(coz.id, 'mat', 'Tomada 20 A com placa', 'un', 5, 2200),
+      it(coz.id, 'mat', 'Caixa 4x2', 'un', 5, 250),
+      it(coz.id, 'mat', 'Plafon LED 18 W', 'un', 1, 4500),
+      it('', 'svc', 'Instalação de DR', 'un', 1, 9000),
+      it('', 'svc', 'Instalação ou troca de disjuntor', 'un', 2, 4000),
+      it('', 'mat', 'DR bipolar 40 A 30 mA', 'un', 1, 16000),
+      it('', 'mat', 'Disjuntor monopolar 10 a 32 A', 'un', 2, 2200),
+      it('', 'mat', 'Cabo flexível 2,5 mm²', 'm', 60, 350),
+    ] });
+  q.travel = tripCalc(q.trip).total;
+  quotes.unshift(q); saveQuotes();
+  go('/q/' + q.id);
+}
+function duplicateQuote(q) {
+  const d = fixQuote({ ...clone(q), id: uid(), createdAt: Date.now(), updatedAt: Date.now(), status: 'rascunho', sentAt: null, approvedAt: null, doneAt: null, refusedAt: null, example: false, approvedVia: '', startAt: null, endAt: null, dateTbd: false, dates: [], days: 1, prevStatus: '' });
+  d.items = d.items.map(i => ({ ...i, id: uid() }));
+  settings.seq = (settings.seq || 0) + 1; d.num = settings.seq; saveSettings();
+  quotes.unshift(d); saveQuotes();
+  go('/q/' + d.id, true);
+  toast(`Cópia criada: ${numLabel(d)}.`);
+}
+function deleteQuote(q) {
+  confirmSheet('Excluir orçamento?', `O orçamento ${numLabel(q)}${q.client.name ? ' de ' + q.client.name : ''} será apagado${syncOn() ? ' de todos os seus aparelhos' : ' deste aparelho'}.`, 'Excluir', () => {
+    const idx = quotes.indexOf(q);
+    quotes = quotes.filter(x => x !== q); saveQuotes();
+    go('/', true);
+    toast('Orçamento excluído.', { label: 'Desfazer', run: () => { quotes.splice(Math.max(0, idx), 0, q); saveQuotes(); rerender(); } });
+  });
+}
+
+/* ================= tela: orçamentos ================= */
+let homeFilter = 'todos', homeQuery = '';
+const pill = st => `<span class="pill st-${st}">${STATUS[st]}</span>`;
+function quoteCard(q) {
+  const c = compute(q);
+  const when = { rascunho: 'editado ' + rel(q.updatedAt), enviado: 'enviado ' + rel(q.sentAt), aprovado: 'aprovado ' + rel(q.approvedAt), concluido: 'concluído em ' + (q.doneAt ? fmtShort(q.doneAt) : ''), recusado: 'recusado em ' + (q.refusedAt ? fmtShort(q.refusedAt) : '') }[q.status];
+  const nudge = q.status === 'enviado' && daysSince(q.sentAt) >= 3 ? ' · <span class="nudge">vale cobrar resposta</span>' : '';
+  return `<button class="qcard" data-open="${q.id}">
+    <span class="qc-name">${esc(q.client.name || 'Cliente sem nome')}</span>
+    <span class="qc-total">${BRL(c.total)}</span>
+    <span class="qc-title">${esc(q.title || plural(q.items.length, 'item', 'itens'))}</span>
+    <span class="qc-pill">${pill(q.status)}</span>
+    <span class="qc-meta">${q.example ? '<span class="tag-ex">Exemplo</span> · ' : esc(numLabel(q)) + ' · '}${esc(when)}${nudge}</span>
+  </button>`;
+}
+// rascunho: arrastar o cartão para a esquerda mostra Excluir (o botão também recebe o foco pelo teclado e pelo leitor de tela)
+const QC_DEL = 104;
+function draftCard(q) {
+  return `<div class="qswipe" data-swipe="${q.id}">${quoteCard(q)}<button class="qc-del" data-del-draft="${q.id}">${I.trash}<span>Excluir</span><span class="sr-only"> rascunho ${esc(q.client.name || q.title || numLabel(q))}</span></button></div>`;
+}
+function excluiRascunho(id) {
+  const q = getQ(id); if (!q) return;
+  const idx = quotes.indexOf(q);
+  quotes = quotes.filter(x => x !== q); saveQuotes(); rerender();
+  toast('Rascunho excluído.', { label: 'Desfazer', run: () => { quotes.splice(Math.max(0, idx), 0, q); saveQuotes(); rerender(); } });
+}
+function bindSwipe(v) {
+  let aberto = null, arrastou = false;
+  // o vermelho fica atrás do cartão inteiro (sem emenda nos cantos) e só aparece enquanto o cartão sai do lugar
+  const poe = (w, x) => {
+    const c = $('.qcard', w); c.style.transform = x ? `translateX(${x}px)` : '';
+    clearTimeout(w._t);
+    if (x) w.classList.add('mexe'); else w._t = setTimeout(() => w.classList.remove('mexe'), KitFacil.movimento.reduzido() ? 0 : KitFacil.movimento.curto);
+  };
+  const fecha = () => { if (aberto) { poe(aberto, 0); aberto = null; } };
+  $$('[data-swipe]', v).forEach(w => {
+    const c = $('.qcard', w), del = $('.qc-del', w);
+    let x0 = 0, y0 = 0, dx = 0, base = 0, modo = '', id = null;
+    c.addEventListener('pointerdown', e => {
+      if (e.button) return;
+      if (aberto && aberto !== w) fecha();
+      x0 = e.clientX; y0 = e.clientY; dx = 0; modo = ''; id = e.pointerId; base = aberto === w ? -QC_DEL : 0; arrastou = false;
+    });
+    c.addEventListener('pointermove', e => {
+      if (e.pointerId !== id) return;
+      const mx = e.clientX - x0, my = e.clientY - y0;
+      if (!modo) { if (Math.abs(mx) > 8 && Math.abs(mx) > Math.abs(my)) { modo = 'x'; c.setPointerCapture(id); w.classList.add('arrastando'); } else if (Math.abs(my) > 8) modo = 'y'; }
+      if (modo !== 'x') return;
+      dx = Math.max(-QC_DEL - 24, Math.min(0, base + mx)); poe(w, dx);
+    });
+    const solta = e => {
+      if (e.pointerId !== id) return; id = null;
+      w.classList.remove('arrastando');
+      if (modo !== 'x') return;
+      arrastou = true;
+      if (dx < -QC_DEL / 2) { poe(w, -QC_DEL); aberto = w; } else { poe(w, 0); if (aberto === w) aberto = null; }
+    };
+    c.addEventListener('pointerup', solta); c.addEventListener('pointercancel', solta);
+    // depois de arrastar, o toque não abre o orçamento; com Excluir à mostra, tocar no cartão só fecha
+    c.addEventListener('click', e => {
+      if (!arrastou && aberto !== w) return;
+      e.stopPropagation(); e.preventDefault();
+      if (arrastou) arrastou = false; else fecha();
+    }, true);
+    del.addEventListener('focus', () => { if (aberto && aberto !== w) fecha(); poe(w, -QC_DEL); aberto = w; });
+    del.addEventListener('blur', () => setTimeout(() => { if (aberto === w && document.activeElement !== del) fecha(); }, 0));
+    del.addEventListener('click', () => excluiRascunho(w.dataset.swipe));
+  });
+}
+// Início: os orçamentos em seções (por situação; em Concluídos e Recusados, por mês), como no resto do app
+const HOME_G = [['enviado', 'Aguardando resposta'], ['aprovado', 'Aprovados · a executar'], ['rascunho', 'Rascunhos'], ['concluido', 'Concluídos'], ['recusado', 'Recusados']];
+function homeListHTML() {
+  const qf = fold(homeQuery);
+  const match = q => !qf || fold([q.client.name, q.title, numLabel(q), q.client.address].join(' ')).includes(qf);
+  const byDate = (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0);
+  if (!quotes.length) return KitFacil.ui.vazio({ titulo: 'Nenhum orçamento ainda', texto: 'Toque em <b>Novo orçamento</b> para começar, ou veja como fica um orçamento pronto.', acao: '<button type="button" class="btn ghost" data-example>Ver um orçamento de exemplo</button>' });
+  const L = quotes.filter(q => (homeFilter === 'todos' || (homeFilter === 'aberto' ? ['rascunho', 'enviado', 'aprovado'].includes(q.status) : q.status === homeFilter)) && match(q)).sort(byDate);
+  if (!L.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum orçamento encontrado', texto: 'Confira o nome do cliente, o serviço ou o número.' }
+    : homeFilter === 'aberto' ? { titulo: 'Nenhum orçamento em aberto', texto: 'Toque em <b>Novo orçamento</b> para começar.' } : { titulo: 'Nada por aqui ainda', texto: 'Os orçamentos com esta situação aparecem aqui.' });
+  let grupos;
+  if (homeFilter === 'concluido' || homeFilter === 'recusado') {
+    const quando = q => homeFilter === 'concluido' ? (q.doneAt || q.updatedAt) : (q.refusedAt || q.updatedAt);
+    const meses = new Map();
+    L.forEach(q => { const d = new Date(quando(q)), k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; if (!meses.has(k)) meses.set(k, []); meses.get(k).push(q); });
+    grupos = [...meses].sort((a, b) => b[0].localeCompare(a[0])).map(([k, M]) => [`home:${homeFilter}:${k}`, capFirst(new Date(k + '-15T12:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })), M, '']);
+  } else grupos = HOME_G.map(([st, l]) => [`home:${st}`, l, L.filter(q => q.status === st), st]).filter(g => g[2].length);
+  return grupos.map(([key, l, M, st]) => panel(key, '', esc(l), qf ? null : resumoDe(M, q => q.client.name || q.title || numLabel(q)), `<div class="qlist">${M.map(q => q.status === 'rascunho' ? draftCard(q) : quoteCard(q)).join('')}</div>`,
+    { right: conta(M.length), force: qf ? true : undefined, attrs: st ? ` id="grp-${st}"` : '' })).join('');
+}
+VIEWS.home = {
+  html() {
+    const bar = barraTopo();
+    const s = stats(), cnt = k => k === 'aberto' ? quotes.filter(q => ['rascunho', 'enviado', 'aprovado'].includes(q.status)).length : k === 'todos' ? quotes.length : quotes.filter(q => q.status === k).length;
+    const [int, dec] = BRL(s.won).replace(/R\$\s?/, '').split(',');
+    const needMe = !settings.name && !settings.company;
+    return `${bar}<main class="page">
+      <section class="hero" aria-label="Resumo do mês">
+        <div class="hero-top"><span>${s.month}</span><span>${s.wonN ? plural(s.wonN, 'orçamento aprovado', 'orçamentos aprovados') : 'aprovado no mês'}</span></div>
+        <div class="hero-num"><small>R$</small>${int}<small>,${dec}</small></div>
+        <div class="hero-stats">
+          <button data-jump="enviado"><b>${s.waitN}</b><span>aguardando resposta</span></button>
+          <button data-jump="aprovado"><b>${s.todoN}</b><span>aprovados a executar</span></button>
+          <div><b>${s.rate === null ? '–' : s.rate + '%'}</b><span>de aprovação em 90 dias</span></div>
+          <div><b>${s.receber ? BRL(s.receber).replace(/,00$/, '') : 'R$ 0'}</b><span>a receber</span></div>
+        </div>
+      </section>
+      ${!syncOn() && !sync.tipOff && !needMe && quotes.some(q => !q.example) ? `<div class="banner b-tip"><p><b>Usa o app em mais de um aparelho?</b> Ative a sincronização e tenha os mesmos orçamentos no celular e no tablet.</p><div class="banner-act"><button class="btn sm ghost" data-kf="sync-ativar">Ativar</button><button class="btn sm ghost" data-tip-off>Agora não</button></div></div>` : ''}
+      ${needMe ? `<div class="banner b-tip"><p><b>Seu nome ainda não sai na proposta.</b> Preencha seus dados e chave Pix em Ajustes.</p><div class="banner-act"><button class="btn sm ghost" data-aj="conta">Preencher meus dados</button></div></div>` : ''}
+      <div class="toolbar">
+        ${quotes.length > 4 ? `<label class="search">${I.search}<input type="search" id="h-q" placeholder="Buscar cliente, serviço ou número" value="${esc(homeQuery)}" aria-label="Buscar orçamento"></label>` : ''}
+        ${filtroSeg('data-filter', [['todos', 'Todos'], ['aberto', 'Em aberto'], ['concluido', 'Concluídos'], ['recusado', 'Recusados']], homeFilter, cnt, 'Filtrar')}
+        ${KitFacil.ui.criar({ rotulo: 'Novo orçamento', attrs: 'data-new' })}
+      </div>
+      <div class="qlist" id="q-list">${homeListHTML()}</div>
+    </main>`;
+  },
+  bind(v) {
+    $$('[data-new]', v).forEach(b => b.onclick = () => createQuote());
+    $('[data-example]', v)?.addEventListener('click', createExample);
+    $('[data-tip-off]', v)?.addEventListener('click', () => { sync.tipOff = true; saveSync(); rerender(); });
+    $$('[data-aj]', v).forEach(b => b.onclick = () => KitFacil.ajustes.ir(b.dataset.aj));
+    v.addEventListener('click', e => {
+      const b = e.target.closest('[data-open]'); if (b) return go('/q/' + b.dataset.open);
+    });
+    $$('[data-filter]', v).forEach(b => b.onclick = () => { homeFilter = b.dataset.filter; rerender(); });
+    $$('[data-jump]', v).forEach(b => b.onclick = () => {
+      if (homeFilter !== 'aberto' && homeFilter !== 'todos') homeFilter = 'aberto';
+      PANEL['home:' + b.dataset.jump] = true; rerender();
+      const el = $('#grp-' + b.dataset.jump);
+      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior: 'smooth' });
+      else toast(b.dataset.jump === 'enviado' ? 'Nenhum orçamento aguardando resposta.' : 'Nenhum orçamento aprovado a executar.');
+    });
+    const sq = $('#h-q', v);
+    if (sq) sq.addEventListener('input', () => { homeQuery = sq.value; $('#q-list').innerHTML = homeListHTML(); bindSwipe($('#q-list')); });
+    bindSwipe(v);
+  },
+};
+
+/* ================= tela: editor do orçamento ================= */
+const NOTE_CHIPS = [
+  ['Sem alvenaria e pintura', 'Não inclui reparos de alvenaria, gesso ou pintura.'],
+  ['Material pode variar', 'Valores de material sujeitos a alteração pelo fornecedor.'],
+  ['Conforme NBR 5410', 'Serviço executado conforme a norma NBR 5410.'],
+  ['Energia desligada', 'A energia será desligada durante parte do serviço.'],
+];
+// relatório técnico em duas etapas: 1) o que (dispositivo, serviço, teste); 2) como, onde e com qual resultado
+// listas de lugares: [rótulo, forma "no/na", forma "do/da"]
+const PLACES = {
+  circ: [['Geral', 'no circuito geral', 'geral'], ['Chuveiro', 'no circuito do chuveiro', 'do circuito do chuveiro'], ['Tomadas', 'no circuito de tomadas', 'do circuito de tomadas'],
+    ['Iluminação', 'no circuito de iluminação', 'do circuito de iluminação'], ['Ar-condicionado', 'no circuito do ar-condicionado', 'do circuito do ar-condicionado'],
+    ['Forno ou cooktop', 'no circuito do forno ou cooktop', 'do circuito do forno ou cooktop'], ['Máquina de lavar', 'no circuito da máquina de lavar', 'do circuito da máquina de lavar'],
+    ['Torneira elétrica', 'no circuito da torneira elétrica', 'do circuito da torneira elétrica'], ['Bomba ou portão', 'no circuito da bomba ou do portão', 'do circuito da bomba ou do portão']],
+  pts: [['Quadro', 'no quadro de distribuição', 'do quadro de distribuição'], ['Padrão de entrada', 'no padrão de entrada', 'do padrão de entrada'], ['Tomadas', 'nas tomadas', 'das tomadas'],
+    ['Interruptores', 'nos interruptores', 'dos interruptores'], ['Iluminação', 'nos pontos de iluminação', 'dos pontos de iluminação'], ['Chuveiro', 'no chuveiro', 'do chuveiro'],
+    ['Conexões', 'nas conexões', 'das conexões'], ['Equipamentos', 'nos equipamentos', 'dos equipamentos'], ['Todos os circuitos', 'em todos os circuitos', 'de todos os circuitos']],
+};
+const ROOMS_STD = ['Sala', 'Cozinha', 'Banheiro', 'Quartos', 'Área de serviço', 'Área externa', 'Garagem'];
+const W_CIRC = { list: 'circ', form: 2, lab: 'Qual circuito?' }, W_CIRC_NO = { list: 'circ', form: 1, lab: 'Em qual circuito?' };
+const W_PTS = { list: 'pts', form: 1, lab: 'Onde?' }, W_PTS_DE = { list: 'pts', form: 2, lab: 'Do quê?' };
+const opts = (lab, list, one) => ({ lab, list, one: !!one });
+// cada item: l = botão; a = início da frase; o = opções; w = lugar; r = ambiente; v = complemento; ord = ordem das partes
+const TECH = {
+  diag: [
+    { l: 'Disjuntor', a: 'disjuntor', w: W_CIRC, r: true, o: opts('Qual a falha?', [
+      ['Desarma por sobrecarga', 'desarmando por sobrecarga'], ['Desarma por curto', 'desarmando por curto-circuito'],
+      ['Não rearma', 'com falha interna: não rearma'], ['Desarma sem carga', 'com falha interna: desarma sem carga ligada'],
+      ['Não desarma', 'com falha interna: não desarma e deixa o circuito sem proteção'], ['Mecanismo quebrado', 'com mecanismo travado ou quebrado'],
+      ['Terminais carbonizados', 'com terminais aquecidos ou carbonizados'], ['Mau contato', 'com mau contato nos terminais'],
+      ['Pequeno para a carga', 'subdimensionado para a carga do circuito'], ['Grande para o cabo', 'superdimensionado para o cabo, sem proteger a fiação'],
+      ['Fora de padrão', 'antigo e fora de padrão']]) },
+    { l: 'DR', a: 'DR', w: W_CIRC, o: opts('Qual a falha?', [
+      ['Fuga de corrente', 'desarmando por fuga de corrente no circuito'], ['Desarma sem fuga', 'com falha interna: desarma sem fuga de corrente'],
+      ['Não desarma no teste', 'não desarma no botão de teste'], ['Não rearma', 'com falha interna: não rearma'], ['Ligação errada', 'ligado de forma incorreta']]) },
+    { l: 'DPS', a: 'DPS', o: opts('Qual a falha?', [
+      ['Fim de vida útil', 'com sinalização de fim de vida útil'], ['Queimado', 'queimado por surto de tensão'], ['Sem terra', 'sem ligação ao aterramento'], ['Ligação errada', 'ligado de forma incorreta']]) },
+    { l: 'Tomada', a: 'tomada', r: true, o: opts('Qual a falha?', [
+      ['Mau contato', 'com mau contato'], ['Derretida', 'derretida ou carbonizada'], ['Terminais frouxos', 'com terminais frouxos'], ['Solta', 'solta da caixa'],
+      ['Quebrada', 'quebrada'], ['Sem aterramento', 'sem aterramento'], ['Fase e neutro invertidos', 'com fase e neutro invertidos'],
+      ['10 A para aparelho de 20 A', 'de 10 A usada por aparelho que exige 20 A'], ['Padrão antigo', 'fora do padrão atual da NBR 14136']]) },
+    { l: 'Interruptor', a: 'interruptor', r: true, o: opts('Qual a falha?', [
+      ['Mau contato', 'com mau contato'], ['Não liga ou desliga', 'sem acionar a carga'], ['Aquecendo', 'aquecendo durante o uso'], ['Quebrado', 'quebrado'],
+      ['Corta o neutro', 'ligado no neutro, sem interromper a fase']]) },
+    { l: 'Chuveiro', a: 'chuveiro', r: true, o: opts('Qual a falha?', [
+      ['Resistência queimada', 'com resistência queimada'], ['Ligação derretida', 'com fiação de ligação derretida'], ['Conexões aquecidas', 'com conexões aquecidas'],
+      ['Dando choque', 'com fuga de corrente, dando choque'], ['Sem aterramento', 'sem aterramento'], ['Potência alta', 'com potência acima do que o circuito suporta']]) },
+    { l: 'Iluminação', a: '', r: true, o: opts('Qual a falha?', [
+      ['Lâmpada queimada', 'lâmpada queimada'], ['Reator queimado', 'reator queimado'], ['Driver queimado', 'driver de LED queimado'], ['Mau contato', 'luminária com mau contato'],
+      ['Soquete danificado', 'soquete danificado'], ['Sensor de presença', 'sensor de presença com defeito'], ['Fotocélula', 'fotocélula com defeito']]) },
+    { l: 'Fiação', a: 'fiação', w: W_CIRC, r: true, o: opts('Qual o problema?', [
+      ['Aquecida ou derretida', 'aquecida ou derretida'], ['Bitola pequena', 'com bitola inadequada para a carga'], ['Isolamento ressecado', 'com isolamento ressecado ou danificado'],
+      ['Emendas sem isolamento', 'com emendas sem isolamento adequado'], ['Emendas com mau contato', 'com mau contato nas emendas'], ['Curto-circuito', 'em curto-circuito'],
+      ['Fuga de corrente', 'com fuga de corrente'], ['Exposta', 'exposta, sem eletroduto'], ['Roída', 'danificada por animais']]) },
+    { l: 'Quadro', a: 'quadro de distribuição', o: opts('Qual o problema?', [
+      ['Sem identificação', 'sem identificação dos circuitos'], ['Conexões frouxas', 'com conexões frouxas'], ['Sinais de aquecimento', 'com sinais de aquecimento'],
+      ['Barramento oxidado', 'com barramento oxidado'], ['Sem tampa', 'sem tampa de proteção'], ['Sem espaço', 'sem espaço para novos circuitos'],
+      ['Com fusíveis', 'antigo, com fusíveis'], ['Sem barramento de terra', 'sem barramento de terra']]) },
+    { l: 'Aterramento', a: '', o: opts('Qual o problema?', [
+      ['Sem aterramento', 'instalação sem aterramento'], ['Terra ausente nas tomadas', 'condutor de proteção, o terra, ausente nas tomadas'], ['Resistência alta', 'aterramento com resistência elevada'],
+      ['Haste corroída', 'haste de aterramento corroída ou desconectada'], ['Terra no neutro', 'terra ligado ao neutro']]) },
+    { l: 'Proteção', a: '', o: opts('O que falta?', [
+      ['Sem DR', 'instalação sem DR, a proteção contra choque elétrico'], ['Sem DPS', 'instalação sem DPS, a proteção contra surtos'],
+      ['Chuveiro sem circuito próprio', 'chuveiro sem circuito exclusivo'], ['Disjuntor compartilhado', 'vários circuitos ligados no mesmo disjuntor']]) },
+    { l: 'Rede elétrica', a: '', w: W_PTS, o: opts('Qual o problema?', [
+      ['Falta de fase', 'falta de fase'], ['Neutro interrompido', 'neutro interrompido'], ['Oscilação', 'oscilação de tensão'],
+      ['Tensão baixa', 'tensão abaixo do normal'], ['Tensão alta', 'tensão acima do normal']], true), v: { opt: true, lab: 'Tensão medida', pre: ': ', sug: ['127 V', '220 V', '110 V', '240 V'] } },
+  ],
+  work: [
+    { l: 'Troca', a: 'substituição', ord: ['o', 'w'], w: W_CIRC, r: true, o: opts('O que foi trocado?', [
+      ['Disjuntor', 'do disjuntor'], ['DR', 'do DR'], ['DPS', 'do DPS'], ['Tomadas', 'das tomadas'], ['Interruptores', 'dos interruptores'], ['Chuveiro', 'do chuveiro'],
+      ['Resistência', 'da resistência do chuveiro'], ['Lâmpadas', 'das lâmpadas'], ['Reator ou driver', 'do reator ou driver'], ['Luminária', 'da luminária'], ['Quadro', 'do quadro de distribuição']]),
+      v: { opt: true, lab: 'Por qual?', pre: ' por ', sug: ['modelo equivalente', 'disjuntor de 32 A', 'disjuntor de 40 A', 'DR de 40 A 30 mA', 'tomada de 20 A'] } },
+    { l: 'Instalação', a: 'instalação', ord: ['o', 'w'], w: W_CIRC_NO, r: true, o: opts('O que foi instalado?', [
+      ['DR', 'de DR'], ['DPS', 'de DPS'], ['Tomadas', 'de tomadas'], ['Interruptores', 'de interruptores'], ['Luminárias', 'de luminárias'], ['Chuveiro', 'de chuveiro'],
+      ['Circuito novo', 'de circuito novo'], ['Quadro', 'de quadro de distribuição'], ['Haste de terra', 'de haste de aterramento']]) },
+    { l: 'Fiação', a: '', ord: ['o', 'w'], w: W_CIRC, r: true, o: opts('O que foi feito?', [
+      ['Troca dos cabos', 'substituição dos cabos'], ['Cabos novos', 'passagem de cabos novos'], ['Emendas refeitas', 'emendas refeitas com conectores adequados'],
+      ['Isolamento', 'isolamento das emendas'], ['Bitola adequada', 'adequação da bitola dos cabos à carga']]),
+      v: { opt: true, lab: 'Bitola do cabo', pre: ', com cabos de ', sug: ['1,5 mm²', '2,5 mm²', '4 mm²', '6 mm²', '10 mm²'] } },
+    { l: 'Reparo', a: '', ord: ['o', 'w'], w: W_CIRC_NO, r: true, o: opts('O que foi feito?', [
+      ['Achar a falha', 'localização e isolamento do ponto de falha'], ['Reparo do curto', 'reparo do ponto de curto-circuito'], ['Polaridade', 'correção da polaridade de fase e neutro'],
+      ['Interruptor na fase', 'ligação do interruptor na fase'], ['Separar neutro e terra', 'separação de neutro e terra'], ['Dividir circuito', 'divisão do circuito sobrecarregado']]) },
+    { l: 'Quadro', a: '', o: opts('O que foi feito?', [
+      ['Reaperto', 'reaperto das conexões do quadro de distribuição'], ['Identificação', 'identificação dos circuitos no quadro de distribuição'],
+      ['Organização', 'organização da fiação do quadro de distribuição'], ['Barramentos', 'instalação de barramentos de terra e neutro no quadro']]) },
+    { l: 'Aterramento', a: '', o: opts('O que foi feito?', [
+      ['Haste', 'instalação de haste de aterramento'], ['Terra nas tomadas', 'ligação do condutor de proteção, o terra, às tomadas'], ['Terra no quadro', 'interligação do aterramento ao quadro de distribuição']]) },
+  ],
+  tests: [
+    { l: 'Tensão', a: 'medição de tensão', w: W_PTS, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['127 V', '220 V', '127/220 V', 'dentro do normal'] } },
+    { l: 'Corrente', a: 'medição de corrente', w: W_CIRC_NO, v: { lab: 'Resultado', pre: ': ', sug: ['dentro da capacidade do disjuntor', 'acima da capacidade do disjuntor'] } },
+    { l: 'DR', a: 'teste do DR', w: W_CIRC, o: opts('Como foi testado?', [['Botão de teste', 'pelo botão de teste'], ['Com instrumento', 'com instrumento, medindo a corrente de disparo']], true),
+      v: { lab: 'Resultado', pre: ': ', sug: ['desarmou corretamente', 'não desarmou'] } },
+    { l: 'Aterramento', a: 'verificação do aterramento', w: W_PTS, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['presente e funcionando', 'ausente', 'resistência de 10 Ω'] } },
+    { l: 'Isolamento', a: 'medição de resistência de isolamento', w: { list: 'circ', form: 2, lab: 'De qual circuito?' }, v: { lab: 'Resultado', pre: ': ', sug: ['acima de 1 MΩ, aprovado', 'abaixo do mínimo'] } },
+    { l: 'Polaridade', a: 'verificação de polaridade', w: W_PTS, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['correta', 'corrigida'] } },
+    { l: 'Aquecimento', a: 'verificação de aquecimento', w: W_PTS, o: opts('Como?', [['Termômetro', 'com termômetro infravermelho'], ['Visual', 'por inspeção visual']], true),
+      v: { lab: 'Resultado', pre: ': ', sug: ['sem aquecimento', 'aquecimento corrigido'] } },
+    { l: 'Funcionamento', a: 'teste de funcionamento', w: W_PTS_DE, r: true, v: { lab: 'Resultado', pre: ': ', sug: ['funcionando normalmente'] } },
+    { l: 'Com carga', a: 'teste com carga', w: W_CIRC_NO, v: { lab: 'Resultado', pre: ': ', sug: ['sem desarme e sem aquecimento'] } },
+    { l: 'Continuidade', a: 'teste de continuidade', w: { list: 'circ', form: 2, lab: 'De qual circuito?' }, v: { lab: 'Resultado', pre: ': ', sug: ['aprovado'] } },
+    { l: 'Outro', free: true },
+  ],
+  recs: [
+    { l: 'Trocar', a: 'recomenda-se a substituição', ord: ['o', 'w'], w: W_CIRC, r: true, o: opts('O quê?', [
+      ['Quadro', 'do quadro de distribuição'], ['Fiação', 'da fiação'], ['Disjuntores', 'dos disjuntores'], ['Tomadas antigas', 'das tomadas fora do padrão'], ['Chuveiro', 'do chuveiro']]) },
+    { l: 'Instalar', a: 'recomenda-se a instalação', o: opts('O quê?', [
+      ['DR', 'de DR, conforme a NBR 5410'], ['DPS', 'de DPS, para proteção contra surtos'], ['Aterramento', 'de aterramento'],
+      ['Circuito do chuveiro', 'de circuito exclusivo para o chuveiro'], ['Circuito do ar', 'de circuito exclusivo para o ar-condicionado'], ['Mais tomadas', 'de mais tomadas, para não usar benjamins']]) },
+    { l: 'Revisão geral', s: 'Recomenda-se uma revisão completa da instalação elétrica.' },
+    { l: 'Evitar sobrecarga', s: 'Evitar ligar aparelhos de alta potência ao mesmo tempo no mesmo circuito.' },
+    { l: 'Sem benjamins', s: 'Não usar benjamins e extensões como ligação permanente.' },
+    { l: 'Cliente recusou', s: 'O cliente foi informado dos riscos e optou por não realizar os serviços recomendados neste momento.' },
+  ],
+};
+const joinPt = L => L.length < 2 ? (L[0] || '') : L.slice(0, -1).join(', ') + ' e ' + L[L.length - 1];
+const capFirst = s => s.charAt(0).toUpperCase() + s.slice(1);
+function techRooms(q) {
+  const out = [], seen = new Set();
+  [...(q.useRooms ? q.rooms.map(r => r.name) : []), ...ROOMS_STD].forEach(n => { const k = fold(n); if (!seen.has(k)) { seen.add(k); out.push(n); } });
+  return out;
+}
+function techSentence(it, sel, rooms) {
+  const part = {
+    o: it.o ? joinPt(sel.o.map(i => it.o.list[i][1])) : '',
+    w: it.w ? joinPt(sel.w.map(i => PLACES[it.w.list][i][it.w.form])) : '',
+  };
+  let s = [it.a, ...(it.ord || ['w', 'o']).map(k => part[k])].filter(Boolean).join(' ');
+  if (sel.r.length) s += `, ${sel.r.length > 1 ? 'ambientes' : 'ambiente'}: ${joinPt(sel.r.map(i => rooms[i].charAt(0).toLowerCase() + rooms[i].slice(1)))}`;
+  if (sel.v.trim()) s += (it.v.pre || ': ') + sel.v.trim();
+  s = capFirst(s.trim());
+  return s && !/[.!?]$/.test(s) ? s + '.' : s;
+}
+const TECH_TITLE = { diag: 'Diagnóstico', work: 'Serviço realizado', tests: 'Teste ou verificação', recs: 'Recomendação' };
+// etapa 2: escolhe falha, lugar, ambiente e resultado; a frase aparece pronta e pode ser ajustada
+function techSheet(q, key, idx, onAdd) {
+  const it = TECH[key][idx], rooms = techRooms(q), sel = { o: [], w: [], r: [], v: '' };
+  const av = $('.kf-toast'); if (av) av.hidden = true;
+  const grupo = (grp, list, one) => linhas(list.map((x, i) => linha(`data-i="${i}"`, esc(x), { tipo: one ? 'um' : 'varios' })), ` data-grp="${grp}"${one ? ' data-one' : ''}`);
+  // cada escolha numa seção; a primeira (obrigatória) já vem aberta, as opcionais fechadas com o resumo do que foi marcado
+  const secao = (grp, lab, list, one, aberta) => panel(`tb:${grp}`, `tb-${grp}`, esc(lab), aberta ? 'Escolha uma opção' : 'Opcional', grupo(grp, list, one), { force: aberta });
+  const body = it.free
+    ? `<div class="field"><label for="tb-out">Descreva o teste e o resultado</label><textarea id="tb-out" placeholder="Ex.: Medição da corrente de fuga do chuveiro: dentro do limite."></textarea></div>`
+    : `<div class="stack14">${it.o ? secao('o', it.o.lab, it.o.list.map(x => x[0]), it.o.one, true) : ''}
+      ${it.w ? secao('w', it.w.lab, PLACES[it.w.list].map(x => x[0]), false, !it.o) : ''}
+      ${it.r ? secao('r', 'Ambiente', rooms, false, false) : ''}
+      ${it.v ? `<div class="field"><label for="tb-v">${esc(it.v.lab)}${it.v.opt ? ' <span class="lab-opt">opcional</span>' : ''}</label><input id="tb-v" type="text" autocomplete="off">${linhas(it.v.sug.map(x => linha(`data-sug="${esc(x)}"`, esc(x), { tipo: 'um' })), ' role="group" aria-label="Sugestões"')}</div>` : ''}</div>
+`;
+  openSheet({ title: `${TECH_TITLE[key]}: ${it.l}`, tall: true, body,
+    foot: `${it.free ? '' : '<div class="tb-prev"><label for="tb-out">Vai entrar assim</label><textarea id="tb-out" rows="2" placeholder="Escolha as opções acima"></textarea></div>'}<button class="btn ghost" data-no>Cancelar</button><button class="btn primary" data-ok>${I.plus}Adicionar</button>`,
+    onMount: s => {
+      const out = $('#tb-out', s), ok = $('[data-ok]', s);
+      let dirty = false;
+      const refresh = () => {
+        if (!it.free && !dirty) { out.value = it.o && !sel.o.length ? '' : techSentence(it, sel, rooms); out.style.height = 'auto'; out.style.height = out.scrollHeight + 2 + 'px'; }
+        ok.disabled = !out.value.trim();
+      };
+      $$('[data-grp]', s).forEach(g => g.addEventListener('click', e => {
+        const b = e.target.closest('[data-i]'); if (!b) return;
+        const grp = g.dataset.grp, i = +b.dataset.i, on = !sel[grp].includes(i);
+        if (g.hasAttribute('data-one')) { sel[grp] = on ? [i] : []; $$('[data-i]', g).forEach(x => x.setAttribute('aria-pressed', on && +x.dataset.i === i)); }
+        else { sel[grp] = on ? [...sel[grp], i] : sel[grp].filter(x => x !== i); b.setAttribute('aria-pressed', on); }
+        const nomes = sel[grp].map(k => $(`[data-i="${k}"] .lt`, g).textContent), sm = $(`[data-sum="tb-${grp}"]`, s);
+        if (sm) sm.textContent = nomes.length ? resumoDe(nomes, x => x) : grp === 'o' ? 'Escolha uma opção' : 'Opcional';
+        dirty = false; refresh();
+      }));
+      const v = $('#tb-v', s);
+      if (v) {
+        v.addEventListener('input', () => { sel.v = v.value; dirty = false; refresh(); });
+        const marcaSug = () => $$('[data-sug]', s).forEach(x => x.setAttribute('aria-pressed', x.dataset.sug === v.value.trim()));
+        v.addEventListener('input', marcaSug);
+        $$('[data-sug]', s).forEach(b => b.onclick = () => { v.value = sel.v = b.dataset.sug; dirty = false; refresh(); marcaSug(); });
+      }
+      out.addEventListener('input', () => { dirty = true; ok.disabled = !out.value.trim(); });
+      $('[data-no]', s).onclick = () => closeSheet();
+      ok.onclick = () => { const t = out.value.trim(); if (!t) return; closeSheet(true); onAdd(/[.!?]$/.test(t) ? t : t + '.'); };
+      refresh();
+      if (it.free) setTimeout(() => out.focus(), 60);
+    } });
+}
+// etapa 1: a lista de textos padrão, numa seção própria; com seta abre a etapa 2, com + entra direto
+function techChips(key, q) {
+  const L = TECH[key];
+  return panel(`q:${q.id}:${key}:pad`, '', 'Textos padrão', resumoDe(L, it => it.l),
+    linhas(L.map((it, k) => linha(`data-tc="${key}" data-ti="${k}"`, esc(it.l), it.s ? { tipo: 'mais', dis: key !== 'tests' && q[key].includes(it.s) } : {}))), { right: conta(L.length) });
+}
+const firstLine = (t, empty) => (String(t || '').trim().split('\n')[0] || empty);
+function techField(q, key, label, ph, extra = '') {
+  return panel(`q:${q.id}:${key}`, key, label, firstLine(q[key], 'Toque para preencher'),
+    `${techChips(key, q)}<textarea id="q-${key}" data-tech="${key}" aria-label="${esc(label)}" placeholder="${esc(ph)}">${esc(q[key])}</textarea>${extra}`, { sub: true });
+}
+const testsSum = q => q.tests.length ? plural(q.tests.length, 'teste registrado', 'testes registrados') : 'Toque para registrar';
+const testsHTML = q => panel(`q:${q.id}:tests`, 'tests', 'Testes e verificações', testsSum(q), `<p class="hint">Escolha o teste e depois onde foi feito e o resultado.</p>${techChips('tests', q)}
+  <div class="test-list">${q.tests.map((t, k) => `<div class="test-row"><span class="tk">${I.check}</span><span class="tt">${esc(t)}</span><button class="icon-btn sm" data-test-rm="${k}" aria-label="Remover teste">${I.x}</button></div>`).join('')}</div>`, { sub: true });
+function techSum(q) {
+  const L = [q.diag.trim() && 'diagnóstico', q.work.trim() && 'serviços', q.tests.length && plural(q.tests.length, 'teste', 'testes'), q.recs.trim() && 'recomendações'].filter(Boolean);
+  return L.length ? capFirst(joinPt(L)) : 'Diagnóstico, serviços, testes e recomendações';
+}
+function techCardHTML(q) {
+  if (!isReport(q)) return '';
+  return panel(`q:${q.id}:tech`, 'tech', 'Relatório técnico', techSum(q), `<p class="hint">Toque no que se aplica e complete os detalhes: a frase entra pronta.</p>
+      ${techField(q, 'diag', 'Diagnóstico', 'O que você encontrou: causa do problema, estado da instalação…')}
+      ${techField(q, 'work', 'Serviços realizados', 'O que foi feito, com mais detalhe que a lista de itens.', q.items.some(i => i.kind === 'svc') ? '<button class="linkish" data-work-items>Preencher com os serviços lançados</button>' : '')}
+      ${testsHTML(q)}
+      ${techField(q, 'recs', 'Recomendações', 'O que ainda precisa de atenção, riscos e cuidados de uso.')}
+`);
+}
+// material lançado com valor menor que o custo médio do seu estoque (só quando o material é por sua conta)
+function abaixoCusto(q, i) {
+  if (i.kind !== 'mat' || q.materialBy === 'cliente') return 0;
+  const p = prices.find(x => x.kind === 'mat' && norm(x.name) === norm(i.name));
+  return p && inStock(p) && p.cost > 0 && i.price < p.cost ? p.cost : 0;
+}
+function lineHTML(q, i) {
+  const cli = i.kind === 'mat' && q.materialBy === 'cliente';
+  return `<div class="line${cli ? ' cli' : ''}" data-line="${i.id}">
+    <button class="line-main" data-edit="${i.id}" aria-label="Alterar ${esc(i.name)}">
+      <span class="line-name">${esc(i.name)}</span>
+      <span class="line-meta">${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${refLinha(i) ? refV(BRL(i.price)) : BRL(i.price)}</span>
+      ${abaixoCusto(q, i) ? `<span class="line-warn">${I.warn}Abaixo do seu custo de ${BRL(abaixoCusto(q, i))} por ${unitName(i.unit)}</span>` : ''}
+    </button>
+    <div class="line-side">
+      <span class="line-total">${BRL(lineTotal(i))}</span>
+      <div class="qty">${i.qty <= 1 ? `<button class="rm" data-rm="${i.id}" aria-label="Remover ${esc(i.name)}">${I.trash}</button>` : `<button data-dq="-1" data-id="${i.id}" aria-label="Menos 1 em ${esc(i.name)}">${I.minus}</button>`}<button class="qty-n" data-qe="${i.id}" aria-label="Quantidade de ${esc(i.name)}: ${fmtQty(i.qty)}. Toque para digitar">${fmtQty(i.qty)}</button><button data-dq="1" data-id="${i.id}" aria-label="Mais 1 em ${esc(i.name)}">${I.plus}</button></div>
+    </div>
+  </div>`;
+}
+const payShort = p => ({ avista: p.avista && (p.avista.pct || p.avista.value) ? 'À vista com desconto' : 'À vista', entrada: `Entrada de ${p.entryPct}%`, parcelado: p.cardTipo === 'debito' ? 'Cartão de débito' : `Cartão em ${p.installments}×${p.juros === 'sem' || (p.semAte && p.installments <= p.semAte) ? '' : ' com juros'}`, combinar: 'Pagamento a combinar' })[p.mode] || '';
+function quoteSums(q, c) {
+  const rep = isReport(q), nS = q.items.filter(i => i.kind === 'svc').length, nM = q.items.filter(i => i.kind === 'mat').length;
+  const ds = ts => new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  const val = [c.extra && `adicional +${c.surPct}%`, c.travel && `deslocamento ${BRL(c.travel)}`, c.discount && `desconto ${BRL(c.discount)}`, c.taxFora && `impostos ${BRL(c.taxFora)}`, c.taxDentro && 'impostos embutidos'].filter(Boolean);
+  return {
+    cli: [q.client.name, q.title].filter(Boolean).join(' · ') || 'Nome, WhatsApp, endereço e serviço',
+    items: q.items.length ? [nS && plural(nS, 'serviço', 'serviços'), nM && plural(nM, 'material', 'materiais'), q.useRooms && q.rooms.length && plural(new Set(q.items.map(i => roomOf(q, i) || 'geral')).size, 'ambiente', 'ambientes')].filter(Boolean).join(' · ') : 'Nenhum item ainda',
+    itemsR: BRL(c.labor + (c.matIn ? c.matTotal : 0)),
+    tech: techSum(q),
+    diag: firstLine(q.diag, 'Toque para preencher'), work: firstLine(q.work, 'Toque para preencher'), recs: firstLine(q.recs, 'Toque para preencher'), tests: testsSum(q),
+    val: val.length ? capFirst(val.join(' · ')) : 'Adicionais, deslocamento e desconto',
+    valR: BRL(c.total),
+    cond: [payShort(q.payment), !rep && prazoTxt(q.prazo), (!rep && q.dateTbd) ? 'datas a combinar' : q.dates.length ? (q.dates.length > 1 ? `de ${ds(q.dates[0])} a ${ds(q.dates[q.dates.length - 1])}` : `dia ${ds(q.dates[0])}`) + (daysOk(q) ? '' : ' · confira as datas') : '', q.warranty ? `garantia ${q.warranty} dias` : 'sem garantia'].filter(Boolean).join(' · '),
+    notes: firstLine(q.notes, 'Nada anotado'),
+  };
+}
+// pagamentos recebidos (F10): o que já entrou e o que falta, por orçamento aprovado ou concluído
+const recebido = q => sum((q.pagos || []).map(x => x.v));
+const falta = (q, c = compute(q)) => Math.max(0, c.payTotal - recebido(q));
+function pagosHTML(q, c) {
+  if (!['aprovado', 'concluido'].includes(q.status)) return '';
+  const r = recebido(q), f = falta(q, c);
+  return `<div class="pagos" id="q-pagos"><div class="pagos-top"><span><b>Recebido ${BRL(r)}</b> de ${BRL(c.payTotal)}${f ? ` · falta <b>${BRL(f)}</b>` : ' · tudo pago'}</span><button class="btn sm ghost" data-pago>${I.plus}Registrar pagamento</button></div>
+    ${(q.pagos || []).length ? `<ul class="pagos-lista">${q.pagos.map(x => `<li><span>${fmtDate(x.t)}</span><b>${BRL(x.v)}</b><button class="icon-btn" data-pago-rm="${x.id}" aria-label="Apagar o pagamento de ${BRL(x.v)} de ${fmtDate(x.t)}">${I.x}</button></li>`).join('')}</ul>` : ''}</div>`;
+}
+function pagoSheet(q) {
+  const c = compute(q), f = falta(q, c), sugestao = !recebido(q) && c.entry ? c.entry : f;
+  openSheet({ title: 'Registrar pagamento', body: `<div class="field"><label for="pg-v">Valor recebido</label><input id="pg-v" type="text" inputmode="numeric" data-money value="${sugestao ? BRL(sugestao) : ''}" placeholder="R$ 0,00"></div>
+      <p class="hint">${f ? `Falta receber ${BRL(f)}${!recebido(q) && c.entry ? `; a entrada combinada é de ${BRL(c.entry)}` : ''}.` : 'Este orçamento já está todo pago.'}</p>`,
+    foot: `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-ok>${I.check}Registrar</button>`,
+    onMount: s2 => {
+      prepFields(s2);
+      $('[data-cancel]', s2).onclick = () => closeSheet();
+      $('[data-ok]', s2).onclick = () => {
+        const v = parseMoney($('#pg-v', s2).value);
+        if (!v) return toast('Informe o valor recebido.');
+        const reg = { id: uid(), v, t: Date.now() };
+        q.pagos = [...(q.pagos || []), reg]; touch(q); closeSheet(true); rerender();
+        toast(`Pagamento de ${BRL(v)} registrado.`, { label: 'Desfazer', run: () => { q.pagos = q.pagos.filter(x => x.id !== reg.id); touch(q); rerender(); } });
+      };
+    } });
+}
+function statusBanner(q, c) {
+  const px = pixOf(q, c);
+  if (q.status === 'enviado') return `<div class="banner b-sent">
+    <p><b>Enviado ${rel(q.sentAt)}.</b> O cliente já respondeu?</p>
+    <div class="banner-act"><button class="btn sm ghost ok-ic" data-st="aprovado">${I.check}Aprovou</button><button class="btn sm ghost" data-st="recusado">Recusou</button></div>
+    <a class="link" href="${waLink(q.client.phone, followMessage(q, c))}" target="_blank" rel="noopener">${I.wa}Lembrar o cliente pelo WhatsApp</a>
+  </div>`;
+  if (q.status === 'aprovado') return `<div class="banner b-ok">
+    <p><b>Aprovado ${rel(q.approvedAt)}.</b> Quando terminar o serviço, marque como concluído para gerar o recibo.</p>
+    ${pagosHTML(q, c)}
+    <div class="banner-act"><button class="btn sm ghost ok-ic" data-st="concluido">${I.check}Serviço concluído</button>${px ? `<button class="btn sm ghost" data-pix>${I.pix}Pix d${px.what}</button>` : `<button class="btn sm ghost" data-receipt>${I.receipt}Recibo</button>`}</div>
+  </div>`;
+  if (q.status === 'concluido') {
+    const pr = pixOf(q, c, 'report');
+    return `<div class="banner b-done">
+    <div class="done-row"><p><b>Executado em</b> <span id="q-donetxt">${esc(execText(q))}</span></p><button class="btn sm ghost" data-goto-days>${I.cal}Alterar datas</button></div>
+    ${pagosHTML(q, c)}
+    <div class="banner-act"><button class="btn sm ghost" data-receipt>${I.receipt}Gerar recibo</button>${pr ? `<button class="btn sm ghost" data-pix-rest>${I.pix}Pix d${pr.what}</button>` : ''}</div>
+    <button class="linkish" data-undone style="color:var(--muted);font-size:14px">${q.prevStatus && q.prevStatus !== 'rascunho' ? 'Desfazer conclusão' : 'Transformar em orçamento'}</button>
+  </div>`;
+  }
+  if (q.status === 'recusado') return `<div class="banner b-bad">
+    <p><b>Recusado em ${fmtDate(q.refusedAt)}.</b> Se o cliente mudar de ideia, reabra e ajuste os valores.</p>
+    <div class="banner-act"><button class="btn sm ghost" data-st="rascunho">Reabrir como rascunho</button></div>
+  </div>`;
+  return '';
+}
+// detalhe de uma forma de pagamento (a principal ou outra que também vai na proposta)
+function payDetailHTML(q, c, mode) {
+  const p = q.payment;
+  let detail = '';
+  if (mode === 'entrada') detail = `<div class="field"><span class="lab">Entrada na aprovação</span><div class="seg" role="group" aria-label="Entrada na aprovação">${[30, 40, 50, 60, 70].map(n => `<button data-ep="${n}" aria-pressed="${p.entryPct === n}">${n}%</button>`).join('')}</div></div>`;
+  if (mode === 'avista') {
+    const a = p.avista;
+    detail = `<div class="field"><label for="q-avd">Desconto para pagamento à vista</label><div class="disc"><div class="seg" role="group" aria-label="Tipo de desconto à vista"><button data-avm="pct" aria-pressed="${a.mode === 'pct'}">%</button><button data-avm="value" aria-pressed="${a.mode === 'value'}">R$</button></div>${a.mode === 'value'
+      ? `<input id="q-avd" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${a.value ? BRL(a.value) : ''}">`
+      : `<input id="q-avd" type="text" inputmode="decimal" placeholder="0" value="${a.pct ? fmtQty(a.pct) : ''}" aria-label="Desconto à vista em porcentagem">`}</div>
+      <span class="hint">Só vale se o cliente pagar à vista, em Pix ou dinheiro. É separado do desconto do serviço, em Valores.</span></div>`;
+  }
+  if (mode === 'parcelado') {
+    const k = c.card, deb = p.cardTipo === 'debito', semTab = p.juros === 'taxa' && !Object.keys(settings.cardRates || {}).length;
+    detail = `<div class="seg" role="group" aria-label="Tipo de cartão"><button data-ct="credito" aria-pressed="${!deb}">Crédito</button><button data-ct="debito" aria-pressed="${deb}">Débito</button></div>
+      ${deb ? '' : `<div class="field"><span class="lab">Parcelas</span><div class="stepper"><button data-in="-1" aria-label="Menos parcelas" ${p.installments <= 1 ? 'disabled' : ''}>${I.minus}</button><input id="q-inst" type="text" readonly value="${p.installments}×" aria-label="Parcelas"><button data-in="1" aria-label="Mais parcelas" ${p.installments >= 18 ? 'disabled' : ''}>${I.plus}</button></div></div>`}
+      <div class="field"><span class="lab" id="q-jur-l">Juros e taxa do cartão</span><div class="seg" role="group" aria-labelledby="q-jur-l"><button data-jur="sem" aria-pressed="${p.juros === 'sem'}">Sem juros</button><button data-jur="taxa" aria-pressed="${p.juros === 'taxa'}">Taxa da maquininha</button>${deb ? '' : `<button data-jur="mes" aria-pressed="${p.juros === 'mes'}">Juros ao mês</button>`}</div></div>
+      ${p.juros === 'taxa' ? `<div class="field"><label for="q-taxa">Taxa ${deb ? 'no débito' : `em ${p.installments}×`}, em %</label><input id="q-taxa" type="text" inputmode="decimal" placeholder="0" value="${fmtQty(k.taxaPct)}"><span class="hint">${p.taxaPct != null ? '<button class="linkish" data-taxa-tab>Usar a da tabela</button>' : semTab ? 'Cadastre as taxas em Ajustes, Orçamento novo.' : 'Da sua tabela, em Ajustes.'}</span></div>
+        <div class="field"><span class="lab" id="q-paga-l">Quem paga a taxa</span><div class="seg" role="group" aria-labelledby="q-paga-l"><button data-paga="cliente" aria-pressed="${p.paga === 'cliente'}">O cliente</button><button data-paga="eu" aria-pressed="${p.paga === 'eu'}">Eu</button></div></div>` : ''}
+      ${p.juros === 'mes' && !deb ? `<div class="field"><label for="q-mes">Juros ao mês, em %</label><input id="q-mes" type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${p.mesPct ? fmtQty(p.mesPct) : ''}"></div>` : ''}
+      ${p.juros !== 'sem' && !deb ? `<div class="field"><label for="q-semate">Sem juros até quantas parcelas</label><div class="stepper"><button data-sa="-1" aria-label="Menos">${I.minus}</button><input id="q-semate" type="text" readonly value="${p.semAte ? p.semAte + '×' : 'Não'}" aria-label="Sem juros até"><button data-sa="1" aria-label="Mais">${I.plus}</button></div><span class="hint">Até esse número de parcelas, ${p.juros === 'taxa' ? 'você absorve a taxa' : 'não há juros'}.</span></div>` : ''}`;
+  }
+  return detail;
+}
+const PAY_NOME = { avista: 'À vista', entrada: 'Entrada', parcelado: 'Cartão' };
+// a mesma conta com outra forma de pagamento (para as outras formas que vão na proposta)
+const comForma = (q, mode) => { const q2 = { ...q, payment: { ...q.payment, mode } }; return { q: q2, c: compute(q2) }; };
+const outrasFormas = q => isReport(q) ? [] : (q.payment.outras || []).filter(m => m !== q.payment.mode);
+function payBlockHTML(q, c) {
+  const p = q.payment, outras = ['avista', 'entrada', 'parcelado'].filter(m => m !== p.mode);
+  const alts = outrasFormas(q).map(m => { const x = comForma(q, m); return panel(`q:${q.id}:alt:${m}`, '', `${PAY_NOME[m]}, também na proposta`, payText(x.q, x.c).replace(/\.$/, ''), `${payDetailHTML(q, x.c, m)}<div class="pay-sum" id="pay-sum-${m}">${paySumHTML(x.q, x.c)}</div>`); }).join('');
+  return payDetailHTML(q, c, p.mode) + `<div class="pay-sum" id="pay-sum">${paySumHTML(q, c)}</div>`
+    + (isReport(q) ? '' : `<div class="field"><span class="lab" id="q-outras-l">O cliente também pode pagar</span>${linhas(outras.map(m => linha(`data-outra="${m}"`, PAY_NOME[m], { tipo: 'varios', on: (p.outras || []).includes(m) })), ' role="group" aria-labelledby="q-outras-l"')}<span class="hint">As formas marcadas aparecem na proposta, além da principal.</span></div>${alts}`);
+}
+
+function paySumHTML(q, c) {
+  const p = q.payment;
+  if (p.mode === 'avista') return c.avistaDesc ? `<div><span>Total do orçamento</span><b>${BRL(c.total)}</b></div><div><span>Desconto à vista</span><b>− ${BRL(c.avistaDesc)}</b></div><div><span>À vista</span><b>${BRL(c.avistaTotal)}</b></div>` : `<div><span>À vista</span><b>${BRL(c.total)}</b></div>`;
+  if (p.mode === 'entrada') return `<div><span>Entrada de ${p.entryPct}% na aprovação</span><b>${BRL(c.entry)}</b></div><div><span>Na conclusão do serviço</span><b>${BRL(c.rest)}</b></div>`;
+  if (p.mode === 'parcelado') {
+    const k = c.card, t = cardTxt(p, c);
+    const linhas = [`<div><span>${k.deb ? 'No débito' : k.n === 1 ? 'Crédito à vista' : 'No cartão'}</span><b>${k.deb || k.n === 1 ? BRL(k.total) : partsText(k.parts)}</b></div>`];
+    if (k.juros > 0) linhas.push(`<div><span>${p.juros === 'mes' ? `Juros de ${fmtQty(k.mesPct)}% ao mês` : `Taxa repassada de ${fmtQty(k.taxaPct)}%`}</span><b>+ ${BRL(k.juros)}</b></div>`, `<div><span>Total no cartão</span><b>${BRL(k.total)}</b></div>`);
+    else if (!k.deb && k.n > 1) linhas.push(`<div><span>Sem juros</span><b>${BRL(k.total)}</b></div>`);
+    if (p.juros === 'taxa' && k.taxaPct > 0) linhas.push(`<div class="ps-rec"><span>Você recebe, depois da taxa</span><b>${BRL(k.recebe)}</b></div>`);
+    return linhas.join('');
+  }
+  return `<div><span>Forma de pagamento a combinar com o cliente</span></div>`;
+}
+const matSwitchHTML = q => `<label class="switch-row" for="q-matcli"><span><b>O cliente compra o material</b><small>${q.materialBy === 'cliente' ? 'A lista vai na proposta, com valores estimados fora do total.' : 'Desligado: o material entra no total da proposta.'}</small></span><input type="checkbox" class="sw" id="q-matcli" ${q.materialBy === 'cliente' ? 'checked' : ''}></label>`;
+const roomToggleHTML = q => `<label class="switch-row" for="q-rooms"><span><b>Separar por ambiente</b><small>${q.useRooms ? 'Cada cômodo com a sua contagem de pontos e de material.' : 'Sala, cozinha, quartos… para contar e conferir cômodo por cômodo.'}</small></span><input type="checkbox" class="sw" id="q-rooms" ${q.useRooms ? 'checked' : ''}></label>`;
+function kindCardsHTML(q, c) {
+  return panel(`q:${q.id}:svc`, '', 'Mão de obra', c.svc.length ? resumoDe(c.svc, i => i.name) : 'Nenhum serviço ainda',
+      `${c.svc.length ? `<div class="lines">${c.svc.map(i => lineHTML(q, i)).join('')}</div>` : '<p class="empty-line">Escolha os serviços na sua tabela de preços.</p>'}
+      <button class="add-btn" data-add="svc">${I.plus}Adicionar mão de obra</button>`, { right: `<span data-t="labor">${BRL(c.labor)}</span>` })
+    + panel(`q:${q.id}:mat`, '', 'Material', c.mat.length ? resumoDe(c.mat, i => i.name) : 'Nenhum material ainda',
+      `${matSwitchHTML(q)}
+      ${c.mat.length ? `<div class="lines">${c.mat.map(i => lineHTML(q, i)).join('')}</div>` : ''}
+      <button class="add-btn" data-add="mat">${I.plus}Adicionar material</button>`, { right: `<span data-t="mat">${BRL(c.matTotal)}</span>` });
+}
+function roomsHTML(q, c) {
+  const card = g => {
+    const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
+    const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
+    const sumTxt = g.items.length ? [svc.length && plural(svc.length, 'serviço', 'serviços'), mat.length && plural(mat.length, 'material', 'materiais')].filter(Boolean).join(' · ') : (norm(g.name) === 'geral' ? 'Quadro, entrada de energia e itens da casa toda' : 'Vazio');
+    const rk = `q:${q.id}:room:${g.id || 'geral'}`;
+    return panelOpen(rk, '', esc(g.name), sumTxt, { right: BRL(st), attrs: ` data-room-card="${g.id}"`,
+      tool: g.id ? `<button class="icon-btn sm" data-room-menu="${g.id}" aria-label="Opções de ${esc(g.name)}">${I.more}</button>` : '' }) + `
+      ${svc.length ? panel(rk + ':svc', '', 'Mão de obra', resumoDe(svc, i => i.name), `<div class="lines">${svc.map(i => lineHTML(q, i)).join('')}</div>`, { right: BRL(sum(svc.map(lineTotal))) }) : ''}
+      ${mat.length ? panel(rk + ':mat', '', 'Material', resumoDe(mat, i => i.name), `<div class="lines">${mat.map(i => lineHTML(q, i)).join('')}</div>`, { right: BRL(sum(mat.map(lineTotal))) }) : ''}
+      ${g.items.length ? '' : `<p class="empty-line">Toque em adicionar e conte cada tomada, interruptor e luminária.</p>`}
+      <button class="add-btn" data-add-room="${g.id}">${I.plus}Adicionar em ${esc(g.name)}</button>
+    ${panelClose}`;
+  };
+  const groups = roomList(q);
+  return (groups.length ? '' : `<p class="empty-line">Crie o primeiro ambiente: sala, cozinha, quarto ou Geral, para o quadro e a casa toda.</p>`)
+    + groups.map(card).join('') + `<button class="add-btn room" data-new-room>${I.plus}Novo ambiente</button>` + conferenceHTML(q);
+}
+const byText = e => [...e.by.entries()].map(([r, n]) => `${r}: ${fmtQty(n)}`).join(' · ');
+function conferenceHTML(q) {
+  if (!q.items.length || !q.rooms.length) return '';
+  const block = (kind, title) => {
+    const L = consolidate(q, kind); if (!L.length) return '';
+    return panel(`q:${q.id}:conf:${kind}`, '', title, resumoDe(L, e => e.name), `<div class="conf">${L.map(e => `<div class="conf-row"><span><b>${esc(e.name)}</b><small>${esc(byText(e))}</small></span><span class="num">${fmtQty(e.qty)} ${unitTxt(e.qty, e.unit)}</span></div>`).join('')}</div>`, { right: conta(L.length) });
+  };
+  return panel(`q:${q.id}:conf`, '', 'Conferência', 'Total de cada item, somando os ambientes', `${block('mat', 'Material')}${block('svc', 'Mão de obra')}
+    <button class="btn ghost" data-conf-pdf>${I.share}PDF da conferência</button>`);
+}
+function valuesHTML(q, c) {
+  const d = q.discount, rt = q.trip ? tripCalc(q.trip) : null;
+  return `<div class="vrows">
+      <div class="vrow"><span>Mão de obra</span><b data-t="labor">${BRL(c.labor)}</b></div>
+      <div class="xlins"><span class="lab" id="q-x-l">Adicional sobre a mão de obra</span>${linhas(EXTRAS.map(([k, l, sk]) => { const on = q.extras[k] > 0; return linha(`data-x="${k}"`, l, { tipo: 'varios', on, dir: on ? `+${q.extras[k]}%` : settings[sk] ? `+${settings[sk]}%` : '' }); }), ' role="group" aria-labelledby="q-x-l"')}</div>
+      ${c.extra ? `<div class="vrow"><span>Adicionais (+${c.surPct}%)</span><b>${BRL(c.extra)}</b></div>` : ''}
+      <div class="vrow"><span>Material</span><b class="${c.matIn ? '' : 'dim'}">${c.matIn ? BRL(c.matTotal) : 'por conta do cliente'}</b></div>
+      ${q.useRooms ? `<div class="vrow-free">${matSwitchHTML(q)}</div>` : ''}
+      <button class="vrow vbtn" data-trip><span>Deslocamento<small>${rt ? esc(tripShort(q.trip, rt)) : q.travel ? 'valor fixo' : 'pela distância e o combustível'}</small></span><span class="vb-r">${q.travel ? `<b>${BRL(q.travel)}</b>` : '<b class="cta">Calcular</b>'}${I.chev}</span></button>
+      <div class="vrow"><label for="q-disc">Desconto</label><div class="disc"><div class="seg" role="group" aria-label="Tipo de desconto"><button data-dm="value" aria-pressed="${d.mode === 'value'}">R$</button><button data-dm="pct" aria-pressed="${d.mode === 'pct'}">%</button></div>${d.mode === 'value'
+        ? `<input id="q-disc" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${d.value ? BRL(d.value) : ''}">`
+        : `<input id="q-disc" type="text" inputmode="decimal" placeholder="0" value="${d.pct ? fmtQty(d.pct) : ''}" aria-label="Desconto em porcentagem">`}</div></div>
+      <div class="vrow tax-row"><span class="lab" id="q-tx-l">Impostos ou nota fiscal</span>
+        <div class="seg" role="group" aria-labelledby="q-tx-l"><button data-tx="sem" aria-pressed="${c.tax.mode === 'sem'}">Sem</button><button data-tx="fora" aria-pressed="${c.tax.mode === 'fora'}">Por fora</button><button data-tx="dentro" aria-pressed="${c.tax.mode === 'dentro'}">Embutido</button></div></div>
+      ${c.tax.mode !== 'sem' ? `<div class="tax-cfg"><div class="field"><label for="q-txp">Alíquota (%)</label><input id="q-txp" type="text" inputmode="decimal" value="${fmtQty(c.tax.pct)}" placeholder="5"></div>
+        <div class="seg" role="group" aria-label="Base do imposto"><button data-txb="servico" aria-pressed="${c.tax.base === 'servico'}">Só mão de obra (ISS)</button><button data-txb="total" aria-pressed="${c.tax.base === 'total'}">Total (Simples)</button></div>
+        <p class="hint">${c.tax.mode === 'fora' ? `O cliente vê a linha ${esc(taxLabel(c))}: <b>${BRL(c.taxFora)}</b>.` : `Os preços da proposta já incluem <b>${BRL(c.taxDentro)}</b> de imposto; o cliente não vê a linha. MEI com DAS fixo: use Sem.`}</p></div>` : ''}
+      <div class="vrow total"><span>Total</span><b data-t="total">${BRL(c.total)}</b></div>
+    </div>`;
+}
+/* prazo de execução e dias do serviço, num bloco só: o prazo marca os dias no calendário e o usuário ajusta */
+const calMonth = {};
+function daysBlockHTML(q) {
+  const rep = isReport(q), off = !rep && q.dateTbd, p = q.prazo;
+  const qtd = rep
+    ? `<div class="days-row"><label for="q-days">Quantos dias de serviço</label>
+      <div class="stepper"><button data-days="-1" aria-label="Menos um dia" ${q.days <= 1 ? 'disabled' : ''}>${I.minus}</button><input id="q-days" type="text" inputmode="numeric" value="${q.days}" aria-label="Dias de serviço"><button data-days="1" aria-label="Mais um dia" ${q.days >= 99 ? 'disabled' : ''}>${I.plus}</button></div></div>`
+    : `<div class="prazo-row" role="group" aria-labelledby="q-prazo-l">
+      <div class="stepper"><button data-days="-1" aria-label="Diminuir o prazo" ${p.n <= 1 ? 'disabled' : ''}>${I.minus}</button><input id="q-days" type="text" inputmode="numeric" value="${p.n}" aria-label="Quantidade do prazo"><button data-days="1" aria-label="Aumentar o prazo" ${p.n >= 99 ? 'disabled' : ''}>${I.plus}</button></div>
+      <select id="q-prazo-u" aria-label="Unidade do prazo">${Object.entries(PRAZO_U).map(([k, [pl, sg]]) => `<option value="${k}" ${p.u === k ? 'selected' : ''}>${p.n === 1 ? sg : pl}</option>`).join('')}</select></div>`;
+  return `<div class="field sched" id="q-days-blk"><span class="lab" id="q-prazo-l">${rep ? 'Dias trabalhados' : 'Prazo de execução e datas'}</span>
+    ${qtd}
+    <div id="q-cal-area" ${off ? 'hidden' : ''}>
+      <div class="cal-wrap" id="cal">${calHTML(q)}</div>
+      <div id="cal-msg" aria-live="polite">${calMsgHTML(q)}</div>
+    </div>
+    ${rep ? '' : `<label class="switch-row" for="q-tbd"><span><b>Combinar as datas na aprovação</b><small>O prazo vai na proposta; as datas ficam para depois.</small></span><input type="checkbox" class="sw" id="q-tbd" ${q.dateTbd ? 'checked' : ''}></label>
+    <p class="hint" id="q-cdc" ${q.dateTbd || q.dates.length ? 'hidden' : ''}>O Código de Defesa do Consumidor pede as datas de início e término no orçamento.</p>`}
+  </div>`;
+}
+function calHTML(q) {
+  const base = new Date(calMonth[q.id] || q.dates[0] || Date.now()); base.setDate(1); base.setHours(12, 0, 0, 0);
+  const y = base.getFullYear(), m = base.getMonth(), first = base.getDay(), n = new Date(y, m + 1, 0).getDate();
+  const hoje = hojeTs(), rep = isReport(q), sel = new Set(q.dates);
+  const fim = !rep && q.dates.length ? prazoFim(q.dates[0], q.prazo) : 0;
+  const nome = capFirst(base.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }));
+  const mesAtual = new Date(hoje); mesAtual.setDate(1); mesAtual.setHours(12, 0, 0, 0);
+  // orçamento: não volta para meses que já passaram (a não ser para ver um dia marcado lá)
+  const semVoltar = !rep && base.getTime() <= mesAtual.getTime() && !q.dates.some(t => t < base.getTime());
+  let cells = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, k) => `<span class="cal-w" aria-hidden="true" title="${['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'][k]}">${d}</span>`).join('');
+  cells += '<span></span>'.repeat(first);
+  for (let d = 1; d <= n; d++) {
+    const t = new Date(y, m, d, 12).getTime(), on = sel.has(t), fer = feriado(t);
+    // relatório: só dias que já passaram; orçamento: só de hoje em diante (um dia antigo já marcado ainda pode ser desmarcado)
+    const off = rep ? t > hoje : t < hoje && !on;
+    const noPrazo = fim && t >= q.dates[0] && t <= fim && !on;
+    const nomeDia = new Date(t).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    cells += `<button class="cal-d${t === hoje ? ' hoje' : ''}${fer ? ' fer' : ''}${noPrazo ? ' prazo' : ''}${!rep && t < hoje && on ? ' velho' : ''}" data-cal="${t}" aria-pressed="${on}" aria-label="${esc(nomeDia)}${t === hoje ? ', hoje' : ''}${fer ? ', feriado: ' + esc(fer) : ''}${noPrazo ? ', dentro do prazo' : ''}" ${off ? 'disabled' : ''}${fer ? ` title="${esc(fer)}"` : ''}><span>${d}</span></button>`;
+  }
+  return `<div class="cal-h"><button class="icon-btn" data-calm="-1" aria-label="Mês anterior" ${semVoltar ? 'disabled' : ''}>${I.left}</button><b aria-live="polite">${esc(nome)}</b><button class="icon-btn" data-calm="1" aria-label="Próximo mês">${I.chev}</button></div>
+    <div class="cal-g" role="group" aria-label="Dias de ${esc(nome)}. ${rep ? 'Toque nos dias trabalhados.' : q.dates.length ? 'Toque num dia para pôr ou tirar.' : 'Toque no dia de início.'}">${cells}</div>
+    ${fim || Object.keys(feriadosDo(y)).some(k => k.startsWith(`${y}-${String(m + 1).padStart(2, '0')}`)) ? `<p class="cal-leg">${fim ? '<span class="lg-prazo"></span>dentro do prazo' : ''}${Object.keys(feriadosDo(y)).some(k => k.startsWith(`${y}-${String(m + 1).padStart(2, '0')}`)) ? '<span class="lg-fer"></span>feriado' : ''}</p>` : ''}`;
+}
+function calMsgHTML(q) {
+  const n = q.dates.length, rep = isReport(q);
+  if (!n) return `<p class="hint">${rep ? 'Toque nos dias em que o serviço foi feito. Dá para escolher dias que não são seguidos.' : `Toque no dia de início: o app marca ${q.prazo.n > 1 || !ehDia(q.prazo) ? `os ${prazoTxt(q.prazo)} do prazo` : 'o dia'}${q.prazo.u === 'uteis' || !ehDia(q.prazo) ? ', sem fins de semana e feriados' : ''}. Depois, toque num dia para pôr ou tirar.`}</p>`;
+  const pr = prazoProblema(q);
+  if (pr) {
+    const fix = pr === 'retro' ? '<button class="linkish" data-cal-reset>Escolher outro início</button>'
+      : rep ? `<button class="linkish" data-days-fix>Mudar para ${plural(n, 'dia', 'dias')}</button>`
+      : `<button class="linkish" data-days-fix>Mudar o prazo para ${prazoTxt(prazoQueCobre(q))}</button>`;
+    return `<div class="cal-msg bad" role="alert">${I.warn}<span><b>${pr === 'retro' ? 'Data retroativa.' : 'O prazo e os dias não conferem.'}</b> ${esc(daysMismatch(q))} ${fix}</span></div>`;
+  }
+  const fim = rep ? 0 : prazoFim(q.dates[0], q.prazo);
+  return `<div class="cal-msg">${I.check}<span><b>${rep ? plural(n, 'dia trabalhado', 'dias trabalhados') : `${capFirst(prazoTxt(q.prazo))}`}:</b> ${esc(diasResumo(q.dates))}.${rep ? '' : ` Término em ${fmtDate(ehDia(q.prazo) ? q.dates[n - 1] : fim)}.`}${rep ? '' : ' <button class="linkish" data-cal-reset>Escolher outro início</button>'}</span></div>`;
+}
+function bindDays(v, q) {
+  const blk = $('#q-days-blk', v); if (!blk) return;
+  const rep = isReport(q);
+  const pinta = () => {
+    q.dates.sort((a, b) => a - b);
+    q.startAt = q.dates[0] || null; q.endAt = q.dates[q.dates.length - 1] || null;
+    if (rep && q.dates.length) q.doneAt = q.endAt;
+    if (!rep) q.deadline = prazoTxt(q.prazo); // aparelhos com versões antigas leem o texto
+    touch(q);
+    $('#cal', v).innerHTML = calHTML(q);
+    $('#cal-msg', v).innerHTML = calMsgHTML(q);
+    const dt = $('#q-donetxt', v); if (dt) dt.textContent = execText(q);
+    const cdc = $('#q-cdc', v); if (cdc) cdc.hidden = !!q.dates.length || q.dateTbd;
+    const n = rep ? q.days : q.prazo.n;
+    const di = $('#q-days', v); if (di && document.activeElement !== di) di.value = n;
+    $$('[data-days]', v).forEach(b => b.disabled = (+b.dataset.days < 0 && n <= 1) || (+b.dataset.days > 0 && n >= 99));
+    const sel = $('#q-prazo-u', v);
+    if (sel) [...sel.options].forEach(o => { o.textContent = PRAZO_U[o.value][n === 1 ? 1 : 0]; });
+    v.dispatchEvent(new Event('change'));
+  };
+  // mudou o prazo com o início já escolhido: o app remarca a partir do mesmo início
+  const remarca = () => { if (!rep && q.dates.length && q.dates[0] >= hojeTs()) q.dates = prazoDias(q.dates[0], q.prazo); };
+  const setN = n => { n = Math.max(1, Math.min(99, n)); if (rep) q.days = n; else { q.prazo.n = n; remarca(); } pinta(); };
+  blk.addEventListener('click', e => {
+    const d = e.target.closest('[data-cal]');
+    if (d) {
+      const t = +d.dataset.cal, k = q.dates.indexOf(t);
+      if (!rep && !q.dates.length) q.dates = prazoDias(t, q.prazo);
+      else if (k >= 0) q.dates.splice(k, 1);
+      else if (rep && q.days === 1 && q.dates.length === 1) q.dates = [t]; // um dia só: marcar outro troca o dia
+      else q.dates.push(t);
+      vibrate(); pinta(); $(`[data-cal="${t}"]`, v)?.focus({ preventScroll: true }); return;
+    }
+    const mo = e.target.closest('[data-calm]');
+    if (mo) {
+      const b = new Date(calMonth[q.id] || q.dates[0] || Date.now()); b.setDate(1); b.setMonth(b.getMonth() + +mo.dataset.calm); calMonth[q.id] = b.getTime();
+      $('#cal', v).innerHTML = calHTML(q); $(`[data-calm="${mo.dataset.calm}"]:not([disabled])`, v)?.focus(); return;
+    }
+    const st = e.target.closest('[data-days]');
+    if (st) return setN((rep ? q.days : q.prazo.n) + +st.dataset.days);
+    if (e.target.closest('[data-cal-reset]')) { q.dates = []; delete calMonth[q.id]; pinta(); toast('Toque no novo dia de início.'); return; }
+    if (e.target.closest('[data-days-fix]')) {
+      if (rep) q.days = Math.max(1, q.dates.length); else q.prazo = prazoQueCobre(q);
+      pinta(); toast(rep ? `Dias de serviço: ${q.days}.` : `Prazo: ${prazoTxt(q.prazo)}.`);
+    }
+  });
+  const di = $('#q-days', v);
+  di?.addEventListener('input', () => { const n = parseInt(di.value.replace(/\D/g, ''), 10); if (n >= 1) setN(n); });
+  di?.addEventListener('change', () => { di.value = rep ? q.days : q.prazo.n; });
+  $('#q-prazo-u', v)?.addEventListener('change', e => { q.prazo.u = e.target.value; remarca(); pinta(); });
+}
+VIEWS.quote = {
+  html(r) {
+    const q = getQ(r.id), c = compute(q), S = quoteSums(q, c);
+    return `<header class="kf-barra appbar"><div class="kf-barra-in">
+      <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
+      <div class="ab-title"><span class="ab-row"><span class="ab-eyebrow">${q.example ? 'Exemplo' : `<span class="ab-tipo">${isReport(q) ? 'Relatório' : 'Orçamento'} </span>` + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-saved" id="ab-saved" role="status" aria-label="Alterações salvas neste aparelho">${I.check}<span>Salvo</span></span></span><span class="ab-main" id="ab-name">${esc(q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'))}</span></div>
+      ${KitFacil.topo.html({ principal: false })}
+    </div></header>
+    <main class="page bar">
+      ${q.example ? `<div class="banner b-tip"><p><b>Este é um orçamento de exemplo.</b> Mexa à vontade para conhecer o app e exclua quando quiser pelo botão ⋯, ao lado de Ver proposta.</p></div>` : ''}
+      ${statusBanner(q, c)}
+      ${panelOpen(`q:${q.id}:cli`, 'cli', 'Cliente e serviço', S.cli)}
+        <div class="field"><label for="q-name">Nome</label><input id="q-name" type="text" autocapitalize="words" autocomplete="off" placeholder="Nome do cliente" value="${esc(q.client.name)}"></div>
+        <div class="grid2 stack">
+          <div class="field"><label for="q-phone">WhatsApp</label><input id="q-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="(11) 90000-0000" value="${esc(fmtPhone(q.client.phone))}"></div>
+          <div class="field"><label for="q-doc">CPF ou CNPJ <span class="lab-opt">opcional</span></label><input id="q-doc" type="text" inputmode="numeric" autocomplete="off" placeholder="Sai no orçamento e no recibo" value="${esc(fmtDoc(q.client.doc))}"></div>
+        </div>
+        <div class="field"><label for="q-addr">Endereço da obra</label><input id="q-addr" type="text" autocomplete="off" placeholder="Rua, número, bairro" value="${esc(q.client.address)}"></div>
+        <div class="field"><label for="q-title">Serviço</label><input id="q-title" type="text" autocomplete="off" placeholder="Ex.: Troca do quadro e instalação de chuveiro" value="${esc(q.title)}"></div>
+      ${panelClose}
+
+      ${techCardHTML(q)}
+      ${panel(`q:${q.id}:items`, 'items', q.useRooms ? 'Ambientes e itens' : 'Serviços e material', S.items, roomToggleHTML(q) + (q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)), { right: S.itemsR })}
+      ${panel(`q:${q.id}:val`, 'val', 'Valores', S.val, valuesHTML(q, c), { right: S.valR })}
+
+      ${panelOpen(`q:${q.id}:cond`, 'cond', isReport(q) ? 'Datas, pagamento e garantia' : 'Pagamento, datas e garantia', S.cond, { attrs: ' id="h-cond"' })}
+        <div class="field"><span class="lab">Pagamento</span>
+          <div class="seg" role="group" aria-label="Forma de pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${q.payment.mode === k}">${l}</button>`).join('')}</div>
+        </div>
+        ${payBlockHTML(q, c)}
+        ${daysBlockHTML(q)}
+        <div class="grid2">
+          <div class="field"><label for="q-war">Garantia, em dias</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
+          ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade, em dias</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
+        </div>
+      ${panelClose}
+      ${panelOpen(`q:${q.id}:notes`, 'notes', 'Observações', S.notes)}
+        <div class="field"><textarea id="q-notes" aria-label="Observações" placeholder="O que está fora do orçamento, cuidados no dia do serviço…">${esc(q.notes)}</textarea>
+          </div>
+        <div class="field"><span class="lab" id="q-nt-l">Textos prontos</span>${linhas(NOTE_CHIPS.map(([l, t], k) => linha(`data-note="${k}"`, l, { tipo: 'mais', dis: q.notes.includes(t) })), ' role="group" aria-labelledby="q-nt-l"')}</div>
+      ${panelClose}
+    </main>
+    <aside class="q-vivo" aria-label="Prévia ${isReport(q) ? 'do relatório' : 'da proposta'}"><div class="q-vivo-in"><div class="q-vivo-cab"><b>Prévia ao vivo</b><span class="hint">Muda enquanto você edita</span></div>${paperHTML(q, c, docMode(q))}</div></aside>
+    <div class="bbar"><div class="bbar-in">
+      <div class="bb-total"><small data-t="paylab">${payLabel(q, c)}</small><b data-t="paytotal">${BRL(c.payTotal)}</b></div>
+      <button class="icon-btn boxed" data-menu aria-label="Mais opções do orçamento">${I.more}</button>
+      <button class="btn primary" data-preview>${isReport(q) ? 'Ver relatório' : 'Ver proposta'}${I.arrow}</button>
+    </div></div>`;
+  },
+  bind(v, r) {
+    const q = getQ(r.id);
+    const paint = () => {
+      const c = compute(q);
+      $$('[data-t="labor"]', v).forEach(e => e.textContent = BRL(c.labor));
+      $$('[data-t="mat"]', v).forEach(e => e.textContent = BRL(c.matTotal));
+      $$('[data-t="total"]', v).forEach(e => e.textContent = BRL(c.total));
+      $$('[data-t="paytotal"]', v).forEach(e => e.textContent = BRL(c.payTotal));
+      $$('[data-t="paylab"]', v).forEach(e => e.textContent = payLabel(q, c));
+      const ps = $('#pay-sum', v); if (ps) ps.innerHTML = paySumHTML(q, c);
+      outrasFormas(q).forEach(m => { const e = $('#pay-sum-' + m, v); if (e) { const x = comForma(q, m); e.innerHTML = paySumHTML(x.q, x.c); } });
+      paintSums(v, quoteSums(q, c));
+    };
+    ['input', 'change'].forEach(ev => v.addEventListener(ev, () => requestAnimationFrame(paint)));
+    $('[data-back]', v).onclick = () => back('/');
+    $('[data-menu]', v).onclick = () => quoteMenu(q);
+    $('[data-preview]', v).onclick = () => go('/q/' + q.id + '/proposta');
+
+    // cliente
+    const nm = $('#q-name', v);
+    nm.addEventListener('input', () => { q.client.name = nm.value.replace(/\s+/g, ' ').trimStart(); $('#ab-name').textContent = q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'); touch(q); });
+    nm.addEventListener('change', () => { q.client.name = nm.value.trim().replace(/\s+/g, ' '); touch(q); });
+    attachSuggest(nm, () => clientList().map(k => ({ label: k.name, right: k.phone ? fmtPhone(k.phone) : k.address, k })), x => {
+      q.client.name = x.k.name;
+      if (!q.client.phone) q.client.phone = x.k.phone; if (!q.client.address) q.client.address = x.k.address; if (!q.client.doc) q.client.doc = x.k.doc || '';
+      touch(q); rerender();
+    });
+    $('#q-phone', v).addEventListener('input', e => { q.client.phone = e.target.value.trim(); touch(q); });
+    $('#q-phone', v).addEventListener('change', e => { e.target.value = fmtPhone(e.target.value); });
+    $('#q-addr', v).addEventListener('input', e => { q.client.address = e.target.value; touch(q); });
+    $('#q-doc', v).addEventListener('input', e => { q.client.doc = e.target.value.trim(); touch(q); });
+    $('#q-doc', v).addEventListener('change', e => {
+      const d = phoneDigits(e.target.value);
+      e.target.value = fmtDoc(e.target.value);
+      if (!d) return;
+      if (d.length === 11 && !cpfValid(d)) toast('Esse CPF parece ter um número errado. Confira.');
+      else if (d.length === 14 && !cnpjValid(d)) toast('Esse CNPJ parece ter um número errado. Confira.');
+      else if (d.length !== 11 && d.length !== 14) toast('O CPF tem 11 números e o CNPJ tem 14.');
+    });
+    $('#q-title', v).addEventListener('input', e => { q.title = e.target.value; touch(q); });
+    $('#q-title', v).addEventListener('change', e => { q.title = e.target.value.trim(); touch(q); });
+
+    // itens e ambientes
+    $('#q-rooms', v).addEventListener('change', e => { q.useRooms = e.target.checked; touch(q); rerender(); if (q.useRooms && !q.rooms.length) roomAddSheet(q); });
+    $$('[data-add]', v).forEach(b => b.onclick = () => pickerSheet(q, b.dataset.add));
+    $$('[data-add-room]', v).forEach(b => b.onclick = () => pickerSheet(q, 'svc', b.dataset.addRoom));
+    $$('[data-room-menu]', v).forEach(b => b.onclick = () => roomMenu(q, b.dataset.roomMenu));
+    $('[data-new-room]', v)?.addEventListener('click', () => roomAddSheet(q));
+    $('[data-conf-pdf]', v)?.addEventListener('click', e => shareConference(q, e.currentTarget));
+    $$('[data-dq]', v).forEach(b => b.onclick = () => { const i = q.items.find(x => x.id === b.dataset.id); if (!i) return; i.qty = Math.max(1, Math.round((i.qty + +b.dataset.dq) * 100) / 100); if (+b.dataset.dq < 0) ultimoMenos = { id: i.id, t: Date.now() }; touch(q); rerender(); });
+    // a lixeira aparece no lugar do − quando a quantidade chega a 1: um segundo toque logo em seguida não apaga (U9)
+    $$('[data-rm]', v).forEach(b => b.onclick = () => { if (ultimoMenos.id === b.dataset.rm && Date.now() - ultimoMenos.t < 900) return; removeLine(q, b.dataset.rm); });
+    // tocar no número abre o item com a quantidade pronta para digitar (U8)
+    $$('[data-qe]', v).forEach(b => b.onclick = () => { const i = q.items.find(x => x.id === b.dataset.qe); if (!i) return; lineSheet(q, i); setTimeout(() => { const f = document.getElementById('it-qty'); if (f) { f.focus(); f.select(); } }, 80); });
+    $$('[data-edit]', v).forEach(b => b.onclick = () => lineSheet(q, q.items.find(x => x.id === b.dataset.edit)));
+    $('#q-matcli', v).addEventListener('change', e => { q.materialBy = e.target.checked ? 'cliente' : 'eu'; touch(q); rerender(); });
+
+    // valores
+    $$('[data-x]', v).forEach(b => b.onclick = () => {
+      const k = b.dataset.x, ex = EXTRAS.find(x => x[0] === k), sk = ex[2];
+      if (q.extras[k]) { q.extras[k] = 0; touch(q); return rerender(); }
+      if (settings[sk]) { q.extras[k] = settings[sk]; touch(q); return rerender(); }
+      // sem percentual padrão: pede o valor aqui mesmo, com a opção de guardar para os próximos
+      openSheet({ title: `Adicional de ${ex[3]}`, body: `<div class="field"><label for="ax-pct">Percentual sobre a mão de obra</label><input id="ax-pct" type="text" inputmode="numeric" placeholder="Ex.: ${{ urgent: 50, night: 30, weekend: 50 }[k]}"></div>
+          <label class="switch-row" for="ax-pad"><span><b>Usar nos próximos orçamentos</b><small>Fica em Ajustes, Adicionais.</small></span><input type="checkbox" class="sw" id="ax-pad" checked></label>`,
+        foot: `<button class="btn ghost" data-no>Cancelar</button><button class="btn primary" data-ok>${I.plus}Aplicar</button>`,
+        onMount: s => {
+          if (!isTouch) $('#ax-pct', s).focus();
+          $('[data-no]', s).onclick = () => closeSheet();
+          $('[data-ok]', s).onclick = () => {
+            const n = Math.max(0, Math.min(300, parseInt($('#ax-pct', s).value.replace(/\D/g, ''), 10) || 0));
+            if (!n) return toast('Informe o percentual do adicional.');
+            q.extras[k] = n; if ($('#ax-pad', s).checked) { settings[sk] = n; saveSettings(); }
+            touch(q); closeSheet(true); rerender();
+          };
+        } });
+    });
+    $('[data-trip]', v).onclick = () => tripSheet(q);
+    $$('[data-dm]', v).forEach(b => b.onclick = () => { if (q.discount.mode === b.dataset.dm) return; q.discount.mode = b.dataset.dm; touch(q); rerender(); });
+    $('[data-pago]', v)?.addEventListener('click', () => pagoSheet(q));
+    $$('[data-pago-rm]', v).forEach(b => b.onclick = () => { const x = q.pagos.find(y => y.id === b.dataset.pagoRm); if (!x) return; q.pagos = q.pagos.filter(y => y !== x); touch(q); rerender(); toast(`Pagamento de ${BRL(x.v)} apagado.`, { label: 'Desfazer', run: () => { q.pagos.push(x); q.pagos.sort((a, b) => a.t - b.t); touch(q); rerender(); } }); });
+    // impostos (F6): o modo e a base escolhidos aqui viram o padrão dos próximos orçamentos
+    const lembraTax = () => { settings.taxMode = q.tax.mode; settings.taxPct = q.tax.pct; settings.taxBase = q.tax.base; saveSettings(); };
+    $$('[data-tx]', v).forEach(b => b.onclick = () => { q.tax = { ...taxOf(q), mode: b.dataset.tx }; if (q.tax.mode !== 'sem' && !q.tax.pct) q.tax.pct = 5; lembraTax(); touch(q); rerender(); });
+    $$('[data-txb]', v).forEach(b => b.onclick = () => { q.tax = { ...taxOf(q), base: b.dataset.txb }; lembraTax(); touch(q); rerender(); });
+    $('#q-txp', v)?.addEventListener('change', e => { const x = parseQty(e.target.value); q.tax = { ...taxOf(q), pct: Math.max(0, Math.min(30, x || 0)) }; e.target.value = fmtQty(q.tax.pct); lembraTax(); touch(q); rerender(); });
+    $('#q-disc', v).addEventListener('input', e => {
+      if (q.discount.mode === 'value') q.discount.value = parseMoney(e.target.value) || 0;
+      else q.discount.pct = Math.min(100, parseQty(e.target.value) || 0);
+      touch(q); paint();
+    });
+
+    // condições
+    $$('[data-pm]', v).forEach(b => b.onclick = () => { q.payment.mode = b.dataset.pm; q.payment.outras = (q.payment.outras || []).filter(m => m !== b.dataset.pm); touch(q); rerender(); });
+    $$('[data-outra]', v).forEach(b => b.onclick = () => { const m = b.dataset.outra, L = q.payment.outras || []; q.payment.outras = L.includes(m) ? L.filter(x => x !== m) : [...L, m]; touch(q); rerender(); });
+    $$('[data-ep]', v).forEach(b => b.onclick = () => { q.payment.entryPct = +b.dataset.ep; touch(q); rerender(); });
+    $$('[data-in]', v).forEach(b => b.onclick = () => { q.payment.installments = Math.max(1, Math.min(18, (q.payment.installments || 3) + +b.dataset.in)); q.payment.taxaPct = null; touch(q); rerender(); });
+    $$('[data-ct]', v).forEach(b => b.onclick = () => { q.payment.cardTipo = b.dataset.ct; if (b.dataset.ct === 'debito' && q.payment.juros === 'mes') q.payment.juros = 'taxa'; q.payment.taxaPct = null; touch(q); rerender(); });
+    $$('[data-jur]', v).forEach(b => b.onclick = () => { q.payment.juros = b.dataset.jur; touch(q); rerender(); });
+    $$('[data-paga]', v).forEach(b => b.onclick = () => { q.payment.paga = b.dataset.paga; touch(q); rerender(); });
+    $$('[data-sa]', v).forEach(b => b.onclick = () => { q.payment.semAte = Math.max(0, Math.min(18, (q.payment.semAte || 0) + +b.dataset.sa)); touch(q); rerender(); });
+    $$('[data-avm]', v).forEach(b => b.onclick = () => { if (q.payment.avista.mode === b.dataset.avm) return; q.payment.avista.mode = b.dataset.avm; touch(q); rerender(); });
+    $('[data-taxa-tab]', v)?.addEventListener('click', () => { q.payment.taxaPct = null; touch(q); rerender(); });
+    $('#q-taxa', v)?.addEventListener('input', e => { const x = parseQty(e.target.value); q.payment.taxaPct = x === null ? 0 : Math.max(0, Math.min(40, x)); touch(q); paint(); });
+    $('#q-taxa', v)?.addEventListener('change', () => rerender());
+    $('#q-mes', v)?.addEventListener('input', e => { q.payment.mesPct = Math.max(0, Math.min(20, parseQty(e.target.value) || 0)); touch(q); paint(); });
+    $('#q-avd', v)?.addEventListener('input', e => { const a = q.payment.avista; if (a.mode === 'value') a.value = parseMoney(e.target.value) || 0; else a.pct = Math.max(0, Math.min(50, parseQty(e.target.value) || 0)); touch(q); paint(); });
+    // só números: o que aparece no campo é o que vale (nada de "-10" na tela e 10 por dentro)
+    const soDigitos = el => { const d = el.value.replace(/\D/g, '').slice(0, 5); if (el.value !== d) el.value = d; return parseInt(d, 10) || 0; };
+    $('#q-war', v).addEventListener('input', e => { q.warranty = soDigitos(e.target); touch(q); });
+    $('#q-war', v).addEventListener('change', e => { if (q.warranty > 1825) confirmSheet('Garantia longa', `${q.warranty} dias são mais de ${Math.floor(q.warranty / 365)} anos. É isso mesmo?`, 'Manter', () => {}, false); });
+    $('#q-val', v)?.addEventListener('input', e => { q.validity = soDigitos(e.target); touch(q); });
+    $('#q-val', v)?.addEventListener('change', e => { if (!q.validity) { q.validity = 1; e.target.value = '1'; touch(q); toast('A validade mínima é de 1 dia: a proposta vale até amanhã.'); } else if (q.validity > 365) confirmSheet('Validade longa', `A proposta valeria por ${q.validity} dias. Preços de material mudam: é isso mesmo?`, 'Manter', () => {}, false); });
+    // datas do serviço: dias de serviço e calendário
+    bindDays(v, q);
+    $('#q-tbd', v)?.addEventListener('change', e => { q.dateTbd = e.target.checked; touch(q); $('#q-cal-area', v).hidden = q.dateTbd; const cdc = $('#q-cdc', v); if (cdc) cdc.hidden = q.dateTbd || !!q.dates.length; requestAnimationFrame(() => paintSums(v, quoteSums(q, compute(q)))); });
+    // serviço já realizado: vira relatório; desfazer volta para a situação anterior
+    $('#q-done', v)?.addEventListener('change', e => { if (!e.target.checked) return; setStatus(q, 'concluido'); rerender(); window.scrollTo({ top: 0 }); setTimeout(() => baixaSheet(q), 350); toast('Agora é um Relatório de Serviços Executados.'); });
+    $('[data-goto-days]', v)?.addEventListener('click', () => { const d = $(`details[data-panel="q:${q.id}:cond"]`, v); KitFacil.secao.abrir(d); setTimeout(() => $('#cal', v)?.querySelector('[aria-pressed="true"], button.cal-d:not([disabled])')?.focus({ preventScroll: true }), KitFacil.movimento.ms + 40); });
+    $('[data-undone]', v)?.addEventListener('click', () => {
+      const prev = q.prevStatus && q.prevStatus !== 'concluido' ? q.prevStatus : 'rascunho';
+      setStatus(q, prev); rerender(); toast(`Voltou para ${STATUS[prev].toLowerCase()}. O documento é orçamento de novo.`);
+    });
+    $('[data-pix-rest]', v)?.addEventListener('click', () => { const px = pixOf(q, compute(q), 'report'); if (px) pixSheet(px); });
+    const nt = $('#q-notes', v);
+    nt.addEventListener('input', () => { q.notes = nt.value; touch(q); $$('[data-note]', v).forEach(c => linhaFeita(c, q.notes.includes(NOTE_CHIPS[+c.dataset.note][1]))); });
+    $$('[data-note]', v).forEach(b => b.onclick = () => {
+      const t = NOTE_CHIPS[+b.dataset.note][1];
+      q.notes = (q.notes.trim() ? q.notes.trim() + '\n' : '') + t; nt.value = q.notes; autoGrow(nt); touch(q); linhaFeita(b, true);
+    });
+
+    // relatório técnico: etapa 1 (botão) abre a etapa 2 (detalhes); a frase entra no fim do campo
+    $$('[data-tech]', v).forEach(t => t.addEventListener('input', () => {
+      const k = t.dataset.tech; q[k] = t.value; touch(q);
+      $$(`[data-tc="${k}"]`, v).forEach(b => { const it = TECH[k][+b.dataset.ti]; if (it.s) linhaFeita(b, q[k].includes(it.s)); });
+    }));
+    $$('[data-tc]', v).forEach(b => b.onclick = () => {
+      const k = b.dataset.tc, it = TECH[k][+b.dataset.ti];
+      const add = txt => {
+        if (k === 'tests') { q.tests.push(txt); touch(q); rerender(); return; }
+        const ta = $('#q-' + k); q[k] = (q[k].trim() ? q[k].trim() + '\n' : '') + txt; touch(q);
+        if (ta) { ta.value = q[k]; autoGrow(ta); }
+        toast('Adicionado.');
+      };
+      if (it.s) { if (!q[k].includes(it.s)) { add(it.s); linhaFeita(b, true); } else toast('Esse texto já está no campo.'); return; }
+      techSheet(q, k, +b.dataset.ti, add);
+    });
+    $$('[data-test-rm]', v).forEach(b => b.onclick = () => {
+      const k = +b.dataset.testRm, [gone] = q.tests.splice(k, 1); touch(q); rerender();
+      toast('Teste removido.', { label: 'Desfazer', run: () => { q.tests.splice(k, 0, gone); touch(q); rerender(); } });
+    });
+    $('[data-work-items]', v)?.addEventListener('click', () => {
+      const txt = q.items.filter(i => i.kind === 'svc').map(i => `${i.name}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)}.`).join('\n');
+      q.work = (q.work.trim() ? q.work.trim() + '\n' : '') + txt; $('#q-work', v).value = q.work; autoGrow($('#q-work', v)); touch(q);
+    });
+
+    // situação
+    $$('[data-st]', v).forEach(b => b.onclick = () => { if (b.dataset.st === 'aprovado') return approveSheet(q); setStatus(q, b.dataset.st); rerender(); if (q.status === 'concluido') setTimeout(() => baixaSheet(q), 350); toast({ aprovado: 'Boa! Orçamento aprovado.', recusado: 'Marcado como recusado.', concluido: 'Serviço concluído.', rascunho: 'Reaberto como rascunho.' }[b.dataset.st] || 'Situação alterada.'); });
+    $('[data-pix]', v)?.addEventListener('click', () => { const px = pixOf(q, compute(q)); if (px) pixSheet(px); });
+    $('[data-receipt]', v)?.addEventListener('click', () => receiptSheet(q));
+  },
+};
+let ultimoMenos = { id: '', t: 0 };
+function removeLine(q, id) {
+  const idx = q.items.findIndex(x => x.id === id); if (idx < 0) return;
+  const [gone] = q.items.splice(idx, 1); touch(q); rerender();
+  toast(`${gone.name} removido.`, { label: 'Desfazer', run: () => { q.items.splice(idx, 0, gone); touch(q); rerender(); } });
+}
+function quoteMenu(q) {
+  openSheet({ title: q.client.name || 'Orçamento', body: `<div class="opts">
+      <button class="opt" data-o="status">${I.flag}<span>Alterar situação<small>Agora: ${STATUS[q.status]}</small></span></button>
+      <button class="opt" data-o="preview">${I.doc}<span>Ver e enviar ${isReport(q) ? 'o relatório' : 'a proposta'}</span></button>
+      ${['aprovado', 'concluido'].includes(q.status) ? `<button class="opt" data-o="receipt">${I.receipt}<span>Gerar recibo</span></button>` : ''}
+      <button class="opt" data-o="dup">${I.dup}<span>Duplicar<small>Cria um rascunho igual, com novo número</small></span></button>
+      <button class="opt danger" data-o="del">${I.trash}<span>Excluir orçamento</span></button>
+    </div>`,
+    onMount: s => $$('[data-o]', s).forEach(b => b.onclick = () => {
+      const o = b.dataset.o;
+      if (o === 'status') statusSheet(q);
+      if (o === 'preview') { closeSheet(true); go('/q/' + q.id + '/proposta'); }
+      if (o === 'receipt') receiptSheet(q);
+      if (o === 'dup') { closeSheet(true); duplicateQuote(q); }
+      if (o === 'del') deleteQuote(q);
+    }) });
+}
+// campo de data: <input type="date"> que o Kit Fácil troca pelo calendário do app (KitFacil.data); aqui só convertemos
+const isoDe = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const tsDeIso = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3], 12).getTime() : null; };
+function approveSheet(q) {
+  let via = q.approvedVia || 'msg';
+  const OPTS = [['msg', 'Por mensagem', 'WhatsApp ou e-mail. Vale como aprovação por escrito.'], ['sign', 'Assinou a proposta', 'No papel ou em PDF assinado.'], ['verbal', 'Pessoalmente', 'Sem registro escrito.']];
+  openSheet({ title: 'Orçamento aprovado', body: `
+      <p class="hint">Como o cliente aprovou? Fica registrado no orçamento e no relatório.</p>
+      <div class="opts">${OPTS.map(([k, l, h]) => `<button class="opt" data-via="${k}" aria-pressed="${via === k}"><span>${l}<small>${h}</small></span></button>`).join('')}</div>
+      <div class="banner b-tip" id="ap-warn"${via === 'verbal' ? '' : ' hidden'}><p><b>Peça uma confirmação por escrito.</b> Um “De acordo” do cliente no WhatsApp protege você se houver discordância depois.</p></div>
+      <div class="field"><label for="ap-date">Data da aprovação</label><input type="date" id="ap-date" required max="${isoDe(hojeTs())}" value="${isoDe(hojeTs())}"></div>`,
+    foot: `<button class="btn primary" data-ok>${I.check}Registrar aprovação</button>`,
+    onMount: s => {
+      $$('[data-via]', s).forEach(b => b.onclick = () => { via = b.dataset.via; $$('[data-via]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#ap-warn', s).hidden = via !== 'verbal'; });
+      $('[data-ok]', s).onclick = () => {
+        setStatus(q, 'aprovado');
+        q.approvedVia = via; q.approvedAt = Math.min(tsDeIso($('#ap-date', s).value) || Date.now(), Date.now()); touch(q);
+        closeSheet(true); rerender(); toast('Boa! Aprovação registrada.');
+      };
+    } });
+}
+/* baixa no estoque ao concluir: material do orçamento que está no estoque (quando o material é por sua conta) */
+function stockMatch(q) {
+  if (q.materialBy === 'cliente' || q.example) return [];
+  const m = new Map();
+  q.items.filter(i => i.kind === 'mat').forEach(i => {
+    const p = prices.find(x => inStock(x) && norm(x.name) === norm(i.name)); if (!p) return;
+    m.set(p.id, Math.round(((m.get(p.id) || 0) + i.qty) * 100) / 100);
+  });
+  return [...m].map(([id, qty]) => ({ p: prices.find(x => x.id === id), qty }));
+}
+function baixaSheet(q) {
+  if (q.baixa && q.baixa.length) return;
+  const L = stockMatch(q); if (!L.length) return;
+  const row = (x, k) => {
+    const fica = Math.round((x.p.stock - x.qty) * 100) / 100, falta = fica < 0, baixo = !falta && (fica <= 0 || (x.p.min > 0 && fica <= x.p.min));
+    return `<div class="bx-row" data-bx="${k}"><div class="bx-t"><b>${esc(x.p.name)}</b><small>em estoque: ${fmtQty(x.p.stock)} → <b>${fmtQty(Math.max(0, fica))}</b> ${unitTxt(Math.max(0, fica), x.p.unit)}${falta ? `<span class="bx-w">${I.warn}faltam ${fmtQty(-fica)}: fica em 0</span>` : baixo ? `<span class="bx-w">${I.warn}abaixo do mínimo</span>` : ''}</small></div>
+      <div class="stepper"><button data-bq="-1" data-k="${k}" aria-label="Menos ${esc(x.p.name)}" ${x.qty <= 0 ? 'disabled' : ''}>${I.minus}</button><input type="text" inputmode="decimal" data-bi="${k}" value="${fmtQty(x.qty)}" aria-label="Quantidade usada de ${esc(x.p.name)}"><button data-bq="1" data-k="${k}" aria-label="Mais ${esc(x.p.name)}">${I.plus}</button></div></div>`;
+  };
+  openSheet({ title: 'Dar baixa no estoque?',
+    body: `<p class="hint">Material deste serviço que está no seu estoque. Ajuste se usou mais ou menos.</p><div class="bx-list" id="bx-list">${L.map(row).join('')}</div><p class="hint">Se você desfizer a conclusão, o material volta para o estoque.</p>`,
+    foot: `<button class="btn ghost" data-no>Agora não</button><button class="btn primary" data-ok>${I.check}Dar baixa</button>`,
+    onMount: s => {
+      const pinta = k => { const el = $(`[data-bx="${k}"]`, s); const tmp = document.createElement('div'); tmp.innerHTML = row(L[k], k); el.replaceWith(tmp.firstElementChild); };
+      s.addEventListener('click', e => { const b = e.target.closest('[data-bq]'); if (!b) return; const k = +b.dataset.k; L[k].qty = Math.max(0, Math.round((L[k].qty + +b.dataset.bq) * 100) / 100); pinta(k); });
+      s.addEventListener('change', e => { const i = e.target.closest('[data-bi]'); if (!i) return; const k = +i.dataset.bi; L[k].qty = Math.max(0, parseQty(i.value) || 0); pinta(k); });
+      $('[data-no]', s).onclick = () => closeSheet();
+      $('[data-ok]', s).onclick = () => {
+        q.baixa = [];
+        L.forEach(x => { const sai = Math.min(x.p.stock, x.qty); if (sai <= 0) return; const lotes = tiraDoEstoque(x.p, sai); q.baixa.push({ id: x.p.id, qty: sai, lotes }); });
+        savePrices(); touch(q); closeSheet(true); rerender();
+        const low = L.filter(x => stockLow(x.p)).length;
+        toast(`Baixa feita: ${plural(q.baixa.length, 'material', 'materiais')}.${low ? ` ${plural(low, 'precisa', 'precisam')} de reposição.` : ''}`, { label: 'Desfazer', run: () => {
+          (q.baixa || []).forEach(b => devolveAoEstoque(prices.find(x => x.id === b.id), b));
+          q.baixa = null; savePrices(); touch(q); rerender();
+        } });
+      };
+    } });
+}
+function statusSheet(q) {
+  const help = { rascunho: 'Ainda montando', enviado: 'Proposta com o cliente', aprovado: 'Cliente aceitou; serviço a executar', concluido: 'Serviço feito e entregue', recusado: 'Cliente não aceitou' };
+  openSheet({ title: 'Situação do orçamento', body: `<div class="opts">${Object.keys(STATUS).map(k => `<button class="opt" data-s="${k}" aria-pressed="${q.status === k}">${pill(k)}<span><small>${help[k]}</small></span></button>`).join('')}</div>`,
+    onMount: s => $$('[data-s]', s).forEach(b => b.onclick = () => { if (b.dataset.s === 'aprovado' && q.status !== 'aprovado') return approveSheet(q); setStatus(q, b.dataset.s); closeSheet(true); rerender(); if (q.status === 'concluido') setTimeout(() => baixaSheet(q), 350); toast('Situação: ' + STATUS[q.status] + '.'); }) });
+}
+
+/* ================= escolher itens da tabela ================= */
+function addFromPrice(q, p, room = '') {
+  const ex = q.items.find(i => i.kind === p.kind && norm(i.name) === norm(p.name) && i.unit === p.unit && i.price === p.price && (!q.useRooms || roomOf(q, i) === room));
+  if (ex) ex.qty = Math.round((ex.qty + 1) * 100) / 100;
+  else q.items.push({ id: uid(), kind: p.kind, name: p.name, unit: p.unit, qty: 1, price: p.price, room: q.useRooms ? room : '' });
+  touch(q); vibrate();
+}
+function groupByCat(list) {
+  const order = catOrder(list.length ? list[0].kind : 'svc');
+  const cats = [...new Set(list.map(p => p.cat || 'Outros'))].sort((a, b) => { const ia = order.indexOf(a), ib = order.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); });
+  return cats.map(cat => [cat, list.filter(p => (p.cat || 'Outros') === cat).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true }))]);
+}
+const hl = (s, qf) => { if (!qf) return esc(s); const i = fold(s).indexOf(qf); return i < 0 ? esc(s) : esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i, i + qf.length)) + '</mark>' + esc(s.slice(i + qf.length)); };
+let lastRoomKind = null;
+/* F5: depois de adicionar serviços com composição, o app sugere o material (quantidades editáveis, marque o que vai) */
+function sugerirMaterial(q, svcAdd, room = '') {
+  const tot = new Map();
+  Object.entries(svcAdd).forEach(([pid, n]) => { const sv = prices.find(x => x.id === pid); (sv && sv.comp || []).forEach(c => { const m = prices.find(x => x.kind === 'mat' && norm(x.name) === norm(c.n)); if (m) tot.set(m.id, Math.round(((tot.get(m.id) || 0) + c.q * n) * 100) / 100); }); });
+  if (!tot.size || q.materialBy === 'cliente') return;
+  const L = [...tot].map(([id, qtd]) => ({ m: prices.find(x => x.id === id), qtd, on: true }));
+  const nomes = Object.keys(svcAdd).map(id => (prices.find(x => x.id === id) || {}).name).filter(Boolean);
+  openSheet({ title: 'Material sugerido', body: `<p class="hint">Para ${esc(joinPt(nomes.map(n => n.charAt(0).toLowerCase() + n.slice(1))))}. Desmarque o que o cliente já tem e ajuste as quantidades.</p>
+      <div class="sug-list">${L.map((x, k) => `<label class="sug-row"><input type="checkbox" class="sw-check" data-sk="${k}" checked><span class="sug-n">${esc(x.m.name)}<small>${BRL(x.m.price)} por ${unitName(x.m.unit)}</small></span>
+        <input type="text" inputmode="decimal" class="sug-q" data-sq="${k}" value="${fmtQty(x.qtd)}" aria-label="Quantidade de ${esc(x.m.name)}"><span class="sug-u">${unitTxt(x.qtd, x.m.unit)}</span></label>`).join('')}</div>
+      <p class="hint">A sugestão vem da tabela de preços: em Preços, toque no serviço para mudar o material que costuma ir.</p>`,
+    foot: `<button class="btn ghost" data-cancel>Agora não</button><button class="btn primary" data-ok>${I.plus}Adicionar material</button>`,
+    onMount: s2 => {
+      $('[data-cancel]', s2).onclick = () => closeSheet();
+      $('[data-ok]', s2).onclick = () => {
+        let n = 0, alto = 0;
+        L.forEach((x, k) => { if (!$(`[data-sk="${k}"]`, s2).checked) return; const qq = parseQty($(`[data-sq="${k}"]`, s2).value); if (!qq) return; if (qq > QTD_ALTA) alto++;
+          const ex = q.items.find(i => i.kind === 'mat' && norm(i.name) === norm(x.m.name) && i.price === x.m.price && (!q.useRooms || roomOf(q, i) === room));
+          if (ex) ex.qty = Math.round((ex.qty + qq) * 100) / 100; else q.items.push({ id: uid(), kind: 'mat', name: x.m.name, unit: x.m.unit, qty: qq, price: x.m.price, room: q.useRooms ? room : '' });
+          n++; });
+        touch(q); closeSheet(true); rerender();
+        if (n) toast(`${plural(n, 'material adicionado', 'materiais adicionados')}.`);
+      };
+    } });
+}
+function pickerSheet(q, kind, room) {
+  const inRoom = q.useRooms;
+  room = inRoom ? (room || '') : '';
+  let k = inRoom && lastRoomKind ? lastRoomKind : kind, query = '', added = 0;
+  const svcAdd = {}; // serviços adicionados nesta janela: nome → quantidade (para sugerir o material)
+  const footHTML = () => `<button class="btn primary block" data-done>${added ? `${I.check}Pronto · ${plural(added, 'item adicionado', 'itens adicionados')}` : 'Fechar'}</button>`;
+  const listHTML = () => {
+    const qf = fold(query);
+    const list = prices.filter(p => p.kind === k && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
+    const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name) && (!inRoom || roomOf(q, i) === room)).map(i => i.qty));
+    // com busca: lista única, primeiro a palavra inteira ("DR" acha Instalação de DR antes de "driver" e "quadro") (U10)
+    if (qf) {
+      const rx = new RegExp('(^|[^a-z0-9])' + qf.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z0-9])');
+      const nota = p => { const n = fold(p.name); return rx.test(n) ? 4 : n.startsWith(qf) ? 3 : n.split(/[^a-z0-9]+/).some(w => w.startsWith(qf)) ? 2 : n.includes(qf) ? 1 : 0.5; };
+      const achados = list.map(p => [nota(p), p]).sort((x, y) => y[0] - x[0] || x[1].name.localeCompare(y[1].name, 'pt-BR')).map(x => x[1]);
+      if (achados.length) return `<div class="pk-list">${achados.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}<small class="pk-cat">${esc(p.cat)}</small>${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}</span><span class="pk-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}</div>`
+        + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}Adicionar “${esc(query)}”</button>`;
+    }
+    const rows = groupByCat(list).map(([cat, L]) => { const n0 = sum(L.map(inQuote)); return panel(`pk:${k}:${cat}`, '', esc(cat), qf ? null : resumoDe(L, p => p.name), `<div class="pk-list">${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}</span><span class="pk-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}</div>`, { right: n0 ? `<span class="pk-n">${fmtQty(n0)}</span>` : conta(L.length), force: qf ? true : undefined }); }).join('');
+    return (rows || KitFacil.ui.vazio({ titulo: `Nada com “${esc(query)}”`, texto: `na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}. Adicione como item fora da tabela.` }))
+      + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}${query ? `Adicionar “${esc(query)}”` : `${k === 'svc' ? 'Serviço' : 'Material'} fora da tabela`}</button>`;
+  };
+  openSheet({ title: inRoom ? `Adicionar em ${roomName(q, room)}` : 'Adicionar ao orçamento', tall: true,
+    body: `<div class="pk-list" id="pk-list">${listHTML()}</div>`, foot: footHTML(),
+    onClose: () => { rerender(); if (Object.keys(svcAdd).length) setTimeout(() => sugerirMaterial(q, svcAdd, room), 120); },
+    onMount: s => {
+      const body = $('.kf-dlg-corpo', s);
+      body.insertAdjacentHTML('beforebegin', `<div class="pk-tools">
+        ${KitFacil.ui.abas({ itens: [['svc', 'Mão de obra'], ['mat', 'Material']], atual: k, rotulo: 'Tipo', dado: 'k' })}
+        <label class="search">${I.search}<input type="search" id="pk-q" placeholder="Buscar na sua tabela de preços" aria-label="Buscar"></label>
+        ${inRoom ? '<p class="hint">Cada toque soma uma unidade. Toque 3 vezes para 3 tomadas.</p>' : ''}</div>`);
+      const paintList = () => { const st = body.scrollTop; $('#pk-list', s).innerHTML = listHTML(); body.scrollTop = st; };
+      const qi = $('#pk-q', s);
+      if (!isTouch) qi.focus();
+      qi.addEventListener('input', () => { query = qi.value.trim(); paintList(); body.scrollTop = 0; });
+      $$('[data-k]', s).forEach(b => b.onclick = () => { k = b.dataset.k; if (inRoom) lastRoomKind = k; $$('[data-k]', s).forEach(x => { x.setAttribute('aria-selected', String(x === b)); x.tabIndex = x === b ? 0 : -1; }); paintList(); body.scrollTop = 0; });
+      body.addEventListener('click', e => {
+        const row = e.target.closest('[data-pid]');
+        if (row) { const p = prices.find(x => x.id === row.dataset.pid); if (!p) return; addFromPrice(q, p, room); added++; if (p.kind === 'svc' && (p.comp || []).length) svcAdd[p.id] = (svcAdd[p.id] || 0) + 1; paintList(); $('.kf-dlg-pe', s).innerHTML = footHTML(); bindDone(); return; }
+        if (e.target.closest('[data-custom]')) customItemSheet(q, k, query, room);
+      });
+      const bindDone = () => { $('[data-done]', s).onclick = () => closeSheet(); };
+      bindDone();
+    } });
+}
+function itemFields(i, withKind, q) {
+  const rooms = q && q.useRooms && q.rooms.length ? q.rooms : null;
+  return `<div class="field"><label for="it-name">Descrição</label><input id="it-name" type="text" value="${esc(i.name)}" placeholder="Ex.: Instalação de chuveiro elétrico"></div>
+    ${withKind ? `<div class="seg" role="group" aria-label="Tipo"><button data-ik="svc" aria-pressed="${i.kind === 'svc'}">Mão de obra</button><button data-ik="mat" aria-pressed="${i.kind === 'mat'}">Material</button></div>` : ''}
+    <div class="grid2">
+      <div class="field"><label for="it-qty">Quantidade</label><div class="stepper" style="width:100%"><button data-iq="-1" aria-label="Menos">${I.minus}</button><input id="it-qty" type="text" inputmode="decimal" value="${fmtQty(i.qty)}" style="flex:1;width:auto"><button data-iq="1" aria-label="Mais">${I.plus}</button></div></div>
+      <div class="field"><label for="it-unit">Unidade</label><select id="it-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === i.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label for="it-price">Valor unitário</label><input id="it-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${i.price ? BRL(i.price) : ''}"></div>
+    ${rooms ? `<div class="field"><label for="it-room">Ambiente</label><select id="it-room">${rooms.map(r => `<option value="${esc(r.id)}" ${(q && i.id ? roomOf(q, i) : (i.room || '')) === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')}</select></div>` : ''}
+    <div class="vrow total" style="margin-top:0"><span>Total do item</span><b id="it-total">${BRL(lineTotal(i))}</b></div>`;
+}
+function bindItemFields(s, i) {
+  const read = () => {
+    const r = { name: $('#it-name', s).value.trim().replace(/\s+/g, ' '), qty: parseQty($('#it-qty', s).value), unit: $('#it-unit', s).value, price: parseMoney($('#it-price', s).value) };
+    const rs = $('#it-room', s); if (rs) r.room = rs.value;
+    return r;
+  };
+  const paint = () => { const r = read(); $('#it-total', s).textContent = BRL(Math.round((r.qty || 0) * (r.price || 0))); };
+  $$('[data-iq]', s).forEach(b => b.onclick = () => { const v = parseQty($('#it-qty', s).value) || 1; $('#it-qty', s).value = fmtQty(Math.max(1, Math.round((v + +b.dataset.iq) * 100) / 100)); paint(); });
+  ['#it-qty', '#it-price'].forEach(sel => $(sel, s).addEventListener('input', paint));
+  $$('[data-ik]', s).forEach(b => b.onclick = () => { i.kind = b.dataset.ik; $$('[data-ik]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  return read;
+}
+function lineSheet(q, i) {
+  if (!i) return;
+  openSheet({ title: 'Alterar item', body: itemFields(i, false, q),
+    foot: `<button class="btn danger-text" data-del>${I.trash}Remover</button><button class="btn primary" data-save>Salvar</button>`,
+    onMount: s => {
+      const read = bindItemFields(s, i);
+      $('[data-del]', s).onclick = () => { closeSheet(true); removeLine(q, i.id); };
+      $('[data-save]', s).onclick = () => {
+        const r = read();
+        if (!r.name) return toast('Escreva a descrição do item.');
+        if (!r.qty) return toast('Quantidade inválida. Use, por exemplo, 2 ou 12,5.');
+        if (r.price === null) return toast('Informe o valor unitário.');
+        conferirQtd(r.qty, r.name, () => { Object.assign(i, r); touch(q); closeSheet(true); rerender(); toast('Item alterado.'); });
+      };
+    } });
+}
+function customItemSheet(q, kind, name, room = '') {
+  const i = { name: name || '', kind, unit: 'un', qty: 1, price: 0, room };
+  openSheet({ title: 'Item fora da tabela', body: itemFields(i, true, q) + `<label class="switch-row" for="it-save"><span><b>Guardar na tabela de preços</b><small>Fica disponível nos próximos orçamentos.</small></span><input type="checkbox" class="sw" id="it-save" checked></label>`,
+    foot: `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>`,
+    onClose: () => rerender(),
+    onMount: s => {
+      const read = bindItemFields(s, i);
+      if (!isTouch) $('#it-name', s).focus();
+      $('[data-cancel]', s).onclick = () => closeSheet();
+      $('[data-save]', s).onclick = () => {
+        const r = read();
+        if (!r.name) return toast('Escreva a descrição do item.');
+        if (!r.qty) return toast('Quantidade inválida.');
+        if (r.price === null) return toast('Informe o valor unitário.');
+        q.items.push({ id: uid(), kind: i.kind, room: q.useRooms ? room : '', ...r }); touch(q);
+        if ($('#it-save', s).checked && !prices.some(p => p.kind === i.kind && norm(p.name) === norm(r.name))) { prices.push({ id: uid(), kind: i.kind, cat: 'Outros', name: r.name, unit: r.unit, price: r.price }); savePrices(); }
+        closeSheet(); toast(`${r.name} adicionado.`);
+      };
+    } });
+}
+
+/* ================= ambientes ================= */
+function roomAddSheet(q) {
+  openSheet({ title: 'Novo ambiente', body: `
+      <p class="hint">Escolha um cômodo. Em seguida você já adiciona os pontos e o material dele.</p>
+      ${linhas(ROOM_CHIPS.filter(n => n !== 'Geral' || !q.rooms.some(r => norm(r.name) === 'geral')).map(n => linha(`data-rn="${esc(n)}"`, esc(uniqueRoomName(q, n)), { sub: n === 'Geral' ? 'Quadro, entrada de energia e itens da casa toda' : '' })))}
+      <div class="field"><label for="rm-name">Outro nome</label><input id="rm-name" type="text" autocapitalize="sentences" autocomplete="off" placeholder="Ex.: Suíte, Churrasqueira, Lavanderia"></div>`,
+    foot: `<button class="btn primary" data-create>${I.plus}Criar ambiente</button>`,
+    onClose: () => rerender(),
+    onMount: s => {
+      const create = name => {
+        name = String(name || '').trim().replace(/\s+/g, ' ');
+        if (!name) return toast('Escolha ou escreva o nome do ambiente.');
+        const r = { id: uid(), name: uniqueRoomName(q, name) };
+        q.rooms.push(r); q.useRooms = true; touch(q); closeSheet(true); rerender();
+        $(`[data-room-card="${r.id}"]`)?.scrollIntoView({ block: 'start' });
+        window.scrollBy(0, -70);
+        pickerSheet(q, 'svc', r.id);
+      };
+      $$('[data-rn]', s).forEach(b => b.onclick = () => create(b.dataset.rn));
+      $('[data-create]', s).onclick = () => create($('#rm-name', s).value);
+    } });
+}
+function roomMenu(q, id) {
+  const r = q.rooms.find(x => x.id === id); if (!r) return;
+  const n = q.items.filter(i => i.room === r.id).length;
+  openSheet({ title: r.name, body: `
+      <div class="field"><label for="rm-ren">Nome do ambiente</label><input id="rm-ren" type="text" value="${esc(r.name)}"></div>
+      <div class="opts">
+        <button class="opt" data-o="dup">${I.dup}<span>Duplicar ambiente<small>Cria outro igual, com os mesmos itens. Bom para quartos iguais.</small></span></button>
+        ${q.rooms.indexOf(r) > 0 ? `<button class="opt" data-o="up">${I.up}<span>Mover para cima</span></button>` : ''}
+        <button class="opt danger" data-o="del">${I.trash}<span>Excluir ambiente<small>${n ? plural(n, 'item sai', 'itens saem') + ' do orçamento' : 'Está vazio'}</small></span></button>
+      </div>`,
+    foot: `<button class="btn primary" data-save>Salvar nome</button>`,
+    onMount: s => {
+      $('[data-save]', s).onclick = () => { const nn = $('#rm-ren', s).value.trim().replace(/\s+/g, ' '); if (!nn) return toast('Escreva o nome do ambiente.'); r.name = nn; touch(q); closeSheet(true); rerender(); };
+      $$('[data-o]', s).forEach(b => b.onclick = () => {
+        const o = b.dataset.o;
+        if (o === 'dup') {
+          const nr = { id: uid(), name: nextRoomName(q, r.name) };
+          q.rooms.splice(q.rooms.indexOf(r) + 1, 0, nr);
+          q.items.push(...q.items.filter(i => i.room === r.id).map(i => ({ ...i, id: uid(), room: nr.id })));
+          touch(q); closeSheet(true); rerender(); toast(`${nr.name} criado com os mesmos itens.`);
+        }
+        if (o === 'up') { const k = q.rooms.indexOf(r); q.rooms.splice(k, 1); q.rooms.splice(k - 1, 0, r); touch(q); closeSheet(true); rerender(); }
+        if (o === 'del') {
+          const idx = q.rooms.indexOf(r), gone = q.items.filter(i => i.room === r.id);
+          q.rooms.splice(idx, 1); q.items = q.items.filter(i => i.room !== r.id); touch(q); closeSheet(true); rerender();
+          toast(`${r.name} excluído.`, { label: 'Desfazer', run: () => { q.rooms.splice(idx, 0, r); q.items.push(...gone); touch(q); rerender(); } });
+        }
+      });
+    } });
+}
+
+/* ================= deslocamento ================= */
+function tripSheet(q) {
+  const s0 = settings;
+  const t = Object.assign({ km: 0, roundTrip: s0.roundTrip !== false, visits: 1, minutes: 0, toll: 0 },
+    { kmPerL: s0.kmPerL, fuelPrice: s0.fuelPrice, wearPerKm: s0.wearPerKm, hourRate: s0.hourRate, minVisit: s0.minVisit }, q.trip || {});
+  let mode = q.travel && !q.trip ? 'fixed' : 'calc';
+  const money = (id, v, ph = 'R$ 0,00') => `<input id="${id}" type="text" inputmode="numeric" data-money placeholder="${ph}" value="${v ? BRL(v) : ''}">`;
+  openSheet({ title: 'Deslocamento', body: `
+      <div class="seg" role="group" aria-label="Como cobrar"><button data-mode="calc" aria-pressed="${mode === 'calc'}">Calcular pela distância</button><button data-mode="fixed" aria-pressed="${mode === 'fixed'}">Valor fixo</button></div>
+      <div id="tp-calc" class="stack14"${mode === 'fixed' ? ' hidden' : ''}>
+        <div class="field"><label for="tp-km">Distância até a obra, em km, só ida</label><input id="tp-km" type="text" inputmode="decimal" placeholder="Ex.: 18" value="${t.km ? fmtQty(t.km) : ''}">
+          ${q.client.address ? `<a class="linkish" href="${mapsLink(q.client.address)}" target="_blank" rel="noopener">${I.pin}Ver a rota e a distância no mapa</a>` : '<p class="hint">Com o endereço da obra preenchido, dá para abrir a rota no mapa.</p>'}</div>
+        <label class="switch-row" for="tp-rt"><span><b>Ida e volta</b><small>Conta o caminho de volta também.</small></span><input type="checkbox" class="sw" id="tp-rt" ${t.roundTrip ? 'checked' : ''}></label>
+        <div class="field"><span class="lab">Visitas à obra</span>
+          <div class="stepper"><button data-tv="-1" aria-label="Menos visitas">${I.minus}</button><input id="tp-vis" type="text" readonly value="${t.visits}" aria-label="Visitas"><button data-tv="1" aria-label="Mais visitas">${I.plus}</button></div>
+          <p class="hint">Uma ida por dia de serviço. Some a visita para orçar, se for cobrar por ela.</p></div>
+        <div class="subcard"><div class="card-hr"><b>${I.car}Seu veículo</b><span class="hint">fica salvo</span></div>
+          <div class="grid2">
+            <div class="field"><label for="tp-kml">Consumo, em km por litro</label><input id="tp-kml" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${t.kmPerL ? fmtQty(t.kmPerL) : ''}"></div>
+            <div class="field"><label for="tp-fuel">Preço do litro do combustível</label>${money('tp-fuel', t.fuelPrice, 'Ex.: R$ 6,19')}</div>
+          </div></div>
+        <details class="more"${t.toll || t.minutes || t.wearPerKm ? ' open' : ''}><summary>Outros custos <span class="lab-opt">opcional</span></summary><div class="more-in">
+          <div class="field"><label for="tp-toll">Pedágio e estacionamento por visita</label>${money('tp-toll', t.toll)}</div>
+          <div class="grid2">
+            <div class="field"><label for="tp-min">Tempo de viagem, em minutos, só ida</label><input id="tp-min" type="text" inputmode="numeric" placeholder="Ex.: 30" value="${t.minutes || ''}"></div>
+            <div class="field"><label for="tp-hour">Valor da sua hora</label>${money('tp-hour', t.hourRate)}</div>
+          </div>
+          <div class="field"><label for="tp-wear">Desgaste do veículo por km</label>${money('tp-wear', t.wearPerKm)}<p class="hint">Pneus, óleo, manutenção e depreciação. Sem isso, o cálculo cobre só o combustível.</p></div>
+        </div></details>
+        <div class="breakdown" id="tp-out" aria-live="polite"></div>
+      </div>
+      <div id="tp-fixed"${mode === 'calc' ? ' hidden' : ''}><div class="field"><label for="tp-val">Valor do deslocamento</label>${money('tp-val', q.trip ? 0 : q.travel)}</div></div>`,
+    foot: `<button class="btn ghost" data-clear>Não cobrar</button><button class="btn primary" data-use>Usar <span id="tp-total"></span></button>`,
+    onMount: s => {
+      const out = () => {
+        const r = tripCalc(t), visits = Math.max(1, t.visits || 1), rows = [];
+        if (!t.km) rows.push('<div><span class="warn">Informe a distância até a obra.</span></div>');
+        else {
+          rows.push(`<div><span>Percurso<small>${fmtQty(t.km)} km × ${plural(r.legs, 'trajeto', 'trajetos')}</small></span><b>${fmtQty(r.km)} km</b></div>`);
+          rows.push(t.kmPerL && t.fuelPrice ? `<div><span>Combustível<small>${fmtQty(r.km)} km ÷ ${fmtQty(t.kmPerL)} km/l × ${BRL(t.fuelPrice)}</small></span><b>${BRL(r.fuel)}</b></div>` : '<div><span class="warn">Informe o consumo e o preço do combustível.</span></div>');
+          if (r.toll) rows.push(`<div><span>Pedágio e estacionamento<small>${plural(visits, 'visita', 'visitas')} × ${BRL(t.toll)}</small></span><b>${BRL(r.toll)}</b></div>`);
+          if (r.time) rows.push(`<div><span>Tempo de viagem<small>${fmtQty(Math.round(t.minutes * r.legs / 60 * 100) / 100)} h × ${BRL(t.hourRate)}</small></span><b>${BRL(r.time)}</b></div>`);
+          else if (t.minutes && !t.hourRate) rows.push('<div><span class="warn">Informe o valor da sua hora para cobrar o tempo de viagem.</span></div>');
+          if (r.wear) rows.push(`<div><span>Desgaste do veículo<small>${fmtQty(r.km)} km × ${BRL(t.wearPerKm)}</small></span><b>${BRL(r.wear)}</b></div>`);
+          if (r.usedMin) rows.push(`<div><span>Mínimo aplicado<small>${BRL(t.minVisit)} por visita, definido em Ajustes</small></span><b>${BRL(r.min)}</b></div>`);
+        }
+        rows.push(`<div class="bt"><span><b>Total</b></span><b>${BRL(r.total)}</b></div>`);
+        $('#tp-out', s).innerHTML = rows.join('');
+        $('#tp-total', s).textContent = BRL(mode === 'calc' ? r.total : (parseMoney($('#tp-val', s).value) || 0));
+      };
+      const keep = (k, v) => { settings[k] = v; saveSettings(); };
+      $$('[data-mode]', s).forEach(b => b.onclick = () => { mode = b.dataset.mode; $$('[data-mode]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#tp-calc', s).hidden = mode !== 'calc'; $('#tp-fixed', s).hidden = mode !== 'fixed'; out(); });
+      $('#tp-km', s).addEventListener('input', e => { t.km = parseQty(e.target.value) || 0; out(); });
+      $('#tp-rt', s).addEventListener('change', e => { t.roundTrip = e.target.checked; keep('roundTrip', t.roundTrip); out(); });
+      $$('[data-tv]', s).forEach(b => b.onclick = () => { t.visits = Math.max(1, Math.min(60, (t.visits || 1) + +b.dataset.tv)); $('#tp-vis', s).value = t.visits; out(); });
+      $('#tp-kml', s).addEventListener('input', e => { t.kmPerL = parseQty(e.target.value) || 0; keep('kmPerL', t.kmPerL); out(); });
+      $('#tp-fuel', s).addEventListener('input', e => { t.fuelPrice = parseMoney(e.target.value) || 0; keep('fuelPrice', t.fuelPrice); out(); });
+      $('#tp-toll', s).addEventListener('input', e => { t.toll = parseMoney(e.target.value) || 0; out(); });
+      $('#tp-min', s).addEventListener('input', e => { t.minutes = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0; out(); });
+      $('#tp-hour', s).addEventListener('input', e => { t.hourRate = parseMoney(e.target.value) || 0; keep('hourRate', t.hourRate); out(); });
+      $('#tp-wear', s).addEventListener('input', e => { t.wearPerKm = parseMoney(e.target.value) || 0; keep('wearPerKm', t.wearPerKm); out(); });
+      $('#tp-val', s).addEventListener('input', out);
+      $('[data-clear]', s).onclick = () => { q.trip = null; q.travel = 0; touch(q); closeSheet(true); rerender(); toast('Sem deslocamento neste orçamento.'); };
+      $('[data-use]', s).onclick = () => {
+        if (mode === 'calc') {
+          if (!t.km) return toast('Informe a distância até a obra.');
+          if (!t.kmPerL || !t.fuelPrice) return toast('Informe o consumo do veículo e o preço do combustível.');
+          q.trip = { km: t.km, roundTrip: !!t.roundTrip, visits: Math.max(1, t.visits || 1), minutes: t.minutes || 0, toll: t.toll || 0, kmPerL: t.kmPerL, fuelPrice: t.fuelPrice, wearPerKm: t.wearPerKm || 0, hourRate: t.hourRate || 0, minVisit: t.minVisit || 0 };
+          q.travel = tripCalc(q.trip).total;
+        } else { q.trip = null; q.travel = parseMoney($('#tp-val', s).value) || 0; }
+        touch(q); closeSheet(true); rerender(); toast(`Deslocamento: ${BRL(q.travel)}.`);
+      };
+      out();
+    } });
+}
+
+/* ================= tela: proposta ================= */
+function paperHTML(q, c, mode = docMode(q)) {
+  const s = settings, px = pixOf(q, c, mode), rep = mode === 'report';
+  const biz = s.company || s.name;
+  const sub = [s.company && s.name ? s.name : '', s.phone ? fmtPhone(s.phone) : '', s.email, s.doc, s.registro, s.city].filter(Boolean);
+  const row = (i, dim) => `<tr${dim ? ' class="dim"' : ''}><td>${esc(i.name)}<small>${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(priceShow(c, i))}</small></td><td>${BRL(lineShow(c, i))}</td></tr>`;
+  let body;
+  if (q.useRooms) {
+    body = roomList(q).filter(g => g.items.length).map(g => {
+      const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
+      const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
+      return `<tr class="p-sec"><td colspan="2">${esc(g.name)}</td></tr>${svc.length ? `<tr class="p-kind"><td colspan="2">Mão de obra</td></tr>${svc.map(i => row(i)).join('')}` : ''}${mat.length ? `<tr class="p-kind"><td colspan="2">Material${c.matIn ? '' : ' por conta do cliente'}</td></tr>${mat.map(i => row(i, !c.matIn)).join('')}` : ''}<tr class="p-sub"><td>Subtotal ${esc(g.name)}</td><td>${BRL(st)}</td></tr>`;
+    }).join('');
+    if (!body) body = '<tr class="dim"><td colspan="2">Nenhum item lançado</td></tr>';
+    else if (c.mat.length && !c.matIn) body += `<tr class="p-note"><td colspan="2">${rep ? 'Material fornecido pelo cliente: valores de referência, fora do total.' : 'Material por conta do cliente: valores estimados, fora do total.'}</td></tr>`;
+  } else {
+    body = `<tr class="p-sec"><td colspan="2">Mão de obra</td></tr>
+      ${c.svc.length ? c.svc.map(i => row(i)).join('') : '<tr class="dim"><td colspan="2">Nenhum serviço lançado</td></tr>'}
+      ${c.mat.length ? `<tr class="p-sec"><td colspan="2">Material</td></tr>${c.matIn ? '' : `<tr class="p-note"><td colspan="2">${rep ? 'Fornecido pelo cliente: valores de referência, fora do total.' : 'Por conta do cliente: valores estimados, fora do total.'}</td></tr>`}${c.mat.map(i => row(i, !c.matIn)).join('')}` : ''}`;
+  }
+  return `<article class="paper" aria-label="Prévia do documento">
+    <header class="p-head${rep ? ' long' : ''}">
+      <div class="p-brand"><div class="p-mark">${s.logo ? `<img src="${s.logo}" alt="">` : APP_MARK}</div><div class="p-who"><b>${esc(biz || 'Seu nome ou empresa')}</b>${sub.map(x => `<span>${esc(x)}</span>`).join('')}</div></div>
+      <div class="p-num"><span>${DOC[mode].title}</span><b>${esc(numLabel(q))}</b><small>${rep ? execHead(q) : fmtDate(q.createdAt)}</small></div>
+    </header>
+    <div class="p-rule"></div>
+    <div class="p-parties">
+      <div><span class="p-lab">Cliente</span><b>${esc(q.client.name || '—')}</b>${q.client.doc ? `<span>${esc(fmtDoc(q.client.doc))}</span>` : ''}${q.client.phone ? `<span>${esc(fmtPhone(q.client.phone))}</span>` : ''}${q.client.address ? `<span>${esc(q.client.address)}</span>` : ''}</div>
+      <div><span class="p-lab">${rep ? 'Serviço executado' : 'Serviço'}</span><b>${esc(q.title || 'Serviços elétricos')}</b></div>
+    </div>
+    ${rep && q.diag.trim() ? `<div><span class="p-lab">Diagnóstico</span><div class="p-notes">${esc(q.diag.trim())}</div></div>` : ''}
+    ${rep && q.work.trim() ? `<div><span class="p-lab">Serviços realizados</span><div class="p-notes">${esc(q.work.trim())}</div></div>` : ''}
+    ${rep && q.tests.length ? `<div><span class="p-lab">Testes e verificações</span><ul class="p-checks">${q.tests.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>` : ''}
+    ${rep && q.recs.trim() ? `<div><span class="p-lab">Recomendações</span><div class="p-notes">${esc(q.recs.trim())}</div></div>` : ''}
+    <table class="p-table">
+      <thead><tr><th>Descrição</th><th>Total</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table>
+    <div class="p-tot">
+      <div><span>Mão de obra</span><b>${BRL(c.labor)}</b></div>
+      ${c.extra ? `<div><span>Adicionais (+${c.surPct}%)</span><b>${BRL(c.extra)}</b></div>` : ''}
+      ${c.mat.length ? `<div><span>Material${c.matIn ? '' : ' por conta do cliente'}</span><b>${c.matIn ? BRL(c.matTotal) : '—'}</b></div>` : ''}
+      ${c.travel ? `<div><span>Deslocamento</span><b>${BRL(c.travel)}</b></div>` : ''}
+      ${c.discount ? `<div><span>Desconto${q.discount.mode === 'pct' ? ` de ${fmtQty(q.discount.pct)}%` : ''}</span><b>−${BRL(c.discount)}</b></div>` : ''}
+      ${c.taxFora ? `<div><span>${esc(taxLabel(c))}</span><b>${BRL(c.taxFora)}</b></div>` : ''}
+      <div class="p-grand"><span>TOTAL</span><span>${BRL(c.total)}</span></div>
+    </div>
+    <dl class="p-cond">
+      ${rep ? `<dt>Execução</dt><dd>${esc(capFirst(execText(q)))}</dd>` : ''}
+      ${rep && approvalText(q) ? `<dt>Aprovação</dt><dd>${esc(approvalText(q))}</dd>` : ''}
+      <dt>Pagamento</dt><dd>${esc(payText(q, c))}</dd>
+      ${outrasTxt(q) ? `<dt>Ou, se preferir</dt><dd>${esc(capFirst(outrasTxt(q)))}</dd>` : ''}
+      ${!rep && schedText(q) ? `<dt>Execução</dt><dd>${esc(schedText(q))}</dd>` : ''}
+      ${!rep && prazoDoc(q) ? `<dt>Prazo</dt><dd>${esc(prazoDoc(q))}</dd>` : ''}
+      ${q.warranty ? `<dt>Garantia</dt><dd>${esc(warrantyText(q, mode))}</dd>` : ''}
+      ${!rep && q.validity ? `<dt>Validade</dt><dd>Proposta válida até ${fmtDate(c.validUntil)}</dd>` : ''}
+      ${c.extra ? `<dt>Adicionais</dt><dd>${esc(extrasText(q))}, sobre a mão de obra</dd>` : ''}
+      ${q.trip && c.travel ? `<dt>Deslocamento</dt><dd>${esc(tripLong(q.trip))}</dd>` : ''}
+    </dl>
+    ${px ? `<div class="p-pix"><canvas data-qr width="200" height="200" aria-label="QR code do Pix"></canvas><div><b>Pague ${px.what} com Pix: ${BRL(px.value)}</b><span>Chave: ${esc(px.key)}</span><span>Abra o app do banco e leia o QR code.</span></div></div>` : ''}
+    ${q.warranty && s.warrantyTerms.trim() ? `<div class="p-final"><span class="p-lab">Condições da garantia</span><div class="p-notes">${esc(s.warrantyTerms.trim())}</div></div>` : ''}
+    ${q.notes.trim() ? `<div class="p-final"><span class="p-lab">Observações</span><div class="p-notes">${esc(q.notes.trim())}</div></div>` : ''}
+    ${!rep && (approvalText(q) || s.acceptText.trim()) ? `<p class="p-accept">${esc(approvalText(q) || s.acceptText.trim())}</p>` : ''}
+    <div class="p-sign"><div><b>${esc(q.client.name || 'Cliente')}</b><span>${rep ? 'Serviço recebido pelo cliente' : 'Cliente'}</span></div><div><b>${esc(s.name || s.company || 'Responsável')}</b><span>Responsável pelo serviço</span></div></div>
+  </article>`;
+}
+function markSent(q) {
+  if (q.status !== 'rascunho' || q.example) return;
+  setStatus(q, 'enviado'); rerender(); toast('Marcado como enviado.');
+}
+VIEWS.preview = {
+  html(r) {
+    const q = getQ(r.id), c = compute(q), mode = docMode(q);
+    const warn = [];
+    if (!settings.name && !settings.company) warn.push('Seu nome e telefone ainda não aparecem no cabeçalho.');
+    if (!q.client.name) warn.push('Falta o nome do cliente.');
+    if (!q.items.length) warn.push('Nenhum item lançado.');
+    if (!daysOk(q)) warn.push(prazoProblema(q) === 'retro' ? 'Há datas que já passaram: escolha um novo início.' : 'Os dias marcados não conferem com o prazo.');
+    return `<header class="kf-barra appbar"><div class="kf-barra-in">
+      <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
+      <div class="ab-title"><span class="ab-eyebrow">${mode === 'report' ? 'Relatório' : 'Proposta'} · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Cliente sem nome')}</span></div>
+      ${KitFacil.topo.html({ principal: false })}
+    </div></header>
+    <main class="page bar">
+      ${warn.length ? `<div class="banner b-tip"><p><b>Antes de enviar:</b> ${esc(warn.join(' '))}</p>${!settings.name && !settings.company ? '<div class="banner-act"><button class="btn sm ghost" data-me>Preencher meus dados</button></div>' : ''}</div>` : ''}
+      ${isReport(q) ? KitFacil.ui.abas({ itens: [['report', 'Relatório de serviços'], ['quote', 'Orçamento original']], atual: mode, rotulo: 'Documento', dado: 'doc' }) : ''}
+      ${paperHTML(q, c, mode)}
+      <p class="foot-note">O PDF sai em folha A4, com este mesmo conteúdo.</p>
+      <button class="btn ghost block concluir" data-concluir>${I.check}Concluir e voltar à lista</button>
+      <p class="foot-note">Tudo o que você preencheu já está salvo neste aparelho.</p>
+    </main>
+    <div class="bbar"><div class="bbar-in acts">
+      <button class="btn primary" data-pdf>${I.share}Enviar PDF</button>
+      <a class="btn wa" data-wa href="${waLink(q.client.phone, quoteMessage(q, c, mode))}" target="_blank" rel="noopener">${I.wa}WhatsApp</a>
+      <button class="icon-btn boxed" data-more aria-label="Mais opções de envio">${I.more}</button>
+    </div></div>`;
+  },
+  bind(v, r) {
+    const q = getQ(r.id);
+    loadJsPDF().catch(() => {});
+    fitMark(v);
+    $('[data-back]', v).onclick = () => back('/q/' + q.id);
+    $('[data-concluir]', v).onclick = () => {
+      saveQuotes();
+      const msg = isEmptyQuote(q) ? 'Nada preenchido: o documento vazio foi descartado.' : `${isReport(q) ? 'Relatório' : 'Orçamento'} salvo${syncOn() ? '' : ' neste aparelho'}.`;
+      const d = (history.state && history.state.d) || 0;
+      if (d >= 2) history.go(-2); else go('/', true);
+      setTimeout(() => toast(msg), 60);
+    };
+    $('[data-me]', v)?.addEventListener('click', () => KitFacil.ajustes.ir('conta'));
+    const cv = $('canvas[data-qr]', v);
+    $$('[data-doc]', v).forEach(b => b.onclick = () => { previewDoc[q.id] = b.dataset.doc; rerender(); });
+    if (cv) { const px = pixOf(q, compute(q)); qrMatrix(pixPayload(px)).then(m => drawQR(cv.getContext('2d'), m, 0, 0, 200)).catch(() => cv.replaceWith(Object.assign(document.createElement('span'), { textContent: '' }))); }
+    $('[data-pdf]', v).onclick = e => sharePDF(q, e.currentTarget);
+    $('[data-wa]', v).addEventListener('click', () => setTimeout(() => markSent(q), 400));
+    $('[data-more]', v).onclick = () => shareMore(q);
+  },
+};
+async function sharePDF(q, btn) {
+  const html = btn.innerHTML; btn.disabled = true; btn.textContent = 'Gerando…';
+  try {
+    const mode = docMode(q), blob = await buildQuotePDF(q, mode);
+    if (await saveFile(fileName(DOC[mode].file, q), blob)) markSent(q);
+  } catch (e) { console.warn(e); toast('Não foi possível gerar o PDF. Na primeira vez, o app precisa de internet.'); }
+  btn.disabled = false; btn.innerHTML = html;
+}
+function shareMore(q) {
+  const c = compute(q), px = pixOf(q, c);
+  openSheet({ title: 'Mais opções', body: `<div class="opts">
+      <button class="opt" data-o="edit">${ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')}<span>Editar ${isReport(q) ? 'o relatório' : 'o orçamento'}<small>Volta para os itens, valores e dados do cliente</small></span></button>
+      <button class="opt" data-o="copy">${I.copy}<span>Copiar texto${isReport(q) ? '' : ' da proposta'}<small>Para colar em outro aplicativo</small></span></button>
+      ${q.useRooms && q.items.length ? `<button class="opt" data-o="conf">${I.list}<span>PDF da conferência por ambiente<small>Quantidades de cada cômodo, sem preços, para conferir na obra</small></span></button>` : ''}
+      ${c.mat.length ? `<a class="opt" data-o="mat" href="${waLink(q.client.phone, materialMessage(q, c))}" target="_blank" rel="noopener">${I.wa}<span>Lista de material pelo WhatsApp<small>Total de cada item, para o cliente comprar</small></span></a>` : ''}
+      ${px ? `<button class="opt" data-o="pix">${I.pix}<span>QR code do Pix<small>${BRL(px.value)} · ${px.what}</small></span></button>` : ''}
+      <button class="opt" data-o="status">${I.flag}<span>Alterar situação<small>Agora: ${STATUS[q.status]}</small></span></button>
+    </div>`,
+    onMount: s => $$('[data-o]', s).forEach(b => b.addEventListener('click', () => {
+      const o = b.dataset.o;
+      if (o === 'edit') { closeSheet(true); back('/q/' + q.id); }
+      if (o === 'copy') { closeSheet(true); copyText(quoteMessage(q, c), 'Texto copiado.'); markSent(q); }
+      if (o === 'conf') { closeSheet(true); shareConference(q); }
+      if (o === 'mat') closeSheet(true);
+      if (o === 'pix') pixSheet(px);
+      if (o === 'status') statusSheet(q);
+    })) });
+}
+async function shareConference(q, btn) {
+  const html = btn && btn.innerHTML;
+  if (btn) { btn.disabled = true; btn.textContent = 'Gerando…'; }
+  try { await saveFile(fileName('Conferencia', q), await buildConferencePDF(q)); }
+  catch (e) { console.warn(e); toast('Não foi possível gerar o PDF. Na primeira vez, o app precisa de internet.'); }
+  if (btn) { btn.disabled = false; btn.innerHTML = html; }
+}
+
+/* ================= mensagens ================= */
+function waLink(phone, text) {
+  let ph = phoneDigits(phone);
+  if (ph.length === 10 || ph.length === 11) ph = '55' + ph;
+  return `https://wa.me/${ph.length >= 12 ? ph : ''}?text=${encodeURIComponent(text)}`;
+}
+const signature = () => [settings.name, settings.company && settings.company !== settings.name ? settings.company : '', settings.phone ? fmtPhone(settings.phone) : ''].filter(Boolean);
+function quoteMessage(q, c, mode = docMode(q)) {
+  const L = [], fn = firstName(q.client.name), rep = mode === 'report';
+  const line = (i, tag) => `• ${i.name}${tag && i.kind === 'mat' ? ' (material)' : ''}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)} × ${BRL(i.price)} = ${BRL(lineTotal(i))}`;
+  L.push(rep ? `Olá${fn ? ', ' + fn : ''}! Segue o relatório dos serviços executados${q.dates.length > 1 ? ' ' + (seguidos(q.dates) ? '' : 'em ') + execText(q) : q.doneAt ? ' em ' + fmtDate(q.doneAt) : ''}, ${numLabel(q)}${q.title ? ' – ' + q.title : ''}.`
+    : `Olá${fn ? ', ' + fn : ''}! Segue o orçamento ${numLabel(q)}${q.title ? ' – ' + q.title : ''}.`);
+  if (rep && q.diag.trim()) L.push('', '*Diagnóstico:*', q.diag.trim());
+  if (rep && q.work.trim()) L.push('', '*Serviços realizados:*', q.work.trim());
+  if (rep && q.tests.length) L.push('', '*Testes e verificações:*', ...q.tests.map(t => `✓ ${t}`));
+  if (q.useRooms) {
+    roomList(q).filter(g => g.items.length).forEach(g => {
+      L.push('', `*${g.name}*`);
+      const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
+      if (svc.length) { L.push('_Mão de obra_'); svc.forEach(i => L.push(line(i))); }
+      if (mat.length) { L.push('_Material_'); mat.forEach(i => L.push(line(i))); }
+    });
+    if (c.mat.length && !c.matIn) L.push('', rep ? '_Material fornecido por você: valores de referência, fora do total._' : '_Material por sua conta: valores estimados, fora do total._');
+  } else {
+    const block = (title, items, note) => { if (!items.length) return; L.push('', `*${title}*${note || ''}`); items.forEach(i => L.push(line(i))); };
+    block('Mão de obra', c.svc);
+    block('Material', c.mat, c.matIn ? '' : rep ? ' _(fornecido por você, valores de referência)_' : ' _(por sua conta, valores estimados)_');
+  }
+  L.push('', `Mão de obra: ${BRL(c.labor)}`);
+  if (c.extra) L.push(`Adicionais – ${extrasText(q).replace(/^./, ch => ch.toLowerCase())}: ${BRL(c.extra)}`);
+  if (c.mat.length && c.matIn) L.push(`Material: ${BRL(c.matTotal)}`);
+  if (c.travel) L.push(`Deslocamento${q.trip ? `, ${tripShort(q.trip)}` : ''}: ${BRL(c.travel)}`);
+  if (c.discount) L.push(`Desconto: −${BRL(c.discount)}`);
+  if (c.taxFora) L.push(`${taxLabel(c)}: ${BRL(c.taxFora)}`);
+  L.push(`*Total: ${BRL(c.total)}*`, '', `*Pagamento:* ${payText(q, c)}`);
+  if (outrasTxt(q)) L.push(`*Ou, se preferir:* ${capFirst(outrasTxt(q))}`);
+  if (!rep && schedText(q)) L.push(`*Execução:* ${schedText(q)}`);
+  if (!rep && prazoDoc(q)) L.push(`*Prazo:* ${prazoDoc(q)}`);
+  if (q.warranty) L.push(`*Garantia:* ${rep && q.doneAt ? `${plural(q.warranty, 'dia', 'dias')}, até ${fmtDate(q.doneAt + q.warranty * DAY)}` : plural(q.warranty, 'dia', 'dias')}`);
+  if (!rep && q.validity) L.push(`Proposta válida até ${fmtDate(c.validUntil)}.`);
+  if (rep && q.recs.trim()) L.push('', '*Recomendações:*', q.recs.trim());
+  if (q.notes.trim()) L.push('', q.notes.trim());
+  const px = pixOf(q, c, mode); if (px) L.push('', `Pix para ${px.what}, ${BRL(px.value)}: ${px.key}`);
+  if (!rep && (q.status === 'rascunho' || q.status === 'enviado')) L.push('', 'Para aprovar, é só responder *De acordo* nesta conversa.');
+  const sig = signature(); if (sig.length) L.push('', ...sig);
+  return L.join('\n');
+}
+function followMessage(q, c) {
+  const fn = firstName(q.client.name);
+  return `Olá${fn ? ', ' + fn : ''}, tudo bem? Passando para saber se você conseguiu ver o orçamento ${numLabel(q)}${q.title ? `, “${q.title}”,` : ''} no valor de ${BRL(c.total)}. Se quiser ajustar alguma coisa, é só me falar.${settings.name ? `\n${firstName(settings.name)}` : ''}`;
+}
+function materialMessage(q, c) {
+  const fn = firstName(q.client.name), L = consolidate(q, 'mat');
+  return [`Olá${fn ? ', ' + fn : ''}! Esta é a lista de material para o serviço${q.title ? ` “${q.title}”` : ''}:`, '',
+    ...L.map(e => `• ${fmtQty(e.qty)} ${unitTxt(e.qty, e.unit)} – ${e.name}`), '',
+    `Valor estimado: ${BRL(c.matTotal)} (pode variar conforme a loja).`, ...(signature().length ? ['', ...signature()] : [])].join('\n');
+}
+
+/* ================= Pix copia e cola (BR Code do Banco Central) ================= */
+const pixField = (id, v) => id + String(v.length).padStart(2, '0') + v;
+function crc16(str) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < str.length; i++) { crc ^= str.charCodeAt(i) << 8; for (let j = 0; j < 8; j++) crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF; }
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+const asciiUp = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 ]/g, '').replace(/\s+/g, ' ').toUpperCase().trim();
+function cpfValid(d) {
+  if (!/^\d{11}$/.test(d) || /^(\d)\1{10}$/.test(d)) return false;
+  const dv = n => { let s = 0; for (let i = 0; i < n; i++) s += +d[i] * (n + 1 - i); const r = (s * 10) % 11; return r === 10 ? 0 : r; };
+  return dv(9) === +d[9] && dv(10) === +d[10];
+}
+function normPixKey(k) {
+  k = String(k || '').trim();
+  if (k.includes('@')) return k.toLowerCase();
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(k)) return k.toLowerCase();
+  const dig = k.replace(/\D/g, '');
+  if (k.startsWith('+')) return '+' + dig;
+  if (dig.length === 14) return dig;
+  const phoneish = /[()]/.test(k) || /^\d{2}\s*9\d{4}-?\d{4}$/.test(k);
+  if (dig.length === 11 && !phoneish && cpfValid(dig)) return dig;
+  if (dig.length === 10 || dig.length === 11) return '+55' + dig;
+  if (dig.length === 13 && dig.startsWith('55')) return '+' + dig;
+  return k;
+}
+function pixPayload(px) {
+  const mai = pixField('00', 'br.gov.bcb.pix') + pixField('01', normPixKey(px.key));
+  const p = pixField('00', '01') + pixField('26', mai) + pixField('52', '0000') + pixField('53', '986')
+    + (px.value > 0 ? pixField('54', (px.value / 100).toFixed(2)) : '') + pixField('58', 'BR')
+    + pixField('59', (asciiUp(px.name) || 'RECEBEDOR').slice(0, 25)) + pixField('60', (asciiUp(px.city) || 'BRASIL').slice(0, 15))
+    + pixField('62', pixField('05', '***')) + '6304';
+  return p + crc16(p);
+}
+function pixOf(q, c, mode = docMode(q)) {
+  if (!settings.pix) return null;
+  let value = c.pixValue, what = q.payment.mode === 'entrada' ? 'a entrada' : c.avistaDesc ? 'o total à vista' : 'o total';
+  if (mode === 'report' && q.payment.mode === 'entrada') { value = c.rest; what = 'o restante'; }
+  if (!value) return null;
+  return { key: settings.pix, name: settings.company || settings.name || 'Recebedor', city: settings.city, value, what };
+}
+let qrReady;
+function loadQR() {
+  if (window.qrcode) return Promise.resolve(window.qrcode);
+  if (!qrReady) qrReady = new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+    sc.onload = () => window.qrcode ? res(window.qrcode) : rej(new Error('qr'));
+    sc.onerror = () => { qrReady = null; rej(new Error('qr')); };
+    document.head.appendChild(sc);
+  });
+  return qrReady;
+}
+async function qrMatrix(text) { const q = await loadQR(); const qr = q(0, 'M'); qr.addData(text); qr.make(); const n = qr.getModuleCount(); return { n, dark: (r, c) => qr.isDark(r, c) }; }
+function drawQR(ctx, m, x, y, size) {
+  const cell = size / (m.n + 4);
+  ctx.fillStyle = '#FFFFFF'; ctx.fillRect(x, y, size, size); ctx.fillStyle = '#000000';
+  for (let r = 0; r < m.n; r++) for (let c = 0; c < m.n; c++) if (m.dark(r, c)) ctx.fillRect(Math.floor(x + (c + 2) * cell), Math.floor(y + (r + 2) * cell), Math.ceil(cell), Math.ceil(cell));
+}
+function pixSheet(px) {
+  const code = pixPayload(px);
+  openSheet({ title: `Pix d${px.what}`, body: `<p class="hint" style="font-size:16px"><b style="color:var(--ink)">${BRL(px.value)}</b> para ${esc(px.name)}</p>
+      <div style="background:#FFFFFF;border-radius:16px;padding:14px;display:grid;place-items:center"><canvas id="px-qr" width="480" height="480" style="width:min(250px,70vw);height:auto;image-rendering:pixelated" aria-label="QR code do Pix"></canvas></div>
+      <div class="field"><span class="lab">Pix copia e cola</span><textarea readonly rows="4" style="font-size:13px;word-break:break-all">${esc(code)}</textarea></div>`,
+    foot: `<button class="btn primary" data-copy>${I.copy}Copiar código Pix</button>`,
+    onMount: async s => {
+      $('[data-copy]', s).onclick = () => copyText(code, 'Código Pix copiado.');
+      try { const m = await qrMatrix(code); const cv = $('#px-qr', s); if (cv) drawQR(cv.getContext('2d'), m, 0, 0, 480); } catch { const cv = $('#px-qr', s); if (cv) cv.parentNode.innerHTML = '<p class="hint">Sem internet para desenhar o QR code. Use o código copia e cola.</p>'; }
+    } });
+}
+
+/* ================= PDF (folha A4, texto de verdade, não imagem) ================= */
+let jsPDFReady;
+function loadJsPDF() {
+  if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+  if (!jsPDFReady) jsPDFReady = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.crossOrigin = 'anonymous'; s.integrity = 'sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk'; // impressão digital (SRI)
+    s.onload = () => window.jspdf && window.jspdf.jsPDF ? res(window.jspdf.jsPDF) : rej(new Error('jspdf'));
+    s.onerror = () => { jsPDFReady = null; rej(new Error('jspdf')); };
+    document.head.appendChild(s);
+  });
+  return jsPDFReady;
+}
+// as fontes padrão do PDF só têm o alfabeto latino básico
+const pdfSafe = s => String(s ?? '').replace(/[‒-―−]/g, '-').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/…/g, '...').replace(/[•●]/g, '-').replace(/[^\u0000-ÿ]/g, '');
+const PC = { ink: [26, 24, 19], muted: [107, 103, 91], line: [226, 223, 214], soft: [246, 245, 241], volt: [255, 196, 0] };
+const BOLT = [[13.5, 1.5], [3.8, 13.6], [10.7, 13.6], [9.6, 22.5], [20.2, 9.5], [13.1, 9.5]];
+function pdfKit(JsPDF) {
+  const doc = new JsPDF({ unit: 'mm', format: 'a4', compress: true });
+  const W = 210, H = 297, M = 16, CW = W - 2 * M;
+  const font = (size, bold, italic) => { doc.setFont('helvetica', bold ? (italic ? 'bolditalic' : 'bold') : (italic ? 'italic' : 'normal')); doc.setFontSize(size); };
+  const txt = (s, x, y, o = {}) => { font(o.size || 10, o.bold, o.italic); doc.setTextColor(...(o.color || PC.ink)); doc.text(pdfSafe(s), x, y, { align: o.align || 'left' }); };
+  const wrap = (s, w, size, bold) => { font(size, bold); return doc.splitTextToSize(pdfSafe(s), w); };
+  const lh = size => size * 0.3528 * 1.34;
+  const label = (t, x, y) => txt(t.toUpperCase(), x, y, { size: 7.5, bold: true, color: PC.muted });
+  return { doc, W, H, M, CW, font, txt, wrap, lh, label };
+}
+function pdfBolt(doc, x, y, size) {
+  const s = size / 24, pts = BOLT.map(([a, b]) => [x + a * s, y + b * s]);
+  doc.lines(pts.slice(1).map((p, i) => [p[0] - pts[i][0], p[1] - pts[i][1]]), pts[0][0], pts[0][1], [1, 1], 'F', true);
+}
+function pdfHeader(K, kind, num, extra) {
+  const { doc, M, CW, txt, wrap } = K, s = settings;
+  const top = M;
+  // uma informação por linha, como na tela; a logo vai do topo do nome até a base da última linha
+  const subs = [s.company && s.name ? s.name : '', s.phone ? fmtPhone(s.phone) : '', s.email, s.doc, s.registro, s.city].filter(Boolean);
+  const NS = 13.5, SS = 8.8, NL = 5.6, SL = 4.1, cap = NS * 0.3528 * 0.718;
+  const ratio = s.logo ? (s.logoRatio || 1) : 1;
+  const names = wrap(s.company || s.name || 'Seu nome ou empresa', CW - Math.min(44, 18 * ratio) - 55, NS, true).slice(0, 2);
+  const lastName = cap + (names.length - 1) * NL;
+  const textH = subs.length ? lastName + 5.4 + (subs.length - 1) * SL : lastName;
+  const h = Math.min(22, Math.max(textH, 12)), boxH = Math.max(h, textH);
+  const textTop = top + (boxH - textH) / 2, logoTop = top + (boxH - h) / 2;
+  let w = h;
+  if (s.logo) {
+    w = Math.min(44, h * ratio); const hh = w / ratio;
+    try { doc.addImage(s.logo, 'PNG', M, logoTop + (h - hh) / 2, w, hh); } catch { w = 0; }
+  } else {
+    doc.setFillColor(...PC.volt); doc.roundedRect(M, logoTop, h, h, h * 0.22, h * 0.22, 'F');
+    doc.setFillColor(...PC.ink); pdfBolt(doc, M + h * 0.15, logoTop + h * 0.15, h * 0.7);
+  }
+  const x = M + (w ? w + 5 : 0);
+  let ly = textTop + cap;
+  names.forEach(t => { txt(t, x, ly, { size: NS, bold: true }); ly += NL; });
+  ly += 5.4 - NL;
+  subs.forEach(t => { txt(t, x, ly, { size: SS, color: PC.muted }); ly += SL; });
+  const rx = M + CW;
+  const kl = wrap(kind, 46, 8, true), ko = (kl.length - 1) * 3.6;
+  kl.forEach((t, k) => txt(t, rx, top + 4.2 + k * 3.6, { size: 8, bold: true, color: PC.muted, align: 'right' }));
+  txt(num, rx, top + 11.4 + ko, { size: 16, bold: true, align: 'right' });
+  let ry = top + 16.6 + ko;
+  extra.forEach(t => { txt(t, rx, ry, { size: 8.8, color: PC.muted, align: 'right' }); ry += 4.1; });
+  const yy = Math.max(top + boxH + 1, ry - 1.2) + 3.5;
+  doc.setFillColor(...PC.volt); doc.rect(M, yy, CW, 1.4, 'F');
+  return yy + 7.5;
+}
+function pdfFooter(K, left) {
+  const { doc, H, M, CW, txt } = K, n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(...PC.line); doc.setLineWidth(0.2); doc.line(M, H - 14, M + CW, H - 14);
+    txt(left, M, H - 9.5, { size: 7.8, color: PC.muted });
+    if (n > 1) txt(`Página ${i} de ${n}`, M + CW, H - 9.5, { size: 7.8, color: PC.muted, align: 'right' });
+  }
+}
+function pdfQR(doc, m, x, y, size) {
+  const cell = size / (m.n + 4);
+  doc.setFillColor(255, 255, 255); doc.rect(x, y, size, size, 'F'); doc.setFillColor(0, 0, 0);
+  for (let r = 0; r < m.n; r++) for (let c = 0; c < m.n; c++) if (m.dark(r, c)) doc.rect(x + (c + 2) * cell, y + (r + 2) * cell, cell + 0.02, cell + 0.02, 'F');
+}
+async function buildQuotePDF(q, mode = docMode(q)) {
+  const rep = mode === 'report';
+  const JsPDF = await loadJsPDF();
+  const c = compute(q), px = pixOf(q, c, mode);
+  let qr = null; if (px) { try { qr = await qrMatrix(pixPayload(px)); } catch {} }
+  const K = pdfKit(JsPDF), { doc, H, M, CW, txt, wrap, lh, label } = K;
+  let y = pdfHeader(K, DOC[mode].title, numLabel(q), [rep ? execHead(q) : fmtDate(q.createdAt)]);
+  const bottom = H - 19;
+  const need = h => { if (y + h > bottom) { doc.addPage(); y = M + 2; return true; } return false; };
+
+  // cliente e serviço
+  const colW = (CW - 10) / 2, rx = M + colW + 10;
+  let ly = y, ry = y;
+  label('Cliente', M, ly); ly += 5.4;
+  wrap(q.client.name || 'Cliente', colW, 11.5, true).forEach(t => { txt(t, M, ly, { size: 11.5, bold: true }); ly += lh(11.5); });
+  [q.client.doc ? fmtDoc(q.client.doc) : '', q.client.phone ? fmtPhone(q.client.phone) : '', q.client.address].filter(Boolean).forEach(v => wrap(v, colW, 9.3).forEach(t => { txt(t, M, ly, { size: 9.3, color: PC.muted }); ly += lh(9.3); }));
+  label(rep ? 'Serviço executado' : 'Serviço', rx, ry); ry += 5.4;
+  wrap(q.title || 'Serviços elétricos', colW, 11.5, true).forEach(t => { txt(t, rx, ry, { size: 11.5, bold: true }); ry += lh(11.5); });
+  y = Math.max(ly, ry) + 5;
+
+  // diagnóstico, serviços realizados e testes
+  const textBlock = (title, text) => {
+    const L = wrap(text.trim(), CW, 9.5);
+    need(9 + Math.min(L.length, 3) * lh(9.5));
+    label(title, M, y); y += 5.4;
+    L.forEach(t => { need(lh(9.5)); txt(t, M, y, { size: 9.5 }); y += lh(9.5); });
+    y += 3.5;
+  };
+  if (rep && q.diag.trim()) textBlock('Diagnóstico', q.diag);
+  if (rep && q.work.trim()) textBlock('Serviços realizados', q.work);
+  if (rep && q.tests.length) {
+    const first = wrap(q.tests[0], CW - 5, 9.5).length;
+    need(9 + first * lh(9.5)); label('Testes e verificações', M, y); y += 5.4;
+    q.tests.forEach(t => {
+      const L = wrap(t, CW - 5, 9.5);
+      need(L.length * lh(9.5));
+      doc.setDrawColor(28, 122, 70); doc.setLineWidth(0.55); doc.lines([[0.9, 1.1], [2, -2.5]], M, y - 1.5, [1, 1], 'S');
+      L.forEach(l => { txt(l, M + 5, y, { size: 9.5 }); y += lh(9.5); });
+      y += 0.8;
+    });
+    y += 2.7;
+  }
+  if (rep && q.recs.trim()) textBlock('Recomendações', q.recs);
+
+  // tabela de itens
+  const qtyR = M + CW - 60, unitR = M + CW - 29, totR = M + CW - 2.5, descW = qtyR - M - 24;
+  const thead = () => {
+    doc.setFillColor(...PC.soft); doc.rect(M, y, CW, 7.5, 'F');
+    [['Descrição', M + 2.5, 'left'], ['Qtd.', qtyR, 'right'], ['Valor unit.', unitR, 'right'], ['Total', totR, 'right']].forEach(([t, x, a]) => txt(t.toUpperCase(), x, y + 5, { size: 7.2, bold: true, color: PC.muted, align: a }));
+    y += 7.5;
+  };
+  const section = (title, note) => {
+    if (need(note ? 20 : 16)) thead();
+    y += 2;
+    doc.setFillColor(...PC.volt); doc.rect(M + 2.5, y + 1.3, 1.5, 4, 'F');
+    txt(title.toUpperCase(), M + 6, y + 4.7, { size: 8.5, bold: true });
+    y += 6.8;
+    if (note) { txt(note, M + 6, y + 2.5, { size: 8.5, italic: true, color: PC.muted }); y += 5.5; }
+  };
+  let curRoom = '';
+  const brk = () => { thead(); if (curRoom) { txt(`${curRoom.toUpperCase()} (CONTINUAÇÃO)`, M + 2.5, y + 4.6, { size: 7.4, bold: true, color: PC.muted }); y += 6.2; } };
+  const kindLabel = t => {
+    if (need(12)) brk();
+    txt(t.toUpperCase(), M + 6, y + 4.2, { size: 7.4, bold: true, color: PC.muted }); y += 5.6;
+  };
+  const row = (i, dim) => {
+    const L = wrap(i.name, descW, 9.5), h = L.length * lh(9.5) + 2.7;
+    if (need(h)) brk();
+    const col = dim ? PC.muted : PC.ink;
+    L.forEach((t, k) => txt(t, M + 2.5, y + 4.4 + k * lh(9.5), { size: 9.5, color: col }));
+    txt(`${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)}`, qtyR, y + 4.4, { size: 9.5, color: col, align: 'right' });
+    txt(BRL(i.price), unitR, y + 4.4, { size: 9.5, color: col, align: 'right' });
+    txt(BRL(lineTotal(i)), totR, y + 4.4, { size: 9.5, color: col, bold: !dim, align: 'right' });
+    y += h;
+    doc.setDrawColor(...PC.line); doc.setLineWidth(0.2); doc.line(M, y, M + CW, y);
+  };
+  thead();
+  if (q.useRooms) {
+    const G = roomList(q).filter(g => g.items.length);
+    if (!G.length) { txt('Nenhum item lançado', M + 6, y + 4.5, { size: 9.5, color: PC.muted }); y += 7; }
+    G.forEach(g => {
+      const svc = g.items.filter(i => i.kind === 'svc'), mat = g.items.filter(i => i.kind === 'mat');
+      curRoom = ''; section(g.name); curRoom = g.name;
+      if (svc.length) { kindLabel('Mão de obra'); svc.forEach(i => row(i)); }
+      if (mat.length) { kindLabel(c.matIn ? 'Material' : 'Material por conta do cliente'); mat.forEach(i => row(i, !c.matIn)); }
+      const st = sum(svc.map(lineTotal)) + (c.matIn ? sum(mat.map(lineTotal)) : 0);
+      if (need(6.5)) brk();
+      txt(`Subtotal ${g.name}`, unitR, y + 4.4, { size: 8.6, color: PC.muted, align: 'right' });
+      txt(BRL(st), totR, y + 4.4, { size: 9.2, bold: true, align: 'right' }); y += 6.5;
+    });
+    if (c.mat.length && !c.matIn) { need(7); txt(rep ? 'Material fornecido pelo cliente: valores de referência, fora do total.' : 'Material por conta do cliente: valores estimados, fora do total.', M + 2.5, y + 4, { size: 8.5, italic: true, color: PC.muted }); y += 6; }
+  } else {
+    section('Mão de obra');
+    if (c.svc.length) c.svc.forEach(i => row(i)); else { txt('Nenhum serviço lançado', M + 6, y + 4.5, { size: 9.5, color: PC.muted }); y += 7; }
+    if (c.mat.length) { section('Material', c.matIn ? '' : rep ? 'Fornecido pelo cliente: valores de referência, fora do total.' : 'Por conta do cliente: valores estimados, fora do total.'); c.mat.forEach(i => row(i, !c.matIn)); }
+  }
+
+  // totais
+  y += 5;
+  const rows = [['Mão de obra', BRL(c.labor)]];
+  if (c.extra) rows.push([`Adicionais (+${c.surPct}%)`, BRL(c.extra)]);
+  if (c.mat.length) rows.push([c.matIn ? 'Material' : 'Material por conta do cliente', c.matIn ? BRL(c.matTotal) : '-']);
+  if (c.travel) rows.push(['Deslocamento', BRL(c.travel)]);
+  if (c.discount) rows.push(['Desconto' + (q.discount.mode === 'pct' ? ` de ${fmtQty(q.discount.pct)}%` : ''), '- ' + BRL(c.discount)]);
+  if (c.taxFora) rows.push([taxLabel(c), BRL(c.taxFora)]);
+  const totH = rows.length * 6 + 13;
+  need(Math.max(totH, px && qr ? 34 : 0) + 6);
+  const bw = 82, bx = M + CW - bw, top = y;
+  // Pix ao lado dos totais, no espaço que sobraria vazio
+  if (px && qr) {
+    const pw = CW - bw - 8, ph = Math.max(totH, 32);
+    doc.setDrawColor(...PC.line); doc.setLineWidth(0.3); doc.roundedRect(M, top, pw, ph, 2, 2, 'S');
+    pdfQR(doc, qr, M + 3, top + (ph - 26) / 2, 26);
+    const tx = M + 32, tw = pw - 35;
+    let ty = top + 7.5;
+    txt(`Pix d${px.what}`, tx, ty, { size: 9.5, bold: true }); ty += 6.2;
+    txt(BRL(px.value), tx, ty, { size: 13, bold: true }); ty += 5.6;
+    wrap(px.key, tw, 8.3).slice(0, 2).forEach(t => { txt(t, tx, ty, { size: 8.3, color: PC.muted }); ty += 3.8; });
+    ty += 0.8;
+    wrap('Leia o QR code no app do banco.', tw, 7.8).forEach(t => { txt(t, tx, ty, { size: 7.8, color: PC.muted }); ty += 3.5; });
+  }
+  rows.forEach(([l, v]) => { txt(l, bx + 3, y + 4.4, { size: 9.5, color: PC.muted }); txt(v, bx + bw - 3, y + 4.4, { size: 9.5, align: 'right' }); y += 6; });
+  y += 1.5;
+  doc.setFillColor(...PC.volt); doc.roundedRect(bx, y, bw, 11.5, 1.6, 1.6, 'F');
+  txt('TOTAL', bx + 3.5, y + 7.4, { size: 10, bold: true });
+  txt(BRL(c.total), bx + bw - 3.5, y + 7.8, { size: 14, bold: true, align: 'right' });
+  y = Math.max(y + 11.5, px && qr ? top + Math.max(totH, 32) : 0) + 7.5;
+
+  // condições
+  const conds = [rep && ['Execução', capFirst(execText(q))], rep && approvalText(q) && ['Aprovação', approvalText(q)], ['Pagamento', payText(q, c)], !rep && outrasTxt(q) && ['Ou, se preferir', capFirst(outrasTxt(q))], !rep && schedText(q) && ['Execução', schedText(q)], !rep && prazoDoc(q) && ['Prazo de execução', prazoDoc(q)], q.warranty && ['Garantia', warrantyText(q, mode)], !rep && q.validity && ['Validade', `Proposta válida até ${fmtDate(c.validUntil)}`], c.extra && ['Adicionais', `${extrasText(q)}, sobre a mão de obra`], q.trip && c.travel && ['Deslocamento', tripLong(q.trip)]].filter(Boolean);
+  need(14); label(rep ? 'Informações' : 'Condições', M, y); y += 5.6;
+  conds.forEach(([l, v]) => {
+    const L = wrap(v, CW - 42, 9.5);
+    need(L.length * lh(9.5) + 2);
+    txt(l, M, y, { size: 9.5, bold: true });
+    L.forEach((t, k) => txt(t, M + 42, y + k * lh(9.5), { size: 9.5 }));
+    y += L.length * lh(9.5) + 1.4;
+  });
+
+  // condições da garantia e observações (mesma formatação); com o termo de aceite e as assinaturas, não se separam
+  const terms = q.warranty ? settings.warrantyTerms.trim() : '';
+  const FS = 9.2, finals = [['Condições da garantia', terms], ['Observações', q.notes.trim()]].filter(x => x[1]);
+  const acceptL = rep ? [] : wrap(approvalText(q) || settings.acceptText.trim(), CW, 8.3).filter(Boolean);
+  const tailH = sum(finals.map(([, t]) => 2.5 + 5.4 + wrap(t, CW, FS).length * lh(FS) + 1.5)) + (acceptL.length ? 4 + acceptL.length * lh(8.3) : 0) + 27;
+  if (y + tailH > bottom && tailH < bottom - M - 2) { doc.addPage(); y = M + 2; }
+  finals.forEach(([title, t]) => {
+    const L = wrap(t, CW, FS);
+    need(8 + Math.min(L.length, 3) * lh(FS));
+    y += 2.5; label(title, M, y); y += 5.4;
+    L.forEach(l => { need(lh(FS)); txt(l, M, y, { size: FS }); y += lh(FS); });
+    y += 1.5;
+  });
+
+  // termo de aceite (ou o registro da aprovação) logo acima das assinaturas
+  if (acceptL.length) {
+    need(4 + acceptL.length * lh(8.3) + 27); y += 4;
+    acceptL.forEach(t => { txt(t, M, y, { size: 8.3, color: PC.muted }); y += lh(8.3); });
+  }
+
+  // assinaturas
+  need(27); y += acceptL.length ? 12 : 15;
+  const sw = (CW - 14) / 2, sx = M + sw + 14;
+  doc.setDrawColor(...PC.ink); doc.setLineWidth(0.3);
+  doc.line(M, y, M + sw, y); doc.line(sx, y, M + CW, y);
+  txt(q.client.name || 'Cliente', M, y + 5, { size: 9.2, bold: true });
+  txt(rep ? 'Serviço recebido pelo cliente' : 'Cliente', M, y + 9.6, { size: 8, color: PC.muted });
+  txt(settings.name || settings.company || 'Responsável', sx, y + 5, { size: 9.2, bold: true });
+  txt('Responsável pelo serviço', sx, y + 9.6, { size: 8, color: PC.muted });
+
+  pdfFooter(K, `${DOC[mode].name} ${numLabel(q)}${q.client.name ? ' · ' + q.client.name : ''}`);
+  return doc.output('blob');
+}
+
+// conferência de quantitativos: o que vai em cada cômodo, sem preços, com caixinha para marcar na obra
+async function buildConferencePDF(q) {
+  const JsPDF = await loadJsPDF();
+  const K = pdfKit(JsPDF), { doc, H, M, CW, txt, wrap, lh, label } = K;
+  let y = pdfHeader(K, 'CONFERÊNCIA', numLabel(q), [fmtDate(Date.now())]);
+  const bottom = H - 19;
+  const need = h => { if (y + h > bottom) { doc.addPage(); y = M + 2; return true; } return false; };
+  label('Obra', M, y); y += 5.4;
+  txt(q.client.name || 'Cliente', M, y, { size: 11.5, bold: true }); y += lh(11.5);
+  const sub = [q.title, q.client.address].filter(Boolean).join(' · ');
+  if (sub) wrap(sub, CW, 9.3).forEach(t => { txt(t, M, y, { size: 9.3, color: PC.muted }); y += lh(9.3); });
+  y += 5;
+  const qtyR = M + CW - 12, kindX = M + CW - 62, okX = M + CW - 6.1;
+  const box = yy => { doc.setDrawColor(...PC.muted); doc.setLineWidth(0.3); doc.rect(okX, yy, 3.6, 3.6, 'S'); };
+  const head = cols => { doc.setFillColor(...PC.soft); doc.rect(M, y, CW, 7, 'F'); cols.forEach(([t, x, a]) => txt(t.toUpperCase(), x, y + 4.7, { size: 7.2, bold: true, color: PC.muted, align: a })); y += 7; };
+  const cols1 = [['Item', M + 2.5, 'left'], ['Tipo', kindX, 'left'], ['Qtd.', qtyR, 'right'], ['OK', M + CW - 2.5, 'right']];
+  const sep = () => { doc.setDrawColor(...PC.line); doc.setLineWidth(0.2); doc.line(M, y, M + CW, y); };
+  head(cols1);
+  roomList(q).filter(g => g.items.length).forEach(g => {
+    if (need(16)) head(cols1);
+    y += 2; doc.setFillColor(...PC.volt); doc.rect(M + 2.5, y + 1.3, 1.5, 4, 'F');
+    txt(g.name.toUpperCase(), M + 6, y + 4.7, { size: 8.5, bold: true }); y += 6.8;
+    [...g.items.filter(i => i.kind === 'mat'), ...g.items.filter(i => i.kind === 'svc')].forEach(i => {
+      const L = wrap(i.name, kindX - M - 8, 9.5), h = L.length * lh(9.5) + 2.7;
+      if (need(h)) head(cols1);
+      L.forEach((t, k) => txt(t, M + 2.5, y + 4.4 + k * lh(9.5), { size: 9.5 }));
+      txt(i.kind === 'mat' ? 'Material' : 'Mão de obra', kindX, y + 4.4, { size: 8.5, color: PC.muted });
+      txt(`${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)}`, qtyR, y + 4.4, { size: 9.5, bold: true, align: 'right' });
+      box(y + 1.4); y += h; sep();
+    });
+  });
+  const tot = consolidate(q, 'mat');
+  if (tot.length) {
+    y += 9; if (need(26)) y += 0;
+    label('Total de material, somando os ambientes', M, y); y += 3.5;
+    const cols2 = [['Item', M + 2.5, 'left'], ['Qtd. total', qtyR, 'right'], ['OK', M + CW - 2.5, 'right']];
+    head(cols2);
+    tot.forEach(e => {
+      const w = qtyR - M - 30, L = wrap(e.name, w, 9.5), B = e.by.size > 1 ? wrap(byText(e), w, 8) : [];
+      const h = L.length * lh(9.5) + B.length * lh(8) + 2.7;
+      if (need(h)) head(cols2);
+      L.forEach((t, k) => txt(t, M + 2.5, y + 4.4 + k * lh(9.5), { size: 9.5, bold: true }));
+      B.forEach((t, k) => txt(t, M + 2.5, y + 4.2 + L.length * lh(9.5) + k * lh(8), { size: 8, color: PC.muted }));
+      txt(`${fmtQty(e.qty)} ${unitTxt(e.qty, e.unit)}`, qtyR, y + 4.4, { size: 9.5, bold: true, align: 'right' });
+      box(y + 1.4); y += h; sep();
+    });
+  }
+  pdfFooter(K, `Conferência ${numLabel(q)}${q.client.name ? ' · ' + q.client.name : ''}`);
+  return doc.output('blob');
+}
+
+/* ================= recibo ================= */
+function extenso(cents) {
+  const U = ['zero', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+  const D = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+  const C = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+  const tri = n => {
+    if (n === 100) return 'cem';
+    const c = Math.floor(n / 100), r = n % 100, p = [];
+    if (c) p.push(C[c]);
+    if (r) p.push(r < 20 ? U[r] : D[Math.floor(r / 10)] + (r % 10 ? ' e ' + U[r % 10] : ''));
+    return p.join(' e ');
+  };
+  const whole = n => {
+    const G = [[Math.floor(n / 1e6) % 1000, 'milhão', 'milhões'], [Math.floor(n / 1e3) % 1000, 'mil', 'mil'], [n % 1000, '', '']].filter(g => g[0] > 0);
+    return G.map((g, i) => {
+      let w = g[1] === 'mil' && g[0] === 1 ? 'mil' : tri(g[0]) + (g[1] ? ' ' + (g[0] === 1 ? g[1] : g[2]) : '');
+      if (i > 0) w = (i === G.length - 1 && (g[0] < 100 || g[0] % 100 === 0) ? ' e ' : ' ') + w;
+      return w;
+    }).join('');
+  };
+  const r = Math.floor(cents / 100), cc = cents % 100;
+  let s = '';
+  if (r) s = whole(r) + (r >= 1e6 && r % 1e6 === 0 ? ' de' : '') + (r === 1 ? ' real' : ' reais');
+  if (cc) s += (s ? ' e ' : '') + tri(cc) + (cc === 1 ? ' centavo' : ' centavos');
+  return s || 'zero real';
+}
+function receiptSheet(q) {
+  const c = compute(q);
+  const def = q.status === 'aprovado' && q.payment.mode === 'entrada' ? c.entry : c.payTotal;
+  let method = 'Pix';
+  openSheet({ title: 'Recibo de pagamento', body: `
+      <div class="field"><label for="rc-val">Valor recebido</label><input id="rc-val" type="text" inputmode="numeric" data-money value="${BRL(def)}"></div>
+      ${linhas([['Total', c.payTotal], q.payment.mode === 'entrada' ? ['Entrada', c.entry] : null, q.payment.mode === 'entrada' ? ['Restante', c.rest] : null].filter(Boolean).map(([l, v]) => linha(`data-v="${v}"`, l, { tipo: 'um', on: v === def, dir: BRL(v) })), ' role="group" aria-label="Sugestões de valor"')}
+      <div class="field"><label for="rc-ref">Referente a</label><input id="rc-ref" type="text" value="${esc((q.title || 'serviços elétricos').replace(/^./, ch => ch.toLowerCase()))}, ${isReport(q) ? 'relatório' : 'orçamento'} ${esc(numLabel(q))}"></div>
+      <div class="field"><span class="lab">Forma de pagamento</span><div class="seg" role="group">${['Pix', 'Dinheiro', 'Cartão', 'Transferência'].map(m => `<button data-m="${m}" aria-pressed="${m === method}">${m}</button>`).join('')}</div></div>
+      <p class="hint" id="rc-ext"></p>`,
+    foot: `<button class="btn primary" data-go>${I.share}Gerar recibo em PDF</button>`,
+    onMount: s => {
+      const vi = $('#rc-val', s), ext = () => { const v = parseMoney(vi.value) || 0; $('#rc-ext', s).textContent = v ? `Por extenso: ${extenso(v)}.` : ''; };
+      ext(); vi.addEventListener('input', ext);
+      const marcaV = () => { const v = parseMoney(vi.value) || 0; $$('[data-v]', s).forEach(x => x.setAttribute('aria-pressed', +x.dataset.v === v)); };
+      vi.addEventListener('input', marcaV);
+      $$('[data-v]', s).forEach(b => b.onclick = () => { vi.value = BRL(+b.dataset.v); ext(); marcaV(); });
+      $$('[data-m]', s).forEach(b => b.onclick = () => { method = b.dataset.m; $$('[data-m]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); });
+      $('[data-go]', s).onclick = async e => {
+        const v = parseMoney(vi.value);
+        if (!v) return toast('Informe o valor recebido.');
+        const btn = e.currentTarget, html = btn.innerHTML; btn.disabled = true; btn.textContent = 'Gerando…';
+        try { const blob = await buildReceiptPDF(q, v, $('#rc-ref', s).value.trim(), method); await saveFile(fileName('Recibo', q), blob); }
+        catch (err) { console.warn(err); toast('Não foi possível gerar o recibo. Na primeira vez, o app precisa de internet.'); }
+        btn.disabled = false; btn.innerHTML = html;
+      };
+    } });
+}
+async function buildReceiptPDF(q, value, ref, method) {
+  const JsPDF = await loadJsPDF();
+  const K = pdfKit(JsPDF), { doc, M, CW, txt, wrap, label } = K, s = settings;
+  let y = pdfHeader(K, 'RECIBO', numLabel(q), [fmtDate(Date.now())]);
+  doc.setFillColor(...PC.volt); doc.roundedRect(M + CW - 70, y, 70, 17, 1.8, 1.8, 'F');
+  label('Valor', M + CW - 66, y + 5.5);
+  txt(BRL(value), M + CW - 4, y + 13, { size: 16, bold: true, align: 'right' });
+  y += 30;
+  const body = `Recebi de ${q.client.name || 'cliente'}${q.client.doc ? ', ' + fmtDoc(q.client.doc) + ',' : ''} a importância de ${BRL(value)}, ${extenso(value)}, referente a ${ref || 'serviços elétricos'}.`;
+  wrap(body, CW, 12).forEach(t => { txt(t, M, y, { size: 12 }); y += 6.6; });
+  y += 3;
+  txt(`Forma de pagamento: ${method}.`, M, y, { size: 12 }); y += 14;
+  txt(`${s.city ? s.city + ', ' : ''}${longDate(Date.now())}.`, M, y, { size: 12 }); y += 32;
+  const cx = M + CW / 2;
+  doc.setDrawColor(...PC.ink); doc.setLineWidth(0.3); doc.line(cx - 48, y, cx + 48, y);
+  txt(s.name || s.company || 'Assinatura', cx, y + 5.5, { size: 10.5, bold: true, align: 'center' });
+  const sub = [s.company && s.name ? s.company : '', s.doc].filter(Boolean).join(' · ');
+  if (sub) txt(sub, cx, y + 10.5, { size: 9, color: PC.muted, align: 'center' });
+  pdfFooter(K, `Recibo ${numLabel(q)}${q.client.name ? ' · ' + q.client.name : ''}`);
+  return doc.output('blob');
+}
+
+/* ================= salvar e compartilhar arquivos ================= */
+let pendingFile = null;
+const slug = s => fold(s || '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const fileName = (kind, q) => `${kind}-${q.example ? 'exemplo' : String(q.num || 0).padStart(4, '0')}${q.client.name ? '-' + slug(q.client.name) : ''}.pdf`;
+async function saveFile(name, blob) {
+  const file = new File([blob], name, { type: blob.type || 'application/octet-stream' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return true; }
+    catch (e) {
+      if (e && e.name === 'AbortError') return false;
+      // no iPhone o menu só abre logo depois de um toque; se o PDF demorou, oferece um toque novo
+      if (e && e.name === 'NotAllowedError') { pendingFile = file; toast('Arquivo pronto.', { label: 'Compartilhar', run: () => { const f = pendingFile; pendingFile = null; if (f) navigator.share({ files: [f] }).catch(() => {}); } }); return true; }
+    }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  return true;
+}
+
+/* ================= tela: tabela de preços ================= */
+let priceKind = 'svc', priceQuery = '';
+function priceListHTML() {
+  const qf = fold(priceQuery);
+  const list = prices.filter(p => p.kind === priceKind && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
+  if (!list.length) return KitFacil.ui.vazio(qf ? { titulo: 'Nenhum item encontrado', texto: 'Confira o nome do item ou da categoria.' } : { titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo preço</b> para cadastrar.' });
+  return groupByCat(list).map(([cat, L]) => panel(`pr:${priceKind}:${cat}`, '', esc(cat), qf ? null : L.slice(0, 3).map(p => p.name).join(' · ') + (L.length > 3 ? '…' : ''),
+    `<div class="plist">${L.map(p => `<button class="prow" data-pid="${p.id}"><span><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${inStock(p) ? ` · ${stockTxt(p)}` : ''}</small></span><span class="prow-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}</span></button>`).join('')}</div>`,
+    { right: conta(L.length), force: qf ? true : undefined })).join('');
+}
+VIEWS.prices = {
+  html() {
+    const n = k => prices.filter(p => p.kind === k).length;
+    return `${barraTopo()}
+    <main class="page">
+      ${KitFacil.ui.cabecalho({ titulo: 'Preços', criar: { rotulo: 'Novo preço', attrs: 'data-new-price' } })}
+      ${KitFacil.ui.abas({ itens: [['svc', 'Mão de obra', n('svc')], ['mat', 'Material', n('mat')]], atual: priceKind, rotulo: 'Tipo de preço', dado: 'k' })}
+      <label class="search">${I.search}<input type="search" id="pr-q" placeholder="Buscar item ou categoria" value="${esc(priceQuery)}" aria-label="Buscar na tabela"></label>
+      <div id="pr-list" style="display:flex;flex-direction:column;gap:10px">${priceListHTML()}</div>
+      ${prices.length ? `<button class="pr-ajuste" data-adjust>${I.percent}<span class="lt"><b>Reajustar preços</b></span>${I.chev}</button>` : ''}
+      ${prices.some(p => p.ref) ? `<aside class="pr-aviso" role="note" aria-label="Sobre os preços em cinza">
+        <p><b>Atenção: os preços em cinza são apenas valores ilustrativos.</b> Eles são fornecidos exclusivamente como referência inicial para configurar o aplicativo. Não representam preços de mercado, não constituem recomendações comerciais e não foram definidos com base em pesquisas de preços.</p>
+        <p>Você é o responsável por definir seus preços. Antes de elaborar qualquer orçamento, ajuste os valores conforme seus custos, sua região e as características do serviço.</p>
+        <p>Ao personalizar um preço, ele passa de cinza para preto, indicando que foi definido por você.</p></aside>` : ''}
+    </main>`;
+  },
+  bind(v) {
+    $$('[data-k]', v).forEach(b => b.onclick = () => { priceKind = b.dataset.k; rerender(); });
+    const sq = $('#pr-q', v); sq.addEventListener('input', () => { priceQuery = sq.value; $('#pr-list').innerHTML = priceListHTML(); });
+    $('#pr-list', v).addEventListener('click', e => {
+      const b = e.target.closest('[data-pid]'); if (b) priceSheet(prices.find(p => p.id === b.dataset.pid));
+    });
+    $('[data-new-price]', v).onclick = () => priceSheet(null);
+    $('[data-adjust]', v).onclick = adjustSheet;
+  },
+};
+function compEditorHTML(it) {
+  const C = it.comp || [], mats = prices.filter(x => x.kind === 'mat' && !C.some(c => norm(c.n) === norm(x.name))).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true }));
+  return `<div class="field"><span class="lab">Material que costuma ir, por ${esc(unitName(it.unit || 'un'))}</span>
+    ${C.length ? `<div class="sug-list">${C.map((c, k) => { const m = prices.find(x => x.kind === 'mat' && norm(x.name) === norm(c.n)); return `<div class="sug-row"><span class="sug-n">${esc(c.n)}${m ? '' : '<small>Fora da tabela de material</small>'}</span><input type="text" inputmode="decimal" class="sug-q" data-cq="${k}" value="${fmtQty(c.q)}" aria-label="Quantidade de ${esc(c.n)}"><span class="sug-u">${m ? unitTxt(c.q, m.unit) : ''}</span><button type="button" class="icon-btn" data-crm="${k}" aria-label="Tirar ${esc(c.n)}">${I.x}</button></div>`; }).join('')}</div>` : '<p class="hint">Nenhum. Com material aqui, o app sugere a lista ao adicionar o serviço num orçamento.</p>'}
+    <select id="pp-comp-add" aria-label="Incluir material"><option value="">Incluir material…</option>${mats.map(m => `<option>${esc(m.name)}</option>`).join('')}</select></div>`;
+}
+function priceSheet(p) {
+  const isNew = !p;
+  const it = p ? { ...p, comp: (p.comp || []).map(c => ({ ...c })) } : { kind: priceKind, cat: '', name: '', unit: 'un', price: 0, comp: [] };
+  // mesmo padrão do estoque e das ferramentas: 1. categoria, 2. o item
+  const cats = k => { const o = catOrder(k); return [...new Set(prices.filter(x => x.kind === k).map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = o.indexOf(a), ib = o.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); }); };
+  const catOpts = k => `${isNew ? '<option value="" hidden>Escolha a categoria</option>' : ''}${cats(k).map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option>`;
+  openSheet({ title: isNew ? 'Novo preço' : 'Alterar preço', body: `
+      <div class="seg" role="group" aria-label="Tipo"><button data-ik="svc" aria-pressed="${it.kind === 'svc'}">Mão de obra</button><button data-ik="mat" aria-pressed="${it.kind === 'mat'}">Material</button></div>
+      <div class="field"><label for="pp-cat-sel">${isNew ? '1. Categoria' : 'Categoria'}</label><select id="pp-cat-sel">${catOpts(it.kind)}</select>
+        <input id="pp-cat" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
+      <div class="st-resto" id="pp-resto" ${isNew ? 'hidden' : ''}>
+      <div class="field"><label for="pp-name">${isNew ? '2. Descrição' : 'Descrição'}</label><input id="pp-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Instalação de chuveiro elétrico"></div>
+      <div class="grid2">
+        <div class="field"><label for="pp-price">Preço</label><input id="pp-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${it.price ? BRL(it.price) : ''}"></div>
+        <div class="field"><label for="pp-unit">Cobrado por</label><select id="pp-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === it.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      </div>
+      </div>
+      <div id="pp-comp" ${it.kind === 'svc' ? '' : 'hidden'}>${compEditorHTML(it)}</div>
+      ${p && inStock(p) ? `<p class="hint">No estoque: ${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}${p.cost ? `, custo ${BRL(p.cost)}` : ''}. O preço daqui é o repasse ao cliente. Altere a quantidade e o custo em Gestão.</p>` : ''}`,
+    foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
+    onMount: s => {
+      if (!isTouch) $(isNew ? '#pp-cat-sel' : '#pp-price', s).focus();
+      const cs = $('#pp-cat-sel', s), cn = $('#pp-cat', s);
+      cs.addEventListener('change', () => { const nv = cs.value === '__nova'; cn.hidden = !nv; if (nv) cn.focus(); $('#pp-resto', s).hidden = !cs.value; if (cs.value && !nv && !isTouch) $('#pp-name', s).focus(); });
+      $$('[data-ik]', s).forEach(b => b.onclick = () => { it.kind = b.dataset.ik; $$('[data-ik]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); cs.innerHTML = catOpts(it.kind); cs.dispatchEvent(new Event('change')); $('#pp-comp', s).hidden = it.kind !== 'svc'; });
+      // composição (F5): material por unidade do serviço
+      const compArea = $('#pp-comp', s), pintaComp = () => { compArea.innerHTML = compEditorHTML(it); };
+      compArea.addEventListener('click', e => { const rm = e.target.closest('[data-crm]'); if (rm) { it.comp.splice(+rm.dataset.crm, 1); pintaComp(); } });
+      compArea.addEventListener('change', e => {
+        const qi = e.target.closest('[data-cq]'); if (qi) { const v = parseQty(qi.value); if (v) it.comp[+qi.dataset.cq].q = v; qi.value = fmtQty(it.comp[+qi.dataset.cq].q); }
+        const ad = e.target.closest('#pp-comp-add'); if (ad && ad.value) { it.comp = [...(it.comp || []), { n: ad.value, q: 1 }]; pintaComp(); }
+      });
+      $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const idx = prices.findIndex(x => x.id === p.id); if (idx < 0) return;
+        const [gone] = prices.splice(idx, 1); savePrices(); closeSheet(true); rerender();
+        toast(`${gone.name} excluído da tabela.`, { label: 'Desfazer', run: () => { prices.splice(idx, 0, gone); savePrices(); rerender(); } });
+      });
+      $('[data-save]', s).onclick = () => {
+        const name = $('#pp-name', s).value.trim().replace(/\s+/g, ' '), price = parseMoney($('#pp-price', s).value);
+        const cat = cs.value === '__nova' ? cn.value.trim().replace(/\s+/g, ' ') : cs.value;
+        if (!cat) return toast(cs.value === '__nova' ? 'Escreva o nome da nova categoria.' : 'Escolha a categoria.');
+        if (!name) return toast('Escreva a descrição do item.');
+        if (price === null) return toast('Informe o preço.');
+        const data = { kind: it.kind, name, price, unit: $('#pp-unit', s).value, cat, comp: it.kind === 'svc' ? (it.comp || []).filter(c => c.n && c.q > 0) : undefined };
+        if (!data.comp || !data.comp.length) delete data.comp;
+        const mudou = !isNew && p.price !== price;
+        if (isNew) prices.push({ id: uid(), ...data }); else { Object.assign(p, data); if (mudou) p.ref = false; }
+        savePrices(); priceKind = it.kind; closeSheet(true); rerender(); toast(isNew ? `${name} adicionado.` : mudou ? 'Preço salvo e conferido.' : 'Item salvo.');
+      };
+    } });
+}
+function adjustSheet() {
+  let scope = priceKind, pct = 10;
+  const affected = () => prices.filter(p => scope === 'all' || p.kind === scope);
+  const nv = p => Math.round(p.price * (1 + pct / 100));
+  const prev = () => affected().slice(0, 3).map(p => `<div class="vrow"><span style="font-size:14.5px">${esc(p.name)}</span><b>${BRL(p.price)} → ${BRL(nv(p))}</b></div>`).join('');
+  openSheet({ title: 'Reajustar preços', body: `
+      <p class="hint">Aumenta ou diminui, com sinal de menos, todos os preços de uma vez. Bom para acompanhar a inflação ou o aumento do material.</p>
+      <div class="seg" role="group" aria-label="Quais preços"><button data-sc="svc" aria-pressed="${scope === 'svc'}">Mão de obra</button><button data-sc="mat" aria-pressed="${scope === 'mat'}">Material</button><button data-sc="all" aria-pressed="false">Todos</button></div>
+      <div class="field"><label for="aj-pct">Percentual</label><div class="stepper" style="width:100%"><button data-ap="-1" aria-label="Menos">${I.minus}</button><input id="aj-pct" type="text" inputmode="decimal" value="10%" style="flex:1;width:auto"><button data-ap="1" aria-label="Mais">${I.plus}</button></div></div>
+      <div><span class="lab">Como fica</span><div class="vrows" id="aj-prev">${prev()}</div></div>`,
+    foot: `<button class="btn primary" data-go>Reajustar <span id="aj-n">${affected().length}</span> preços</button>`,
+    onMount: s => {
+      const inp = $('#aj-pct', s);
+      const paint = () => { $('#aj-prev', s).innerHTML = prev(); $('#aj-n', s).textContent = affected().length; };
+      const readPct = () => { const neg = /-/.test(inp.value); const v = parseQty(inp.value.replace('-', '').replace('%', '')) || 0; pct = Math.max(-90, Math.min(300, neg ? -v : v)); };
+      inp.addEventListener('input', () => { readPct(); paint(); });
+      inp.addEventListener('change', () => { inp.value = fmtQty(pct) + '%'; });
+      $$('[data-ap]', s).forEach(b => b.onclick = () => { pct = Math.max(-90, Math.min(300, Math.round(pct + +b.dataset.ap))); inp.value = fmtQty(pct) + '%'; paint(); });
+      $$('[data-sc]', s).forEach(b => b.onclick = () => { scope = b.dataset.sc; $$('[data-sc]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); paint(); });
+      $('[data-go]', s).onclick = () => {
+        if (!pct) return toast('Escolha um percentual diferente de zero.');
+        const before = prices.map(p => ({ id: p.id, price: p.price }));
+        const refs = affected().filter(p => p.ref).map(p => p.id);
+        affected().forEach(p => { p.price = nv(p); p.ref = false; }); savePrices(); closeSheet(true); rerender();
+        toast(`Preços reajustados em ${fmtQty(pct)}%.`, { label: 'Desfazer', run: () => { before.forEach(b => { const p = prices.find(x => x.id === b.id); if (p) { p.price = b.price; if (refs.includes(p.id)) p.ref = true; } }); savePrices(); rerender(); } });
+      };
+    } });
+}
+
+/* ================= tela: gestão (estoque, ferramentas e checklist) ================= */
+// estoque = materiais da tabela de preços com quantidade guardada; o preço de repasse é o próprio preço da tabela
+let gestaoAba = 'estoque', gestaoQuery = '', checkLado = 'ida';
+const GESTAO = {
+  estoque: { nome: 'Materiais', criar: 'Novo material', sub: 'O que você tem em estoque, o que precisa repor e o catálogo de materiais.' },
+  ferramentas: { nome: 'Ferramentas', criar: 'Nova ferramenta', sub: 'As suas ferramentas, as que quer comprar e o catálogo.' },
+  checklist: { nome: 'Checklist', criar: 'Novo item', sub: 'Confira o que levar antes de ir e o que trazer antes de voltar da obra.' },
+};
+function gHero(attr, L, atual, n, topo = '', compras = true) {
+  const cn = comprasN();
+  return `<section class="hero g-hero" aria-label="Resumo">${topo ? `<div class="hero-top"><span>${topo}</span></div>` : ''}
+    <div class="hero-stats" role="group" aria-label="Mostrar">${L.map(([k, l]) => `<button ${attr}="${k}" aria-pressed="${atual === k}"><b>${n(k)}</b><span>${l}</span></button>`).join('')}</div>
+    ${compras ? `<button class="g-cp" data-compras>${I.cart}<span class="lt">Lista de compras <small>· ${cn ? plural(cn, 'item', 'itens') : 'vazia'}</small></span>${I.chev}</button>` : ''}</section>`;
+}
+const margem = p => p.cost > 0 ? Math.round((p.price - p.cost) / p.cost * 100) : null;
+const margemTxt = p => { const m = margem(p); return m === null ? '' : m >= 0 ? `margem +${m}%` : `abaixo do custo, ${m}%`; };
+// materiais: três listas, como em Ferramentas — Em estoque (o que você tem, por marca), Repor (chegou ao mínimo ou
+// marcado como Preciso repor) e Catálogo (todos os materiais da tabela de Preços). Cada linha abre a caixa do material.
+let matFiltro = '';
+const MAT_FILTROS = [['estoque', 'em estoque'], ['repor', 'para repor'], ['catalogo', 'no catálogo']];
+const precisaRepor = p => p.kind === 'mat' && (stockLow(p) || !!p.repor);
+const lotesTxt = p => (p.lotes || []).map(l => `${l.brand || 'Sem marca'}: ${fmtQty(l.qty)} ${unitTxt(l.qty, p.unit)}`).join(' · ');
+function stockListHTML() {
+  const mats = prices.filter(p => p.kind === 'mat'), est = mats.filter(inStock), rep = mats.filter(precisaRepor);
+  const n = { estoque: est.length, repor: rep.length, catalogo: mats.length };
+  const f = matFiltro || (est.length ? 'estoque' : 'catalogo');
+  const qf = fold(gestaoQuery);
+  const bate = p => !qf || fold([p.name, p.cat, ...(p.lotes || []).map(l => l.brand)].join(' ')).includes(qf);
+  let topo = '';
+  const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar material, marca ou categoria" value="${esc(gestaoQuery)}" aria-label="Buscar material"></label>`;
+  if (est.length) {
+    const custo = sum(est.map(p => sum((p.lotes || []).map(l => Math.round(l.qty * (l.cost || 0)))))), repasse = sum(est.map(p => Math.round(p.price * p.stock)));
+    topo = `${BRL(custo)} de custo · ${BRL(repasse)} no repasse`;
+  }
+  const chips = gHero('data-mf', MAT_FILTROS, f, k => n[k], topo);
+  const L = (f === 'estoque' ? est : f === 'repor' ? rep : mats).filter(bate);
+  const linha = p => {
+    let sub = '', dir = '';
+    let subH = '';
+    if (f === 'catalogo') { subH = `repasse ${p.ref ? refV(BRL(p.price)) : BRL(p.price)} por ${esc(unitName(p.unit))}`; dir = inStock(p) ? `<span class="t-tem">${I.check}${fmtQty(p.stock)}</span>` : p.repor ? `<span class="t-quero">${I.cart}</span>` : ''; }
+    else if (f === 'repor') { sub = p.repor && !stockLow(p) ? `marcado para repor ${fmtQty(p.reporQtd || 1)} ${unitTxt(p.reporQtd || 1, p.unit)}` : p.stock <= 0 ? 'em falta' : `tem ${fmtQty(p.stock)}${p.min ? `, mínimo ${fmtQty(p.min)}` : ''}`; dir = `<span class="g-zero">${I.warn}</span>`; }
+    else { sub = lotesTxt(p) || 'Sem marca'; dir = p.stock <= 0 ? `<span class="g-zero">${I.warn}Em falta</span>` : `<span class="${stockLow(p) ? 'g-zero' : ''}">${stockLow(p) ? I.warn : ''}${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}</span>`; }
+    return `<button class="prow" data-mat="${p.id}"><span><b>${hl(p.name, qf)}</b><small>${subH || esc(sub)}</small></span><span class="prow-price">${dir}</span></button>`;
+  };
+  // categorias recolhíveis, como em Preços: abertas no estoque e em Repor, fechadas no catálogo (na busca, todas abertas)
+  const lista = L.length ? groupByCat(L).map(([cat, M]) => panel(`g:mat:${f}:${cat}`, '', esc(cat), qf ? null : M.slice(0, 3).map(p => p.name).join(' · ') + (M.length > 3 ? '…' : ''),
+      `<div class="plist">${M.map(linha).join('')}</div>`, { right: `<span class="card-sum">${M.length}</span>`, force: qf ? true : undefined })).join('')
+    : KitFacil.ui.vazio(qf ? { titulo: 'Nenhum material encontrado', texto: 'Confira o nome, a marca ou a categoria.' }
+      : f === 'estoque' ? { titulo: 'Nenhum material em estoque', texto: 'Toque em <b>Novo material</b>, ou abra um no <b>Catálogo</b> e diga quanto você tem.', icone: I.box }
+      : f === 'repor' ? { titulo: 'Nada para repor', texto: 'Aqui entram o material que chegou ao mínimo e o que você marcar como Preciso repor.', icone: I.cart }
+      : { titulo: 'Nenhum material no catálogo', texto: 'Toque em <b>Novo material</b> para cadastrar.', icone: I.box });
+  return chips + busca + `<div id="g-list" class="g-list">${lista}</div>`;
+}
+const margemHTML = (cost, price) => {
+  if (!cost || price === null) return '<span class="hint">Com o custo e o repasse, o app mostra a sua margem.</span>';
+  const m = Math.round((price - cost) / cost * 100);
+  return m >= 0 ? `${I.check}<span>Margem de <b>${m}%</b>: ${BRL(price - cost)} por unidade.</span>` : `${I.warn}<span><b>Repasse abaixo do custo.</b> Você perde ${BRL(cost - price)} por unidade.</span>`;
+};
+// caixa do material: as marcas que você tem, o repasse, o mínimo e a lista de compras
+function matSheet(p) {
+  if (!p) return;
+  const corpo = () => {
+    const L = p.lotes || [], tem = inStock(p);
+    const cats = (() => { const o = catOrder('mat'); return [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = o.indexOf(a), ib = o.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); }); })();
+    // nome, categoria e unidade: editáveis também nos itens que vêm com o app
+    return `${panel(`mt:${p.id}:dados`, 'mt-dados', 'Nome, categoria e unidade', `${p.cat || 'Outros'} · por ${unitName(p.unit)}`, `<div class="stack14">
+        <div class="field"><label for="mt-name">Nome do material</label><input id="mt-name" type="text" value="${esc(p.name)}" autocomplete="off"></div>
+        <div class="field"><label for="mt-cat">Categoria</label><select id="mt-cat">${cats.map(c => `<option ${c === (p.cat || 'Outros') ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+          <input id="mt-cat-n" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
+        <div class="field"><label for="mt-unit">Cobrado por</label><select id="mt-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === p.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      </div>`)}
+      ${panel(`mt:${p.id}:est`, '', 'Em estoque', tem ? resumoDe(L, l => `${l.brand || 'Sem marca'} ${fmtQty(l.qty)}`) : 'Nada no estoque', `${L.length ? `<div class="plist">${L.map(l => `<button class="prow" data-lote="${l.id}"><span><b>${esc(l.brand || 'Sem marca')}</b><small>${l.cost ? `custo ${BRL(l.cost)}` : 'sem custo'}</small></span><span class="prow-price${l.qty <= 0 ? ' g-zero' : ''}">${fmtQty(l.qty)} ${unitTxt(l.qty, p.unit)}</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem este material no estoque.</p>'}
+      <button class="add-btn" data-novo-lote>${I.plus}${L.length ? 'Adicionar outra marca' : 'Tenho este material'}</button>`, { right: tem ? `${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}` : conta(0) })}
+      <div class="grid2">
+        <div class="field"><label for="mt-price">Repasse ao cliente por ${unitName(p.unit)}</label><input id="mt-price" type="text" inputmode="numeric" data-money value="${BRL(p.price)}"></div>
+        <div class="field"><label for="mt-min">Avisar quando chegar a <span class="lab-opt">opcional</span></label><input id="mt-min" type="text" inputmode="decimal" placeholder="Ex.: 10" value="${p.min ? fmtQty(p.min) : ''}"></div>
+      </div>
+      <p class="g-margin" id="mt-margin" aria-live="polite">${margemHTML(p.cost || 0, p.price)}</p>
+      <p class="hint">O repasse é o preço deste material na tabela de Preços e nos orçamentos.${stockLow(p) ? ' Chegou ao mínimo: já está em Repor.' : ''}</p>
+      <label class="switch-row" for="mt-repor"><span><b>Preciso repor</b><small>Entra na lista de compras${stockLow(p) ? ', além do aviso de mínimo' : ''}.</small></span><input type="checkbox" class="sw" id="mt-repor" ${p.repor ? 'checked' : ''}></label>
+      <div class="field" id="mt-rq-f" ${p.repor || stockLow(p) ? '' : 'hidden'}><label for="mt-rq">Quanto quer comprar</label><div class="tp-qq-row"><div class="stepper"><button data-rq="-1" aria-label="Menos">${I.minus}</button><input id="mt-rq" type="text" inputmode="decimal" value="${fmtQty(p.reporQtd || sugestaoCompra(p))}"><button data-rq="1" aria-label="Mais">${I.plus}</button></div><button class="btn primary" data-comprei-mat>${I.check}Comprei</button></div></div>`;
+  };
+  openSheet({ title: p.name, body: `<div id="mt-corpo" class="tp-corpo">${corpo()}</div>`,
+    foot: `${inStock(p) ? `<button class="btn danger-text" data-del>${I.trash}Tirar do estoque</button>` : ''}<button class="btn primary${inStock(p) ? '' : ' block'}" data-ok>Pronto</button>`,
+    onClose: () => rerender(),
+    onMount: s => {
+      s.addEventListener('click', e => {
+        const lt = e.target.closest('[data-lote]'); if (lt) return loteSheet(p, (p.lotes || []).find(l => l.id === lt.dataset.lote));
+        if (e.target.closest('[data-novo-lote]')) return loteSheet(p, null);
+        if (e.target.closest('[data-comprei-mat]')) return loteSheet(p, null, parseQty($('#mt-rq', s).value) || 1);
+        const rq = e.target.closest('[data-rq]'); if (rq) { p.reporQtd = Math.max(1, Math.round(((parseQty($('#mt-rq', s).value) || 1) + +rq.dataset.rq) * 100) / 100); $('#mt-rq', s).value = fmtQty(p.reporQtd); savePrices(); }
+      });
+      s.addEventListener('input', e => {
+        if (e.target.id === 'mt-price') { const v = parseMoney(e.target.value); if (v !== null) { if (v !== p.price) p.ref = false; p.price = v; savePrices(); $('#mt-margin', s).innerHTML = margemHTML(p.cost || 0, p.price); } }
+        if (e.target.id === 'mt-min') { p.min = Math.max(0, parseQty(e.target.value) || 0); savePrices(); }
+      });
+      const resumoDados = () => { const sm = $('[data-sum="mt-dados"]', s); if (sm) sm.textContent = `${p.cat || 'Outros'} · por ${unitName(p.unit)}`; };
+      s.addEventListener('change', e => {
+        if (e.target.id === 'mt-name') {
+          const nn = e.target.value.trim().replace(/\s+/g, ' ');
+          if (!nn) { e.target.value = p.name; return toast('Escreva o nome do material.'); }
+          if (prices.some(x => x !== p && x.kind === 'mat' && norm(x.name) === norm(nn))) { e.target.value = p.name; return toast('Já existe um material com esse nome.'); }
+          p.name = nn; savePrices(); const tt = $('.kf-dlg-tt'); if (tt) tt.textContent = nn; toast('Nome salvo.');
+        }
+        if (e.target.id === 'mt-cat') {
+          const cn = $('#mt-cat-n', s), nv = e.target.value === '__nova'; cn.hidden = !nv;
+          if (nv) { cn.focus(); return; }
+          p.cat = e.target.value; savePrices(); resumoDados(); toast('Categoria salva.');
+        }
+        if (e.target.id === 'mt-cat-n') { const c = e.target.value.trim().replace(/\s+/g, ' '); if (!c) return; p.cat = c; savePrices(); resumoDados(); toast('Categoria salva.'); }
+        if (e.target.id === 'mt-unit') { p.unit = e.target.value; savePrices(); resumoDados(); const lb = $('label[for="mt-price"]', s); if (lb) lb.textContent = 'Repasse ao cliente por ' + unitName(p.unit); toast('Unidade salva.'); }
+        if (e.target.id === 'mt-repor') { p.repor = e.target.checked; if (p.repor && !p.reporQtd) p.reporQtd = sugestaoCompra(p); $('#mt-rq-f', s).hidden = !(p.repor || stockLow(p)); savePrices(); toast(p.repor ? `${p.name} na lista de compras.` : `${p.name} saiu da lista de compras.`); }
+        if (e.target.id === 'mt-rq') { p.reporQtd = Math.max(1, parseQty(e.target.value) || 1); e.target.value = fmtQty(p.reporQtd); savePrices(); }
+        if (e.target.id === 'mt-min' || e.target.id === 'mt-price') toast('Salvo.');
+      });
+      $('[data-ok]', s).onclick = () => closeSheet();
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const antes = JSON.stringify(p);
+        delete p.lotes; delete p.stock; delete p.cost; delete p.brand; savePrices(); closeSheet(true); rerender();
+        toast(`${p.name} saiu do estoque. Continua no catálogo.`, { label: 'Desfazer', run: () => { Object.assign(p, JSON.parse(antes)); savePrices(); rerender(); } });
+      });
+    } });
+}
+// uma marca do material: quantidade e custo. comprar = veio de Comprei (soma a compra e tira da lista de compras)
+function loteSheet(p, lote, comprar) {
+  const isNew = !lote;
+  const x = lote ? { ...lote } : { brand: '', qty: comprar || 1, cost: 0 };
+  openSheet({ title: comprar ? 'Comprei' : isNew ? (inStock(p) ? 'Outra marca' : 'Tenho este material') : 'Marca no estoque', body: `
+      <p class="hint"><b>${esc(p.name)}</b>${comprar ? '. A quantidade entra no estoque e o material sai da lista de compras.' : ''}</p>
+      <div class="field"><label for="lt-brand">Marca <span class="lab-opt">opcional</span></label><input id="lt-brand" type="text" value="${esc(x.brand)}" placeholder="Ex.: Steck" autocomplete="off"></div>
+      <div class="grid2">
+        <div class="field"><label for="lt-qty">${comprar ? 'Quantidade comprada' : 'Quantidade'}, em ${unitName(p.unit)}</label><div class="stepper" style="width:100%"><button data-lq="-1" aria-label="Menos">${I.minus}</button><input id="lt-qty" type="text" inputmode="decimal" value="${fmtQty(x.qty)}" style="flex:1;width:auto"><button data-lq="1" aria-label="Mais">${I.plus}</button></div></div>
+        <div class="field"><label for="lt-cost">Custo por ${unitName(p.unit)}</label><input id="lt-cost" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${x.cost ? BRL(x.cost) : ''}"></div>
+      </div>
+      <p class="g-margin" id="lt-margin" aria-live="polite">${margemHTML(x.cost, p.price)}</p>`,
+    foot: isNew ? `<button class="btn ghost" data-cancel>Voltar</button><button class="btn primary" data-save>${comprar ? I.check + 'Confirmar compra' : I.plus + 'Adicionar'}</button>` : `<button class="btn danger-text" data-del>${I.trash}Não tenho mais</button><button class="btn primary" data-save>Salvar</button>`,
+    onClose: () => rerender(),
+    onMount: s => {
+      if (!isTouch) $('#lt-brand', s).focus();
+      attachSuggest($('#lt-brand', s), () => [...new Set(prices.flatMap(y => (y.lotes || []).map(l => l.brand)).filter(Boolean))].map(b => ({ label: b })));
+      $('#lt-cost', s).addEventListener('input', () => { $('#lt-margin', s).innerHTML = margemHTML(parseMoney($('#lt-cost', s).value) || 0, p.price); });
+      $$('[data-lq]', s).forEach(b => b.onclick = () => { $('#lt-qty', s).value = fmtQty(Math.max(0, Math.round(((parseQty($('#lt-qty', s).value) || 0) + +b.dataset.lq) * 100) / 100)); });
+      const volta = () => matSheet(p);
+      $('[data-cancel]', s)?.addEventListener('click', volta);
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const antes = JSON.stringify(p.lotes);
+        p.lotes = p.lotes.filter(l => l.id !== lote.id); acertaLotes(p); savePrices(); volta();
+        toast('Marca tirada do estoque.', { label: 'Desfazer', run: () => { p.lotes = JSON.parse(antes); acertaLotes(p); savePrices(); rerender(); } });
+      });
+      $('[data-save]', s).onclick = () => {
+        const raw = $('#lt-qty', s).value.trim(), qty = /^0+([.,]0*)?$/.test(raw) ? 0 : parseQty(raw);
+        if (qty === null || qty < 0) return toast('Informe a quantidade. Use 0 se acabou.');
+        const data = { brand: $('#lt-brand', s).value.trim().replace(/\s+/g, ' '), qty: Math.round(qty * 100) / 100, cost: parseMoney($('#lt-cost', s).value) || 0 };
+        p.lotes = p.lotes || [];
+        const igual = p.lotes.find(l => l.id !== (lote && lote.id) && norm(l.brand) === norm(data.brand));
+        if (igual && (isNew || comprar)) {
+          // mesma marca: soma a quantidade; o custo fica a média ponderada
+          const tot = igual.qty + data.qty;
+          if (data.cost) igual.cost = tot ? Math.round((igual.qty * (igual.cost || data.cost) + data.qty * data.cost) / tot) : data.cost;
+          igual.qty = Math.round(tot * 100) / 100;
+        } else if (isNew) p.lotes.push({ id: uid(), ...data });
+        else Object.assign(p.lotes.find(l => l.id === lote.id), data);
+        if (comprar) p.repor = false;
+        acertaLotes(p); savePrices();
+        toast(comprar ? `${p.name}: compra no estoque.` : igual && isNew ? `Somado ao ${data.brand || 'sem marca'} que já estava no estoque.` : isNew ? `${p.name} no estoque.` : 'Estoque salvo.');
+        volta();
+      };
+    } });
+}
+// novo material: 1. categoria, 2. material do catálogo (ou um novo, que entra em Preços), depois marca, quantidade e custo
+function stockSheet(p) {
+  if (p) return matSheet(p);
+  let modo = 'tenho';
+  const ordem = catOrder('mat');
+  const cats = [...new Set(prices.filter(x => x.kind === 'mat').map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = ordem.indexOf(a), ib = ordem.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); });
+  const opts = c => `<option value="" hidden>Escolha o material</option>${prices.filter(x => x.kind === 'mat' && (x.cat || 'Outros') === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(x => `<option value="${x.id}">${esc(x.name)}${inStock(x) ? ` · tem ${fmtQty(x.stock)}` : ''}</option>`).join('')}<option value="__novo">Outro material desta categoria…</option>`;
+  openSheet({ title: 'Novo material', body: `
+      <div class="field"><label for="st-cat-sel">1. Categoria</label><select id="st-cat-sel"><option value="" hidden>Escolha a categoria</option>${cats.map(c => `<option>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+        <input id="st-cat" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
+      <div class="field"><label for="st-mat">2. Material</label><select id="st-mat" disabled><option value="" hidden>Escolha antes a categoria</option></select><span class="hint">Os materiais desta categoria no catálogo, que é a sua tabela de Preços.</span></div>
+      <div class="field" id="st-name-f" hidden><label for="st-name">Nome do material novo</label><input id="st-name" type="text" placeholder="Ex.: Disjuntor 20 A" autocomplete="off"><span class="hint">Ele entra também no catálogo e na tabela de Preços.</span></div>
+      <div class="st-resto" id="st-resto" hidden>
+        <div class="seg" role="group" aria-label="Situação"><button data-modo="tenho" aria-pressed="true">Tenho em estoque</button><button data-modo="repor" aria-pressed="false">Preciso comprar</button></div>
+        <div class="grid2" id="st-un-f"><div class="field"><label for="st-unit">Unidade</label><select id="st-unit">${UNITS.filter(([u]) => !['ponto', 'h', 'vb'].includes(u)).map(([u, l]) => `<option value="${esc(u)}">${l}</option>`).join('')}</select></div>
+          <div class="field"><label for="st-price">Repasse ao cliente</label><input id="st-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00"></div></div>
+        <div class="field" id="st-brand-f"><label for="st-brand">Marca <span class="lab-opt">opcional</span></label><input id="st-brand" type="text" placeholder="Ex.: Steck" autocomplete="off"></div>
+        <div class="grid2">
+          <div class="field"><label for="st-qty">Quantidade</label><div class="stepper" style="width:100%"><button data-sq="-1" aria-label="Menos">${I.minus}</button><input id="st-qty" type="text" inputmode="decimal" value="1" style="flex:1;width:auto"><button data-sq="1" aria-label="Mais">${I.plus}</button></div></div>
+          <div class="field" id="st-cost-f"><label for="st-cost">Custo por unidade</label><input id="st-cost" type="text" inputmode="numeric" data-money placeholder="R$ 0,00"></div>
+        </div>
+        <p class="g-margin" id="st-margin" aria-live="polite">${margemHTML(0, null)}</p>
+      </div>`,
+    foot: `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>`,
+    onMount: s => {
+      const catSel = $('#st-cat-sel', s), catNova = $('#st-cat', s), matSel = $('#st-mat', s);
+      const paintM = () => { $('#st-margin', s).innerHTML = modo === 'tenho' ? margemHTML(parseMoney($('#st-cost', s).value) || 0, parseMoney($('#st-price', s).value)) : ''; };
+      ['#st-cost', '#st-price'].forEach(sel => $(sel, s).addEventListener('input', paintM));
+      catSel.addEventListener('change', () => {
+        const nv = catSel.value === '__nova';
+        catNova.hidden = !nv; if (nv) catNova.focus();
+        matSel.disabled = !catSel.value;
+        matSel.innerHTML = nv ? '<option value="__novo">Material novo</option>' : opts(catSel.value);
+        if (nv) matSel.dispatchEvent(new Event('change')); else { $('#st-name-f', s).hidden = true; $('#st-resto', s).hidden = true; }
+      });
+      matSel.addEventListener('change', () => {
+        const x = prices.find(y => y.id === matSel.value);
+        $('#st-name-f', s).hidden = matSel.value !== '__novo'; $('#st-resto', s).hidden = !matSel.value;
+        $('#st-un-f', s).hidden = !!x;
+        if (x) { $('#st-price', s).value = BRL(x.price); paintM(); }
+        else if (matSel.value === '__novo' && catSel.value !== '__nova') $('#st-name', s).focus();
+      });
+      $$('[data-modo]', s).forEach(b => b.onclick = () => { modo = b.dataset.modo; $$('[data-modo]', s).forEach(y => y.setAttribute('aria-pressed', y === b)); $('#st-brand-f', s).hidden = $('#st-cost-f', s).hidden = modo !== 'tenho'; paintM(); });
+      $$('[data-sq]', s).forEach(b => b.onclick = () => { $('#st-qty', s).value = fmtQty(Math.max(0, Math.round(((parseQty($('#st-qty', s).value) || 0) + +b.dataset.sq) * 100) / 100)); });
+      attachSuggest($('#st-brand', s), () => [...new Set(prices.flatMap(y => (y.lotes || []).map(l => l.brand)).filter(Boolean))].map(b => ({ label: b })));
+      $('[data-cancel]', s).onclick = () => closeSheet();
+      $('[data-save]', s).onclick = () => {
+        const cat = catSel.value === '__nova' ? catNova.value.trim().replace(/\s+/g, ' ') : catSel.value;
+        if (!cat) return toast(catSel.value === '__nova' ? 'Escreva o nome da nova categoria.' : 'Escolha a categoria.');
+        if (!matSel.value) return toast('Escolha o material.');
+        const raw = $('#st-qty', s).value.trim(), qty = /^0+([.,]0*)?$/.test(raw) ? 0 : parseQty(raw);
+        if (qty === null || qty < 0) return toast('Informe a quantidade. Use 0 se acabou.');
+        let p = prices.find(y => y.id === matSel.value);
+        if (!p) {
+          const name = $('#st-name', s).value.trim().replace(/\s+/g, ' '), price = parseMoney($('#st-price', s).value);
+          if (!name) return toast('Escreva o nome do material.');
+          if (price === null) return toast('Informe o preço de repasse ao cliente.');
+          p = prices.find(y => y.kind === 'mat' && norm(y.name) === norm(name));
+          if (!p) { p = { id: uid(), kind: 'mat', cat, name, unit: $('#st-unit', s).value, price }; prices.push(p); }
+        } else { const pr = parseMoney($('#st-price', s).value); if (pr !== null && pr !== p.price) { p.price = pr; p.ref = false; } }
+        if (modo === 'repor') { p.repor = true; p.reporQtd = Math.max(1, qty || 1); }
+        else {
+          const brand = $('#st-brand', s).value.trim().replace(/\s+/g, ' '), cost = parseMoney($('#st-cost', s).value) || 0;
+          p.lotes = p.lotes || [];
+          const igual = p.lotes.find(l => norm(l.brand) === norm(brand));
+          if (igual) { const tot = igual.qty + qty; if (cost) igual.cost = tot ? Math.round((igual.qty * (igual.cost || cost) + qty * cost) / tot) : cost; igual.qty = Math.round(tot * 100) / 100; }
+          else p.lotes.push({ id: uid(), brand, qty: Math.round(qty * 100) / 100, cost });
+          acertaLotes(p);
+        }
+        savePrices(); matFiltro = modo === 'repor' ? 'repor' : 'estoque'; closeSheet(true); rerender();
+        toast(modo === 'repor' ? `${p.name} na lista de compras.` : `${p.name} no estoque.`);
+      };
+    } });
+}
+// ferramentas: três listas — Minhas ferramentas (as unidades que você tem), Quero comprar e Ferramentas cadastradas
+// (o catálogo). Cada linha abre a caixa da ferramenta, onde você diz se tem (com marca, modelo e quantidade) ou quer comprar
+let toolFiltro = '';
+const TOOL_FILTROS = [['minhas', 'minhas'], ['quero', 'a comprar'], ['cadastradas', 'no catálogo']];
+const toolCats = () => { const usadas = new Set(tiposTool().map(t => t.cat)); return [...TOOL_CATS.filter(c => usadas.has(c)), ...[...usadas].filter(c => !TOOL_CATS.includes(c)).sort((a, b) => a.localeCompare(b, 'pt-BR'))]; };
+function toolsListHTML() {
+  const itens = tools.filter(t => t.k === 'item' && tipoDe(t)), quero = tiposTool().filter(t => t.quero), todos = tiposTool();
+  const n = { minhas: sum(itens.map(i => i.qty)), quero: quero.length, cadastradas: todos.length };
+  const f = toolFiltro || (itens.length ? 'minhas' : 'cadastradas');
+  const qf = fold(gestaoQuery);
+  const bate = (tipo, it) => !qf || fold([tipo.name, tipo.cat, it ? itemTxt(it) : ''].join(' ')).includes(qf);
+  const chips = gHero('data-tf', TOOL_FILTROS, f, k => n[k]);
+  const busca = `<label class="search">${I.search}<input type="search" id="g-q" placeholder="Buscar ferramenta, marca ou modelo" value="${esc(gestaoQuery)}" aria-label="Buscar ferramenta"></label>`;
+  const porCat = (L, cat, row) => toolCats().filter(c => L.some(x => cat(x) === c)).map(c => { const M = L.filter(x => cat(x) === c); return panel(`g:tool:${f}:${c}`, '', esc(c), qf ? null : M.slice(0, 3).map(x => (x.name || (tipoDe(x) || {}).name || '')).join(' · ') + (M.length > 3 ? '…' : ''),
+      `<div class="plist">${M.map(row).join('')}</div>`, { right: `<span class="card-sum">${M.length}</span>`, force: qf ? true : undefined }); }).join('');
+  let lista = '';
+  if (f === 'minhas') {
+    const L = itens.filter(it => bate(tipoDe(it), it)).sort((a, b) => tipoDe(a).name.localeCompare(tipoDe(b).name, 'pt-BR') || itemTxt(a).localeCompare(itemTxt(b), 'pt-BR'));
+    lista = L.length ? porCat(L, it => tipoDe(it).cat, it => `<button class="prow" data-item="${it.id}"><span><b>${hl(tipoDe(it).name, qf)}</b><small>${esc(itemTxt(it) || 'Sem marca e modelo')}</small></span><span class="prow-price">${it.qty} un.</span></button>`)
+      : KitFacil.ui.vazio(qf ? { titulo: 'Nenhuma ferramenta encontrada', texto: 'Confira o nome, a marca ou o modelo.' } : { titulo: 'Nenhuma ferramenta sua ainda', texto: 'Toque em <b>Nova ferramenta</b>, ou abra uma do catálogo e toque em Tenho esta ferramenta.', icone: I.tool });
+  } else {
+    const L = (f === 'quero' ? quero : todos).filter(t => bate(t)).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    const estado = t => { const its = itensDe(t.id), q = sum(its.map(i => i.qty)); return [q && `${plural(q, 'minha', 'minhas')}${its.some(itemTxt) ? ': ' + its.map(itemTxt).filter(Boolean).join(', ') : ''}`, t.quero && `quero comprar ${t.queroQtd}`].filter(Boolean).join(' · '); };
+    lista = L.length ? porCat(L, t => t.cat, t => `<button class="prow" data-tipo="${t.id}"><span><b>${hl(t.name, qf)}</b>${estado(t) ? `<small>${esc(estado(t))}</small>` : ''}</span><span class="prow-price">${temTool(t) ? `<span class="t-tem">${I.check}Minha</span>` : t.quero ? `<span class="t-quero">${I.cart}</span>` : ''}</span></button>`)
+      : KitFacil.ui.vazio(qf ? { titulo: 'Nenhuma ferramenta encontrada', texto: 'Confira o nome.' } : { titulo: 'Nada na lista de compras', texto: 'Abra uma ferramenta do <b>catálogo</b> e ligue Quero comprar.', icone: I.cart });
+  }
+  return chips + busca + `<div id="g-list" class="g-list">${lista}</div>`;
+}
+// caixa da ferramenta: as unidades que você tem e a lista de compras
+function typeSheet(t) {
+  if (!t) return;
+  const corpo = () => {
+    const its = itensDe(t.id), cats = [...new Set([...TOOL_CATS, ...tiposTool().map(x => x.cat)])];
+    // nome e categoria: editáveis também nas ferramentas que vêm com o app
+    return `${panel(`tp:${t.id}:dados`, 'tp-dados', 'Nome e categoria', t.cat, `<div class="stack14">
+        <div class="field"><label for="tp-name">Nome da ferramenta</label><input id="tp-name" type="text" value="${esc(t.name)}" autocomplete="off"></div>
+        <div class="field"><label for="tp-cat">Categoria</label><select id="tp-cat">${cats.map(c => `<option ${c === t.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+          <input id="tp-cat-n" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
+      </div>`)}
+      ${panel(`tp:${t.id}:minhas`, '', 'Minhas ferramentas', its.length ? resumoDe(its, it => itemTxt(it) || 'Sem marca e modelo') : 'Nenhuma ainda', `${its.length ? `<div class="plist">${its.map(it => `<button class="prow" data-item="${it.id}"><span><b>${esc(itemTxt(it) || 'Sem marca e modelo')}</b></span><span class="prow-price">${it.qty} un.</span></button>`).join('')}</div>` : '<p class="hint">Você ainda não tem esta ferramenta cadastrada como sua.</p>'}
+      <button class="add-btn" data-novo-item>${I.plus}${its.length ? 'Adicionar outra marca ou modelo' : 'Tenho esta ferramenta'}</button>`, { right: conta(sum(its.map(i => i.qty))) })}
+      <label class="switch-row" for="tp-quero"><span><b>Quero comprar</b><small>Entra na lista de compras.</small></span><input type="checkbox" class="sw" id="tp-quero" ${t.quero ? 'checked' : ''}></label>
+      <div class="field" id="tp-qq-f" ${t.quero ? '' : 'hidden'}><label for="tp-qq">Quantas quer comprar</label><div class="tp-qq-row"><div class="stepper"><button data-qq="-1" aria-label="Menos">${I.minus}</button><input id="tp-qq" type="text" inputmode="numeric" value="${t.queroQtd}"><button data-qq="1" aria-label="Mais">${I.plus}</button></div><button class="btn primary" data-comprei>${I.check}Comprei</button></div></div>`;
+  };
+  openSheet({ title: t.name, body: `<div id="tp-corpo" class="tp-corpo">${corpo()}</div>`,
+    foot: `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-ok>Pronto</button>`,
+    onClose: () => rerender(),
+    onMount: s => {
+      s.addEventListener('click', e => {
+        const it = e.target.closest('[data-item]'); if (it) return itemSheet(tools.find(x => x.id === it.dataset.item), t);
+        if (e.target.closest('[data-novo-item]')) return itemSheet(null, t);
+        if (e.target.closest('[data-comprei]')) return itemSheet(null, t, false, true);
+        const qq = e.target.closest('[data-qq]'); if (qq) { t.queroQtd = Math.max(1, Math.min(999, t.queroQtd + +qq.dataset.qq)); $('#tp-qq', s).value = t.queroQtd; saveTools(); }
+      });
+      s.addEventListener('change', e => {
+        if (e.target.id === 'tp-name') {
+          const nn = e.target.value.trim().replace(/\s+/g, ' ');
+          if (!nn) { e.target.value = t.name; return toast('Escreva o nome da ferramenta.'); }
+          if (tiposTool().some(x => x !== t && norm(x.name) === norm(nn))) { e.target.value = t.name; return toast('Já existe uma ferramenta com esse nome.'); }
+          t.name = nn; saveTools(); const tt = $('.kf-dlg-tt'); if (tt) tt.textContent = nn; toast('Nome salvo.');
+        }
+        const poeCat = c => { t.cat = c; saveTools(); const sm = $('[data-sum="tp-dados"]', s); if (sm) sm.textContent = c; toast('Categoria salva.'); };
+        if (e.target.id === 'tp-cat') { const cn = $('#tp-cat-n', s), nv = e.target.value === '__nova'; cn.hidden = !nv; if (nv) cn.focus(); else poeCat(e.target.value); }
+        if (e.target.id === 'tp-cat-n') { const c = e.target.value.trim().replace(/\s+/g, ' '); if (c) poeCat(c); }
+        if (e.target.id === 'tp-quero') { t.quero = e.target.checked; $('#tp-qq-f', s).hidden = !t.quero; saveTools(); toast(t.quero ? `${t.name} na lista de compras.` : `${t.name} saiu da lista de compras.`); }
+        if (e.target.id === 'tp-qq') { t.queroQtd = Math.max(1, Math.min(999, parseInt(e.target.value, 10) || 1)); e.target.value = t.queroQtd; saveTools(); }
+      });
+      $('[data-ok]', s).onclick = () => closeSheet();
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const antes = tools.slice(); tools = tools.filter(x => x.id !== t.id && !(x.k === 'item' && x.tipo === t.id)); saveTools(); closeSheet(true); rerender();
+        toast(`${t.name} excluída.`, { label: 'Desfazer', run: () => { tools = antes; saveTools(); rerender(); } });
+      });
+    } });
+}
+// uma ferramenta sua: marca, modelo e quantidade
+// comprei = veio do botão Comprei: já traz a quantidade da lista de compras e, ao salvar, tira a ferramenta de lá
+function itemSheet(it, tipo, daLista, comprei) {
+  const isNew = !it;
+  tipo = tipo || tipoDe(it);
+  const x = it ? { ...it } : { brand: '', model: '', qty: comprei ? tipo.queroQtd : 1 };
+  const volta = () => daLista ? (closeSheet(true), rerender()) : typeSheet(tipo);
+  openSheet({ title: comprei ? 'Comprei' : isNew ? 'Tenho esta ferramenta' : 'Minha ferramenta', body: `
+      <p class="hint"><b>${esc(tipo.name)}</b> · ${esc(tipo.cat)}${comprei ? '. Diga a marca e o modelo: ela vai para Minhas ferramentas e sai da lista de compras.' : ''}</p>
+      <div class="grid2">
+        <div class="field"><label for="it-brand">Marca <span class="lab-opt">opcional</span></label><input id="it-brand" type="text" value="${esc(x.brand)}" placeholder="Ex.: Bosch" autocomplete="off"></div>
+        <div class="field"><label for="it-model">Modelo <span class="lab-opt">opcional</span></label><input id="it-model" type="text" value="${esc(x.model)}" placeholder="Ex.: GSB 13 RE" autocomplete="off"></div>
+      </div>
+      <div class="field"><label for="it-qty">Quantidade</label><div class="stepper"><button data-iq2="-1" aria-label="Menos">${I.minus}</button><input id="it-qty" type="text" inputmode="numeric" value="${x.qty}"><button data-iq2="1" aria-label="Mais">${I.plus}</button></div></div>`,
+    foot: isNew ? `<button class="btn ghost" data-cancel>Voltar</button><button class="btn primary" data-save>${comprei ? I.check + 'Confirmar compra' : I.plus + 'Adicionar'}</button>` : `<button class="btn danger-text" data-del>${I.trash}Não tenho mais</button><button class="btn primary" data-save>Salvar</button>`,
+    onClose: () => rerender(),
+    onMount: s => {
+      if (!isTouch) $('#it-brand', s).focus();
+      attachSuggest($('#it-brand', s), () => [...new Set(tools.filter(y => y.k === 'item' && y.brand).map(y => y.brand))].map(b => ({ label: b })));
+      $$('[data-iq2]', s).forEach(b => b.onclick = () => { $('#it-qty', s).value = Math.max(1, Math.min(999, (parseInt($('#it-qty', s).value, 10) || 1) + +b.dataset.iq2)); });
+      $('[data-cancel]', s)?.addEventListener('click', volta);
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const idx = tools.findIndex(y => y.id === it.id); if (idx < 0) return;
+        const [gone] = tools.splice(idx, 1); saveTools(); volta();
+        toast('Ferramenta tirada das suas.', { label: 'Desfazer', run: () => { tools.splice(idx, 0, gone); saveTools(); rerender(); } });
+      });
+      $('[data-save]', s).onclick = () => {
+        const data = { brand: $('#it-brand', s).value.trim().replace(/\s+/g, ' '), model: $('#it-model', s).value.trim().replace(/\s+/g, ' '), qty: Math.max(1, Math.min(999, parseInt($('#it-qty', s).value, 10) || 1)) };
+        const igual = tools.find(y => y.k === 'item' && y.tipo === tipo.id && y.id !== (it && it.id) && norm(y.brand) === norm(data.brand) && norm(y.model) === norm(data.model));
+        if (igual) { igual.qty = Math.min(999, igual.qty + data.qty); if (it) tools = tools.filter(y => y.id !== it.id); }
+        else if (isNew) tools.push(fixItem({ id: uid(), tipo: tipo.id, ...data })); else Object.assign(tools.find(y => y.id === it.id), data);
+        if (comprei) tipo.quero = false;
+        saveTools(); toast(comprei ? `${tipo.name} nas suas ferramentas e fora da lista de compras.` : igual ? `Somado à sua ${tipo.name}${itemTxt(igual) ? ' ' + itemTxt(igual) : ''}.` : isNew ? `${tipo.name} nas suas ferramentas.` : 'Ferramenta salva.'); volta();
+      };
+    } });
+}
+// nova ferramenta: 1. categoria, 2. ferramenta do catálogo (ou uma nova), depois se é sua ou se quer comprar
+function newToolSheet() {
+  let modo = 'minha';
+  const opts = c => `<option value="" hidden>Escolha a ferramenta</option>${tiposTool().filter(t => t.cat === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => `<option value="${t.id}">${esc(t.name)}${temTool(t) ? ' · já tem' : ''}</option>`).join('')}<option value="__novo">Outra ferramenta desta categoria…</option>`;
+  openSheet({ title: 'Nova ferramenta', body: `
+      <div class="field"><label for="nt-cat">1. Categoria</label><select id="nt-cat"><option value="" hidden>Escolha a categoria</option>${toolCats().map(c => `<option>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option></select>
+        <input id="nt-cat-nova" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
+      <div class="field"><label for="nt-tipo">2. Ferramenta</label><select id="nt-tipo" disabled><option value="" hidden>Escolha antes a categoria</option></select></div>
+      <div class="field" id="nt-nome-f" hidden><label for="nt-nome">Nome da ferramenta nova</label><input id="nt-nome" type="text" placeholder="Ex.: Detector de metais" autocomplete="off"><span class="hint">Ela entra também no catálogo de ferramentas.</span></div>
+      <div class="st-resto" id="nt-resto" hidden>
+        <div class="seg" role="group" aria-label="Situação"><button data-modo="minha" aria-pressed="true">É minha</button><button data-modo="quero" aria-pressed="false">Quero comprar</button></div>
+        <div class="grid2" id="nt-marca">
+          <div class="field"><label for="nt-brand">Marca <span class="lab-opt">opcional</span></label><input id="nt-brand" type="text" placeholder="Ex.: Bosch" autocomplete="off"></div>
+          <div class="field"><label for="nt-model">Modelo <span class="lab-opt">opcional</span></label><input id="nt-model" type="text" placeholder="Ex.: GSB 13 RE" autocomplete="off"></div>
+        </div>
+        <div class="field"><label for="nt-qty">Quantidade</label><div class="stepper"><button data-nq="-1" aria-label="Menos">${I.minus}</button><input id="nt-qty" type="text" inputmode="numeric" value="1"><button data-nq="1" aria-label="Mais">${I.plus}</button></div></div>
+      </div>`,
+    foot: `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>`,
+    onMount: s => {
+      const cat = $('#nt-cat', s), nova = $('#nt-cat-nova', s), tipo = $('#nt-tipo', s);
+      cat.addEventListener('change', () => {
+        const nv = cat.value === '__nova';
+        nova.hidden = !nv; if (nv) nova.focus();
+        tipo.disabled = !cat.value;
+        tipo.innerHTML = nv ? '<option value="__novo">Ferramenta nova</option>' : cat.value ? opts(cat.value) : '<option value="" hidden>Escolha antes a categoria</option>';
+        if (nv) tipo.dispatchEvent(new Event('change')); else { $('#nt-nome-f', s).hidden = true; $('#nt-resto', s).hidden = true; }
+      });
+      tipo.addEventListener('change', () => {
+        $('#nt-nome-f', s).hidden = tipo.value !== '__novo'; $('#nt-resto', s).hidden = !tipo.value;
+        if (tipo.value === '__novo' && cat.value !== '__nova') $('#nt-nome', s).focus();
+      });
+      $$('[data-modo]', s).forEach(b => b.onclick = () => { modo = b.dataset.modo; $$('[data-modo]', s).forEach(x => x.setAttribute('aria-pressed', x === b)); $('#nt-marca', s).hidden = modo !== 'minha'; });
+      $$('[data-nq]', s).forEach(b => b.onclick = () => { $('#nt-qty', s).value = Math.max(1, Math.min(999, (parseInt($('#nt-qty', s).value, 10) || 1) + +b.dataset.nq)); });
+      $('[data-cancel]', s).onclick = () => closeSheet();
+      $('[data-save]', s).onclick = () => {
+        const c = cat.value === '__nova' ? nova.value.trim().replace(/\s+/g, ' ') : cat.value;
+        if (!c) return toast(cat.value === '__nova' ? 'Escreva o nome da nova categoria.' : 'Escolha a categoria.');
+        if (!tipo.value) return toast('Escolha a ferramenta.');
+        let t = tools.find(x => x.id === tipo.value);
+        if (!t) {
+          const nome = $('#nt-nome', s).value.trim().replace(/\s+/g, ' ');
+          if (!nome) return toast('Escreva o nome da ferramenta.');
+          t = tiposTool().find(x => norm(x.name) === norm(nome));
+          if (!t) { t = fixTipo({ id: uid(), name: nome, cat: c }); tools.push(t); }
+        }
+        const qty = Math.max(1, Math.min(999, parseInt($('#nt-qty', s).value, 10) || 1));
+        if (modo === 'quero') { t.quero = true; t.queroQtd = qty; }
+        else {
+          const brand = $('#nt-brand', s).value.trim().replace(/\s+/g, ' '), model = $('#nt-model', s).value.trim().replace(/\s+/g, ' ');
+          const igual = itensDe(t.id).find(y => norm(y.brand) === norm(brand) && norm(y.model) === norm(model));
+          if (igual) igual.qty = Math.min(999, igual.qty + qty); else tools.push(fixItem({ id: uid(), tipo: t.id, brand, model, qty }));
+        }
+        saveTools(); toolFiltro = modo === 'quero' ? 'quero' : 'minhas'; closeSheet(true); rerender();
+        toast(modo === 'quero' ? `${t.name} na lista de compras.` : `${t.name} nas suas ferramentas.`);
+      };
+    } });
+}
+/* lista de compras única: material para repor e ferramentas que você quer comprar */
+const comprasN = () => prices.filter(precisaRepor).length + tiposTool().filter(t => t.quero).length;
+function comprasSheet() {
+  const L = [
+    ...prices.filter(precisaRepor).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => ({ k: 'm', id: p.id, nome: p.name, marca: p.brand || '', un: p.unit, qtd: p.repor && p.reporQtd ? p.reporQtd : sugestaoCompra(p), on: true, info: !inStock(p) ? 'não tem no estoque' : p.stock <= 0 ? 'em falta' : `tem ${fmtQty(p.stock)}${p.min ? `, mínimo ${fmtQty(p.min)}` : ''}` })),
+    ...tiposTool().filter(t => t.quero).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => ({ k: 'f', id: t.id, nome: t.name, marca: '', un: 'un', qtd: t.queroQtd || 1, on: true, info: t.cat })),
+  ];
+  const texto = () => {
+    const linha = x => `• ${x.nome}${x.marca ? `, ${x.marca}` : ''}: ${fmtQty(x.qtd)} ${unitTxt(x.qtd, x.un)}`;
+    const M = L.filter(x => x.on && x.k === 'm'), F = L.filter(x => x.on && x.k === 'f');
+    return [`*Lista de compras*${settings.company || settings.name ? ` · ${settings.company || settings.name}` : ''}`, M.length && `\n*Material*\n${M.map(linha).join('\n')}`, F.length && `\n*Ferramentas*\n${F.map(linha).join('\n')}`].filter(Boolean).join('\n');
+  };
+  const row = (x, i) => `<div class="cp-row"><label class="cp-chk"><input type="checkbox" data-cp="${i}" ${x.on ? 'checked' : ''}><span><b>${esc(x.nome)}</b><small>${esc([x.marca, x.info].filter(Boolean).join(' · '))}</small></span></label>
+    <div class="stepper"><button data-cq="-1" data-i="${i}" aria-label="Menos ${esc(x.nome)}">${I.minus}</button><input type="text" inputmode="decimal" data-ci="${i}" value="${fmtQty(x.qtd)}" aria-label="Quantidade de ${esc(x.nome)} (${unitName(x.un)})"><button data-cq="1" data-i="${i}" aria-label="Mais ${esc(x.nome)}">${I.plus}</button></div><span class="cp-un" aria-hidden="true">${unitTxt(x.qtd, x.un)}</span></div>`;
+  const corpo = () => {
+    if (!L.length) return KitFacil.ui.vazio({ titulo: 'Nada para comprar agora', texto: 'Aqui entram o material que chegou ao mínimo no estoque e as ferramentas marcadas como Quero comprar.', icone: I.cart });
+    const m = L.map((x, i) => [x, i]).filter(([x]) => x.k === 'm'), f = L.map((x, i) => [x, i]).filter(([x]) => x.k === 'f');
+    return `${m.length ? panel('cp:mat', '', 'Material para repor', resumoDe(m, ([x]) => x.nome), `<p class="hint">Sugestão: o bastante para ficar com o dobro do mínimo. Ajuste à vontade.</p>${m.map(([x, i]) => row(x, i)).join('')}`, { right: conta(m.length) }) : ''}
+      ${f.length ? panel('cp:ferr', '', 'Ferramentas para comprar', resumoDe(f, ([x]) => x.nome), f.map(([x, i]) => row(x, i)).join(''), { right: conta(f.length) }) : ''}`;
+  };
+  openSheet({ title: 'Lista de compras', tall: true, body: `<div id="cp-list">${corpo()}</div>`,
+    foot: L.length ? `<div class="cp-pe"><button class="btn ghost" data-cp-copy>${I.copy}Copiar</button><a class="btn wa" data-cp-wa href="#" target="_blank" rel="noopener">${I.wa}WhatsApp</a></div><button class="btn ok block" data-cp-tudo>${I.check}Comprei tudo</button>` : '',
+    onMount: s => {
+      const pinta = () => { const st = $('.kf-dlg-corpo', s)?.scrollTop; $('#cp-list', s).innerHTML = corpo(); if (st != null) $('.kf-dlg-corpo', s).scrollTop = st; };
+      s.addEventListener('click', e => {
+        const b = e.target.closest('[data-cq]');
+        if (b) { const x = L[+b.dataset.i]; x.qtd = Math.max(1, Math.round((x.qtd + +b.dataset.cq) * 100) / 100); pinta(); return; }
+        if (e.target.closest('[data-cp-tudo]')) {
+          const M = L.filter(x => x.on); if (!M.length) return toast('Marque ao menos um item.');
+          const antes = { prices: JSON.stringify(prices), tools: JSON.stringify(tools) };
+          M.forEach(x => {
+            if (x.k === 'm') {
+              const p = prices.find(y => y.id === x.id); if (!p) return;
+              acertaLotes(p); p.lotes = p.lotes || [];
+              // sem marca: soma no lote sem marca (ou cria um, com o custo médio de hoje)
+              const l = p.lotes.find(y => !y.brand) || (p.lotes.push({ id: uid(), brand: '', qty: 0, cost: p.cost || 0 }), p.lotes[p.lotes.length - 1]);
+              l.qty = Math.round((l.qty + x.qtd) * 100) / 100; p.repor = false; acertaLotes(p);
+            } else {
+              const t = tools.find(y => y.id === x.id); if (!t) return;
+              const it = itensDe(t.id).find(y => !y.brand && !y.model);
+              if (it) it.qty = Math.min(999, it.qty + Math.round(x.qtd)); else tools.push(fixItem({ id: uid(), tipo: t.id, qty: Math.round(x.qtd) }));
+              t.quero = false;
+            }
+          });
+          savePrices(); saveTools(); closeSheet(true); rerender();
+          toast(`${plural(M.length, 'item comprado', 'itens comprados')}: o material entrou no estoque e as ferramentas, nas suas.`, { label: 'Desfazer', run: () => { prices = JSON.parse(antes.prices); tools = JSON.parse(antes.tools); savePrices(); saveTools(); rerender(); } });
+          return;
+        }
+        if (e.target.closest('[data-cp-copy]')) { if (!L.some(x => x.on)) return toast('Marque ao menos um item.'); copyText(texto(), 'Lista copiada.'); return; }
+        const wa = e.target.closest('[data-cp-wa]');
+        if (wa) { if (!L.some(x => x.on)) { e.preventDefault(); return toast('Marque ao menos um item.'); } wa.href = waLink('', texto()); }
+      });
+      s.addEventListener('change', e => {
+        const c = e.target.closest('[data-cp]'); if (c) { L[+c.dataset.cp].on = c.checked; return; }
+        const i = e.target.closest('[data-ci]'); if (i) { L[+i.dataset.ci].qtd = Math.max(1, parseQty(i.value) || 1); pinta(); }
+      });
+    } });
+}
+const checkNome = c => { const t = c.toolId && tools.find(x => x.id === c.toolId); return t ? t.name : c.name; };
+function checklistHTML() {
+  const faltam = tiposTool().filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
+  const addTools = faltam.length ? `<button class="btn sm ghost" data-ck-tools>${I.plus}${checks.length ? `Adicionar ${plural(faltam.length, 'ferramenta que falta', 'ferramentas que faltam')}` : `Adicionar minhas ${plural(faltam.length, 'ferramenta', 'ferramentas')}`}</button>` : '';
+  if (!checks.length) return KitFacil.ui.vazio({ titulo: 'Checklist vazio', texto: 'Monte uma vez a lista do que sempre vai para a obra. Toque em <b>Novo item</b>' + (faltam.length ? ' ou adicione as suas ferramentas de uma vez.' : '.'), icone: I.checklist, acao: addTools });
+  const lista = checks.filter(c => checkLado === 'ida' || c.back);
+  const k = checkLado, feitos = lista.filter(c => c[k]).length, tot = lista.length, pct = tot ? Math.round(feitos / tot * 100) : 0;
+  const conta2 = lado => { const L = checks.filter(c => lado === 'ida' || c.back); return `${L.filter(c => c[lado]).length} de ${L.length}`; };
+  return `${gHero('data-lado', [['ida', 'conferidos na ida'], ['volta', 'conferidos na volta']], k, conta2)}
+    <p class="hint">${k === 'ida' ? 'Antes de sair: marque o que já está no carro.' : 'Antes de ir embora: marque o que já recolheu. Só aparecem os itens que voltam.'}</p>
+    <div class="g-prog"><div class="g-prog-t"><b>${feitos} de ${tot}</b> conferidos</div><div class="g-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${feitos}" aria-label="Itens conferidos"><span style="width:${pct}%"></span></div></div>
+    ${tot && feitos === tot ? `<div class="cal-msg" role="status">${I.check}<span><b>Tudo conferido.</b> ${k === 'ida' ? 'Bom serviço!' : 'Nada ficou para trás.'}</span></div>` : ''}
+    ${panel(`ck:${k}`, '', k === 'ida' ? 'Ida para a obra' : 'Volta da obra', `${feitos} de ${tot} conferidos`, `${tot ? `<div class="ck-list">${lista.map(c => `<div class="ck-row"><label><input type="checkbox" data-ck="${c.id}" ${c[k] ? 'checked' : ''}><span>${esc(checkNome(c))}${checkLado === 'ida' && !c.back ? '<small>fica na obra</small>' : ''}</span></label><button class="icon-btn sm" data-ck-edit="${c.id}" aria-label="Alterar ${esc(checkNome(c))}">${I.more}</button></div>`).join('')}</div>` : '<p class="hint">Nenhum item volta da obra. Ao alterar um item, ligue "Conferir também na volta".</p>'}`, { right: conta(tot) })}
+    <div class="g-acts">${feitos ? `<button class="btn sm ghost" data-ck-reset>Desmarcar tudo</button>` : ''}${addTools}</div>`;
+}
+function checkSheet(c) {
+  const isNew = !c;
+  const it = c ? { ...c, name: checkNome(c) } : { name: '', back: true };
+  openSheet({ title: isNew ? 'Novo item no checklist' : 'Item do checklist', body: `
+      <div class="field"><label for="ck-name">Item</label><input id="ck-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Escada, fita isolante, multímetro" autocomplete="off" ${c && c.toolId && tools.some(t => t.id === c.toolId) ? 'readonly aria-describedby="ck-tool"' : ''}></div>
+      ${c && c.toolId && tools.some(t => t.id === c.toolId) ? '<p class="hint" id="ck-tool">O nome vem da sua lista de ferramentas.</p>' : ''}
+      <label class="switch-row" for="ck-back"><span><b>Conferir também na volta</b><small>Desligue para o que fica na obra, como material usado.</small></span><input type="checkbox" class="sw" id="ck-back" ${it.back ? 'checked' : ''}></label>`,
+    foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,
+    onMount: s => {
+      if (!isTouch && isNew) $('#ck-name', s).focus();
+      if (isNew) attachSuggest($('#ck-name', s), () => [...tiposTool().filter(temTool).map(t => t.name), ...prices.filter(inStock).map(p => p.name)].filter(n => !checks.some(x => norm(checkNome(x)) === norm(n))).map(n => ({ label: n })));
+      $('[data-cancel]', s)?.addEventListener('click', () => closeSheet());
+      $('[data-del]', s)?.addEventListener('click', () => {
+        const idx = checks.findIndex(x => x.id === c.id); if (idx < 0) return;
+        const [gone] = checks.splice(idx, 1); saveChecks(); closeSheet(true); rerender();
+        toast(`${checkNome(gone)} saiu do checklist.`, { label: 'Desfazer', run: () => { checks.splice(idx, 0, gone); saveChecks(); rerender(); } });
+      });
+      $('[data-save]', s).onclick = () => {
+        const name = $('#ck-name', s).value.trim().replace(/\s+/g, ' ');
+        if (!name) return toast('Escreva o que conferir.');
+        const back = $('#ck-back', s).checked;
+        if (isNew) {
+          if (checks.some(x => norm(checkNome(x)) === norm(name))) return toast(`${name} já está no checklist.`);
+          const t = tiposTool().find(x => temTool(x) && norm(x.name) === norm(name));
+          checks.push(fixCheck({ id: uid(), name, back, toolId: t ? t.id : '' }));
+        } else Object.assign(checks.find(x => x.id === c.id) || {}, { name, back });
+        saveChecks(); closeSheet(true); rerender(); toast(isNew ? `${name} no checklist.` : 'Item salvo.');
+      };
+    } });
+}
+VIEWS.gestao = {
+  html() {
+    const G = GESTAO[gestaoAba];
+    const corpo = gestaoAba === 'estoque' ? stockListHTML() : gestaoAba === 'ferramentas' ? toolsListHTML() : checklistHTML();
+    return `${barraTopo()}
+    <main class="page">
+      ${KitFacil.ui.cabecalho({ titulo: 'Gestão', criar: { rotulo: G.criar, attrs: 'data-g-new' } })}
+      ${KitFacil.ui.abas({ itens: Object.entries(GESTAO).map(([k, x]) => [k, x.nome]), atual: gestaoAba, rotulo: 'Parte da gestão' })}
+      <div class="g-body" id="g-body">${corpo}</div>
+    </main>`;
+  },
+  bind(v) {
+    $$('[data-aba]', v).forEach(b => b.onclick = () => { if (gestaoAba === b.dataset.aba) return; gestaoAba = b.dataset.aba; gestaoQuery = ''; rerender(); });
+    $('[data-compras]', v)?.addEventListener('click', comprasSheet);
+    $('[data-g-new]', v).onclick = () => gestaoAba === 'estoque' ? stockSheet(null) : gestaoAba === 'ferramentas' ? newToolSheet() : checkSheet(null);
+    const sq = $('#g-q', v);
+    if (sq) sq.addEventListener('input', () => { gestaoQuery = sq.value; const tmp = document.createElement('div'); tmp.innerHTML = gestaoAba === 'estoque' ? stockListHTML() : toolsListHTML(); $('#g-list', v).replaceWith($('#g-list', tmp)); });
+    v.addEventListener('click', e => {
+      const sb = e.target.closest('[data-mat]'); if (sb) return matSheet(prices.find(p => p.id === sb.dataset.mat));
+      const mf = e.target.closest('[data-mf]'); if (mf) { matFiltro = mf.dataset.mf; gestaoQuery = ''; return rerender(); }
+      const ti = e.target.closest('[data-tipo]'); if (ti) return typeSheet(tools.find(x => x.id === ti.dataset.tipo));
+      const it = e.target.closest('[data-item]'); if (it) { const x = tools.find(y => y.id === it.dataset.item); return itemSheet(x, null, true); }
+      const tf = e.target.closest('[data-tf]'); if (tf) { toolFiltro = tf.dataset.tf; gestaoQuery = ''; return rerender(); }
+      const ld = e.target.closest('[data-lado]'); if (ld) { checkLado = ld.dataset.lado; return rerender(); }
+      const ce = e.target.closest('[data-ck-edit]'); if (ce) return checkSheet(checks.find(c => c.id === ce.dataset.ckEdit));
+      if (e.target.closest('[data-ck-tools]')) {
+        const novos = tiposTool().filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
+        novos.forEach(t => checks.push(fixCheck({ id: uid(), name: t.name, toolId: t.id, back: true })));
+        saveChecks(); rerender(); return toast(`${plural(novos.length, 'ferramenta entrou', 'ferramentas entraram')} no checklist.`, { label: 'Desfazer', run: () => { checks = checks.filter(c => !novos.some(t => t.id === c.toolId)); saveChecks(); rerender(); } });
+      }
+      if (e.target.closest('[data-ck-reset]')) {
+        const k = checkLado, antes = checks.filter(c => c[k]).map(c => c.id);
+        checks.forEach(c => { c[k] = false; }); saveChecks(); rerender();
+        toast(`Checklist de ${k === 'ida' ? 'ida' : 'volta'} desmarcado.`, { label: 'Desfazer', run: () => { checks.forEach(c => { if (antes.includes(c.id)) c[k] = true; }); saveChecks(); rerender(); } });
+      }
+    });
+    v.addEventListener('change', e => {
+      const ck = e.target.closest('[data-ck]'); if (!ck) return;
+      const c = checks.find(x => x.id === ck.dataset.ck); if (!c) return;
+      c[checkLado] = ck.checked; vibrate(); saveChecks(); rerender();
+    });
+  },
+};
+
+/* ================= tela: ajustes ================= */
+function readLogo(file) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 320, r = img.width / img.height;
+        let w = img.width, h = img.height;
+        if (w >= h && w > max) { w = max; h = Math.round(max / r); } else if (h > w && h > max) { h = max; w = Math.round(max * r); }
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        res({ url: cv.toDataURL('image/png'), ratio: r });
+      };
+      img.onerror = rej; img.src = fr.result;
+    };
+    fr.onerror = rej; fr.readAsDataURL(file);
+  });
+}
+function settingsSums() {
+  const s = settings;
+  return {
+    conta: [s.company || s.name, s.phone ? fmtPhone(s.phone) : ''].filter(Boolean).join(' · ') || undefined,
+    pix: s.pix || 'Nenhuma chave cadastrada',
+    deslocamento: s.kmPerL || s.fuelPrice ? [s.kmPerL && `${fmtQty(s.kmPerL)} km/l`, s.fuelPrice && `combustível ${BRL(s.fuelPrice)}`].filter(Boolean).join(' · ') : 'Consumo do veículo e preço do combustível',
+    adicionais: s.surUrgent || s.surNight || s.surWeekend ? [s.surUrgent && `urgência ${s.surUrgent}%`, s.surNight && `noturno ${s.surNight}%`, s.surWeekend && `fim de semana ${s.surWeekend}%`].filter(Boolean).join(' · ').replace(/^./, c => c.toUpperCase()) : 'Urgência, noturno e fim de semana',
+    padrao: `Prazo ${prazoTxt({ n: Math.max(1, s.prazoN || 1), u: PRAZO_U[s.prazoU] ? s.prazoU : 'uteis' })} · validade ${s.validity} dias · garantia ${s.warranty} dias · ${payShort({ mode: s.payMode, entryPct: s.entryPct, installments: s.installments }).toLowerCase()}`,
+    textos: 'Termo de aceite e condições da garantia',
+  };
+}
+function pintarResumos() { const S = settingsSums(); for (const k in S) KitFacil.ajustes.resumo(k, S[k]); }
+/* cópia de segurança no formato comum da família (as cópias antigas, { app: 'eletrica-facil', v: 1 ou 2 }, continuam valendo) */
+// no celular abre o menu de compartilhar (WhatsApp, Drive, e-mail…), como antes; no computador, baixa o arquivo
+function baixarCopiaEletrica() {
+  const env = KitFacil.copia.envelope({ settings, prices, quotes: quotes.filter(q => !q.example), tools, checks }, 2);
+  saveFile(`eletrica-facil-copia-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(env, null, 1)], { type: 'application/json' }));
+}
+async function restaurarCopiaEletrica(file) {
+  const j = await KitFacil.copia.ler(file, { antigos: true });
+  let data = null;
+  try {
+    if (j && j.dados) data = { settings: j.dados.settings || {}, prices: j.dados.prices || seedPrices(), quotes: (j.dados.quotes || []).map(fixQuote), tools: Array.isArray(j.dados.tools) ? j.dados.tools : null, checks: Array.isArray(j.dados.checks) ? j.dados.checks : null };
+    else if (j && j.antigo && j.antigo.app === 'eletrica-facil') { const o = j.antigo; data = o.v >= 2 ? { settings: o.settings || {}, prices: o.prices || seedPrices(), quotes: (o.quotes || []).map(fixQuote) } : fromV1(o.catalog, o.bills, o.draft); }
+  } catch { data = null; }
+  if (!data || !Array.isArray(data.quotes) || !Array.isArray(data.prices)) { toast('Esse arquivo não é uma cópia do Elétrica Fácil.'); return; }
+  confirmSheet('Restaurar a cópia?', `O arquivo tem ${plural(data.quotes.length, 'orçamento', 'orçamentos')} e ${plural(data.prices.length, 'preço', 'preços')}. Os dados deste aparelho${syncOn() ? ' e dos outros aparelhos conectados' : ''} serão substituídos.`, 'Restaurar', () => {
+    settings = { ...DEF, ...data.settings }; prices = data.prices; prices.forEach(acertaLotes); quotes = data.quotes.map(fixQuote);
+    if (data.tools) { tools = normTools(data.tools); saveTools(); }
+    if (data.checks) { checks = data.checks.map(fixCheck); saveChecks(); }
+    settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
+    saveSettings(); savePrices(); saveQuotes(); rerender(); toast('Cópia restaurada.');
+  });
+}
+// cartão nos Ajustes: como cobrar o parcelado e a tabela de taxas da maquininha
+function cartaoAjHTML(s) {
+  const R = s.cardRates || {}, v = k => typeof R[k] === 'number' ? fmtQty(R[k]) : '';
+  const cel = (k, l) => `<label class="tx-cel"><span>${l}</span><input type="text" inputmode="decimal" data-rate="${k}" value="${v(k)}" placeholder="0" aria-label="Taxa ${l} (%)"></label>`;
+  return `<div class="field"><span class="lab" id="aj-jur-l">Cartão: juros e taxas</span><div class="seg" role="group" aria-labelledby="aj-jur-l">${[['sem', 'Sem juros'], ['taxa', 'Taxa da maquininha'], ['mes', 'Juros ao mês']].map(([k, l]) => `<button data-aj-jur="${k}" aria-pressed="${(s.cardJuros || 'sem') === k}">${l}</button>`).join('')}</div>
+      <span class="kf-ajuda">Como começa todo orçamento novo no cartão. Dá para mudar em cada orçamento.</span></div>
+    <div class="field"><span class="lab">Taxa da maquininha, em %</span><div class="tx-grid">${cel('debito', 'Débito')}${Array.from({ length: 12 }, (_, i) => cel(String(i + 1), `${i + 1}×`)).join('')}</div>
+      <span class="kf-ajuda">Copie da sua maquininha ou do app do banco. ${(s.cardPaga || 'cliente') === 'cliente' ? 'Repassada ao cliente: ele paga o suficiente para você receber o valor cheio.' : 'Paga por você: o cliente paga o valor do orçamento e você recebe menos.'}</span></div>
+    <div class="grid2"><div class="field"><span class="lab" id="aj-paga-l">Quem paga a taxa</span><div class="seg" role="group" aria-labelledby="aj-paga-l"><button data-aj-paga="cliente" aria-pressed="${(s.cardPaga || 'cliente') === 'cliente'}">O cliente</button><button data-aj-paga="eu" aria-pressed="${s.cardPaga === 'eu'}">Eu</button></div></div>
+      <div class="field"><label for="st-cardSemAte">Sem juros até quantas parcelas</label><input id="st-cardSemAte" data-set="cardSemAte" data-int type="text" inputmode="numeric" placeholder="0" value="${s.cardSemAte || ''}"></div></div>
+    <div class="field"><label for="st-cardMes">Juros ao mês, em %</label><input id="st-cardMes" data-set="cardMes" data-dec type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${s.cardMes ? fmtQty(s.cardMes) : ''}"></div>`;
+}
+const ICONES_AJ = {
+  pix: '<path d="m12 3 9 9-9 9-9-9z"/><path d="m8.5 12 3.5-3.5 3.5 3.5-3.5 3.5z"/>',
+  deslocamento: '<path d="M3 16V9l2.5-4h9L17 9h2a2 2 0 0 1 2 2v5"/><path d="M3 16h18"/><circle cx="7.5" cy="17.5" r="2"/><circle cx="16.5" cy="17.5" r="2"/>',
+  adicionais: '<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+  padrao: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v7M8.5 14.5h7"/>',
+  textos: '<path d="M4 6h16M4 11h16M4 16h10M4 21h6"/>',
+};
+VIEWS.settings = {
+  html() {
+    const s = settings, S = settingsSums();
+    const money = (k, label, ph) => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" data-money type="text" inputmode="numeric" value="${s[k] ? BRL(s[k]) : ''}" placeholder="${esc(ph)}"></div>`;
+    const pct = (k, label) => `<div class="field"><label for="st-${k}">${label}, em %</label><input id="st-${k}" data-set="${k}" data-int type="text" inputmode="numeric" placeholder="${{ surUrgent: 50, surNight: 30, surWeekend: 50 }[k]}" value="${s[k] || ''}"></div>`;
+    const f = (k, label, ph, type = 'text', extra = '') => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" type="${type}" value="${esc(k === 'phone' ? fmtPhone(s[k]) : s[k])}" placeholder="${esc(ph)}" ${extra}></div>`;
+    const bloco = (titulo, corpo) => `<div class="kf-bloco"><h3>${titulo}</h3>${corpo}</div>`;
+    return `${barraTopo()}
+    <main class="page largo">
+      ${KitFacil.ajustes.html({
+        resumos: { conta: S.conta },
+        extras: {
+          conta: bloco('Seus dados na proposta', `<p class="kf-ajuda">Saem no cabeçalho das propostas, dos relatórios e dos recibos.</p>
+            <div class="logo-row">
+              <button class="logo-pick" data-logo aria-label="Escolher logotipo">${s.logo ? `<img src="${s.logo}" alt="Seu logotipo">` : I.image}</button>
+              <div><b>Logotipo</b><small>Opcional. Sem logo, a proposta usa o raio do app.</small>${s.logo ? '<button class="linkish" data-logo-rm style="margin-top:4px;font-size:14px;color:var(--bad)">Remover logotipo</button>' : ''}</div>
+              <input type="file" id="st-logo" accept="image/*" hidden>
+            </div>
+            ${f('name', 'Seu nome', 'Ex.: Carlos Pereira', 'text', 'autocapitalize="words"')}
+            ${f('company', 'Nome da empresa <span class="lab-opt">opcional</span>', 'Ex.: Pereira Instalações Elétricas', 'text', 'autocapitalize="words"')}
+            <div class="grid2 stack">
+              ${f('phone', 'WhatsApp', '(11) 90000-0000', 'tel', 'inputmode="tel"')}
+              ${f('email', 'E-mail <span class="lab-opt">opcional</span>', 'voce@email.com', 'email', 'autocapitalize="off"')}
+              ${f('doc', 'CPF ou CNPJ <span class="lab-opt">opcional</span>', 'Sai no recibo')}
+              ${f('registro', 'Registro profissional <span class="lab-opt">opcional</span>', 'CREA-DF 123456/D, CFT ou NR-10')}
+              ${f('city', 'Cidade', 'Ex.: São Paulo', 'text', 'autocapitalize="words"')}
+            </div>`),
+        },
+        produto: [
+          { id: 'pix', titulo: 'Pix', icone: ICONES_AJ.pix, resumo: S.pix, html: bloco('Chave Pix', `<p class="kf-ajuda">Com a chave, a proposta já sai com o QR code da entrada, ou do total no pagamento à vista.</p>
+              ${f('pix', 'Chave Pix', 'CPF, celular, e-mail ou chave aleatória', 'text', 'autocapitalize="off" spellcheck="false"')}`) },
+          { id: 'deslocamento', titulo: 'Veículo e deslocamento', icone: ICONES_AJ.deslocamento, resumo: S.deslocamento, html: bloco('Calculadora de deslocamento', `<p class="kf-ajuda">Base da calculadora de deslocamento. O preço do combustível também pode ser atualizado direto no orçamento.</p>
+              <div class="grid2">
+                <div class="field"><label for="st-kmPerL">Consumo médio, em km por litro</label><input id="st-kmPerL" data-set="kmPerL" data-dec type="text" inputmode="decimal" value="${s.kmPerL ? fmtQty(s.kmPerL) : ''}" placeholder="Ex.: 10"></div>
+                ${money('fuelPrice', 'Preço do litro do combustível', 'Ex.: R$ 6,19')}
+                ${money('wearPerKm', 'Desgaste por km', 'Opcional')}
+                ${money('hourRate', 'Valor da sua hora', 'Opcional')}
+              </div>
+              ${money('minVisit', 'Mínimo por visita', 'Opcional')}
+              <p class="kf-ajuda">O desgaste cobre pneus, óleo e manutenção. A hora entra quando você informa o tempo de viagem. O mínimo protege as obras muito perto.</p>`) },
+          { id: 'adicionais', titulo: 'Adicionais', icone: ICONES_AJ.adicionais, resumo: S.adicionais, html: bloco('Adicionais sobre a mão de obra', `<p class="kf-ajuda">Percentual usado quando você marca o adicional no orçamento. Se marcar mais de um, eles se somam.</p>
+              <div class="grid3">${pct('surUrgent', 'Urgência')}${pct('surNight', 'Noturno')}${pct('surWeekend', 'Fim de sem.')}</div>`) },
+          { id: 'padrao', titulo: 'Orçamento novo', icone: ICONES_AJ.padrao, resumo: S.padrao, html: bloco('Padrão de cada orçamento novo', `<p class="kf-ajuda">Dá para mudar em cada orçamento.</p>
+              <div class="grid2">
+                ${f('validity', 'Validade, em dias', '15', 'text', 'inputmode="numeric" data-int')}
+                ${f('warranty', 'Garantia, em dias', '90', 'text', 'inputmode="numeric" data-int')}
+              </div>
+              <div class="field"><label for="st-prazoN">Prazo de execução</label><div class="prazo-row"><input id="st-prazoN" data-set="prazoN" data-int type="text" inputmode="numeric" value="${s.prazoN || 1}" style="max-width:96px" aria-label="Quantidade do prazo"><select id="st-prazoU" data-set="prazoU" aria-label="Unidade do prazo">${Object.entries(PRAZO_U).map(([k, [pl, sg]]) => `<option value="${k}" ${s.prazoU === k ? 'selected' : ''}>${(s.prazoN || 1) === 1 ? sg : pl}</option>`).join('')}</select></div></div>
+              <div class="field"><span class="lab">Pagamento</span><div class="seg" role="group" aria-label="Pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${s.payMode === k}">${l}</button>`).join('')}</div></div>
+              ${s.payMode === 'entrada' ? `<div class="field"><span class="lab">Entrada</span><div class="seg" role="group" aria-label="Entrada">${[30, 40, 50, 60, 70].map(n => `<button data-ep="${n}" aria-pressed="${s.entryPct === n}">${n}%</button>`).join('')}</div></div>` : ''}
+              ${cartaoAjHTML(s)}
+              <div class="field"><label for="st-avistaPct">Desconto para pagamento à vista, em %</label><input id="st-avistaPct" data-set="avistaPct" data-dec type="text" inputmode="decimal" placeholder="0" value="${s.avistaPct ? fmtQty(s.avistaPct) : ''}"><span class="kf-ajuda">Entra em todo orçamento novo à vista. Separado do desconto do serviço.</span></div>
+              <div class="field"><label for="st-notes">Observações que sempre vão na proposta</label><textarea id="st-notes" data-set="notes" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.notes)}</textarea></div>`) },
+          { id: 'textos', titulo: 'Textos dos documentos', icone: ICONES_AJ.textos, resumo: S.textos, html: bloco('Textos dos documentos', `<p class="kf-ajuda">Saem em todos os orçamentos e relatórios. Deixe em branco para não usar.</p>
+              <div class="field"><label for="st-acceptText">Termo de aceite, acima da assinatura do orçamento</label><textarea id="st-acceptText" data-set="acceptText">${esc(s.acceptText)}</textarea>
+                ${s.acceptText !== ACCEPT_DEFAULT ? '<button class="linkish" data-reset="acceptText">Voltar ao texto sugerido</button>' : ''}</div>
+              <div class="field"><label for="st-warrantyTerms">Condições da garantia</label><textarea id="st-warrantyTerms" data-set="warrantyTerms">${esc(s.warrantyTerms)}</textarea>
+                ${s.warrantyTerms !== WARRANTY_DEFAULT ? '<button class="linkish" data-reset="warrantyTerms">Voltar ao texto sugerido</button>' : ''}</div>`) },
+        ],
+      })}
+    </main>`;
+  },
+  bind(v) {
+    KitFacil.ajustes.ligar(v);
+    v.addEventListener('input', () => setTimeout(pintarResumos, 300));
+    // as guias com texto longo crescem conforme o conteúdo quando são abertas
+    v.addEventListener('click', e => { if (e.target.closest('[data-kf-aj-ir]')) requestAnimationFrame(() => $$('textarea', v).forEach(autoGrow)); });
+    let t;
+    $$('[data-set]', v).forEach(i => {
+      const save = () => {
+        const k = i.dataset.set;
+        let val = i.value;
+        if (i.hasAttribute('data-int')) val = parseInt(val.replace(/\D/g, ''), 10) || 0;
+        else if (i.hasAttribute('data-money')) val = parseMoney(val) || 0;
+        else if (i.hasAttribute('data-dec')) val = parseQty(val) || 0;
+        else if (i.tagName === 'INPUT') val = val.trim();
+        settings[k] = val; clearTimeout(t); t = setTimeout(saveSettings, 250);
+      };
+      i.addEventListener('input', save);
+      i.addEventListener('change', () => {
+        const k = i.dataset.set;
+        if (k === 'pix' && settings.pix) { settings.pix = normPixKey(settings.pix); i.value = settings.pix; }
+        if (k === 'phone') i.value = fmtPhone(settings.phone);
+        saveSettings(); pintarResumos(); toast('Salvo.');
+      });
+    });
+    $$('[data-pm]', v).forEach(b => b.onclick = () => { settings.payMode = b.dataset.pm; saveSettings(); rerender(); });
+    $$('[data-aj-jur]', v).forEach(b => b.onclick = () => { settings.cardJuros = b.dataset.ajJur; saveSettings(); rerender(); });
+    $$('[data-aj-paga]', v).forEach(b => b.onclick = () => { settings.cardPaga = b.dataset.ajPaga; saveSettings(); rerender(); });
+    $$('[data-rate]', v).forEach(i => {
+      i.addEventListener('input', () => { const R = { ...(settings.cardRates || {}) }, x = parseQty(i.value); if (x === null || i.value.trim() === '') delete R[i.dataset.rate]; else R[i.dataset.rate] = Math.max(0, Math.min(40, x)); settings.cardRates = R; clearTimeout(t); t = setTimeout(saveSettings, 250); });
+      i.addEventListener('change', () => { saveSettings(); pintarResumos(); toast('Salvo.'); });
+    });
+    $$('[data-reset]', v).forEach(b => b.onclick = () => { const k = b.dataset.reset; settings[k] = k === 'acceptText' ? ACCEPT_DEFAULT : WARRANTY_DEFAULT; saveSettings(); rerender(); toast('Texto sugerido de volta.'); });
+    $$('[data-ep]', v).forEach(b => b.onclick = () => { settings.entryPct = +b.dataset.ep; saveSettings(); rerender(); });
+    const lf = $('#st-logo', v);
+    $('[data-logo]', v).onclick = () => lf.click();
+    lf.addEventListener('change', async () => {
+      const file = lf.files[0]; if (!file) return;
+      try { const r = await readLogo(file); settings.logo = r.url; settings.logoRatio = r.ratio; if (!saveSettings()) { settings.logo = ''; toast('Imagem grande demais. Tente outra.'); } else toast('Logotipo salvo.'); rerender(); }
+      catch { toast('Não foi possível abrir essa imagem.'); }
+    });
+    $('[data-logo-rm]', v)?.addEventListener('click', () => { settings.logo = ''; saveSettings(); rerender(); });
+  },
+};
+
+/* ================= início ================= */
+try { history.scrollRestoration = 'manual'; } catch {}
+// link de "Conectar outro aparelho": a chave vem depois do #, que não sai do aparelho
+const linkToken = SY.tokenDoLink();
+if (linkToken) history.replaceState({ d: 0 }, '', '#/ajustes');
+if (!location.hash) history.replaceState({ d: 0 }, '', '#/');
+else if (!history.state) history.replaceState({ d: 0 }, '', location.hash);
+render();
+SY.iniciar({ token: linkToken, silencioso: false, textoConfirmar: 'Os orçamentos deste aparelho se juntam aos da nuvem. Os preços e os ajustes passam a ser os da nuvem.' });
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(e => console.warn('sw', e));

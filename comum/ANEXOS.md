@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **3.1** · 08/11/2026 · Kit Fácil **2.14.0**
+Versão **0.1 (rascunho)** · 08/11/2026 · Kit Fácil **0.1.0**
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
@@ -160,7 +160,7 @@ KitFacil.iniciar({
 ```
 
 - Chaves: `kitfacil.<app>.visto` (última versão vista) e `kitfacil.<app>.apresentacao` (ligada ou não; volta de fábrica).
-- Desde o Kit 2.13 não existe tela própria de primeiro uso: com `boasVindas.novo()` verdadeiro na primeira abertura, a
+- Não existe tela própria de primeiro uso: com `boasVindas.novo()` verdadeiro na primeira abertura, a
   apresentação abre com o título "Boas-vindas ao <app>" e o botão do exemplo, se houver.
 - Passo do guia: `{ nivel, niveis?: [n], t, d, sel, alt, ir: () => {}, se: () => bool, acao?: async m => {}, fim? }`.
 - "Mãos" do guia ao vivo (`m`): `apontar`, `tocar` (com `semClique`), `digitar`, `escolher`, `arrastar`, `esperar`,
@@ -175,7 +175,8 @@ Node 22 ou mais novo; testes com Playwright (Chromium).
 |---|---|
 | `npm start` | sobe o app em `http://localhost:8080/<app>/` |
 | `npm test` | testes do Kit e do app, sem internet (GitHub e Firebase simulados) |
-| `npm run verificar` | pasta `comum/` igual, sem segredos, versão nos quatro lugares, arquivos do service worker, idioma, zoom, fonte, moldura, barra de cima, Ajustes em guias e componentes nas medidas do Kit |
+| `npm run verificar` | pasta `comum/` igual, sem segredos, versão nos quatro lugares, arquivos do service worker, idioma, zoom, fonte, moldura, barra de cima, Ajustes em guias, componentes nas medidas do Kit, CSP e SRI |
+| `npm run testar-regras` | testa as regras do Firestore no projeto de verdade, sem deixar nada gravado (precisa de internet) |
 
 - Telas de referência: 360 × 740, 390 × 844, 820 × 1180 e 1440 × 900; áreas seguras respeitadas.
 - Testes comuns: `conferirTopo`, `conferirNavAjustes`, `guiasAjustes` e o teste de tela principal do Kit.
@@ -211,19 +212,26 @@ O selo do reCAPTCHA fica escondido (`.grecaptcha-badge`); o aviso do Google apar
 **No aparelho**
 
 - CSP no `<meta http-equiv="Content-Security-Policy">` de cada `index.html`, igual nos quatro: `default-src 'self'`;
-  scripts só do próprio app, cdnjs, gstatic e reCAPTCHA; conexões só com GitHub, Firestore, Authentication, App Check,
-  reCAPTCHA, cdnjs e fontes; `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`. Proibido `unsafe-eval` e
-  curinga `*`. O `'unsafe-inline'` continua enquanto os apps tiverem script e estilo dentro do HTML.
+  scripts só de arquivos do próprio app, do cdnjs, do gstatic e do reCAPTCHA (nenhum `<script>` escrito dentro da
+  página, sem `'unsafe-inline'` nos scripts); conexões só com GitHub, Firestore, Authentication, App Check, reCAPTCHA,
+  cdnjs e fontes; `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`. Proibido `unsafe-eval` e curinga `*`.
+  Os estilos ainda aceitam `'unsafe-inline'` (há atributos `style` nas telas); estilo não roda código.
 - SRI (`integrity` com `crossOrigin = 'anonymous'`) nas bibliotecas do cdnjs: qrcode-generator 1.4.4, jsPDF 2.5.1 e
   pdf.js 3.11.174. Exceções: o worker do pdf.js (o próprio pdf.js o carrega) e o Firebase (módulos importados do
   gstatic, que não aceitam SRI).
 - Texto de fora sempre por `esc()` antes de `innerHTML`.
 - Código de acesso da sincronização só com permissão de gist, guardado no aparelho.
 
-**Verificação** (`npm run verificar`): falha sem CSP, com CSP fraca ou com biblioteca do cdnjs sem SRI.
+**Verificação** (`npm run verificar`): falha sem CSP, com CSP fraca, com `<script>` dentro do `index.html` ou com
+biblioteca do cdnjs sem SRI.
 
-**Antes de publicar uma regra:** testar no Playground de regras do console (criar avaliação válida, avaliação com campo a
-mais, avaliação com `tecnico` grande, comanda com campo a mais, apagar comanda de outro dono); só então Publicar.
+**Antes e depois de publicar uma regra:** testar no Playground de regras do console e, depois de publicar, rodar
+`npm run testar-regras` (recusas das avaliações erradas, ciclo completo de uma comanda de teste e coleção sem regra
+fechada; nada fica gravado). Com a exigência do App Check ligada, os aceites precisam do token de depuração do App
+Check.
+
+**Tarefas agendadas:** lembrete mensal da limpeza do Firebase (dia 1º) e auditoria trimestral (fevereiro, maio, agosto
+e novembro), criadas como tarefas agendadas no claude.ai.
 
 **Auditoria trimestral (Art. 50):**
 

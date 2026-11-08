@@ -13,6 +13,7 @@ Estudo Fácil e no Guitarra Fácil.** Não altere só num repositório: siga o A
 | `servidor.mjs` | servidor local (`npm start`) |
 | `verificar.mjs` | verificação do padrão (`npm run verificar`) |
 | `testar.mjs` | roda os testes do kit e do app (`npm test`) |
+| `testar-regras.mjs` | testa as regras do Firestore no projeto de verdade, sem deixar nada gravado (`npm run testar-regras`) |
 | `MANIFESTO.json` | impressão digital dos arquivos acima, para saber se as cópias são iguais |
 | `testes/` | testes do kit, a página de teste e o ambiente comum (GitHub e Firestore simulados, conferências do padrão) |
 
