@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '2.14.0';
+  const VERSAO = '2.14.1';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -30,11 +30,11 @@
   /* Destino das avaliações: banco Firestore do projeto no Firebase (plano gratuito).
      A configuração web do Firebase é pública por natureza (não é senha): quem protege o banco são as regras
      do Firestore (veja comum/regras-firestore-feedback.txt), que só deixam criar avaliações no formato abaixo. */
-  /* appCheck (Código, Título IV, Cap. III): com a chave do site do reCAPTCHA v3 preenchida, cada envio leva o "crachá" do
+  /* appCheck (Código, Título IV, Cap. III): com a chave do site do reCAPTCHA (Fraud Defense, antes reCAPTCHA Enterprise) preenchida, cada envio leva o "crachá" do
      App Check, que prova que veio do app de verdade. Sem a chave, o envio segue sem crachá (o Firebase só exige depois que a
      exigência for ligada no console). */
   const DESTINO_PADRAO = { tipo: 'firestore', projeto: 'conta-facil-2c1f9', chaveApi: 'AIzaSyDKdtdRernEqoaC0BQdMW8P7KiZ-UNcEN0', colecao: 'feedback',
-    appCheck: { appId: '1:862201011516:web:ce36fbe3494eabff045239', siteKey: '' } };
+    appCheck: { appId: '1:862201011516:web:ce36fbe3494eabff045239', siteKey: '6LfLExcuAAAAAFzn0nPzTgN8K7aJoALdTKvVDDqM' } };
   const FIREBASE_V = '10.12.2';
   /* limite de envios neste aparelho (Código, limite de quantidade): sozinho não basta, por isso o App Check no servidor */
   const LIMITE_ENVIO = { intervaloMs: 60e3, porDia: 10 };
@@ -302,7 +302,7 @@
     return { stringValue: String(v ?? '') };
   }
   function camposFS(o) { const f = {}; for (const k of Object.keys(o)) if (o[k] !== undefined) f[k] = valorFS(o[k], k); return f; }
-  /* crachá do App Check (reCAPTCHA v3), só quando a chave do site estiver configurada; sem ela, devolve '' */
+  /* crachá do App Check (reCAPTCHA Enterprise), só quando a chave do site estiver configurada; sem ela, devolve '' */
   let appCheck = null;
   async function tokenAppCheck() {
     const d = C.feedback || {}, a = d.appCheck || {};
@@ -312,7 +312,7 @@
         const base = `https://www.gstatic.com/firebasejs/${FIREBASE_V}`;
         const [fa, ac] = await Promise.all([import(`${base}/firebase-app.js`), import(`${base}/firebase-app-check.js`)]);
         const app = fa.getApps().find(x => x.name === 'kit-facil') || fa.initializeApp({ apiKey: d.chaveApi, projectId: d.projeto, appId: a.appId }, 'kit-facil');
-        return { ac, inst: ac.initializeAppCheck(app, { provider: new ac.ReCaptchaV3Provider(a.siteKey), isTokenAutoRefreshEnabled: false }) };
+        return { ac, inst: ac.initializeAppCheck(app, { provider: new ac.ReCaptchaEnterpriseProvider(a.siteKey), isTokenAutoRefreshEnabled: false }) };
       })();
       const { ac, inst } = await appCheck;
       return (await ac.getToken(inst, false)).token || '';

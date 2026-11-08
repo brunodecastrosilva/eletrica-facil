@@ -1,14 +1,14 @@
 {
-  "kit": "2.14.0",
+  "kit": "2.14.1",
   "arquivos": {
-    "kit-facil.js": "1ef57918f384f78adab473620045ec63bbfbad2a564fb2edd4c48b0cc1c4cf6c",
+    "kit-facil.js": "a72652f5b4b3d69ae179e0aeb6eeea764dbb764e6b66f430dcbd5ca36062f8e3",
     "kit-facil.css": "6068c991da35e2ddf189f3dc7d47fab3c9162ccffcac5aa1eb1c14c973c449cd",
-    "regras-firestore-feedback.txt": "cb76b49f06e9dadd5d3a1b220bd37bdc5a289acb115d868717c5a17b6d834106",
+    "regras-firestore-feedback.txt": "ba70201d3c09369af60df78d7c14ffe01a3fd10349f5accb7b6fe2c6e6cf8cc7",
     "servidor.mjs": "b6cc0deb2154acb2a59d00ad2223d2a69214d40c28680bc05b29777e2b273b57",
     "verificar.mjs": "857cf8126ae7d83d21c6e92610af60e44f3cf930a3e29575fc735c67973e7475",
     "testar.mjs": "53f0ed2efb8b8baaecaabe416fc373b3bc95a574025acf8dd5aec97f68a3642b",
     "CODIGO.md": "841e78e365a1099b61d74b10aa9446133835c7e8fc027596913f99446bba900b",
-    "ANEXOS.md": "5026e7074efb184646ac81ec782cd5086cb01e3714c6db6510b50975a4cbb08a",
+    "ANEXOS.md": "c1179cbed44c70a51e536c0702c8cd02eedb8cb29ae3cb0dab7c3be977253545",
     "LEIAME.md": "300c33cd782f903056f849d81e4dfb05d5c8933384ab6585b3e233bfc985553c",
     "testes/ambiente.mjs": "97f3186955a84a57cc9ee88e308a0bca58e63ddf8bdbc52465b3e120c3e0d08c",
     "testes/kit.test.mjs": "4eac89a1bacf7065375b3a2accff2b6d9f76c05014a441da4a64e1a2de8002b5",

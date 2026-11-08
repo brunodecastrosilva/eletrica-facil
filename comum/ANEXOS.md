@@ -200,7 +200,7 @@ Node 22 ou mais novo; testes com Playwright (Chromium).
 | Camada | Como | Onde |
 |---|---|---|
 | Aparelho | 1 avaliação por minuto e 10 por dia, por app (`kitfacil.<app>.envios`) | `KitFacil.feedback` |
-| App Check | reCAPTCHA v3; o crachá vai no cabeçalho `X-Firebase-AppCheck` (avaliações) e pelo SDK (comanda ao vivo) | chave do site em `DESTINO_PADRAO.appCheck.siteKey` (Kit) e `appCheckSiteKey` (`config.js` do Conta Fácil) |
+| App Check | reCAPTCHA Enterprise (Fraud Defense); o crachá vai no cabeçalho `X-Firebase-AppCheck` (avaliações) e pelo SDK (comanda ao vivo) | chave do site em `DESTINO_PADRAO.appCheck.siteKey` (Kit) e `appCheckSiteKey` (`config.js` do Conta Fácil) |
 | Exigência do App Check | ligada no Firestore só quando as métricas mostrarem quase todos os pedidos com crachá | console do Firebase → App Check → APIs → Cloud Firestore |
 | Contas anônimas | cota de criação de contas por endereço de internet | Firebase Authentication → Configurações |
 | Chave do navegador | restrita a `https://brunodecastrosilva.github.io/*` | Google Cloud → APIs e serviços → Credenciais |

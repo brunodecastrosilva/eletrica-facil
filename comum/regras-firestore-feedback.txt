@@ -97,7 +97,7 @@ service cloud.firestore {
 // Firestore → Time-to-live): `feedback`/`enviadoEm` com adiamento de 730 dias e `mesas`/`expiraEm` sem adiamento.
 
 // Proteções fora das regras (passo a passo no Anexo de segurança do Código):
-// - App Check com reCAPTCHA v3, primeiro só medindo; a exigência no Firestore é ligada quando quase todos os pedidos
+// - App Check com reCAPTCHA Enterprise (Fraud Defense), primeiro só medindo; a exigência no Firestore é ligada quando quase todos os pedidos
 //   chegarem com crachá (veja as métricas do App Check);
 // - chave "Browser key (auto created by Firebase)" restrita a https://brunodecastrosilva.github.io/* no Google Cloud;
 // - Firebase Authentication → Configurações → cota de criação de contas por IP (contas anônimas da comanda ao vivo).

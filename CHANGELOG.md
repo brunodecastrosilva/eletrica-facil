@@ -3,6 +3,10 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
 
+
+## 2.24.2 · 2026-11-08
+
+- **App Check ligado (Kit Fácil 2.14.1):** cada avaliação leva o crachá do App Check, emitido pelo reCAPTCHA (Fraud Defense, antes reCAPTCHA Enterprise), que prova que a mensagem saiu do app de verdade. O Firebase só passa a exigir o crachá depois que a exigência for ligada no console. *Privacidade e segurança* e o formulário de avaliação avisam o uso do reCAPTCHA.
 ## 2.24.1 · 2026-11-08
 
 - **Correção (service worker):** os arquivos do app são sempre conferidos com o servidor, então uma versão nova nunca roda misturada com arquivos antigos guardados pelo navegador; bibliotecas de fora guardadas sem CORS são buscadas de novo, para passar na conferência da impressão digital (SRI).
