@@ -19,7 +19,7 @@ import { execFileSync } from 'node:child_process';
 
 const COMUM = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(COMUM, '..');
-const COMPARTILHADOS = ['kit-facil.js', 'kit-facil.css', 'regras-firestore-feedback.txt', 'servidor.mjs', 'verificar.mjs', 'testar.mjs', 'CODIGO.md', 'LEIAME.md',
+const COMPARTILHADOS = ['kit-facil.js', 'kit-facil.css', 'regras-firestore-feedback.txt', 'servidor.mjs', 'verificar.mjs', 'testar.mjs', 'CODIGO.md', 'ANEXOS.md', 'LEIAME.md',
   'testes/ambiente.mjs', 'testes/kit.test.mjs', 'testes/pagina-kit.html'];
 
 const sha = b => createHash('sha256').update(b).digest('hex');
@@ -135,6 +135,20 @@ try {
   if (typeof mf.start_url === 'string' && (mf.start_url.startsWith('./') || mf.start_url.startsWith(caminho))) ok('start_url dentro da pasta do app'); else falha(`manifest.webmanifest: "start_url" fora da pasta do app (${mf.start_url})`);
   if (mf.scope === './' || mf.scope === caminho) ok('scope limitado à pasta do app'); else falha(`manifest.webmanifest: "scope" deveria ser "./" ou "${caminho}" (está "${mf.scope}")`);
 } catch (e) { falha('manifest.webmanifest ausente ou inválido: ' + e.message); }
+
+/* ---------- segurança (Código 3.1, Título IV, capítulo Da segurança) ---------- */
+console.log('Segurança');
+{
+  const csp = (html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/) || [])[1] || '';
+  if (!csp) falha('index.html sem política de segurança de conteúdo (CSP) — veja o ANEXOS.md, Anexo VIII');
+  else if (/'unsafe-eval'|(^|[ ;])\*[ ;]/.test(csp) || !/object-src 'none'/.test(csp)) falha('CSP fraca: sem unsafe-eval, sem curinga * e com object-src none');
+  else ok('política de segurança de conteúdo (CSP)');
+  const todo = html + '\n' + (await Promise.all(fontes.map(f => ler(f)))).join('\n');
+  const semSri = [...todo.matchAll(/https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/[^'"`\s]+?\.js(?=['"`])/g)].map(m => m[0])
+    .filter(u => !/worker/.test(u));
+  if (semSri.length && !/integrity/.test(todo)) falha('biblioteca de CDN sem impressão digital (SRI): ' + semSri[0]);
+  else ok('bibliotecas de CDN com impressão digital (SRI)');
+}
 
 /* ---------- interface comum (Kit Fácil 2) ---------- */
 console.log('Interface comum');

@@ -7,8 +7,9 @@ Estudo Fácil e no Guitarra Fácil.** Não altere só num repositório: siga o A
 |---|---|
 | `kit-facil.js` | área superior (Ajustes, nuvem, balão), tela de Ajustes em guias, avaliação e relato de problema, Sobre, tema, instalar, cópia de segurança, apagar dados do aparelho e o motor de sincronização |
 | `kit-facil.css` | sistema de design comum: tokens, moldura (barra, navegação, trilho) e componentes. Usa as variáveis `--kf-*` de cada app |
-| `CODIGO.md` | o Código do Projeto Fácil, com os anexos técnicos (interface, dados, avaliação, segurança, abertura e guia) |
-| `regras-firestore-feedback.txt` | regra do Firestore que recebe as avaliações (colar no console do Firebase) |
+| `CODIGO.md` | o Código do Projeto Fácil, em artigos |
+| `ANEXOS.md` | os anexos técnicos do Código (interface, dados, avaliação, movimento, abertura e guia, comandos e segurança) |
+| `regras-firestore-feedback.txt` | regras inteiras do Firestore: avaliações e comanda ao vivo (colar no console do Firebase) |
 | `servidor.mjs` | servidor local (`npm start`) |
 | `verificar.mjs` | verificação do padrão (`npm run verificar`) |
 | `testar.mjs` | roda os testes do kit e do app (`npm test`) |

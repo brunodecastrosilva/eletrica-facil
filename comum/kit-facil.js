@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '2.13.0';
+  const VERSAO = '2.14.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -30,7 +30,16 @@
   /* Destino das avaliações: banco Firestore do projeto no Firebase (plano gratuito).
      A configuração web do Firebase é pública por natureza (não é senha): quem protege o banco são as regras
      do Firestore (veja comum/regras-firestore-feedback.txt), que só deixam criar avaliações no formato abaixo. */
-  const DESTINO_PADRAO = { tipo: 'firestore', projeto: 'conta-facil-2c1f9', chaveApi: 'AIzaSyDKdtdRernEqoaC0BQdMW8P7KiZ-UNcEN0', colecao: 'feedback' };
+  /* appCheck (Código, Título IV, Cap. III): com a chave do site do reCAPTCHA v3 preenchida, cada envio leva o "crachá" do
+     App Check, que prova que veio do app de verdade. Sem a chave, o envio segue sem crachá (o Firebase só exige depois que a
+     exigência for ligada no console). */
+  const DESTINO_PADRAO = { tipo: 'firestore', projeto: 'conta-facil-2c1f9', chaveApi: 'AIzaSyDKdtdRernEqoaC0BQdMW8P7KiZ-UNcEN0', colecao: 'feedback',
+    appCheck: { appId: '1:862201011516:web:ce36fbe3494eabff045239', siteKey: '' } };
+  const FIREBASE_V = '10.12.2';
+  /* limite de envios neste aparelho (Código, limite de quantidade): sozinho não basta, por isso o App Check no servidor */
+  const LIMITE_ENVIO = { intervaloMs: 60e3, porDia: 10 };
+  /* endereço oficial: Sobre o aplicativo mostra, para quem usa reconhecer cópias falsas */
+  const ENDERECO_OFICIAL = 'https://brunodecastrosilva.github.io/';
 
   /* Apoio ao criador (lei 13): Pix do criador, igual em todos os apps. A chave é ALEATÓRIA, de propósito: o repositório é
      público e uma chave de CPF, telefone ou e-mail exporia dado pessoal. Nome (até 25 letras) e cidade (até 15) entram no
@@ -38,6 +47,7 @@
   // nome não pessoal de propósito (decisão do criador): o banco de quem paga mostra o nome real, vindo do cadastro da chave
   const APOIO_PADRAO = { chave: '35b9f895-679e-478f-8bc0-4cc62745a031', nome: 'Projeto Facil', cidade: 'Gama' };
   const QR_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
+  const QR_SRI = 'sha384-mZT2gIty7ZDdOGkxfP6joZcYdMW1Jvj9dRlfpTmaJAKKXTqzygtB22k7FLe+KZC1'; // impressão digital do arquivo (SRI)
 
   /* ================= utilidades ================= */
   const $ = (s, r = document) => r.querySelector(s);
@@ -278,7 +288,7 @@
     const ua = navigator.userAgent || '';
     const plataforma = ehIOS() ? 'iOS' : /android/i.test(ua) ? 'Android' : /windows/i.test(ua) ? 'Windows' : /mac os|macintosh/i.test(ua) ? 'macOS' : /cros/i.test(ua) ? 'ChromeOS' : /linux/i.test(ua) ? 'Linux' : 'Outro';
     const navegador = /edg\//i.test(ua) ? 'Edge' : /opr\//i.test(ua) ? 'Opera' : /samsungbrowser/i.test(ua) ? 'Samsung Internet' : /firefox|fxios/i.test(ua) ? 'Firefox' : /crios|chrome|chromium/i.test(ua) ? 'Chrome' : /safari/i.test(ua) ? 'Safari' : 'Outro';
-    const t = { plataforma, navegador, tela: `${screen.width}x${screen.height}`, janela: `${window.innerWidth}x${window.innerHeight}`, instalado: instalado(), idioma: String(navigator.language || '').slice(0, 12) };
+    const t = { plataforma, navegador, tela: `${screen.width}x${screen.height}`.slice(0, 20), janela: `${window.innerWidth}x${window.innerHeight}`.slice(0, 20), instalado: !!instalado(), idioma: String(navigator.language || '').slice(0, 12) };
     if (erros.length) t.erros = erros.join(' | ').slice(0, 500);
     return t;
   }
@@ -292,13 +302,43 @@
     return { stringValue: String(v ?? '') };
   }
   function camposFS(o) { const f = {}; for (const k of Object.keys(o)) if (o[k] !== undefined) f[k] = valorFS(o[k], k); return f; }
+  /* crachá do App Check (reCAPTCHA v3), só quando a chave do site estiver configurada; sem ela, devolve '' */
+  let appCheck = null;
+  async function tokenAppCheck() {
+    const d = C.feedback || {}, a = d.appCheck || {};
+    if (!a.siteKey || !a.appId) return '';
+    try {
+      if (!appCheck) appCheck = (async () => {
+        const base = `https://www.gstatic.com/firebasejs/${FIREBASE_V}`;
+        const [fa, ac] = await Promise.all([import(`${base}/firebase-app.js`), import(`${base}/firebase-app-check.js`)]);
+        const app = fa.getApps().find(x => x.name === 'kit-facil') || fa.initializeApp({ apiKey: d.chaveApi, projectId: d.projeto, appId: a.appId }, 'kit-facil');
+        return { ac, inst: ac.initializeAppCheck(app, { provider: new ac.ReCaptchaV3Provider(a.siteKey), isTokenAutoRefreshEnabled: false }) };
+      })();
+      const { ac, inst } = await appCheck;
+      return (await ac.getToken(inst, false)).token || '';
+    } catch { appCheck = null; return ''; }
+  }
+  /* limite de envios neste aparelho: no máximo um por minuto e 10 por dia, por app */
+  const envios = {
+    chave: () => `kitfacil.${C.app || 'app'}.envios`,
+    lista() { const l = ler(this.chave(), []); const dia = Date.now() - 864e5; return (Array.isArray(l) ? l : []).filter(t => typeof t === 'number' && t > dia); },
+    bloqueio() {
+      const l = this.lista();
+      if (l.length >= LIMITE_ENVIO.porDia) return 'Você já mandou muitas mensagens hoje. Tente de novo amanhã.';
+      if (l.length && Date.now() - Math.max(...l) < LIMITE_ENVIO.intervaloMs) return 'Espere um minuto antes de mandar outra mensagem.';
+      return '';
+    },
+    marcar() { const l = this.lista(); l.push(Date.now()); gravar(this.chave(), l.slice(-LIMITE_ENVIO.porDia)); },
+  };
   /* envia um registro. Resposta: 'ok' (recebido), 'offline' (sem internet), 'recusado' (o banco não aceitou) ou 'falha' (tentar depois) */
   async function enviarUma(id, dados) {
     const d = C.feedback || {};
     if (d.tipo !== 'firestore' || !d.projeto || !d.chaveApi) return 'recusado';
     const url = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(d.projeto)}/databases/(default)/documents/${encodeURIComponent(d.colecao || 'feedback')}?documentId=${encodeURIComponent(id)}&key=${encodeURIComponent(d.chaveApi)}`;
+    const headers = { 'Content-Type': 'application/json' };
+    const cracha = await tokenAppCheck(); if (cracha) headers['X-Firebase-AppCheck'] = cracha;
     let r;
-    try { r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: camposFS(dados) }), cache: 'no-store' }); }
+    try { r = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ fields: camposFS(dados) }), cache: 'no-store' }); }
     catch { return navigator.onLine === false ? 'offline' : 'falha'; }
     if (r.ok || r.status === 409) return 'ok'; // 409: já tinha chegado numa tentativa anterior
     if (r.status === 400 || r.status === 401 || r.status === 403 || r.status === 404) return 'recusado';
@@ -403,7 +443,7 @@
       </div>
       <label class="kf-check"><input type="checkbox" id="kf-tec"${problema ? ' checked' : ''}><span>Enviar informações técnicas: versão do app, tipo de aparelho, navegador e tamanho da tela${problema ? ', e os últimos erros do app' : ''}. Ajudam a resolver problemas.</span></label>
       <details class="kf-det"><summary>O que é enviado e para onde</summary>
-        <p class="kf-ajuda">${problema ? 'A categoria e a gravidade (se você escolher), a descrição' : 'A nota, o tipo de comentário (se você escolher), o comentário'}, o contato (se você preencher), o app, a versão e a tela em que você está, com as informações técnicas se a opção acima estiver marcada. Tudo vai para o banco de dados do projeto no Firebase (Google), usado só para melhorar os apps e apagado depois de 2 anos. Não enviamos seus dados do app, como ${esc(C.exemploDados || 'os registros que você guarda nele')}.</p></details>
+        <p class="kf-ajuda">${problema ? 'A categoria e a gravidade (se você escolher), a descrição' : 'A nota, o tipo de comentário (se você escolher), o comentário'}, o contato (se você preencher), o app, a versão e a tela em que você está, com as informações técnicas se a opção acima estiver marcada. Tudo vai para o banco de dados do projeto no Firebase (Google), usado só para melhorar os apps e apagado depois de 2 anos. Não enviamos seus dados do app, como ${esc(C.exemploDados || 'os registros que você guarda nele')}.${((C.feedback || {}).appCheck || {}).siteKey ? ' O envio é protegido pelo reCAPTCHA do Google; valem a <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Política de Privacidade</a> e os <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Termos de Serviço</a> do Google.' : ''}</p></details>
       <p class="kf-erro-form" data-kf-erro role="alert" hidden></p>
     </form>`;
     abrirDialogo({ titulo, corpo, classe: 'kf-feedback', nome: modo,
@@ -429,6 +469,9 @@
           const n = nota(), texto = msg.value.trim(), contato = $('#kf-contato', d).value.trim();
           const falta = problema ? (!texto ? 'Conte o que aconteceu.' : '') : (!n ? 'Toque numa estrela para dar sua nota.' : '');
           if (falta) { erro.textContent = falta; erro.hidden = false; (problema ? msg : $('input[name="kf-nota"]', d)).focus(); return; }
+          const limite = envios.bloqueio();
+          if (limite) { erro.textContent = limite; erro.hidden = false; return; }
+          envios.marcar();
           const dados = { esquema: 1, app: C.app, versao: String(C.versao).slice(0, 20), nota: problema ? 0 : n, tipo: problema ? 'problema' : (valor('kf-tipo') || 'avaliacao'), mensagem: texto.slice(0, LIM.mensagem), enviadoEm: new Date().toISOString() };
           if (problema && valor('kf-categoria')) dados.categoria = valor('kf-categoria');
           if (problema && valor('kf-gravidade')) dados.gravidade = valor('kf-gravidade');
@@ -471,6 +514,7 @@
     const l = [...(C.privacidade || [])];
     l.push('Sincronização entre aparelhos (opcional): quando você liga, os dados vão para um gist secreto da sua conta GitHub, criptografados neste aparelho (AES-256) com uma chave que sai do seu código de acesso. Só os seus aparelhos conseguem ler.');
     l.push('Avaliações e relatos de problema (opcionais): só o que você escreve no formulário, com o app, a versão e, se você permitir, informações técnicas do aparelho, vai para o banco de dados do projeto no Firebase (Google) e é apagado depois de 2 anos. O contato só vai se você preencher.');
+    if (((C.feedback || {}).appCheck || {}).siteKey) l.push('Proteção contra robôs: ao enviar uma avaliação, o app usa o reCAPTCHA do Google para provar que a mensagem saiu do app de verdade. Aplicam-se a Política de Privacidade e os Termos de Serviço do Google.');
     l.push('Sem anúncios, sem rastreamento de uso e sem venda de dados.');
     return l;
   }
@@ -484,6 +528,10 @@
         <div><dt>Privacidade</dt><dd>O resumo de como o app trata os seus dados está em <b>Privacidade e segurança</b>.</dd></div></dl>
       ${novidadesDaVersao() ? `<h3 class="kf-sub">Novidades desta versão</h3>${listaNovidades(novidadesDaVersao())}` : ''}
       ${apoioAtivo() ? `<h3 class="kf-sub">Apoie o criador</h3><p class="kf-ajuda">O ${esc(C.nome)} é gratuito. Gostando do app? Pague um chopp para o criador!</p><button type="button" class="kf-btn kf-sec" data-kf="apoio">${IC.chopp}Pagar um chopp</button>` : ''}
+      <h3 class="kf-sub">Como reconhecer o app oficial</h3>
+      <dl class="kf-dados"><div><dt>Endereço oficial</dt><dd>${esc(ENDERECO_OFICIAL + (C.app || '') + '/')}</dd></div>
+        ${apoioAtivo() ? `<div><dt>Chave Pix do apoio</dt><dd>termina em ${esc(String(C.apoio.chave).slice(-4))}</dd></div>` : ''}</dl>
+      <p class="kf-ajuda">O app é gratuito e nunca cobra para funcionar. Desconfie de cópias em outro endereço${apoioAtivo() ? ' ou com outra chave Pix' : ''}.</p>
       ${outros.length ? `<h3 class="kf-sub">Outros apps da família</h3><ul class="kf-apps">${outros.map(f => `<li><a href="${esc(f.url)}" target="_blank" rel="noopener"><b>${esc(f.nome)}</b><span>${esc(f.resumo)}</span>${IC.externo}</a></li>`).join('')}</ul>` : ''}
       <p class="kf-rodape">${esc(C.nome)} ${esc(C.versao)} · Kit Fácil ${VERSAO}</p>`;
   }
@@ -831,7 +879,7 @@
   function carregarQR() {
     if (global.qrcode) return Promise.resolve(global.qrcode);
     if (!qrPromessa) qrPromessa = new Promise((ok, falhou) => {
-      const s = document.createElement('script'); s.src = QR_LIB; s.async = true; s.crossOrigin = 'anonymous';
+      const s = document.createElement('script'); s.src = QR_LIB; s.async = true; s.crossOrigin = 'anonymous'; s.integrity = QR_SRI;
       s.onload = () => global.qrcode ? ok(global.qrcode) : falhou(new Error('qr')); s.onerror = () => { qrPromessa = null; falhou(new Error('qr')); };
       document.head.appendChild(s);
     });

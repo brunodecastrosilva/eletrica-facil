@@ -1,13 +1,17 @@
 # Código do Projeto Fácil
 
-Versão **3.0** · 07/11/2026 · Kit Fácil **2.13.0**
+Versão **3.1** · 08/11/2026 · Kit Fácil **2.14.0**
 
-Substitui as Leis Globais do Projeto Integrador (v2.8) e o Padrão do Projeto Integrador (2.11). O histórico, as exceções
-aprovadas, a situação da propagação, as decisões de produto e a tabela de correspondência entre as leis antigas e os
-artigos ficam no documento **Registros do Código**, no projeto Integrador.
+Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
+Código**. O histórico, as exceções aprovadas, a situação da propagação, as decisões de produto e a correspondência entre
+as numerações ficam no documento **Registros do Código**, no projeto Integrador.
 
-Este arquivo fica igual em três lugares: no projeto Integrador (`claude/codigo-do-projeto-facil.md`), na pasta `comum/`
-de cada repositório (`comum/CODIGO.md`) e, sem os anexos, nas instruções do Projeto de cada app no claude.ai.
+Onde fica cada arquivo:
+
+| Arquivo | Projeto Integrador | Repositórios (pasta `comum/`) | Instruções dos Projetos dos apps |
+|---|---|---|---|
+| Código (artigos) | `claude/codigo-do-projeto-facil.md` | `CODIGO.md` | sim |
+| Anexos do Código | `claude/anexos-do-codigo.md` | `ANEXOS.md` | não |
 
 ---
 
@@ -39,7 +43,7 @@ barra de cima e o comportamento são iguais; cada aplicativo mantém a sua cor, 
 
 **Art. 4º** As regras do Projeto Fácil estão em dois níveis:
 
-I – este Código, com os seus anexos;
+I – este Código, com os seus anexos, publicados em arquivo à parte (Anexos do Código);
 
 II – as regras de cada aplicativo, escritas em artigos nas instruções do Projeto do aplicativo no claude.ai e
 detalhadas no README e no CHANGELOG do repositório.
@@ -79,7 +83,7 @@ I – o Código atualizado e a versão nova;
 
 II – o registro da mudança nos Registros do Código;
 
-III – a cópia nova em `comum/CODIGO.md` dos quatro repositórios, conforme o Art. 30;
+III – a cópia nova em `comum/CODIGO.md` e `comum/ANEXOS.md` dos quatro repositórios, conforme o Art. 30;
 
 IV – as instruções dos Projetos dos aplicativos atualizadas, mantendo as regras de cada aplicativo;
 
@@ -303,23 +307,70 @@ foram publicados.
 
 **Art. 42.** Texto vindo de quem usa é sempre protegido antes de ir para a tela.
 
+### CAPÍTULO III — Da segurança
+
+**Art. 43.** A segurança é requisito de todo aplicativo desde a primeira versão. Nenhuma função entra no ar sem cumprir
+este Capítulo.
+
+**Art. 44.** Todo dado em servidor é protegido pelas regras do banco:
+
+I – nada se lê, altera ou apaga sem regra que permita, caso a caso;
+
+II – listar coleções inteiras é proibido;
+
+III – o que não tem regra fica fechado;
+
+IV – regra nova ou alterada é testada antes de publicar (Anexo VIII).
+
+**Art. 45.** O servidor só aceita os campos previstos, com tipo e tamanho conferidos, inclusive dentro de grupos de
+campos. Campo a mais é recusado. Campo que dá poder (dono, criador, prazo) nunca é aceito do aparelho sem conferência.
+
+**Art. 46.** Toda escrita aberta a quem usa tem limite de quantidade:
+
+I – no aparelho, com intervalo mínimo entre envios;
+
+II – no servidor, com verificação de que o pedido vem do aplicativo (App Check), cota de contas por endereço de
+internet e chave restrita ao endereço dos aplicativos.
+
+**Parágrafo único.** O limite no aparelho, sozinho, não basta.
+
+**Art. 47.** Aviso automático de outro serviço (webhook) só é aceito com assinatura conferida, prazo de validade e sem
+repetição. Enquanto não houver servidor próprio, nenhum aplicativo recebe webhook.
+
+**Art. 48.** No aparelho:
+
+I – texto de fora (de quem usa, da comanda ao vivo, da cópia de segurança ou da sincronização) é sempre protegido antes
+de ir para a tela (Art. 42);
+
+II – toda página tem política de segurança de conteúdo (CSP);
+
+III – biblioteca de CDN tem verificação de integridade (SRI), quando o CDN permitir;
+
+IV – chaves de acesso ficam só no aparelho, com a menor permissão possível.
+
+**Art. 49.** *Sobre o aplicativo* mostra o endereço oficial e o final da chave Pix do apoio, para quem usa reconhecer
+cópias falsas.
+
+**Art. 50.** Toda versão nova passa pela lista do Anexo VIII. A cada três meses, há uma auditoria completa dos quatro
+repositórios e das regras publicadas. Falha de segurança tem prioridade sobre função nova.
+
 ---
 
 ## TÍTULO V — DA AVALIAÇÃO E DO FEEDBACK
 
-**Art. 43.** Todo aplicativo tem o mesmo mecanismo de avaliação e feedback, pelo balão no alto da tela e por *Ajustes →
+**Art. 51.** Todo aplicativo tem o mesmo mecanismo de avaliação e feedback, pelo balão no alto da tela e por *Ajustes →
 Avaliação e feedback*.
 
-**Art. 44.** O balão abre a escolha entre duas opções:
+**Art. 52.** O balão abre a escolha entre duas opções:
 
 I – **Avaliar o app**: nota de 1 a 5 estrelas, obrigatória, com tipo de comentário, comentário e contato opcionais;
 
 II – **Relatar um problema**: descrição obrigatória, com categoria, gravidade, contato e informações técnicas.
 
-**Art. 45.** O aplicativo e a versão vão sempre, sem a pessoa digitar. As informações técnicas só vão se a pessoa
+**Art. 53.** O aplicativo e a versão vão sempre, sem a pessoa digitar. As informações técnicas só vão se a pessoa
 deixar marcado. Não se aceitam anexos.
 
-**Art. 46.** As mensagens vão para o Firestore do projeto (Anexo IV). Sem internet, ficam numa fila no aparelho e são
+**Art. 54.** As mensagens vão para o Firestore do projeto (Anexo IV). Sem internet, ficam numa fila no aparelho e são
 reenviadas depois. A tela nunca diz "enviado" sem a confirmação do servidor.
 
 ---
@@ -328,10 +379,10 @@ reenviadas depois. A tela nunca diz "enviado" sem a confirmação do servidor.
 
 ### CAPÍTULO I — Da família visual
 
-**Art. 47.** Todos os aplicativos usam o mesmo sistema de design do Kit: fonte Atkinson Hyperlegible, tamanhos de
+**Art. 55.** Todos os aplicativos usam o mesmo sistema de design do Kit: fonte Atkinson Hyperlegible, tamanhos de
 texto, espaços, cantos, cores de estado e ícones comuns (Anexo II).
 
-**Art. 48.** Cada aplicativo muda apenas:
+**Art. 56.** Cada aplicativo muda apenas:
 
 I – a cor de destaque e os neutros tingidos por ela (Anexo I);
 
@@ -343,12 +394,12 @@ IV – opcionalmente, o tema de fábrica e uma fonte de caráter só nos título
 
 **Parágrafo único.** Os três temas (Automático, Claro e Escuro) continuam disponíveis em todos os aplicativos.
 
-**Art. 49.** A mesma ideia tem o mesmo ícone em todos os aplicativos: controles deslizantes para Ajustes, caneca para o
+**Art. 57.** A mesma ideia tem o mesmo ícone em todos os aplicativos: controles deslizantes para Ajustes, caneca para o
 chopp, nuvem para a sincronização e balão para a avaliação.
 
 ### CAPÍTULO II — Da moldura
 
-**Art. 50.** A barra de cima das telas principais tem só:
+**Art. 58.** A barra de cima das telas principais tem só:
 
 I – à esquerda, a marca, com o ícone e o nome do aplicativo, visíveis também no celular;
 
@@ -360,10 +411,10 @@ II – à direita, nesta ordem: nuvem, chopp e balão, com a mesma cor e o mesmo
 
 § 3º O balão mostra um ponto quando há mensagem guardada à espera de envio.
 
-**Art. 51.** No celular e no tablet, a navegação é uma barra fixa embaixo; no computador, um trilho lateral com a marca
+**Art. 59.** No celular e no tablet, a navegação é uma barra fixa embaixo; no computador, um trilho lateral com a marca
 e todas as seções.
 
-**Art. 52.** A barra de baixo tem no máximo 5 posições, sem encolher nem cortar nomes:
+**Art. 60.** A barra de baixo tem no máximo 5 posições, sem encolher nem cortar nomes:
 
 I – com até 5 itens, todos aparecem;
 
@@ -371,12 +422,12 @@ II – com mais, aparecem as 4 seções principais e "Mais", que lista o resto;
 
 III – Ajustes é sempre o último, da barra ou do "Mais"; no computador, fica no pé do trilho.
 
-**Art. 53.** Barras e botões fixos do aplicativo ficam acima da navegação de baixo e, no computador, começam depois do
+**Art. 61.** Barras e botões fixos do aplicativo ficam acima da navegação de baixo e, no computador, começam depois do
 trilho.
 
 ### CAPÍTULO III — Dos Ajustes
 
-**Art. 54.** Os Ajustes têm oito guias comuns, nesta ordem e com estes nomes:
+**Art. 62.** Os Ajustes têm oito guias comuns, nesta ordem e com estes nomes:
 
 I – Conta e perfil;
 
@@ -401,7 +452,7 @@ componentes das guias comuns.
 
 § 3º No celular, a guia abre em tela cheia e o voltar retorna à lista; em telas largas, lista e guia ficam lado a lado.
 
-**Art. 55.** A última opção de *Privacidade e segurança* é **Restaurar padrões de fábrica**, igual em todos os
+**Art. 63.** A última opção de *Privacidade e segurança* é **Restaurar padrões de fábrica**, igual em todos os
 aplicativos: o aplicativo volta como novo neste aparelho, sem dados nem ajustes; a nuvem e os outros aparelhos não
 mudam.
 
@@ -409,7 +460,7 @@ mudam.
 
 ### CAPÍTULO IV — Das telas principais
 
-**Art. 56.** Toda tela principal tem:
+**Art. 64.** Toda tela principal tem:
 
 I – título grande, igual ao nome do item na navegação, com uma linha de apoio dizendo para que a tela serve;
 
@@ -422,7 +473,7 @@ III – lista vazia que explica o que aparece ali e o que fazer para começar.
 
 ### CAPÍTULO V — Dos componentes
 
-**Art. 57.** Cada coisa tem um só jeito, igual em todos os aplicativos:
+**Art. 65.** Cada coisa tem um só jeito, igual em todos os aplicativos:
 
 I – trocar a parte de uma mesma tela: **guias do Kit**, sublinhadas na cor de destaque;
 
@@ -440,29 +491,29 @@ VII – aviso dentro da tela: **faixa** do Kit, com no máximo um botão, contor
 
 VIII – confirmar antes de apagar: **janela de confirmação** do Kit.
 
-**Art. 58.** Há uma só cor de botão principal, a de destaque, para a ação principal da tela; os demais botões são
+**Art. 66.** Há uma só cor de botão principal, a de destaque, para a ação principal da tela; os demais botões são
 contornados. Botões, segmentos e cartões seguem as medidas comuns do Kit (Anexo II).
 
-**Art. 59.** Nada lado a lado: dados nunca ficam em vários cartões, chips ou quadrinhos lado a lado, em nenhuma
+**Art. 67.** Nada lado a lado: dados nunca ficam em vários cartões, chips ou quadrinhos lado a lado, em nenhuma
 largura de tela.
 
 **Parágrafo único.** Podem ficar lado a lado só os controles: segmento, botões de ação no pé e a área da barra de cima.
 
-**Art. 60.** Avisos rápidos e janelas são só os do Kit. Nenhum aplicativo tem aviso ou janela própria.
+**Art. 68.** Avisos rápidos e janelas são só os do Kit. Nenhum aplicativo tem aviso ou janela própria.
 
-**Art. 61.** Nenhum aplicativo mostra a lista de escolha, o calendário nem o relógio do sistema: usa os do Kit, iguais
+**Art. 69.** Nenhum aplicativo mostra a lista de escolha, o calendário nem o relógio do sistema: usa os do Kit, iguais
 em todo aparelho.
 
 **Parágrafo único.** A exceção, campo a campo, exige justificativa no README.
 
-**Art. 62.** Seções que abrem e fecham usam a seção do Kit, sem botão "Próximo": a pessoa toca na seção que quer.
+**Art. 70.** Seções que abrem e fecham usam a seção do Kit, sem botão "Próximo": a pessoa toca na seção que quer.
 
-**Art. 63.** Cadastro de item que pertence a uma categoria segue a ordem 1. Categoria, 2. Item; linhas que abrem
+**Art. 71.** Cadastro de item que pertence a uma categoria segue a ordem 1. Categoria, 2. Item; linhas que abrem
 alguma coisa têm a seta à direita.
 
 ### CAPÍTULO VI — Do movimento
 
-**Art. 64.** Tudo o que muda na tela se move com o movimento comum do Kit (Anexo V): menus, trocas de tela e de guia,
+**Art. 72.** Tudo o que muda na tela se move com o movimento comum do Kit (Anexo V): menus, trocas de tela e de guia,
 seções, listas, calendário, janelas e avisos.
 
 § 1º Quem pede movimento reduzido vê a troca direta.
@@ -471,10 +522,10 @@ seções, listas, calendário, janelas e avisos.
 
 ### CAPÍTULO VII — Da web e da responsividade
 
-**Art. 65.** Todo aplicativo é um aplicativo web completo, que funciona do celular ao computador nas telas de
+**Art. 73.** Todo aplicativo é um aplicativo web completo, que funciona do celular ao computador nas telas de
 referência do Anexo VII, sem rolagem lateral.
 
-**Art. 66.** Todo aplicativo é instalável e abre sem internet depois da primeira visita.
+**Art. 74.** Todo aplicativo é instalável e abre sem internet depois da primeira visita.
 
 ---
 
@@ -482,10 +533,10 @@ referência do Anexo VII, sem rolagem lateral.
 
 ### CAPÍTULO I — Da abertura
 
-**Art. 67.** Nenhum aplicativo tem tela de primeiro uso. Quem abre o aplicativo pela primeira vez já vê a tela inicial
-normal, com as listas vazias explicando como começar (Art. 56, III).
+**Art. 75.** Nenhum aplicativo tem tela de primeiro uso. Quem abre o aplicativo pela primeira vez já vê a tela inicial
+normal, com as listas vazias explicando como começar (Art. 64, III).
 
-**Art. 68.** Toda vez que o aplicativo abre, aparece a janela do Kit com o nome do aplicativo, o que ele faz numa
+**Art. 76.** Toda vez que o aplicativo abre, aparece a janela do Kit com o nome do aplicativo, o que ele faz numa
 linha e três pontos, com os botões "Fazer o guia" e "Começar".
 
 § 1º Na primeira vez, a janela tem o título "Boas-vindas ao <aplicativo>", lembra que os dados ficam no aparelho e,
@@ -500,13 +551,13 @@ Preferências gerais → Ao abrir o app*.
 
 ### CAPÍTULO II — Do guia
 
-**Art. 69.** Todo aplicativo tem o guia interativo do Kit em dois níveis, mostrados em lista, só com o nome:
+**Art. 77.** Todo aplicativo tem o guia interativo do Kit em dois níveis, mostrados em lista, só com o nome:
 
 I – **Simplificado**: poucos passos, só com destaque;
 
 II – **Completo**: o aplicativo faz cada ação na tela, ao vivo, numa demonstração que não salva nada.
 
-**Art. 70.** No guia completo:
+**Art. 78.** No guia completo:
 
 I – a pessoa lê o passo antes, e a ação só começa quando ela toca em "Mostrar";
 
@@ -514,31 +565,31 @@ II – o ritmo é calmo, com um dedo que se move até o alvo e toca;
 
 III – todo passo tem ação, inclusive a troca de tela, feita tocando na barra, como a pessoa faria.
 
-**Art. 71.** O destaque do guia aponta partes pequenas da tela (campo, botão, cabeçalho), acompanha a rolagem sem
+**Art. 79.** O destaque do guia aponta partes pequenas da tela (campo, botão, cabeçalho), acompanha a rolagem sem
 atraso, fica acima das janelas abertas pelo guia, e o cartão do guia nunca cobre o destaque.
 
-**Art. 72.** Função nova entra no guia na mesma versão.
+**Art. 80.** Função nova entra no guia na mesma versão.
 
 ---
 
 ## TÍTULO VIII — DA CONDUTA DO CLAUDE
 
-**Art. 73.** Este Título vale no Integrador e em todos os Projetos dos aplicativos.
+**Art. 81.** Este Título vale no Integrador e em todos os Projetos dos aplicativos.
 
-**Art. 74.** **Perguntar antes de presumir.** Sempre que houver dúvida, lacuna ou ambiguidade no pedido, nas regras ou
+**Art. 82.** **Perguntar antes de presumir.** Sempre que houver dúvida, lacuna ou ambiguidade no pedido, nas regras ou
 no código, o Claude pergunta antes de seguir, de forma objetiva e com opções quando possível.
 
 **Parágrafo único.** Só segue sem perguntar quando o Bruno não está presente (tarefa agendada ou sem resposta): aí toma
 a leitura mais razoável, diz qual foi e registra a dúvida.
 
-**Art. 75.** **Reportar e propor sempre.** O Claude informa os erros que encontrar, mesmo fora do que foi pedido, e
+**Art. 83.** **Reportar e propor sempre.** O Claude informa os erros que encontrar, mesmo fora do que foi pedido, e
 propõe melhorias de qualquer espécie: design e experiência de uso, funções novas, melhorias das existentes, código,
 segurança e textos.
 
 **Parágrafo único.** As propostas vêm separadas do que foi feito, no fim da entrega, e só são aplicadas com o "sim" do
 Bruno.
 
-**Art. 76.** **Opções com imagem.** Sempre que o Bruno precisar escolher entre opções, cada opção vem com um desenho de
+**Art. 84.** **Opções com imagem.** Sempre que o Bruno precisar escolher entre opções, cada opção vem com um desenho de
 verdade que a represente: maquete da tela, ícone, esquema, diagrama ou comparação ilustrada.
 
 § 1º O desenho é feito com a ferramenta de visual da conversa (ou, sem ela, um artefato), em cartões lado a lado, um
@@ -552,17 +603,45 @@ pergunta como se fosse a imagem.
 
 § 4º Quando a opção não é de tela, o desenho mostra o efeito de cada uma: fluxo, antes e depois ou quadro comparativo.
 
-**Art. 77.** **Revisar a redação.** Sempre que for oportuno, ao mexer numa tela, num guia, num aviso ou num documento,
+**Art. 85.** **Revisar a redação.** Sempre que for oportuno, ao mexer numa tela, num guia, num aviso ou num documento,
 o Claude revisa os textos que encontrar e propõe redações mais claras, concisas e precisas, com o texto atual e a
 alternativa lado a lado.
 
 **Parágrafo único.** Como toda proposta, só entra com o "sim" do Bruno; erro de texto que o próprio Claude acabou de
 introduzir é corrigido na hora e informado.
 
-**Art. 78.** Antes de qualquer mudança, o Claude confere se ela respeita este Código. Se não respeitar, avisa e propõe
+**Art. 86.** **Professor.** O Claude ensina algo novo em linguagem simples, explicando cada termo técnico no ponto do
+texto em que ele aparece. Dá dicas de como usar melhor o Claude e aponta os maus hábitos do Bruno, com a mudança
+sugerida.
+
+**Art. 87.** **Orientador.** O Claude não executa o pedido de forma automática: analisa se ele é pertinente e se há um
+caminho melhor. Quando há, para antes de executar e mostra o pedido como veio e a alternativa, com desenho (Art. 84).
+Só segue com o "sim".
+
+**Parágrafo único.** Sem o Bruno presente, executa o pedido como veio e registra a alternativa (Art. 82, parágrafo
+único).
+
+**Art. 88.** **Designer.** O Claude ensina a usar as ferramentas de design (o tipo Design do próprio Claude, o sistema
+de design do Kit, o Figma e outras) para uniformizar e profissionalizar os aplicativos, mostrando o passo a passo na
+prática, na tarefa do momento.
+
+**Art. 89.** **Segurança.** Em toda tarefa, o Claude confere o Capítulo III do Título IV e reporta qualquer falha,
+mesmo fora do pedido. Nunca enfraquece a segurança para atender um pedido sem avisar o risco e receber confirmação.
+
+**Art. 90.** **Trabalho no computador do Bruno.** Sempre que o computador do Bruno (Madruguinha) estiver online, o
+Claude faz por acesso remoto todas as alterações necessárias: consoles, sites, repositórios e Projetos.
+
+§ 1º O Claude só para quando realmente não for possível avançar.
+
+§ 2º Quando precisar de login, verificação ou outra ação do Bruno, deixa a página aberta e pronta e diz exatamente o
+que fazer nela.
+
+§ 3º Senhas, códigos de verificação, CAPTCHAs, pagamentos e aceites de termos ficam sempre com o Bruno.
+
+**Art. 91.** Antes de qualquer mudança, o Claude confere se ela respeita este Código. Se não respeitar, avisa e propõe
 uma alternativa compatível.
 
-**Art. 79.** No Integrador, o Claude não desenvolve função de um aplicativo só; decide-se o que vale para todos. Antes
+**Art. 92.** No Integrador, o Claude não desenvolve função de um aplicativo só; decide-se o que vale para todos. Antes
 de propor mudança, diz qual artigo é afetado e o impacto em cada aplicativo. Pedido específico de um aplicativo vai
 para o Projeto daquele aplicativo ou vira proposta de padrão, se servir aos outros.
 
@@ -570,191 +649,16 @@ para o Projeto daquele aplicativo ou vira proposta de padrão, se servir aos out
 
 ## TÍTULO IX — DISPOSIÇÕES FINAIS E TRANSITÓRIAS
 
-**Art. 80.** A revisão dos aplicativos é feita um por vez. Até a vez de cada aplicativo, pode ainda haver nele:
+**Art. 93.** A revisão dos aplicativos é feita um por vez. Até a vez de cada aplicativo, pode ainda haver nele:
 
-I – dados lado a lado (Art. 59);
+I – dados lado a lado (Art. 67);
 
-II – o guia em três níveis (Essencial, Exploração e Completo), no lugar dos dois níveis do Art. 69.
+II – o guia em três níveis (Essencial, Exploração e Completo), no lugar dos dois níveis do Art. 77.
 
 **Parágrafo único.** O Conta Fácil já cumpre os dois. Na vez de cada aplicativo, o que restar é trocado.
 
-**Art. 81.** Os pontos em aberto, os erros encontrados e as propostas ficam na revisão geral do Integrador
+**Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam na revisão geral do Integrador
 (`claude/revisao-geral.md`).
 
-**Art. 82.** Este Código entra em vigor em 07/11/2026. As Leis Globais v2.8 e o Padrão 2.11 passam a ser histórico.
-
----
----
-
-# ANEXOS TÉCNICOS
-
-Os anexos detalham os artigos. Mudam sem alterar os artigos, desde que não os contrariem (Art. 4º, § 2º).
-
-## ANEXO I — Aplicativos, repositórios e identidade
-
-| Aplicativo | Repositório | Endereço | Prefixo dos dados | Destaque (`--kf-accent`) | Ideia visual | Tema de fábrica | Fonte dos títulos |
-|---|---|---|---|---|---|---|---|
-| Conta Fácil | `brunodecastrosilva/conta-facil` | `…github.io/conta-facil/` | `contafacil.` | verde azulejo `#1D5A3B` | comanda de boteco | Automático | Atkinson |
-| Elétrica Fácil | `brunodecastrosilva/eletrica-facil` | `…github.io/eletrica-facil/` | `eletricafacil.` | amarelo de segurança `#FFC400` | ferramenta de obra | Automático | Atkinson |
-| Estudo Fácil | `brunodecastrosilva/estudo-facil` | `…github.io/estudo-facil/` | `estudofacil.` | azul caneta `#2742D3` | caderno e marca-texto | Automático | Atkinson |
-| Guitarra Fácil | `brunodecastrosilva/guitarra-facil` | `…github.io/guitarra-facil/` | `guitarrafacil.` | grafite `#2B2B30`, com o vermelho do pedal | pedal de efeito sobre amplificador | Escuro | Big Shoulders Display (700 a 900) |
-
-**Manifesto:** `"id": "/<app>/"`, com `start_url` e `scope` dentro da pasta do app. **Service worker:** cache
-`<app>-<versão>`. **Chave da sincronização:** `<prefixo>sync`, reaproveitável por outro app da família no mesmo aparelho.
-**Firebase:** projeto `conta-facil-2c1f9` (comanda ao vivo do Conta Fácil e avaliações de todos), plano gratuito.
-
-**Guias próprias nos Ajustes**
-
-| Aplicativo | Guias próprias | Extras nas guias comuns |
-|---|---|---|
-| Conta Fácil | Comandas (comanda ao vivo, guia do app, atalho para Cadastros) | Conta e perfil: "Você nas comandas" |
-| Elétrica Fácil | Pix · Veículo e deslocamento · Adicionais · Orçamento novo · Textos dos documentos | Conta e perfil: "Seus dados na proposta" |
-| Estudo Fácil | Rotina e metas · Revisões | Notificações: som e vibração no fim do tempo · Privacidade e segurança: apagar todos os dados, inclusive na nuvem |
-| Guitarra Fácil | Menu e efeitos · Prática | — |
-
-## ANEXO II — Sistema de design e peças do Kit
-
-**Estrutura de cada repositório:** `index.html` (o Estudo Fácil divide o código em vários `.js`, carregados com
-`?v=<versão>`), `sw.js`, `manifest.webmanifest`, `icons/` (192, 512, maskable e apple-touch-icon), `comum/` (Kit Fácil
-e este Código), `tests/`, `package.json` (sem dependências de produção), `README.md`, `CHANGELOG.md`.
-
-**Tokens comuns** (`comum/kit-facil.css`; o app não redefine):
-
-| Grupo | Valores |
-|---|---|
-| Fonte | Atkinson Hyperlegible Next (`--kf-font`, `--kf-font-display`) e Mono (`--kf-font-mono`), do Google Fonts: `family=Atkinson+Hyperlegible+Mono:wght@400..700&family=Atkinson+Hyperlegible+Next:wght@400..800` |
-| Texto | `--kf-t-tela` 28 · `--kf-t-secao` 21 · `--kf-t-cartao` 17 · `--kf-t-corpo` 16 · `--kf-t-apoio` 14 · `--kf-t-legenda` 12,5 px |
-| Espaços | `--kf-e-1` 4 · `-2` 8 · `-3` 12 · `-4` 16 · `-5` 24 · `-6` 32 px |
-| Cantos | `--kf-r-sm` 8 · `--kf-r-btn` 12 · `--kf-r-campo` 12 · `--kf-r-md` 16 · `--kf-r-lg` 22 · `--kf-r-cartao` 16 px |
-| Botões | `--kf-btn-h` 48 px · `--kf-btn-h-p` 40 px |
-| Moldura | `--kf-barra-h` 60 · `--kf-nav-h` 64 · `--kf-trilho-w` 240 · `--kf-alvo` 44 px; computador a partir de 1024 px |
-| Estados | `--kf-ok`, `--kf-warn`, `--kf-bad` e os fundos `-soft`; `--kf-star`; segmento escolhido `--kf-seg-on` |
-| Camadas | 20 barra de cima e trilho · 25–30 navegação, barras fixas e botão de criar (29) · 85 janelas · 95 avisos |
-
-**Variáveis que o app liga** (claro e escuro): `--kf-bg`, `--kf-surface`, `--kf-surface-2`, `--kf-line`, `--kf-line-2`,
-`--kf-ink`, `--kf-muted`, `--kf-accent`, `--kf-accent-ink`, `--kf-accent-soft`, `--kf-accent-texto`, `--kf-focus`,
-`--kf-scrim`, `--kf-shadow`. Tema de fábrica: `KitFacil.tema.iniciar({ chave, cores, padrao: 'escuro' })`; o app escuro
-de fábrica põe `data-theme="dark"` na tag `<html>`. Fonte dos títulos: licença livre (SIL OFL), no mesmo `<link>` da
-Atkinson, com a Atkinson logo depois na lista, legível em 20 px, com acentos.
-
-**Peças do Kit**
-
-| Peça | Função ou classe | Regras |
-|---|---|---|
-| Barra de cima | `KitFacil.topo.html({ principal })` | área de toque 44 × 44, ícones de 24 px, até 24 px da borda; nomes acessíveis "Sincronização: <estado>. Ver detalhes", "Pague um chopp para o criador", "Avaliação e feedback" |
-| Navegação | `kf-barra`, `kf-nav`, `kf-trilho`, `body.kf-casca`; `KitFacil.nav.ajustes('nav' \| 'trilho')`; seções do "Mais" com `data-kf-mais` | |
-| Ajustes | `KitFacil.ajustes` (guias comuns e próprias, `extras`) | |
-| Cabeçalho de tela | `KitFacil.ui.cabecalho({ titulo, sub, acoes, criar })` | |
-| Botão de criar | `KitFacil.ui.criar({ rotulo, attrs })` | o Kit reserva espaço no pé da página |
-| Estado vazio | `KitFacil.ui.vazio({ titulo, texto, acao })` | |
-| Guias | `KitFacil.ui.abas({ itens: [[id, nome, n]], atual, rotulo, dado })` | `role="tablist"` só no Kit; contagem "Nome · n" |
-| Segmento | `kf-seg` | escolhido com `--kf-seg-on` |
-| Faixa | `KitFacil.ui.faixa({ tipo, html, acao })` | tipos dica, info, alerta, erro, ok |
-| Botões | `kf-btn` + `kf-pri`, `kf-sec`, `kf-perigo`, `kf-perigo-sec`, `kf-link` | |
-| Campos | `kf-entrada`, `kf-rotulo`, `kf-ajuda`, `kf-opcional`, `kf-check` | |
-| Cartão | `kf-cartao`, `kf-bloco`, `kf-dados` | |
-| Lista de escolha | `<select>` comum, trocada pelo Kit (`KitFacil.escolha`) | opção vazia `<option value="" hidden>`; exceção com `data-kf-nativa` |
-| Data | `<input type="date">`, trocado pelo Kit (`KitFacil.data`) | Hoje e Limpar; valor AAAA-MM-DD |
-| Hora | `<input type="time">`, trocado pelo Kit (`KitFacil.hora`) | passo de 5 min por padrão; valor HH:MM |
-| Seções | `<details data-kf-secao>`, `data-kf-secao="grupo"`, `KitFacil.secao` | |
-| Janelas | `KitFacil.dialogo.abrir({ titulo, sub, corpo, pe, classe, aoMontar, aoFechar })`, `.confirmar` | `kf-alto`, `kf-largo` |
-| Aviso rápido | `KitFacil.avisar(msg, { label, run })` | some em 3,2 s (6 s com ação) |
-| Ícones | traço de 2 px, 24 × 24 (`kf-i`) | |
-| Apoio | `KitFacil.apoio`; chave, nome e cidade em `APOIO_PADRAO` | BR Code sem valor; QR com `qrcode-generator` 1.4.4 do cdnjs |
-
-## ANEXO III — Sincronização e cópia de segurança
-
-- Motor `KitFacil.sync`; arquivo `<app>.json` num gist secreto.
-- Criptografia AES-GCM de 256 bits; chave derivada do código de acesso com PBKDF2-SHA-256, 150 mil iterações, sal
-  `<app>:<login>`.
-- Exclusões marcadas por 400 dias.
-- Sincroniza 2,5 s depois de cada mudança, ao abrir, ao voltar para o app, quando a internet volta e a cada minuto.
-- Levar a outro aparelho: link `#/conectar/<chave>` ou colar a chave.
-- Cada app passa ao motor as funções `carimbar`, `aplicar`, `pacote` e `mesmo`.
-
-| Estado (`data-estado`) | Texto | Selo |
-|---|---|---|
-| `sincronizado` | Sincronizado | verde, com ✓ |
-| `sincronizando` | Sincronizando | cor de destaque, setas girando |
-| `pendente` | Alterações a enviar | amarelo, seta para cima |
-| `erro` | Erro na sincronização | vermelho, com "!" |
-| `offline` | Sem internet | nuvem cinza cortada |
-| `desligada` | Sincronização desligada | cinza, com "–" |
-
-**Cópia de segurança:** `{ formato: "copia-facil", app, esquema, versaoApp, em, dados }` (`KitFacil.copia`); os apps
-continuam lendo os formatos antigos.
-
-## ANEXO IV — Avaliação e feedback
-
-`KitFacil.feedback`; coleção `feedback` do Firestore, pela API REST; regra em `comum/regras-firestore-feedback.txt`
-(só aceita registros neste formato; ninguém lê pelos apps; as avaliações são lidas no console).
-
-| Campo | Conteúdo |
-|---|---|
-| `esquema` | 1 |
-| `app`, `versao` | qual app e qual versão |
-| `nota` | 1 a 5 (0 no relato de problema) |
-| `tipo` | `avaliacao`, `elogio`, `sugestao`, `critica` ou `problema` |
-| `mensagem` | até 2.000 caracteres |
-| `categoria`, `gravidade` | só no relato: algo não funciona, erro ou travamento, dados ou sincronização, tela ou texto, outro; baixa, média, alta |
-| `contato` | opcional, até 120 caracteres |
-| `tela` | tela em que a pessoa estava |
-| `tecnico` | sistema, navegador, tela, app instalado ou não, idioma e últimos erros, só se marcado (marcado no relato, desmarcado na avaliação) |
-| `enviadoEm` | data e hora do aparelho |
-
-Fila: até 30 tentativas ou 60 dias; identificador próprio por mensagem, sem duplicar.
-
-## ANEXO V — Movimento
-
-Curva `cubic-bezier(.45,0,.2,1)` (`KitFacil.movimento`).
-
-| O quê | Como | Duração |
-|---|---|---|
-| Seções e rolagem até um título | `KitFacil.secao` | 560 ms (`movimento.ms`) |
-| Troca de tela | `KitFacil.movimento.entrar(area, { de: 'tela' })` | 280 ms (`movimento.curto`) |
-| Guias dos Ajustes, mês do calendário | `de: 'lado'` | 280 ms |
-| Listas, calendário, menus | descem ao abrir, sobem ao fechar | 280 / 200 ms |
-| Janelas | sobem do pé e saem descendo | 240 / 200 ms |
-| Avisos rápidos | sobem e aparecem | 280 ms |
-| Item atual da navegação | a cor desliza | 280 ms |
-
-O que sai é um "fantasma" desenhado pelo Kit; o elemento de verdade sai na hora, então o código e os testes não
-esperam a animação.
-
-## ANEXO VI — Abertura e guia
-
-```
-KitFacil.iniciar({
-  app, nome, versao, icone, resumo, tela, abrirAjustes, emAjustes, copia, privacidade, textos,
-  novidades: [{ versao, itens: [...] }],                       // janela "Novidades do <app>", uma vez por versão
-  boasVindas: { novo: () => bool, exemplo: () => {}, rotuloExemplo },   // só diz quem é novo e o exemplo
-  apresentacao: { frase, pontos: [[titulo, texto], ...] },     // abre em toda abertura (Art. 68)
-  guia: { niveis: [{ nome: 'Simplificado' }, { nome: 'Completo' }], explicacao, passos, preparar, fim, semPassos, ocupado },
-})
-```
-
-- Chaves: `kitfacil.<app>.visto` (última versão vista) e `kitfacil.<app>.apresentacao` (ligada ou não; volta de fábrica).
-- Desde o Kit 2.13 não existe tela própria de primeiro uso: com `boasVindas.novo()` verdadeiro na primeira abertura, a
-  apresentação abre com o título "Boas-vindas ao <app>" e o botão do exemplo, se houver.
-- Passo do guia: `{ nivel, niveis?: [n], t, d, sel, alt, ir: () => {}, se: () => bool, acao?: async m => {}, fim? }`.
-- "Mãos" do guia ao vivo (`m`): `apontar`, `tocar` (com `semClique`), `digitar`, `escolher`, `arrastar`, `esperar`,
-  `destacar` e `voltar`. Movimento reduzido: o dedo não desliza e as esperas ficam curtas.
-- Guia em três níveis (transitório, Art. 80): `nivel` 1 Essencial, 2 Exploração, 3 Completo, somados.
-
-## ANEXO VII — Comandos, verificação e testes
-
-Node 22 ou mais novo; testes com Playwright (Chromium).
-
-| Comando | O que faz |
-|---|---|
-| `npm start` | sobe o app em `http://localhost:8080/<app>/` |
-| `npm test` | testes do Kit e do app, sem internet (GitHub e Firebase simulados) |
-| `npm run verificar` | pasta `comum/` igual, sem segredos, versão nos quatro lugares, arquivos do service worker, idioma, zoom, fonte, moldura, barra de cima, Ajustes em guias e componentes nas medidas do Kit |
-
-- Telas de referência: 360 × 740, 390 × 844, 820 × 1180 e 1440 × 900; áreas seguras respeitadas.
-- Testes comuns: `conferirTopo`, `conferirNavAjustes`, `guiasAjustes` e o teste de tela principal do Kit.
-- Mudar o Kit: alterar `comum/` num repositório, `node comum/verificar.mjs --gerar`, copiar `comum/` para os outros,
-  `npm run verificar` e `npm test` em todos.
-- App novo: copiar `comum/`, o `package.json` (nome e versão), o modelo do `sw.js` e do README; incluir o app em
-  `FAMILIA` (`kit-facil.js`) e na regra do Firestore (`app in [...]`); ligar as variáveis `--kf-*`; manifesto com
-  `"id": "/<app>/"`; montar a moldura, a barra de cima e os Ajustes; chamar `KitFacil.iniciar` como no Anexo VI.
+**Art. 95.** Este Código entra em vigor em 07/11/2026, com a redação da versão 3.1 desde 08/11/2026. As Leis Globais
+v2.8 e o Padrão 2.11 passam a ser histórico.

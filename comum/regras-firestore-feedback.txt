@@ -1,20 +1,36 @@
-// Kit Fácil 2 · regra do Firestore para receber as avaliações e os relatos de problema dos apps do projeto.
+// Kit Fácil 2.14 · regras do Firestore do projeto conta-facil-2c1f9 (avaliações de todos os apps e comanda ao vivo do Conta Fácil).
 //
-// Onde colar: console do Firebase → projeto conta-facil-2c1f9 → Firestore Database → Regras.
-// Troque o bloco `match /feedback/{id} { ... }` que já existe por este (o bloco de /mesas, da comanda ao vivo,
-// continua igual). Depois toque em Publicar.
+// Onde colar: console do Firebase → projeto conta-facil-2c1f9 → Firestore Database → Regras. Este arquivo é a regra
+// INTEIRA: apague tudo o que estiver lá, cole o bloco entre as linhas "INÍCIO" e "FIM" e toque em Publicar.
+// Antes de publicar, teste no "Playground de regras" do próprio console (Código, Anexo de segurança).
 //
-// O que mudou em relação à versão anterior: o relato de problema pode mandar `categoria` e `gravidade`.
-// Enquanto esta versão não for publicada, os apps mandam essas duas informações dentro do texto da mensagem,
-// então nenhum relato se perde.
+// O que mudou na 2.14 (Código 3.1, Título IV, capítulo Da segurança):
+// - avaliações: cada informação técnica tem tamanho máximo, a data de envio não pode ser do futuro e o identificador tem
+//   tamanho máximo (antes dava para mandar textos enormes dentro de `tecnico`);
+// - comanda ao vivo: só aceita os campos da comanda (antes aceitava campos a mais, de qualquer tamanho); limita o número
+//   de pessoas, itens, turmas e aparelhos; o prazo (`expiraEm`) não passa de 31 dias; comanda encerrada não reabre.
 //
-// O que a regra faz: qualquer aparelho pode CRIAR uma avaliação, mas só no formato do Kit Fácil (campos,
-// tipos e tamanhos conferidos). Ninguém lê, altera nem apaga pelos apps: as avaliações são lidas no console
-// do Firebase (Firestore Database → Dados → coleção feedback).
+// O que as regras NÃO fazem: contar envios por pessoa. O limite de quantidade é feito pelo App Check (crachá que prova que o
+// pedido saiu do app), pela cota de contas anônimas por IP do Firebase Authentication e pelo limite no aparelho do Kit.
+// Ninguém lê, altera nem apaga avaliações pelos apps: elas são lidas no console (Firestore Database → Dados → feedback).
 
+// ===== INÍCIO =====
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- avaliações e relatos de problema (todos os apps) ----------
+    function texto(d, campo, max) { return !(campo in d) || (d[campo] is string && d[campo].size() <= max); }
+    function tecnicoValido(t) {
+      return t is map
+        && t.keys().hasOnly(['plataforma', 'navegador', 'tela', 'janela', 'instalado', 'idioma', 'erros'])
+        && texto(t, 'plataforma', 20) && texto(t, 'navegador', 20) && texto(t, 'tela', 20) && texto(t, 'janela', 20)
+        && texto(t, 'idioma', 12) && texto(t, 'erros', 500)
+        && (!('instalado' in t) || t.instalado is bool);
+    }
     match /feedback/{id} {
-      allow create: if
-        request.resource.data.keys().hasOnly(['esquema', 'app', 'versao', 'nota', 'tipo', 'mensagem', 'contato', 'tela', 'categoria', 'gravidade', 'tecnico', 'enviadoEm'])
+      allow create: if id.size() <= 40
+        && request.resource.data.keys().hasOnly(['esquema', 'app', 'versao', 'nota', 'tipo', 'mensagem', 'contato', 'tela', 'categoria', 'gravidade', 'tecnico', 'enviadoEm'])
         && request.resource.data.keys().hasAll(['esquema', 'app', 'versao', 'nota', 'tipo', 'mensagem', 'enviadoEm'])
         && request.resource.data.esquema == 1
         && request.resource.data.app in ['conta-facil', 'eletrica-facil', 'estudo-facil', 'guitarra-facil']
@@ -23,45 +39,65 @@
         && request.resource.data.tipo in ['avaliacao', 'elogio', 'sugestao', 'critica', 'problema']
         && request.resource.data.mensagem is string && request.resource.data.mensagem.size() <= 2000
         && (request.resource.data.nota > 0 || request.resource.data.mensagem.size() > 0)
-        && (!('contato' in request.resource.data) || (request.resource.data.contato is string && request.resource.data.contato.size() <= 120))
-        && (!('tela' in request.resource.data) || (request.resource.data.tela is string && request.resource.data.tela.size() <= 60))
+        && texto(request.resource.data, 'contato', 120)
+        && texto(request.resource.data, 'tela', 60)
         && (!('categoria' in request.resource.data) || request.resource.data.categoria in ['funcionamento', 'erro', 'dados', 'tela', 'outro'])
         && (!('gravidade' in request.resource.data) || request.resource.data.gravidade in ['baixa', 'media', 'alta'])
-        && (!('tecnico' in request.resource.data) || (request.resource.data.tecnico is map
-              && request.resource.data.tecnico.keys().hasOnly(['plataforma', 'navegador', 'tela', 'janela', 'instalado', 'idioma', 'erros'])))
-        && request.resource.data.enviadoEm is timestamp;
+        && (!('tecnico' in request.resource.data) || tecnicoValido(request.resource.data.tecnico))
+        && request.resource.data.enviadoEm is timestamp
+        && request.resource.data.enviadoEm < request.time + duration.value(1, 'd');
       allow read, update, delete: if false;
     }
 
-// Prazo de guarda (política de privacidade, decisões de 29/10/2026): avaliações por 2 anos; comandas ao vivo por 30 dias
-// depois de criadas ou encerradas. No plano gratuito (Spark) o Firestore recusa a exclusão automática (TTL, erro 403),
-// então a limpeza é MANUAL, uma vez por mês, no console do Firebase → Firestore → Dados:
-// 1. coleção `mesas` → Filtrar → campo `expiraEm`, condição "<", valor: a data de hoje → apagar os documentos listados
-//    (são só as comandas nunca encerradas: desde o Conta Fácil 1.4.0, o anfitrião apaga a comanda ao encerrar);
+    // ---------- comanda ao vivo (Conta Fácil) ----------
+    function mesaValida(d) {
+      return d.keys().hasOnly(['place', 'createdAt', 'people', 'items', 'service', 'couvert', 'discount', 'payMode', 'payer',
+                               'custom', 'cover', 'groups', 'closed', 'v', 'hostUid', 'expiraEm', 'online'])
+        && d.place is string && d.place.size() <= 80
+        && d.people is map && d.people.size() <= 60
+        && d.items is map && d.items.size() <= 400
+        && d.closed is bool
+        && (!('groups' in d) || (d.groups is list && d.groups.size() <= 60))
+        && (!('online' in d) || (d.online is map && d.online.size() <= 100))
+        && (!('payer' in d) || (d.payer is string && d.payer.size() <= 40))
+        && (!('expiraEm' in d) || (d.expiraEm is timestamp && d.expiraEm <= request.time + duration.value(31, 'd')));
+    }
+    match /mesas/{code} {
+      allow get: if request.auth != null && code.size() >= 10;
+      allow create: if request.auth != null && code.size() >= 10 && code.size() <= 40
+        && request.resource.data.keys().hasAll(['place', 'people', 'items', 'closed', 'v'])
+        && mesaValida(request.resource.data)
+        && (!('hostUid' in request.resource.data) || request.resource.data.hostUid == request.auth.uid);
+      allow update: if request.auth != null && code.size() >= 10
+        && mesaValida(request.resource.data)
+        && !(resource.data.closed == true && request.resource.data.closed == false)
+        && ((!('hostUid' in resource.data) && !('hostUid' in request.resource.data))
+            || request.resource.data.hostUid == resource.data.hostUid);
+      allow delete: if request.auth != null && ('hostUid' in resource.data) && resource.data.hostUid == request.auth.uid;
+      allow list: if false;
+    }
+
+    // tudo o que não está acima: fechado
+    match /{caminho=**} {
+      allow read, write: if false;
+    }
+  }
+}
+// ===== FIM =====
+
+// Prazo de guarda (Código, Título IV): avaliações por 2 anos; comandas ao vivo apagadas ao encerrar e, as nunca encerradas,
+// 30 dias depois de criadas. No plano gratuito (Spark) o Firestore recusa a exclusão automática (TTL, erro 403), então a
+// limpeza é MANUAL, uma vez por mês, no console do Firebase → Firestore → Dados:
+// 1. coleção `mesas` → Filtrar → campo `expiraEm`, condição "<", valor: a data de hoje → apagar os documentos listados;
 // 2. coleção `feedback` → Filtrar → campo `enviadoEm`, condição "<", valor: a data de hoje menos 2 anos → apagar os
 //    documentos listados (a primeira vez que algo vence é em outubro de 2028);
 // 3. só uma vez: as comandas ao vivo criadas antes do Conta Fácil 1.3.2 não têm `expiraEm`. Apague as que tiverem
 //    `createdAt` menor que 1793242800000 (29/10/2026, 0h de Brasília).
 // Se um dia o projeto for para o plano Blaze, troque a limpeza manual por políticas de TTL (Google Cloud console →
 // Firestore → Time-to-live): `feedback`/`enviadoEm` com adiamento de 730 dias e `mesas`/`expiraEm` sem adiamento.
-// Regra de `/mesas` (Conta Fácil 1.4.0): troque o bloco `match /mesas/{code} { ... }` por este e publique.
-// - create: exige os campos da comanda; `hostUid`, se vier, tem de ser o aparelho que cria;
-// - update: ninguém troca o `hostUid` (e um sinal de presença que chegue depois de apagada não recria a comanda);
-// - delete: só o aparelho que criou (comandas antigas, sem `hostUid`, só saem pela limpeza mensal).
-//
-//    match /mesas/{code} {
-//      allow get: if request.auth != null && code.size() >= 10;
-//      allow create: if request.auth != null && code.size() >= 10
-//        && request.resource.data.keys().hasAll(['place', 'people', 'items', 'closed', 'v'])
-//        && (!('hostUid' in request.resource.data) || request.resource.data.hostUid == request.auth.uid);
-//      allow update: if request.auth != null && code.size() >= 10
-//        && ((!('hostUid' in resource.data) && !('hostUid' in request.resource.data))
-//            || request.resource.data.hostUid == resource.data.hostUid);
-//      allow delete: if request.auth != null && ('hostUid' in resource.data) && resource.data.hostUid == request.auth.uid;
-//      allow list: if false;
-//    }
 
-// Opcional, recomendado antes de divulgar os apps:
-// - Google Cloud → APIs e serviços → Credenciais: restrinja a chave "Browser key (auto created by Firebase)"
-//   a referenciadores https://brunodecastrosilva.github.io/* (e ao domínio próprio, quando houver).
-// - Firebase → App Check: ative para reduzir envios automatizados.
+// Proteções fora das regras (passo a passo no Anexo de segurança do Código):
+// - App Check com reCAPTCHA v3, primeiro só medindo; a exigência no Firestore é ligada quando quase todos os pedidos
+//   chegarem com crachá (veja as métricas do App Check);
+// - chave "Browser key (auto created by Firebase)" restrita a https://brunodecastrosilva.github.io/* no Google Cloud;
+// - Firebase Authentication → Configurações → cota de criação de contas por IP (contas anônimas da comanda ao vivo).

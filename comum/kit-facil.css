@@ -510,3 +510,6 @@ details.kf-secao-anim{overflow:hidden}
 @media (max-width:1023.98px){.kf-com-nav .kf-guia-cartao.kf-guia-solto,body:has(.kf-nav) .kf-guia-cartao.kf-guia-solto{bottom:calc(var(--kf-nav-h) + 16px + env(safe-area-inset-bottom,0px))}}
 @media (min-width:1024px){.kf-guia-cartao{left:calc(var(--kf-trilho-w) + 16px)}}
 @media (prefers-reduced-motion:reduce){.kf-guia-furo,.kf-guia.kf-guia-passo .kf-guia-furo,.kf-guia-cartao,.kf-guia-barra i,.kf-guia-dedo{transition:none}.kf-guia-dedo.kf-toque::after,.kf-guia-ao-vivo span{animation:none}}
+
+/* Kit 2.14: o selo do reCAPTCHA (App Check) fica escondido; o aviso do Google vai no formulário de avaliação e em Privacidade */
+.grecaptcha-badge { visibility: hidden !important; }
