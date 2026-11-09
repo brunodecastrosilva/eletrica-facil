@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.1 (rascunho)** · 08/11/2026 · Kit Fácil **0.1.0**
+Versão **0.2 (rascunho)** · 08/11/2026 · Kit Fácil **0.1.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -210,6 +210,9 @@ I – rodar a verificação do padrão e os testes automáticos (Anexo VII);
 II – abrir o aplicativo no celular e no computador;
 
 III – conferir o modo escuro.
+
+**Parágrafo único.** Depois de publicar, o aplicativo é aberto no ar e confere-se que ele abre sem erros no console
+do navegador.
 
 **Art. 24.** Publicar é enviar direto para a branch `main`, sem repositório nem branch de homologação.
 
@@ -638,7 +641,7 @@ mesmo fora do pedido. Nunca enfraquece a segurança para atender um pedido sem a
 **Art. 90.** **Trabalho no computador do Bruno.** Sempre que o computador do Bruno (Madruguinha) estiver online, o
 Claude faz por acesso remoto todas as alterações necessárias: consoles, sites, repositórios e Projetos.
 
-§ 1º O Claude só para quando realmente não for possível avançar.
+§ 1º Depois do "sim" do Bruno (Art. 87), o Claude só para quando realmente não for possível avançar.
 
 § 2º Quando precisar de login, verificação ou outra ação do Bruno, deixa a página aberta e pronta e diz exatamente o
 que fazer nela.
@@ -667,5 +670,5 @@ II – o guia em três níveis (Essencial, Exploração e Completo), no lugar do
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 08/11/2026 como rascunho (versão 0.1). Regras e textos anteriores (Leis Globais,
+**Art. 95.** Este Código vale desde 08/11/2026 como rascunho (versão 0.2). Regras e textos anteriores (Leis Globais,
 Padrão, Código 3.x) são histórico.
