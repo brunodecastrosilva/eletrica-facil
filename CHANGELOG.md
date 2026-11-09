@@ -1,7 +1,7 @@
 # Mudanças
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
-com `0.`, o app está em fase de testes (rascunho). O histórico da numeração antiga (até a 2.24.3) está em `HISTORICO.md`.
+com `0.`, o app está em fase de testes (rascunho).
 
 ## 0.1.0 · 2026-11-08
 

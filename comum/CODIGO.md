@@ -201,7 +201,7 @@ por CDN, com versão fixa, só quando a função é usada.
 `VERSAO` do código, o cache do service worker e o topo do CHANGELOG.
 
 **Parágrafo único.** Versão que começa com `0.` indica fase de testes. Os aplicativos e o Kit recomeçaram em 0.1.0 em
-08/11/2026; o histórico da numeração antiga fica no `HISTORICO.md` de cada repositório.
+08/11/2026.
 
 **Art. 23.** Antes de publicar:
 
