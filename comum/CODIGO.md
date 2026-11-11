@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.2 (rascunho)** · 08/11/2026 · Kit Fácil **0.1.0**
+Versão **0.3 (rascunho)** · 11/11/2026 · Kit Fácil **0.4.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -159,7 +159,10 @@ VII – movimento reduzido respeitado;
 
 VIII – modo escuro em todas as telas;
 
-IX – janelas com o foco preso dentro, Esc fecha e o foco volta para quem abriu.
+IX – janelas com o foco preso dentro, Esc fecha e o foco volta para quem abriu; com o teclado aberto, a janela fica
+acima dele e o campo não é coberto;
+
+X – toda ação de arrastar tem também um jeito sem arrastar, com botão e lista de marcar.
 
 ---
 
@@ -474,8 +477,13 @@ mudam.
 
 I – título grande, igual ao nome do item na navegação, com uma linha de apoio dizendo para que a tela serve;
 
-II – no máximo um botão de criar, com verbo ou "Novo/Nova", que flutua acima da barra de baixo no celular e no tablet,
-sem cobrir o fim da lista, e fica no cabeçalho ou no topo da lista no computador;
+II – um só jeito de criar por lista, com verbo ou "Novo/Nova":
+
+a) com uma lista na tela, um botão de criar, que flutua acima da barra de baixo no celular e no tablet, sem cobrir o
+fim da lista, e fica no cabeçalho ou no topo da lista no computador;
+
+b) com duas ou mais listas na mesma tela, sem botão flutuante: cada lista tem no fim a sua linha de adicionar
+("+ Pessoa", "+ Novo item"), e o item novo entra no fim da lista;
 
 III – lista vazia que explica o que aparece ali e o que fazer para começar.
 
@@ -499,7 +507,15 @@ VI – grupos de dados: **seções que abrem e fecham**, uma embaixo da outra;
 
 VII – aviso dentro da tela: **faixa** do Kit, com no máximo um botão, contornado;
 
-VIII – confirmar antes de apagar: **janela de confirmação** do Kit.
+VIII – confirmar antes de apagar: **janela de confirmação** do Kit;
+
+IX – percorrer cartões que se mostram um de cada vez, como cupons: **carrossel** do Kit, com setas, contador e pontos;
+dados de consulta continuam em seções que abrem e fecham;
+
+X – registrar um fato que aconteceu (pago, feito, estudado): **botão contornado** que troca de texto ("Marcar como
+pago" / "Desmarcar pago"), com "Desfazer" no aviso; a chave liga e desliga só ajustes que valem dali em diante;
+
+XI – juntar ou reordenar arrastando: **arrastar e soltar** do Kit, sempre com outro jeito sem arrastar (Art. 16, X).
 
 **Art. 66.** Há uma só cor de botão principal, a de destaque, para a ação principal da tela; os demais botões são
 contornados. Botões, segmentos e cartões seguem as medidas comuns do Kit (Anexo II).
@@ -510,6 +526,11 @@ largura de tela.
 **Parágrafo único.** Podem ficar lado a lado só os controles: segmento, botões de ação no pé e a área da barra de cima.
 
 **Art. 68.** Avisos rápidos e janelas são só os do Kit. Nenhum aplicativo tem aviso ou janela própria.
+
+§ 1º Na janela, o título vem primeiro e a linha de apoio fica abaixo dele; acima do título, só um rótulo curto de
+contexto, quando houver.
+
+§ 2º Com uma janela aberta, o aviso rápido aparece acima dos botões do pé dela.
 
 **Art. 69.** Nenhum aplicativo mostra a lista de escolha, o calendário nem o relógio do sistema: usa os do Kit, iguais
 em todo aparelho.
@@ -524,7 +545,8 @@ alguma coisa têm a seta à direita.
 ### CAPÍTULO VI — Do movimento
 
 **Art. 72.** Tudo o que muda na tela se move com o movimento comum do Kit (Anexo V): menus, trocas de tela e de guia,
-seções, listas, calendário, janelas e avisos.
+seções, listas, calendário, janelas (inclusive quando mudam de lugar), avisos, carrossel, arrastar e soltar e o item
+novo de uma lista, que a tela mostra rolando até ele, se estiver fora da tela, e que pisca uma vez.
 
 § 1º Quem pede movimento reduzido vê a troca direta.
 
@@ -670,5 +692,5 @@ II – o guia em três níveis (Essencial, Exploração e Completo), no lugar do
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 08/11/2026 como rascunho (versão 0.2). Regras e textos anteriores (Leis Globais,
+**Art. 95.** Este Código vale desde 11/11/2026 como rascunho (versão 0.3). Regras e textos anteriores (Leis Globais,
 Padrão, Código 3.x) são histórico.

@@ -850,3 +850,116 @@ test('Kit 2.10: guias do Kit (setas do teclado), faixa com botão contornado e m
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
+
+/* ---------------- Kit 0.4.0 (Código 0.3) ---------------- */
+test('Kit 0.4.0 · janela: contexto acima do título e subtítulo abaixo; aviso fica acima dos botões do pé', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => KitFacil.dialogo.abrir({ contexto: 'Fechar a comanda', titulo: 'Bruno não paga o serviço', sub: 'O que fazer com R$ 7,22?', corpo: '<p>x</p>',
+    pe: '<button class="kf-btn kf-sec" data-kf-fechar>Voltar</button><button class="kf-btn kf-pri">Continuar</button>' }));
+  const ordem = await p.evaluate(() => [...document.querySelector('.kf-dlg-tt').children].map(e => e.className || e.tagName));
+  assert.deepEqual(ordem, ['kf-dlg-ctx', 'H2', 'kf-dlg-sub']);
+  await p.evaluate(() => KitFacil.avisar('Bruno: pago.'));
+  await p.waitForTimeout(400); // depois que a janela termina de subir
+  const r = await p.evaluate(() => ({ aviso: document.querySelector('.kf-toast').getBoundingClientRect().bottom, pe: document.querySelector('.kf-dlg-pe').getBoundingClientRect().top }));
+  assert.ok(r.aviso <= r.pe, `o aviso (${r.aviso}) cobre o pé da janela (${r.pe})`);
+  await p.keyboard.press('Escape');
+  await p.evaluate(() => KitFacil.avisar('Sem janela.'));
+  assert.equal(await p.evaluate(() => document.querySelector('.kf-toast').style.bottom), '');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.4.0 · linha de adicionar, botão de fato, texto só para leitor de tela e item novo que pisca', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  const r = await p.evaluate(() => {
+    const m = document.getElementById('main');
+    m.innerHTML = `<ul id="l">${Array.from({ length: 30 }, (_, i) => `<li style="min-height:56px">Item ${i}</li>`).join('')}</ul>` + KitFacil.ui.adicionar({ rotulo: 'Pessoa', attrs: 'data-add' })
+      + KitFacil.ui.fato({ marcado: false, marcar: 'Marcar como pago', desmarcar: 'Desmarcar pago', attrs: 'data-f1' })
+      + KitFacil.ui.fato({ marcado: true, marcar: 'Marcar como pago', desmarcar: 'Desmarcar pago', attrs: 'data-f2' })
+      + '<span class="kf-so-leitor" id="so">Falta pagar</span>';
+    const add = m.querySelector('[data-add]'), so = document.getElementById('so').getBoundingClientRect();
+    return { altura: add.getBoundingClientRect().height, texto: add.textContent.trim(), f1: m.querySelector('[data-f1]').textContent.trim(), f2: m.querySelector('[data-f2]').getAttribute('aria-pressed'), so: [so.width, so.height] };
+  });
+  assert.ok(r.altura >= 44, 'linha de adicionar menor que 44 px');
+  assert.equal(r.texto, 'Pessoa');
+  assert.equal(r.f1, 'Marcar como pago');
+  assert.equal(r.f2, 'true');
+  assert.deepEqual(r.so, [1, 1]);
+  await p.evaluate(() => { const li = document.querySelector('#l li:last-child'); window.__li = li; KitFacil.destacar(li); });
+  assert.ok(await esperar(() => p.evaluate(() => window.__li.classList.contains('kf-novo'))), 'o item novo não piscou');
+  const dentro = await p.evaluate(() => { const r = window.__li.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; });
+  assert.ok(dentro, 'a tela não rolou até o item novo');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.4.0 · carrossel: um cartão por vez, setas, contador, teclado e gesto de deslizar', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => {
+    const m = document.getElementById('main');
+    m.innerHTML = '<div id="car"><div style="height:200px">Ana</div><div style="height:320px">Bruno</div><div style="height:240px">Carla</div></div>';
+    window.__mudou = [];
+    window.__car = KitFacil.carrossel(document.getElementById('car'), { rotulos: ['Ana', 'Bruno', 'Carla'], aoMudar: i => window.__mudou.push(i), rotulo: 'Cupons' });
+  });
+  const cont = () => p.textContent('.kf-car-cont');
+  assert.equal(await cont(), '1 de 3 · Ana');
+  assert.equal(await p.isDisabled('[data-kf-car="-1"]'), true);
+  await p.click('[data-kf-car="1"]');
+  assert.equal(await cont(), '2 de 3 · Bruno');
+  await p.focus('.kf-car-janela'); await p.keyboard.press('ArrowRight');
+  assert.equal(await cont(), '3 de 3 · Carla');
+  assert.equal(await p.isDisabled('[data-kf-car="1"]'), true);
+  // deslizar para a direita volta um cartão
+  const j = await p.evaluate(() => { const r = document.querySelector('.kf-car-janela').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + 60, w: r.width }; });
+  await p.mouse.move(j.x, j.y); await p.mouse.down(); await p.mouse.move(j.x + j.w * .2, j.y, { steps: 4 }); await p.mouse.move(j.x + j.w * .4, j.y, { steps: 4 }); await p.mouse.up();
+  assert.equal(await cont(), '2 de 3 · Bruno');
+  assert.deepEqual(await p.evaluate(() => window.__mudou), [1, 2, 1]);
+  // só o cartão da vez fica ao alcance do teclado e do leitor de tela
+  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.kf-car-slide')].map(s => s.inert)), [true, false, true]);
+  assert.ok(await semRolagemLateral(p));
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.4.0 · arrastar e soltar: o cartão vai ao alvo e o app recebe a mudança; fora do alvo, volta', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => {
+    const m = document.getElementById('main');
+    m.innerHTML = '<div id="area" style="display:flex;flex-direction:column;gap:12px;padding:16px"><div class="cx" data-id="a" style="height:60px;background:#ddd">Ana</div><div class="cx" data-id="b" style="height:60px;background:#ddd">Bruno</div><div class="cx" data-id="c" style="height:60px;background:#ddd">Carla</div></div>';
+    window.__soltou = []; window.__fora = 0;
+    KitFacil.arrastar({ area: document.getElementById('area'), item: '.cx', alvo: '.cx', aoSoltar: (i, al) => window.__soltou.push(i.dataset.id + '>' + al.dataset.id), aoFora: () => window.__fora++ });
+  });
+  const centro = s => p.evaluate(s => { const r = document.querySelector(s).getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, s);
+  const de = await centro('[data-id="a"]'), para = await centro('[data-id="c"]');
+  await p.mouse.move(de.x, de.y); await p.mouse.down(); await p.mouse.move(de.x, de.y + 30, { steps: 5 });
+  assert.equal(await p.evaluate(() => !!document.querySelector('.kf-arr-fantasma')), true, 'o cartão não levantou');
+  await p.mouse.move(para.x, para.y, { steps: 8 });
+  assert.equal(await p.evaluate(() => document.querySelector('[data-id="c"]').classList.contains('kf-arr-alvo')), true, 'o alvo não ficou colorido');
+  await p.mouse.up();
+  assert.deepEqual(await p.evaluate(() => window.__soltou), ['a>c']);
+  // soltar fora de qualquer alvo: volta para casa
+  await p.mouse.move(de.x, de.y); await p.mouse.down(); await p.mouse.move(de.x + 5, 400, { steps: 6 }); await p.mouse.move(380, 700, { steps: 4 }); await p.mouse.up();
+  assert.equal(await p.evaluate(() => window.__fora), 1);
+  assert.ok(await esperar(() => p.evaluate(() => !document.querySelector('.kf-arr-fantasma'))), 'o fantasma ficou na tela');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.4.0 · seção desconta o cabeçalho fixo do app (scroll-margin-top)', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => {
+    const m = document.getElementById('main');
+    m.innerHTML = '<div style="height:900px"></div><div id="g" style="scroll-margin-top:200px">' + [1, 2, 3].map(i => `<details data-kf-secao="grupo"><summary style="min-height:48px">Seção ${i}</summary><div style="height:400px">corpo ${i}</div></details>`).join('') + '</div><div style="height:900px"></div>';
+  });
+  await p.click('#g details:nth-child(2) > summary');
+  await p.waitForTimeout(800);
+  const topo = await p.evaluate(() => document.querySelector('#g details:nth-child(2)').getBoundingClientRect().top);
+  assert.ok(topo >= 198 && topo <= 212, `a seção parou em ${topo}px, embaixo do cabeçalho fixo (200 px)`);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});

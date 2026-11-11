@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '0.1.0';
+  const VERSAO = '0.4.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -159,12 +159,27 @@
     let el = $('.kf-toast');
     if (!el) { el = document.createElement('div'); el.className = 'kf-toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
     el.textContent = msg; el.hidden = false; clearTimeout(toastT);
+    posicionarAviso(el);
     if (acao && acao.label) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'kf-toast-acao'; b.textContent = acao.label;
       b.onclick = () => { el.hidden = true; clearTimeout(toastT); try { acao.run(); } catch (e) { console.error(e); } };
       el.appendChild(b);
     }
     toastT = setTimeout(() => { el.hidden = true; }, acao ? 6000 : 3200);
+  }
+
+  /* Kit 0.4.0: com uma janela aberta, o aviso sobe e fica acima dos botões do pé dela (ou acima da janela, sem pé),
+     para não cobrir um botão (Código, Art. 16, IV) */
+  function posicionarAviso(el) {
+    el.style.bottom = '';
+    if (!atual || !atual.dlg || !atual.dlg.isConnected) return;
+    const pe = $('.kf-dlg-pe', atual.dlg), r = (pe || atual.dlg).getBoundingClientRect();
+    const alvo = r.top;
+    const vh = (global.visualViewport && global.visualViewport.height) || innerHeight;
+    if (alvo > 0 && alvo < vh) el.style.bottom = Math.round(innerHeight - alvo + 12) + 'px';
+    // a janela ainda está subindo ou deslizando: mede de novo quando o movimento termina
+    const anims = atual.dlg.getAnimations ? atual.dlg.getAnimations() : [];
+    if (anims.length && !el._kfEspera) { el._kfEspera = 1; Promise.all(anims.map(a => a.finished.catch(() => {}))).then(() => { el._kfEspera = 0; if (!el.hidden) posicionarAviso(el); }); }
   }
 
   /* ================= janelas (diálogos) ================= */
@@ -198,15 +213,16 @@
     else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
   }
   /* abre uma janela: no celular sobe do pé da tela; em telas largas fica no centro */
-  /* sub: linha pequena acima do título; classe 'kf-alto' (altura quase toda da tela) e 'kf-largo' (até 780 px) */
-  function abrirDialogo({ titulo, sub = '', corpo, pe = '', aoMontar, aoFechar, classe = '', nome = '' }) {
+  /* sub: linha de apoio abaixo do título (Kit 0.4.0); contexto: rótulo curto acima do título, quando houver;
+     classe 'kf-alto' (altura quase toda da tela) e 'kf-largo' (até 780 px) */
+  function abrirDialogo({ titulo, sub = '', contexto = '', corpo, pe = '', aoMontar, aoFechar, classe = '', nome = '' }) {
     const origem = atual ? atual.origem : document.activeElement;
     fecharDialogo(true, { trocando: true });
     const idT = 'kf-t-' + Math.random().toString(36).slice(2, 8);
     const wrap = document.createElement('div');
     wrap.className = 'kf-ov';
     wrap.innerHTML = `<div class="kf-dlg ${esc(classe)}" role="dialog" aria-modal="true" aria-labelledby="${idT}" tabindex="-1"${nome ? ` data-kf-dialogo="${esc(nome)}"` : ''}>
-      <div class="kf-dlg-cab">${sub ? `<div class="kf-dlg-tt"><p class="kf-dlg-sub">${esc(sub)}</p><h2 id="${idT}">${esc(titulo)}</h2></div>` : `<h2 id="${idT}">${esc(titulo)}</h2>`}<button type="button" class="kf-fechar" data-kf-fechar aria-label="Fechar">${IC.x}</button></div>
+      <div class="kf-dlg-cab">${sub || contexto ? `<div class="kf-dlg-tt">${contexto ? `<p class="kf-dlg-ctx">${esc(contexto)}</p>` : ''}<h2 id="${idT}">${esc(titulo)}</h2>${sub ? `<p class="kf-dlg-sub">${esc(sub)}</p>` : ''}</div>` : `<h2 id="${idT}">${esc(titulo)}</h2>`}<button type="button" class="kf-fechar" data-kf-fechar aria-label="Fechar">${IC.x}</button></div>
       <div class="kf-dlg-corpo">${corpo}</div>${pe ? `<div class="kf-dlg-pe">${pe}</div>` : ''}</div>`;
     raiz().appendChild(wrap);
     travar();
@@ -221,6 +237,7 @@
       else if (e.key === 'Tab') prender(e, dlg);
     });
     atual = { el: wrap, dlg, origem, aoFechar, nome };
+    vigiarJanela(dlg);
     if (aoMontar) aoMontar(dlg);
     const alvo = $('[autofocus]', dlg) || dlg;
     try { alvo.focus({ preventScroll: true }); } catch { alvo.focus(); }
@@ -978,10 +995,13 @@
   // Kit 2.12: o app pode definir os próprios níveis (C.guia.niveis); o passo com `niveis: [..]` aparece só nesses níveis,
   // e o sem `niveis` aparece do seu `nivel` em diante (os níveis se somam, como antes)
   const niveisDoApp = () => (C.guia && Array.isArray(C.guia.niveis) && C.guia.niveis.length) ? C.guia.niveis.map((v, i) => ({ n: i + 1, ...v })) : NIVEIS;
-  const passosDoNivel = n => ((C.guia && C.guia.passos) || []).filter(p => p && (Array.isArray(p.niveis) ? p.niveis.includes(n) : (p.nivel || 3) <= n) && (typeof p.se !== 'function' || (() => { try { return p.se(); } catch { return false; } })()));
+  const passosDoNivel = n => ((C.guia && C.guia.passos) || []).filter(p => p && (emVideo() || (Array.isArray(p.niveis) ? p.niveis.includes(n) : (p.nivel || 3) <= n)) && (typeof p.se !== 'function' || (() => { try { return p.se(); } catch { return false; } })()));
   const minutos = q => Math.max(1, Math.round(q * 15 / 60));
+  const emVideo = () => !!(C.guia && C.guia.modo === 'video');
   function niveisHTML() {
     if (!C.guia) return '';
+    // Kit 0.3.0: guia em vídeo, um só, sem níveis
+    if (emVideo()) return `<div class="kf-guia-lista"><button type="button" class="kf-guia-linha" data-kf="guia-1"><b>${esc(C.guia.nome || 'Ver o guia')}</b>${IC.seta || '<span aria-hidden="true">›</span>'}</button></div>`;
     // níveis do app: lista vertical, um nível por linha, só com o nome (lei 6, nada lado a lado; Kit 2.12)
     if (Array.isArray(C.guia.niveis) && C.guia.niveis.length) {
       const ns = niveisDoApp();
@@ -1007,6 +1027,7 @@
   }
   function escolherGuia() {
     if (!C.guia) return false;
+    if (emVideo()) { guiaVideo.iniciar(); return true; }
     abrirDialogo({ titulo: 'Guia do app', classe: 'kf-curto', nome: 'guia',
       corpo: `${C.guia.niveis ? '' : '<p class="kf-ajuda">Escolha até onde quer ir. Dá para parar a qualquer momento.</p>'}${niveisHTML()}`, pe: '<button type="button" class="kf-btn kf-sec" data-kf-fechar>Agora não</button>' });
     return true;
@@ -1015,9 +1036,10 @@
   const movimentoReduzido = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
   const guia = {
     lista: [], i: -1, nivel: 0, el: null, ligado: false, raf: 0, vigia: 0, chave: '',
-    ativo() { return this.i >= 0 && !!this.el; },
+    ativo() { return (this.i >= 0 && !!this.el) || guiaVideo.ativo(); },
     async iniciar(nivel = 1) {
       if (!C.guia) return false;
+      if (emVideo()) return guiaVideo.iniciar();
       if (dialogoAberto()) fecharDialogo(true);
       this.parar(true);
       try { if (C.guia.preparar) await C.guia.preparar(nivel); } catch (x) { console.warn(x); }
@@ -1027,6 +1049,7 @@
       return true;
     },
     parar(semFim) {
+      if (guiaVideo.ativo()) return guiaVideo.parar(semFim);
       const estava = this.ativo();
       // parado no meio de uma ação ao vivo: fecha a janela que a ação abriu
       if (this.el && this.el.classList.contains('kf-guia-vivo') && dialogoAberto()) fecharDialogo(true);
@@ -1076,6 +1099,7 @@
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
       if (!this.el || vez !== this.vez) return;
       const c = $('.kf-guia-cartao', this.el), acao = typeof p.acao === 'function';
+      c.classList.remove('kf-guia-compacto');
       // Kit 2.12.1: no passo ao vivo a pessoa lê primeiro; a ação só começa quando ela toca em Mostrar.
       // estado: 'ler' (antes), 'rodando' (o app faz o passo) ou 'feito' (depois, com o resultado destacado)
       const pinta = estado => {
@@ -1094,11 +1118,11 @@
       };
       const rodar = async () => {
         if (!this.el || vez !== this.vez) return;
-        pinta('rodando'); this.posicionar();
+        pinta('rodando'); c.classList.add('kf-guia-compacto'); this.posicionar();
         this.el.classList.add('kf-guia-vivo');
         try { await this.esperar(500, vez); await p.acao(this.maos(vez)); } catch (x) { if (x !== PARADO) console.warn(x); }
         if (!this.el || vez !== this.vez) return;
-        this.dedo(null); this.el.classList.remove('kf-guia-vivo');
+        this.dedo(null); this.el.classList.remove('kf-guia-vivo'); c.classList.remove('kf-guia-compacto');
         // depois da ação, o destaque vai para o resultado (p.fim: seletor ou função), ou volta ao alvo do passo
         let fim = null; try { fim = typeof p.fim === 'function' ? p.fim() : p.fim ? $$(p.fim).find(el => el.getClientRects().length) : null; } catch {}
         this.alvoVivo = fim || null;
@@ -1127,9 +1151,14 @@
       if (!this.el) return;
       if (!alvo) { if (d) d.hidden = true; return; }
       if (!d) { d = document.createElement('div'); d.className = 'kf-guia-dedo'; d.setAttribute('aria-hidden', 'true'); this.el.appendChild(d); }
+      d.hidden = false; this.porDedo(d, alvo);
+    },
+    // Kit 0.2.0: num campo de texto o dedo fica na ponta direita, para não cobrir o que está sendo digitado
+    porDedo(d, alvo) {
       const r = alvo.getBoundingClientRect();
-      d.hidden = false;
-      d.style.left = Math.round(r.left + Math.min(r.width / 2, 60)) + 'px'; d.style.top = Math.round(r.top + r.height / 2) + 'px';
+      const texto = alvo.matches && alvo.matches('textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="range"])');
+      const x = texto && r.width > 120 ? r.right - 30 : r.left + Math.min(r.width / 2, 60);
+      d.style.left = Math.round(x) + 'px'; d.style.top = Math.round(r.top + r.height / 2) + 'px';
     },
     // as "mãos" do guia ao vivo: o app usa estas funções para mostrar cada ação como se alguém tocasse na tela
     maos(vez) {
@@ -1181,19 +1210,36 @@
       };
     },
     posicionar() {
-      if (!this.ativo()) return;
+      if (!this.el || this.i < 0) return;
       const p = this.lista[this.i], furo = $('.kf-guia-furo', this.el), c = $('.kf-guia-cartao', this.el);
       const t = this.alvo(p), vh = innerHeight, ch = c.offsetHeight, gap = 12, pad = 6;
       const barra = $$('.kf-barra').find(b => b.getClientRects().length), baixo = $$('.kf-nav').find(b => b.getClientRects().length);
       const topoLivre = barra ? Math.max(4, barra.getBoundingClientRect().bottom + 2) : 4;
       let top, lado = 'baixo';
+      // Kit 0.2.0: área que o cartão não pode cobrir. Com janela aberta, a janela inteira; sem janela, o ponto destacado
+      // somado à área do passo (ex.: o formulário inteiro enquanto o app digita num campo dele)
+      const dlgR = dialogoAberto() && atual.dlg ? atual.dlg.getBoundingClientRect() : null;
+      let zona = null;
+      if (t) {
+        const rt = t.getBoundingClientRect(); zona = { top: rt.top, bottom: rt.bottom, left: rt.left, right: rt.right };
+        const base = !dlgR && this.alvoVivo ? (() => { const v = this.alvoVivo; this.alvoVivo = null; const b = this.alvo(p); this.alvoVivo = v; return b; })() : null;
+        if (base && base !== t && !(base.closest && base.closest('.kf-ov'))) {
+          const rb = base.getBoundingClientRect();
+          const u = { top: Math.min(rt.top, rb.top), bottom: Math.max(rt.bottom, rb.bottom), left: Math.min(rt.left, rb.left), right: Math.max(rt.right, rb.right) };
+          if (u.bottom - u.top <= vh * .55) zona = u;
+        }
+      }
+      if (dlgR) zona = { top: dlgR.top, bottom: dlgR.bottom, left: dlgR.left, right: dlgR.right };
       if (t) {
         const r = t.getBoundingClientRect(), naNav = !!(baixo && baixo.contains(t)), naBarra = !!(barra && barra.contains(t));
         const fundo = baixo && !naNav ? baixo.getBoundingClientRect().top - 2 : vh - 4;
         let y1 = Math.max(r.top - pad, naBarra || naNav ? 2 : topoLivre), y2 = Math.min(r.bottom + pad, fundo);
         const MIN = 44; // o destaque nunca fica menor que um alvo de toque
+        const z1 = zona ? Math.min(y1, zona.top - pad) : y1, z2 = zona ? Math.max(y2, zona.bottom + pad) : y2;
         if (y2 - y1 >= 8) {
-          if (y2 + gap + ch <= fundo - gap) top = y2 + gap;
+          if (z2 + gap + ch <= fundo - gap) top = z2 + gap;
+          else if (z1 - gap - ch >= topoLivre) top = z1 - gap - ch;
+          else if (y2 + gap + ch <= fundo - gap) top = y2 + gap;
           else if (y1 - gap - ch >= topoLivre) top = y1 - gap - ch;
           else {
             // Kit 2.11.1: destaque alto demais para caber com o cartão. O cartão fica na ponta com mais destaque
@@ -1209,18 +1255,283 @@
         Object.assign(furo.style, { left: (r.left - pad) + 'px', top: y1 + 'px', width: (r.width + pad * 2) + 'px', height: Math.max(0, y2 - y1) + 'px' });
       } else furo.hidden = true;
       // janela aberta (guia ao vivo): o cartão fica acima da janela, sem cobrir o que ela mostra
-      if (dialogoAberto() && atual.dlg) {
-        const dt = atual.dlg.getBoundingClientRect().top;
-        if (dt - gap - ch >= topoLivre) top = Math.min(dt - gap - ch, top === undefined ? Infinity : Math.max(top, topoLivre + gap)) ;
-        if (top === undefined || top + ch > dt - gap) top = Math.max(topoLivre + gap, dt - gap - ch);
+      // janela aberta: o cartão fica acima, abaixo ou ao lado da janela (tela larga); sem espaço, no alto ou no pé da
+      // tela, onde cobre menos da janela, e nunca sobre o ponto destacado
+      let lateral = null;
+      if (dlgR) {
+        const fundoTela = vh - 4, livreEsq = dlgR.left - gap * 2, livreDir = innerWidth - dlgR.right - gap * 2;
+        if (dlgR.top - gap - ch >= topoLivre) top = dlgR.top - gap - ch;
+        else if (dlgR.bottom + gap + ch <= fundoTela - gap) top = dlgR.bottom + gap;
+        else if (Math.max(livreEsq, livreDir) >= 260) {
+          const esq = livreEsq >= livreDir, w = Math.min(440, esq ? livreEsq : livreDir);
+          lateral = { left: esq ? gap : dlgR.right + gap, width: w };
+          top = Math.max(topoLivre + gap, Math.min(dlgR.top, fundoTela - gap - ch));
+        } else {
+          const r = t ? t.getBoundingClientRect() : null;
+          const opcoes = [topoLivre + gap, fundoTela - gap - ch].filter(y => !r || y + ch <= r.top - pad || y >= r.bottom + pad);
+          const cobre = y => Math.max(0, Math.min(y + ch, dlgR.bottom) - Math.max(y, dlgR.top));
+          if (opcoes.length) top = opcoes.sort((x, y) => cobre(x) - cobre(y))[0];
+        }
       }
+      Object.assign(c.style, lateral ? { left: lateral.left + 'px', right: 'auto', width: lateral.width + 'px', marginInline: '0' } : { left: '', right: '', width: '', marginInline: '' });
       c.classList.toggle('kf-guia-solto', top === undefined && lado === 'baixo');
       c.classList.toggle('kf-guia-alto', false);
       c.style.top = top === undefined ? '' : top + 'px';
       this.el.classList.toggle('kf-guia-escuro', !t || furo.hidden);
       // com uma janela aberta (o guia ao vivo abre janelas), o guia fica por cima dela e não escurece de novo
       this.el.classList.toggle('kf-guia-sobre', dialogoAberto());
-      const dd = $('.kf-guia-dedo', this.el); if (dd && !dd.hidden && this.alvoVivo && this.alvoVivo.isConnected) { const r = this.alvoVivo.getBoundingClientRect(); dd.style.left = Math.round(r.left + Math.min(r.width / 2, 60)) + 'px'; dd.style.top = Math.round(r.top + r.height / 2) + 'px'; }
+      const dd = $('.kf-guia-dedo', this.el); if (dd && !dd.hidden && this.alvoVivo && this.alvoVivo.isConnected) this.porDedo(dd, this.alvoVivo);
+    },
+  };
+
+
+  /* ================= Kit 0.3.0: guia em vídeo =================
+     Ligado com C.guia.modo = 'video'. Um guia só, como um vídeo: cada etapa mostra só o título (que já diz o que fazer)
+     e o app faz a ação na tela, com um ponteiro que passeia até cada alvo e toca. Sem destaque e sem escurecer a tela.
+     Ao fim de cada etapa, uma pausa curta e a próxima começa sozinha. No player: voltar, pausar ou continuar, avançar e
+     fechar; tocar na tela também pausa. Teclado: Espaço pausa, setas voltam e avançam, Esc fecha.
+     Para voltar e avançar livremente, o app informa o estado da demonstração:
+       C.guia.foto(): devolve o estado (texto) no começo de uma etapa; C.guia.restaurar(foto): volta a esse estado.
+     Avançar para uma etapa ainda não vista faz as etapas do meio na hora, sem ponteiro e sem espera. */
+  const guiaVideo = {
+    lista: [], i: -1, el: null, vez: 0, pausado: false, fotos: [], instantaneo: false, fim: false, raf: 0,
+    pt: { x: -60, y: -60, de: null, t0: 0, dur: 0, el: null },
+    ativo() { return !!this.el; },
+    async iniciar() {
+      if (!C.guia) return false;
+      if (dialogoAberto()) fecharDialogo(true);
+      this.parar(true);
+      try { if (C.guia.preparar) await C.guia.preparar(1); } catch (x) { console.warn(x); }
+      this.lista = ((C.guia && C.guia.passos) || []).filter(p => p && (typeof p.se !== 'function' || (() => { try { return p.se(); } catch { return false; } })()));
+      if (!this.lista.length) { avisar(C.guia.semPassos || 'O guia ainda não tem o que mostrar aqui.'); return false; }
+      this.fotos = []; this.pausado = false; this.fim = false;
+      this.montar(); this.tocar(0);
+      return true;
+    },
+    parar(semFim) {
+      if (!this.el) return;
+      this.vez++; this.yPlayer = null;
+      if (dialogoAberto()) fecharDialogo(true);
+      cancelAnimationFrame(this.raf); this.raf = 0;
+      this.el.remove(); this.el = null; this.i = -1;
+      document.documentElement.classList.remove('kf-gv-ligado');
+      if (!semFim && C.guia && C.guia.fim) { try { C.guia.fim(); } catch (x) { console.warn(x); } }
+    },
+    montar() {
+      const el = document.createElement('div'); el.className = 'kf-gv';
+      el.innerHTML = `<div class="kf-gv-tela" aria-hidden="true"></div>
+        <svg class="kf-gv-ponteiro" viewBox="0 0 28 28" aria-hidden="true"><path d="M5 3l17 10.5-7.6 1.6 4.4 8.3-3.4 1.8-4.4-8.4L5 22z"/></svg>
+        <section class="kf-gv-player" role="region" aria-label="Guia do app">
+          <div class="kf-gv-linha"><h3 class="kf-gv-titulo" aria-live="polite"></h3><span class="kf-gv-n"></span></div>
+          <div class="kf-gv-barra" aria-hidden="true"><i></i></div>
+          <div class="kf-gv-ctl">
+            <button type="button" data-gv="voltar" aria-label="Voltar uma etapa">${svg('<path d="M19 20 9 12l10-8v16zM5 19V5"/>')}</button>
+            <button type="button" data-gv="pausa" class="kf-gv-pp" aria-label="Pausar">${svg('<path d="M8 5v14M16 5v14"/>')}</button>
+            <button type="button" data-gv="avancar" aria-label="Avançar uma etapa">${svg('<path d="m5 4 10 8-10 8V4zM19 5v14"/>')}</button>
+            <button type="button" data-gv="fechar" class="kf-gv-x" aria-label="Fechar guia">${IC.x || '×'}</button>
+          </div>
+        </section>`;
+      document.body.appendChild(el); this.el = el;
+      document.documentElement.classList.add('kf-gv-ligado');
+      $('.kf-gv-tela', el).addEventListener('click', () => this.alternar());
+      el.addEventListener('click', e => {
+        const b = e.target.closest('[data-gv]'); if (!b) return;
+        ({ voltar: () => this.tocar(this.i - 1), avancar: () => this.tocar(this.i + 1), pausa: () => this.alternar(), fechar: () => this.parar(), rever: () => this.tocar(0) })[b.dataset.gv]();
+      });
+      if (!this.teclado) {
+        this.teclado = e => {
+          if (!this.el) return;
+          const k = e.key, mapa = { ' ': () => this.alternar(), Escape: () => this.parar(), ArrowLeft: () => this.tocar(this.i - 1), ArrowRight: () => this.tocar(this.i + 1) };
+          if (k === 'Tab' || k === 'Enter') { if (!e.target.closest || !e.target.closest('.kf-gv-player')) { e.preventDefault(); e.stopPropagation(); $('.kf-gv-pp', this.el).focus(); } return; }
+          if (!mapa[k]) return;
+          if (k === ' ' && e.target.closest && e.target.closest('.kf-gv-player button')) return; // Espaço no botão já é o clique
+          e.preventDefault(); e.stopPropagation(); mapa[k]();
+        };
+        document.addEventListener('keydown', this.teclado, true);
+      }
+      const quadro = () => { if (!this.el) return; this.desenhar(); this.raf = requestAnimationFrame(quadro); };
+      this.raf = requestAnimationFrame(quadro);
+      setTimeout(() => this.el && $('.kf-gv-pp', this.el).focus({ preventScroll: true }), 50);
+    },
+    alternar() {
+      if (this.fim) return this.tocar(0);
+      this.pausado = !this.pausado; this.pintarPP();
+    },
+    pintarPP() {
+      const b = this.el && $('.kf-gv-pp', this.el); if (!b) return;
+      b.dataset.gv = this.fim ? 'rever' : 'pausa';
+      b.setAttribute('aria-label', this.fim ? 'Ver de novo' : this.pausado ? 'Continuar' : 'Pausar');
+      b.innerHTML = this.fim ? svg('<path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/>') : this.pausado ? svg('<path d="M7 4v16l13-8z"/>') : svg('<path d="M8 5v14M16 5v14"/>');
+      this.el.classList.toggle('kf-gv-pausado', this.pausado);
+    },
+    pintar() {
+      const p = this.lista[this.i], n = this.lista.length;
+      $('.kf-gv-titulo', this.el).textContent = this.fim ? (C.guia.concluido || 'Pronto. Agora é com você.') : p.t;
+      $('.kf-gv-n', this.el).textContent = this.fim ? '' : `${this.i + 1}/${n}`;
+      $('.kf-gv-barra i', this.el).style.width = (this.fim ? 100 : Math.round(this.i / n * 100)) + '%';
+      $('[data-gv="voltar"]', this.el).disabled = this.i <= 0 && !this.fim;
+      $('[data-gv="avancar"]', this.el).disabled = this.fim;
+      this.pintarPP();
+    },
+    // espera que conta só o tempo fora da pausa; no modo instantâneo, um quadro
+    esperar(ms, vez) {
+      if (this.instantaneo) return new Promise((ok, nao) => requestAnimationFrame(() => (this.el && vez === this.vez ? ok() : nao(PARADO))));
+      if (movimentoReduzido()) ms = Math.min(ms, 400);
+      return new Promise((ok, nao) => {
+        let falta = ms, antes = performance.now();
+        const t = () => {
+          if (!this.el || vez !== this.vez) return nao(PARADO);
+          const agora = performance.now(); if (!this.pausado) falta -= agora - antes; antes = agora;
+          if (falta <= 0) ok(); else setTimeout(t, Math.min(50, falta));
+        };
+        setTimeout(t, Math.min(50, ms));
+      });
+    },
+    async tocar(n) {
+      if (!this.el) return;
+      n = Math.max(0, Math.min(n, this.lista.length - 1));
+      const vez = ++this.vez; this.fim = false; this.i = n;
+      if (dialogoAberto()) fecharDialogo(true);
+      this.pintar();
+      try {
+        // volta ao estado do começo da etapa; etapa ainda não vista: faz as do meio na hora
+        let k = n; while (k > 0 && !this.fotos[k]) k--;
+        if (this.fotos[k] && C.guia.restaurar) { C.guia.restaurar(this.fotos[k]); await this.quadro(); }
+        if (k < n) {
+          this.instantaneo = true; this.el.classList.add('kf-gv-pulando');
+          try { for (let j = k; j < n; j++) { await this.rodar(this.lista[j], vez); if (dialogoAberto()) fecharDialogo(true); this.fotos[j + 1] = C.guia.foto ? C.guia.foto() : null; } }
+          finally { this.instantaneo = false; if (this.el) this.el.classList.remove('kf-gv-pulando'); }
+        }
+        if (!this.fotos[n] && C.guia.foto) this.fotos[n] = C.guia.foto();
+        await this.esperar(700, vez); // tempo de ler o título
+        await this.rodar(this.lista[n], vez);
+        // o estado do fim desta etapa é o começo da próxima
+        if (n + 1 < this.lista.length && C.guia.foto) { if (dialogoAberto()) fecharDialogo(true); this.fotos[n + 1] = C.guia.foto(); }
+        await this.esperar(1300, vez); // pausa leve entre uma etapa e outra
+      } catch (x) { if (x !== PARADO) console.warn(x); return; }
+      if (!this.el || vez !== this.vez) return;
+      if (n + 1 < this.lista.length) return this.tocar(n + 1);
+      this.fim = true; this.pausado = false; this.pintar();
+      this.mover(null);
+    },
+    quadro() { return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); },
+    async rodar(p, vez) {
+      try { if (p.ir) await p.ir(); } catch (x) { console.warn(x); }
+      await this.quadro();
+      const m = this.maos(vez);
+      if (typeof p.acao === 'function') await p.acao(m);
+      else if (p.sel) await m.apontar(typeof p.sel === 'function' ? p.sel() : p.sel);
+    },
+    // ponteiro: vai até o alvo com movimento suave e acompanha a rolagem sem atraso
+    ponto(el) {
+      const r = el.getBoundingClientRect();
+      const texto = el.matches && el.matches('textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="range"])');
+      return { x: texto && r.width > 120 ? r.right - 26 : r.left + Math.min(r.width / 2, 70), y: r.top + Math.min(r.height / 2, 28) };
+    },
+    mover(el) {
+      const pt = this.pt;
+      pt.de = { x: pt.x, y: pt.y }; pt.t0 = performance.now(); pt.el = el;
+      pt.dur = this.instantaneo || movimentoReduzido() ? 0 : 750;
+    },
+    desenhar() {
+      const pt = this.pt, svgEl = $('.kf-gv-ponteiro', this.el); if (!svgEl) return;
+      if (pt.el && pt.el.isConnected && pt.el.getClientRects().length) {
+        const alvo = this.ponto(pt.el), t = pt.dur ? Math.min(1, (performance.now() - pt.t0) / pt.dur) : 1;
+        const e = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        pt.x = pt.de.x + (alvo.x - pt.de.x) * e; pt.y = pt.de.y + (alvo.y - pt.de.y) * e;
+      }
+      svgEl.style.transform = `translate(${Math.round(pt.x)}px,${Math.round(pt.y)}px)`;
+      svgEl.classList.toggle('kf-gv-oculto', !pt.el);
+      this.posPlayer();
+    },
+    // player embaixo; com uma janela aberta embaixo, sobe para o alto da tela
+    posPlayer() {
+      const pl = $('.kf-gv-player', this.el); if (!pl) return;
+      const h = pl.offsetHeight, vh = innerHeight;
+      const barra = $$('.kf-barra').find(b => b.getClientRects().length), nav = $$('.kf-nav').find(b => b.getClientRects().length);
+      const topo = (barra ? barra.getBoundingClientRect().bottom : 0) + 10, pe = (nav ? nav.getBoundingClientRect().top : vh) - 12 - h;
+      let y = pe;
+      const d = dialogoAberto() && atual.dlg ? atual.dlg.getBoundingClientRect() : null;
+      if (d && d.bottom > pe && d.top < pe + h) {
+        const cobre = yy => Math.max(0, Math.min(yy + h, d.bottom) - Math.max(yy, d.top));
+        const alvo = this.pt.el && this.pt.el.isConnected ? this.pt.el.getBoundingClientRect() : null;
+        const tapa = yy => alvo && yy < alvo.bottom && yy + h > alvo.top ? 1e6 : 0;
+        y = [pe, topo].sort((a, b) => (cobre(a) + tapa(a)) - (cobre(b) + tapa(b)))[0];
+      }
+      if (this.yPlayer !== y) {
+        this.yPlayer = y; pl.style.top = Math.round(y) + 'px';
+        // os avisos rápidos ficam encostados no player, do lado de dentro da tela, sem cobri-lo
+        document.documentElement.style.setProperty('--kf-gv-aviso', Math.round(y > vh / 2 ? y - 58 : y + h + 10) + 'px');
+      }
+    },
+    // área livre para o alvo: entre a barra de cima e o player
+    async rolarAte(el, vez) {
+      if (el.closest('.kf-ov')) { el.scrollIntoView({ block: 'nearest', behavior: this.instantaneo || movimentoReduzido() ? 'auto' : 'smooth' }); }
+      else {
+        const r = el.getBoundingClientRect(), vh = innerHeight, pl = $('.kf-gv-player', this.el);
+        if (el.closest('.kf-nav, .kf-trilho, .kf-barra')) return;
+        const barra = $$('.kf-barra').find(b => b.getClientRects().length), topo = (barra ? barra.getBoundingClientRect().bottom : 0) + 16;
+        const fundo = (pl ? Math.min(pl.getBoundingClientRect().top, vh) : vh) - 16;
+        if (r.top >= topo && r.bottom <= fundo) return;
+        const quer = r.height > fundo - topo ? topo : topo + (fundo - topo - r.height) * .35;
+        global.scrollTo({ top: Math.max(0, global.scrollY + r.top - quer), behavior: this.instantaneo || movimentoReduzido() ? 'auto' : 'smooth' });
+      }
+      if (this.instantaneo) return;
+      // espera a rolagem parar
+      let y = -1, iguais = 0;
+      for (let k = 0; k < 30 && iguais < 3; k++) { await this.esperar(40, vez); const ny = global.scrollY + (el.closest('.kf-ov') ? el.getBoundingClientRect().top : 0); iguais = ny === y ? iguais + 1 : 0; y = ny; }
+    },
+    clique() {
+      const p = $('.kf-gv-ponteiro', this.el); if (!p || this.instantaneo) return;
+      const o = document.createElement('i'); o.className = 'kf-gv-onda';
+      o.style.left = Math.round(this.pt.x) + 'px'; o.style.top = Math.round(this.pt.y) + 'px';
+      this.el.appendChild(o); setTimeout(() => o.remove(), 700);
+    },
+    maos(vez) {
+      const g = this;
+      const achar = alvo => { if (typeof alvo === 'function') alvo = alvo(); return typeof alvo === 'string' ? $$(alvo).find(el => el.getClientRects().length) : alvo; };
+      const vivo = () => { if (!g.el || vez !== g.vez) throw PARADO; };
+      return {
+        esperar: ms => g.esperar(ms, vez),
+        achar,
+        async apontar(alvo) {
+          vivo(); const el = achar(alvo); if (!el) return null;
+          const ver = (el.offsetWidth < 8 || el.offsetHeight < 8) && el.closest('label') || el;
+          await g.rolarAte(ver, vez); vivo();
+          g.mover(ver); await g.esperar(900, vez); return el;
+        },
+        async tocar(alvo, { semClique = false } = {}) {
+          const el = await this.apontar(alvo); if (!el) return null;
+          g.clique(); await g.esperar(260, vez); vivo();
+          if (!semClique) el.click();
+          await g.esperar(650, vez); return el;
+        },
+        async digitar(alvo, texto, { lento = 110 } = {}) {
+          const el = await this.apontar(alvo); if (!el) return null;
+          g.clique();
+          const set = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value').set;
+          set.call(el, ''); el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+          if (g.instantaneo) { set.call(el, String(texto)); el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' })); }
+          else for (const ch of String(texto)) { await g.esperar(lento, vez); set.call(el, el.value + ch); el.dispatchEvent(new InputEvent('input', { bubbles: true, data: ch, inputType: 'insertText' })); }
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+          await g.esperar(450, vez); return el;
+        },
+        async escolher(alvo, valor) {
+          const el = await this.apontar(alvo); if (!el) return null;
+          g.clique(); el.value = valor; el.dispatchEvent(new Event('change', { bubbles: true }));
+          await g.esperar(700, vez); return el;
+        },
+        async arrastar(de, para, efeito) {
+          const a = await this.apontar(de); if (!a) return null;
+          g.el.classList.add('kf-gv-segura'); await g.esperar(600, vez); vivo();
+          const b = achar(para); if (!b) { g.el.classList.remove('kf-gv-segura'); return null; }
+          g.mover(b); await g.esperar(1000, vez); vivo();
+          g.el.classList.remove('kf-gv-segura'); g.clique();
+          await g.esperar(200, vez); if (efeito) efeito(); await g.esperar(800, vez); return b;
+        },
+        destacar: alvo => { vivo(); const el = achar(alvo); if (el) g.mover(el); return el; },
+        voltar() { vivo(); },
+      };
     },
   };
 
@@ -1256,7 +1567,7 @@
       let zona = ''; try { zona = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch {}
       return bloco('Idioma e região', `<dl class="kf-dados"><div><dt>Idioma</dt><dd>Português (Brasil)</dd></div><div><dt>Moeda</dt><dd>Real (R$)</dd></div><div><dt>Data e hora</dt><dd>As do aparelho${zona ? ` (${esc(zona.replace(/_/g, ' '))})` : ''}</dd></div></dl><p class="kf-ajuda">Outros idiomas ainda não estão disponíveis.</p>`)
         + (C.apresentacao ? bloco('Ao abrir o app', `<label class="kf-check"><input type="checkbox" data-kf-apres ${apresLigada() ? 'checked' : ''}><span>Mostrar a apresentação do ${esc(C.nome)} toda vez que o app abrir</span></label><button type="button" class="kf-btn kf-link" data-kf="apresentacao">Ver a apresentação agora</button>`) : '')
-        + (C.guia ? bloco('Guia do app', `${C.guia.niveis ? '' : '<p class="kf-ajuda">Um passeio pelas telas, com o app destacando onde tocar. Escolha o tamanho.</p>'}${niveisHTML()}`) : '')
+        + (C.guia ? bloco('Guia do app', `${C.guia.niveis || emVideo() ? '' : '<p class="kf-ajuda">Um passeio pelas telas, com o app destacando onde tocar. Escolha o tamanho.</p>'}${niveisHTML()}`) : '')
         + bloco('Usar como aplicativo', instalarHTML() || `<p class="kf-ajuda">O ${esc(C.nome)} já está instalado neste aparelho e funciona sem internet.</p>`) + extra;
     }
     if (id === 'notificacoes') return bloco('Notificações', `<p class="kf-texto">${esc(C.textos.notificacoes || `O ${C.nome} não envia notificações para o aparelho. Os avisos aparecem na tela enquanto o app está aberto.`)}</p>`) + extra;
@@ -2059,7 +2370,10 @@
   // rola a tela na mesma curva e no mesmo relógio da seção; a posição final é calculada antes, com a altura que a página terá
   function secaoRolar(d, fimTopo, fimAltura) {
     const barra = $$('.kf-barra').find(b => b.getClientRects().length && b.getBoundingClientRect().bottom > 0);
-    const lim = (barra ? barra.getBoundingClientRect().bottom : 0) + 8;
+    // Kit 0.4.0: o app com cabeçalho fixo próprio marca a altura dele em scroll-margin-top da seção (ou de um pai)
+    let margem = 0;
+    for (let e = d; e && e !== document.body && !margem; e = e.parentElement) margem = parseFloat(getComputedStyle(e).scrollMarginTop) || 0;
+    const lim = Math.max((barra ? barra.getBoundingClientRect().bottom : 0) + 8, margem);
     const s0 = global.scrollY, alvo = Math.min(Math.max(0, fimAltura - innerHeight), Math.max(0, fimTopo - lim));
     if (Math.abs(alvo - s0) < 2) return;
     if (semMovimento()) { global.scrollTo({ top: alvo }); return; }
@@ -2103,6 +2417,200 @@
     secaoAlternar(sm.parentNode);
   });
 
+  /* ================= Kit 0.4.0: teclado, janela que muda de lugar, item novo, linha de adicionar, fato,
+     carrossel e arrastar e soltar (propostas do Laboratório do Conta Fácil, Código 0.3) ================= */
+
+  /* janela acima do teclado: no celular e no tablet, com um campo de janela em foco, a camada da janela ocupa só a
+     área visível acima do teclado (medida pelo navegador) e a janela fica colada nele */
+  (() => {
+    const html = document.documentElement, vv = global.visualViewport;
+    let toque = false; try { toque = matchMedia('(pointer: coarse)').matches; } catch {}
+    let t = 0;
+    const medir = () => { if (!vv) return; html.style.setProperty('--kf-vv-top', Math.round(vv.offsetTop) + 'px'); html.style.setProperty('--kf-vv-h', Math.round(vv.height) + 'px'); };
+    const campo = el => el && el.matches && el.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=range]),textarea') && el.closest('.kf-ov');
+    if (vv) { vv.addEventListener('resize', medir); vv.addEventListener('scroll', medir); }
+    document.addEventListener('focusin', e => { if (!toque || !campo(e.target)) return; clearTimeout(t); medir(); html.classList.add('kf-teclado'); });
+    document.addEventListener('focusout', () => { clearTimeout(t); t = setTimeout(() => { if (!campo(document.activeElement)) html.classList.remove('kf-teclado'); }, 150); });
+  })();
+
+  /* janela que muda de lugar (teclado abrindo ou fechando, conteúdo que cresce ou encolhe) desliza até o novo lugar,
+     no tempo da janela subir (240 ms), em vez de saltar; com movimento reduzido, a troca é direta */
+  const JANELA_MS = 240;
+  function vigiarJanela(dlg) {
+    let topo = null;
+    const ver = () => {
+      if (!dlg.isConnected) { obs && obs.disconnect(); return; }
+      const t = dlg.getBoundingClientRect().top, ant = topo; topo = t;
+      if (ant == null || semMovimento() || !dlg.animate) return;
+      const dy = ant - t; if (Math.abs(dy) < 2) return;
+      dlg.animate([{ transform: `translateY(${dy}px)` }, { transform: 'translateY(0)' }], { duration: JANELA_MS, easing: MOV.css, composite: 'add' });
+    };
+    const obs = global.ResizeObserver ? new ResizeObserver(() => requestAnimationFrame(ver)) : null;
+    if (obs) { obs.observe(dlg); obs.observe(dlg.parentElement); }
+    if (global.visualViewport) global.visualViewport.addEventListener('resize', () => requestAnimationFrame(ver));
+    requestAnimationFrame(ver);
+  }
+
+  /* destacar(el): item recém-criado. Se estiver fora da tela, a tela rola até ele no movimento comum; depois ele
+     pisca uma vez na cor clara de destaque do app */
+  function destacar(el) {
+    if (!el || !el.getBoundingClientRect) return;
+    const r = el.getBoundingClientRect(), vh = innerHeight;
+    const barra = $$('.kf-barra').find(b => b.getClientRects().length), topoLivre = barra ? barra.getBoundingClientRect().bottom : 0;
+    const nav = $$('.kf-nav').find(b => b.getClientRects().length), pe = nav ? nav.getBoundingClientRect().top : vh;
+    const fora = r.top < topoLivre || r.bottom > pe;
+    const piscar = () => { el.classList.remove('kf-novo'); void el.offsetWidth; el.classList.add('kf-novo'); setTimeout(() => el.classList.remove('kf-novo'), 1300); };
+    if (!fora || el.closest('.kf-ov')) { if (fora) el.scrollIntoView({ block: 'nearest' }); return piscar(); }
+    const s0 = global.scrollY, alvo = Math.max(0, s0 + r.top - Math.max(topoLivre + 16, (pe - r.height) / 2));
+    if (semMovimento()) { global.scrollTo({ top: alvo }); return piscar(); }
+    const t0 = performance.now();
+    const passo = agora => { const k = Math.min(1, (agora - t0) / MOV.ms); global.scrollTo({ top: s0 + (alvo - s0) * MOV.curva(k) }); if (k < 1) requestAnimationFrame(passo); else piscar(); };
+    requestAnimationFrame(passo);
+  }
+
+  /* adicionar({ rotulo, attrs }): linha de adicionar no fim de uma lista ("+ Pessoa"). Telas com duas ou mais listas
+     usam uma linha por lista no lugar do botão flutuante de criar (Código, Art. 64, II) */
+  function adicionarHTML({ rotulo, attrs = '' } = {}) {
+    return `<button type="button" class="kf-adicionar" ${attrs}>${svg('<path d="M12 5v14M5 12h14"/>')}<span>${esc(rotulo)}</span></button>`;
+  }
+
+  /* fato({ marcado, marcar, desmarcar, attrs }): registrar um fato (pago, feito, estudado) é um botão contornado que
+     troca de texto, nunca uma chave (Código, Art. 65, X). O app mostra o aviso com "Desfazer" ao trocar */
+  function fatoHTML({ marcado = false, marcar, desmarcar, attrs = '' } = {}) {
+    return `<button type="button" class="kf-btn kf-sec kf-fato${marcado ? ' kf-fato-on' : ''}" aria-pressed="${marcado}" ${attrs}>${marcado ? IC.check || '' : ''}<span>${esc(marcado ? desmarcar : marcar)}</span></button>`;
+  }
+
+  /* carrossel(el, { rotulos, aoMudar, inicio }): percorre cartões inteiros, um por vez (Código, Art. 65, IX).
+     Os filhos de el são os cartões. O cartão acompanha o dedo e, ao soltar, vai ao vizinho se andou um quarto da
+     largura ou foi um gesto rápido; setas de 44 px, contador "2 de 5 · Nome", pontos de posição, altura do cartão da
+     vez e setas do teclado. Devolve { ir(i), atual() }. */
+  function carrossel(el, { rotulos = [], aoMudar, inicio = 0, rotulo = 'Cartões' } = {}) {
+    const cartoes = [...el.children]; const n = cartoes.length;
+    el.classList.add('kf-car'); el.setAttribute('role', 'region'); el.setAttribute('aria-roledescription', 'carrossel'); el.setAttribute('aria-label', rotulo);
+    el.innerHTML = `<div class="kf-car-nav"><button type="button" class="kf-btn kf-sec kf-car-seta" data-kf-car="-1" aria-label="Anterior">${svg('<path d="M15 6l-6 6 6 6"/>')}</button><p class="kf-car-cont" aria-live="polite"></p><button type="button" class="kf-btn kf-sec kf-car-seta" data-kf-car="1" aria-label="Próximo">${svg('<path d="M9 6l6 6-6 6"/>')}</button></div><div class="kf-car-janela" tabindex="0"><div class="kf-car-trilho"></div></div><div class="kf-car-pontos" aria-hidden="true"></div>`;
+    const jan = $('.kf-car-janela', el), tri = $('.kf-car-trilho', el), cont = $('.kf-car-cont', el), pts = $('.kf-car-pontos', el);
+    cartoes.forEach((c, i) => { const s = document.createElement('div'); s.className = 'kf-car-slide'; s.setAttribute('role', 'group'); s.setAttribute('aria-roledescription', 'cartão'); s.appendChild(c); tri.appendChild(s); });
+    pts.innerHTML = cartoes.map(() => '<i></i>').join('');
+    const slides = [...tri.children];
+    let i = Math.max(0, Math.min(n - 1, inicio));
+    const largura = () => jan.clientWidth || 1;
+    const pintar = (anim = true) => {
+      const dur = anim && !semMovimento() ? MOV.curto : 0;
+      tri.style.transition = dur ? `transform ${dur}ms ${MOV.css}` : 'none';
+      jan.style.transition = dur ? `height ${dur}ms ${MOV.css}` : 'none';
+      tri.style.transform = `translateX(${-i * 100}%)`;
+      jan.style.height = slides[i].offsetHeight + 'px';
+      slides.forEach((s, k) => { s.inert = k !== i; s.setAttribute('aria-hidden', String(k !== i)); s.setAttribute('aria-label', `${k + 1} de ${n}`); });
+      cont.textContent = `${i + 1} de ${n}${rotulos[i] ? ' · ' + rotulos[i] : ''}`;
+      [...pts.children].forEach((p, k) => p.classList.toggle('kf-on', k === i));
+      $$('.kf-car-seta', el).forEach(b => { b.disabled = (+b.dataset.kfCar < 0 && i === 0) || (+b.dataset.kfCar > 0 && i === n - 1); });
+    };
+    const ir = (k, anim = true) => { const j = Math.max(0, Math.min(n - 1, k)); const mudou = j !== i; i = j; pintar(anim); if (mudou && aoMudar) try { aoMudar(i); } catch (e) { console.error(e); } };
+    el.addEventListener('click', e => { const b = e.target.closest('[data-kf-car]'); if (b && el.contains(b)) ir(i + Number(b.dataset.kfCar)); });
+    jan.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { e.preventDefault(); ir(i - 1); } else if (e.key === 'ArrowRight') { e.preventDefault(); ir(i + 1); } });
+    let x0 = null, y0 = 0, t0 = 0, dx = 0, eixo = '';
+    jan.addEventListener('pointerdown', e => { if (e.button) return; x0 = e.clientX; y0 = e.clientY; t0 = performance.now(); dx = 0; eixo = ''; });
+    jan.addEventListener('pointermove', e => {
+      if (x0 == null) return;
+      const mx = e.clientX - x0, my = e.clientY - y0;
+      if (!eixo) { if (Math.abs(mx) < 6 && Math.abs(my) < 6) return; eixo = Math.abs(mx) > Math.abs(my) ? 'x' : 'y'; if (eixo === 'x') try { jan.setPointerCapture(e.pointerId); } catch {} }
+      if (eixo !== 'x') return;
+      dx = (i === 0 && mx > 0) || (i === n - 1 && mx < 0) ? mx / 3 : mx;
+      tri.style.transition = 'none'; tri.style.transform = `translateX(calc(${-i * 100}% + ${dx}px))`;
+    });
+    const soltar = () => {
+      if (x0 == null) return; x0 = null;
+      if (eixo !== 'x') return;
+      const v = Math.abs(dx) / Math.max(1, performance.now() - t0);
+      if (Math.abs(dx) > largura() / 4 || (v > .5 && Math.abs(dx) > 20)) ir(i + (dx < 0 ? 1 : -1)); else pintar(true);
+    };
+    jan.addEventListener('pointerup', soltar); jan.addEventListener('pointercancel', soltar);
+    if (global.ResizeObserver) new ResizeObserver(() => pintar(false)).observe(slides[0]);
+    pintar(false);
+    return { ir, atual: () => i };
+  }
+
+  /* arrastar({ area, item, alvo, aoSoltar, aoFora }): arrastar e soltar do Kit, igual em todos os apps.
+     Segurar (no toque, 300 ms parado; no mouse, mover) levanta o cartão inteiro sob o dedo, levemente inclinado; o
+     alvo fica todo colorido; soltar no alvo faz o cartão encolher e entrar nele, que pisca e assenta. Vibração curta
+     onde o aparelho permite; com movimento reduzido, a troca é direta. aoSoltar(itemEl, alvoEl) faz a mudança;
+     aoFora(itemEl) é chamado se soltar fora de qualquer alvo (opcional).
+     Toda ação de arrastar precisa de outro jeito sem arrastar no app (botão com lista de marcar): Código, Art. 16, X. */
+  function arrastar({ area, item, alvo, aoSoltar, aoFora } = {}) {
+    if (!area) return () => {};
+    let st = null;
+    const limpar = () => {
+      if (!st) return;
+      clearTimeout(st.tm);
+      if (st.sobre) st.sobre.classList.remove('kf-arr-alvo');
+      if (st.el) st.el.classList.remove('kf-arr-origem');
+      document.body.classList.remove('kf-arrastando');
+      st = null;
+    };
+    const levantar = () => {
+      const r = st.el.getBoundingClientRect(), f = st.el.cloneNode(true);
+      f.classList.add('kf-arr-fantasma'); f.removeAttribute('id'); f.setAttribute('aria-hidden', 'true');
+      Object.assign(f.style, { width: r.width + 'px', height: r.height + 'px', transform: `translate(${r.left}px,${r.top}px)` });
+      document.body.appendChild(f);
+      st.f = f; st.dx = st.x - r.left; st.dy = st.y - r.top; st.casa = r; st.no = true;
+      st.el.classList.add('kf-arr-origem'); document.body.classList.add('kf-arrastando');
+      requestAnimationFrame(() => f.classList.add('kf-arr-no-ar'));
+      try { navigator.vibrate && navigator.vibrate(12); } catch {}
+    };
+    const mover = (x, y) => {
+      st.f.style.transform = `translate(${x - st.dx}px,${y - st.dy}px)`;
+      st.f.style.visibility = 'hidden';
+      const sob = document.elementFromPoint(x, y); st.f.style.visibility = '';
+      const a = sob && sob.closest && sob.closest(alvo);
+      const ok = a && a !== st.el && area.contains(a) ? a : null;
+      if (ok !== st.sobre) { if (st.sobre) st.sobre.classList.remove('kf-arr-alvo'); st.sobre = ok; if (ok) { ok.classList.add('kf-arr-alvo'); try { navigator.vibrate && navigator.vibrate(6); } catch {} } }
+    };
+    const pousar = () => {
+      const { f, el, sobre, casa } = st, rapido = semMovimento();
+      const fim = () => { f.remove(); };
+      if (sobre) {
+        const r = sobre.getBoundingClientRect();
+        f.classList.add('kf-arr-entra');
+        f.style.transform = `translate(${r.left + r.width / 2 - casa.width / 2}px,${r.top + r.height / 2 - casa.height / 2}px)`;
+        setTimeout(fim, rapido ? 0 : MOV.curto);
+        if (!rapido) { sobre.classList.remove('kf-arr-pisca'); void sobre.offsetWidth; sobre.classList.add('kf-arr-pisca'); setTimeout(() => sobre.classList.remove('kf-arr-pisca'), 700); }
+        try { navigator.vibrate && navigator.vibrate(18); } catch {}
+        limpar();
+        try { aoSoltar && aoSoltar(el, sobre); } catch (e) { console.error(e); }
+      } else {
+        f.classList.remove('kf-arr-no-ar'); f.classList.add('kf-arr-volta');
+        f.style.transform = `translate(${casa.left}px,${casa.top}px)`;
+        setTimeout(fim, rapido ? 0 : MOV.curto);
+        limpar();
+        try { aoFora && aoFora(el); } catch (e) { console.error(e); }
+      }
+    };
+    const down = e => {
+      if (e.button || st) return;
+      const el = e.target.closest && e.target.closest(item);
+      if (!el || !area.contains(el) || e.target.closest('button,a,input,select,textarea')) return;
+      st = { el, x: e.clientX, y: e.clientY, id: e.pointerId, toque: e.pointerType !== 'mouse', no: false };
+      if (st.toque) st.tm = setTimeout(() => { if (st && !st.no) { levantar(); try { area.setPointerCapture(st.id); } catch {} } }, 300);
+    };
+    const move = e => {
+      if (!st || e.pointerId !== st.id) return;
+      const d = Math.hypot(e.clientX - st.x, e.clientY - st.y);
+      if (!st.no) {
+        if (st.toque) { if (d > 8) limpar(); return; }      // no toque, mexer antes do tempo é rolar a tela
+        if (d < 6) return;
+        levantar(); try { area.setPointerCapture(st.id); } catch {}
+      }
+      e.preventDefault(); st.x = e.clientX; st.y = e.clientY; mover(e.clientX, e.clientY);
+    };
+    const up = e => { if (!st || e.pointerId !== st.id) return; if (st.no) pousar(); else limpar(); };
+    const cancel = () => { if (st && st.no) { st.sobre = null; pousar(); } else limpar(); };
+    const semMenu = e => { if (st && st.no) e.preventDefault(); };
+    const semRolar = e => { if (st && st.no) e.preventDefault(); };
+    area.addEventListener('pointerdown', down); area.addEventListener('pointermove', move); area.addEventListener('pointerup', up); area.addEventListener('pointercancel', cancel);
+    area.addEventListener('contextmenu', semMenu); area.addEventListener('touchmove', semRolar, { passive: false });
+    return () => { limpar(); area.removeEventListener('pointerdown', down); area.removeEventListener('pointermove', move); area.removeEventListener('pointerup', up); area.removeEventListener('pointercancel', cancel); area.removeEventListener('contextmenu', semMenu); area.removeEventListener('touchmove', semRolar); };
+  }
+
   global.KitFacil = Object.freeze({
     VERSAO, FAMILIA, IC, iniciar, avisar, esc, canon, novoId, haQuanto,
     dialogo: { abrir: abrirDialogo, fechar: fecharDialogo, aberto: dialogoAberto, confirmar },
@@ -2111,7 +2619,8 @@
     sobre: { abrir: abrirSobre },
     topo: { html: topoHTML, atualizar: atualizarTopo, estado: estadoNuvem, ESTADOS },
     nav: { ajustes: navAjustesHTML, organizar: organizarNav, MAX: NAV_MAX },
-    ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML, abas: abasHTML, faixa: faixaHTML },
+    ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML, abas: abasHTML, faixa: faixaHTML, adicionar: adicionarHTML, fato: fatoHTML },
+    destacar, carrossel, arrastar,
     escolha: { ligar: escolhaLigar },
     data: { ligar: dataLigar },
     hora: { ligar: horaLigar },

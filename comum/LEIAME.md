@@ -149,3 +149,22 @@ pelo app em `aplicar`.
 - `conferirTopo(page, { comAjustes })` — confere Ajustes, nuvem e balão: um de cada, ordem, alinhamento, 44 px,
   distância da borda direita e nomes acessíveis;
 - `guiasAjustes(page)` e `GUIAS_COMUNS` — os nomes das guias, na ordem.
+
+## Mudanças do kit
+
+- **0.4.0 · 11/11/2026** (Código 0.3, propostas do Laboratório do Conta Fácil; copiado aos quatro apps): janela acima
+  do teclado no celular e no tablet; janela que muda de lugar desliza em 240 ms; aviso rápido acima do pé da janela
+  aberta; subtítulo da janela abaixo do título, com `contexto` opcional acima; seções descontam o cabeçalho fixo do
+  app (`scroll-margin-top`); peças novas `KitFacil.ui.adicionar`, `KitFacil.ui.fato`, `KitFacil.destacar`,
+  `KitFacil.carrossel` e `KitFacil.arrastar`; classes `kf-so-leitor` e `kf-li-*` (escala das linhas de lista).
+  Elétrica Fácil e Estudo Fácil saem do Kit 0.1.0 e recebem também o 0.2.0 e o 0.3.0, que só mexem no guia.
+
+- **0.3.0 · 09/11/2026** (feita no Conta Fácil; copiar para os outros três apps pelo Art. 30): guia em vídeo, ligado com
+  `guia: { modo: 'video', passos, foto, restaurar }`. Um guia só; cada etapa tem só o título (`t`) e a ação (`acao`);
+  ponteiro sem destaque; avanço automático; player com voltar, pausar, avançar e fechar. `foto()` e `restaurar(foto)`
+  deixam voltar e avançar livremente. Sem `modo: 'video'`, o guia continua como antes.
+
+- **0.2.0 · 08/11/2026** (feita no Conta Fácil; copiar para os outros três apps pelo Art. 30):
+  guia ao vivo com o dedo na ponta direita do campo de texto, sem cobrir o que é digitado; o cartão do guia protege a
+  área inteira do passo (ou a janela aberta) e encolhe para o título enquanto o app faz o passo; com o trilho, as
+  janelas se centram na área do app, à direita dele.

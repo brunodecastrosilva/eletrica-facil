@@ -1,18 +1,18 @@
 {
-  "kit": "0.1.0",
+  "kit": "0.4.0",
   "arquivos": {
-    "kit-facil.js": "a4d6d24a26aaa30cde4ab2abf06db83fdb172230fc5e0a176cc691e01188d649",
-    "kit-facil.css": "6068c991da35e2ddf189f3dc7d47fab3c9162ccffcac5aa1eb1c14c973c449cd",
+    "kit-facil.js": "73ad80d01af5d5c06c91cbfa6a7003c597610660aed2d8f5dcd32660fe3610db",
+    "kit-facil.css": "58d6353984769a80697a3e5fbeb149bfcbea55a71fd969e8770cc46dcb3919a1",
     "regras-firestore-feedback.txt": "ba70201d3c09369af60df78d7c14ffe01a3fd10349f5accb7b6fe2c6e6cf8cc7",
     "servidor.mjs": "b6cc0deb2154acb2a59d00ad2223d2a69214d40c28680bc05b29777e2b273b57",
     "verificar.mjs": "9544b3d6f91e9373e98b6e168b3b8adc2e5fd5907d9b9347879a3da2413fa066",
     "testar.mjs": "53f0ed2efb8b8baaecaabe416fc373b3bc95a574025acf8dd5aec97f68a3642b",
     "testar-regras.mjs": "cb2880a786a2cf0554cc5f8878911c14b01764ad6a6a6b1d100ea2965bd11253",
-    "CODIGO.md": "b462d89db53bea03b905bf2b5593a7d31087a9824dedf918ea6bb2d393fc93b7",
-    "ANEXOS.md": "7c18bbdd658c919d452d2f4641177ac2773a68cda39c768a3aa620f36d85a9a1",
-    "LEIAME.md": "d431f778d9afe8cea89740b4422a08e5ff6aad50261ebc1a7485a8b463b9dac7",
+    "CODIGO.md": "c14a73d4b8c6e3ab7d5ab4749dbe615e6433c5eee6dfb83b02898b711fe8937b",
+    "ANEXOS.md": "91787791d4523274b8b0a5b1508040747f3378acf0ab7ff0671669d4b015f0bd",
+    "LEIAME.md": "7de74bf9c77f4ddc863d02dccb51233967a8a13d164c3ca0eb5a46b7171cc8da",
     "testes/ambiente.mjs": "97f3186955a84a57cc9ee88e308a0bca58e63ddf8bdbc52465b3e120c3e0d08c",
-    "testes/kit.test.mjs": "4eac89a1bacf7065375b3a2accff2b6d9f76c05014a441da4a64e1a2de8002b5",
+    "testes/kit.test.mjs": "f7fdd82a045ca2fb611cadc2571ca3487f589c5a8b11a5460c8b4a0216da9d31",
     "testes/pagina-kit.html": "0adc22fa988f655c715da04da7a2fbb03b367ba09de7f72ab566aaef9e807547"
   }
 }

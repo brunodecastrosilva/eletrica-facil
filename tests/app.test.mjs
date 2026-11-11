@@ -137,6 +137,7 @@ test('balão: avaliar o app e relatar um problema saem com o nome do app, a vers
   await p.fill('#kf-msg', 'O PDF saiu sem o logotipo.');
   await p.click('[data-kf-enviar]');
   await p.locator('text=Recebemos sua mensagem').waitFor();
+  await p.evaluate(() => localStorage.removeItem('kitfacil.eletrica-facil.envios')); // limite de 1 envio por minuto (Art. 46)
   await p.keyboard.press('Escape');
   await guia(p, 'feedback');
   await p.click('#kf-aj-feedback [data-kf="avaliar"]');

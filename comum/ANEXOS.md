@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **0.2 (rascunho)** · 08/11/2026 · Kit Fácil **0.1.0**
+Versão **0.3 (rascunho)** · 11/11/2026 · Kit Fácil **0.4.0**
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
@@ -50,11 +50,12 @@ e este Código), `tests/`, `package.json` (sem dependências de produção), `RE
 |---|---|
 | Fonte | Atkinson Hyperlegible Next (`--kf-font`, `--kf-font-display`) e Mono (`--kf-font-mono`), do Google Fonts: `family=Atkinson+Hyperlegible+Mono:wght@400..700&family=Atkinson+Hyperlegible+Next:wght@400..800` |
 | Texto | `--kf-t-tela` 28 · `--kf-t-secao` 21 · `--kf-t-cartao` 17 · `--kf-t-corpo` 16 · `--kf-t-apoio` 14 · `--kf-t-legenda` 12,5 px |
+| Linhas de lista | nome e valor 16 em negrito (`kf-li-nome`, `kf-li-valor`) · coluna da esquerda, como número e quantidade, 14 (`kf-li-lado`) · linha de apoio 12,5 (`kf-li-apoio`) · linhas dentro de um item aberto 14 (`kf-li-dentro`); nenhum outro tamanho nas listas |
 | Espaços | `--kf-e-1` 4 · `-2` 8 · `-3` 12 · `-4` 16 · `-5` 24 · `-6` 32 px |
 | Cantos | `--kf-r-sm` 8 · `--kf-r-btn` 12 · `--kf-r-campo` 12 · `--kf-r-md` 16 · `--kf-r-lg` 22 · `--kf-r-cartao` 16 px |
 | Botões | `--kf-btn-h` 48 px · `--kf-btn-h-p` 40 px |
 | Moldura | `--kf-barra-h` 60 · `--kf-nav-h` 64 · `--kf-trilho-w` 240 · `--kf-alvo` 44 px; computador a partir de 1024 px |
-| Estados | `--kf-ok`, `--kf-warn`, `--kf-bad` e os fundos `-soft`; `--kf-star`; segmento escolhido `--kf-seg-on` |
+| Estados | `--kf-ok`, `--kf-warn`, `--kf-bad` e os fundos `-soft`; `--kf-star`; segmento escolhido `--kf-seg-on`. Sobre papel claro (exceção do Conta Fácil), usam o valor do tema claro, com contraste AA |
 | Camadas | 20 barra de cima e trilho · 25–30 navegação, barras fixas e botão de criar (29) · 85 janelas · 95 avisos |
 
 **Variáveis que o app liga** (claro e escuro): `--kf-bg`, `--kf-surface`, `--kf-surface-2`, `--kf-line`, `--kf-line-2`,
@@ -82,9 +83,15 @@ Atkinson, com a Atkinson logo depois na lista, legível em 20 px, com acentos.
 | Lista de escolha | `<select>` comum, trocada pelo Kit (`KitFacil.escolha`) | opção vazia `<option value="" hidden>`; exceção com `data-kf-nativa` |
 | Data | `<input type="date">`, trocado pelo Kit (`KitFacil.data`) | Hoje e Limpar; valor AAAA-MM-DD |
 | Hora | `<input type="time">`, trocado pelo Kit (`KitFacil.hora`) | passo de 5 min por padrão; valor HH:MM |
-| Seções | `<details data-kf-secao>`, `data-kf-secao="grupo"`, `KitFacil.secao` | |
-| Janelas | `KitFacil.dialogo.abrir({ titulo, sub, corpo, pe, classe, aoMontar, aoFechar })`, `.confirmar` | `kf-alto`, `kf-largo` |
-| Aviso rápido | `KitFacil.avisar(msg, { label, run })` | some em 3,2 s (6 s com ação) |
+| Seções | `<details data-kf-secao>`, `data-kf-secao="grupo"`, `KitFacil.secao` | ao rolar até a seção, desconta a barra de cima e o cabeçalho fixo do app, marcado em `scroll-margin-top` da seção ou de um pai |
+| Janelas | `KitFacil.dialogo.abrir({ contexto, titulo, sub, corpo, pe, classe, aoMontar, aoFechar })`, `.confirmar` | `kf-alto`, `kf-largo`; `contexto` acima do título, `sub` abaixo; com o teclado aberto num campo da janela (celular e tablet), `html.kf-teclado` e a camada ocupa só a área acima do teclado (`--kf-vv-top`, `--kf-vv-h`) |
+| Aviso rápido | `KitFacil.avisar(msg, { label, run })` | some em 3,2 s (6 s com ação); com janela aberta, fica acima do pé dela |
+| Linha de adicionar | `KitFacil.ui.adicionar({ rotulo, attrs })` | no fim de cada lista, em tela com duas ou mais listas (Art. 64, II, b); 48 px, fundo leve e contorno fino |
+| Fato | `KitFacil.ui.fato({ marcado, marcar, desmarcar, attrs })` | botão contornado com `aria-pressed`; marcado na cor `--kf-ok`; o app avisa com "Desfazer" |
+| Item novo | `KitFacil.destacar(el)` | rola até ele se estiver fora da tela e pisca uma vez em `--kf-accent-soft` |
+| Carrossel | `KitFacil.carrossel(el, { rotulos, aoMudar, inicio, rotulo })` | filhos de `el` são os cartões; setas de 44 px, contador "2 de 5 · Nome", pontos, altura do cartão da vez, setas do teclado; vai ao vizinho ao andar um quarto da largura ou num gesto rápido; devolve `{ ir, atual }` |
+| Arrastar e soltar | `KitFacil.arrastar({ area, item, alvo, aoSoltar, aoFora })` | no toque, segurar 300 ms; o alvo fica todo colorido; vibração curta onde houver; devolve a função que desliga; o app sempre oferece também o jeito sem arrastar |
+| Texto só para leitor de tela | classe `kf-so-leitor` | ex.: "Falta pagar" ao lado de um valor tachado |
 | Ícones | traço de 2 px, 24 × 24 (`kf-i`) | |
 | Apoio | `KitFacil.apoio`; chave, nome e cidade em `APOIO_PADRAO` | BR Code sem valor; QR com `qrcode-generator` 1.4.4 do cdnjs |
 
@@ -141,6 +148,10 @@ Curva `cubic-bezier(.45,0,.2,1)` (`KitFacil.movimento`).
 | Guias dos Ajustes, mês do calendário | `de: 'lado'` | 280 ms |
 | Listas, calendário, menus | descem ao abrir, sobem ao fechar | 280 / 200 ms |
 | Janelas | sobem do pé e saem descendo | 240 / 200 ms |
+| Janela que muda de lugar (teclado, conteúdo que cresce) | desliza até o novo lugar | 240 ms |
+| Item novo | a tela rola até ele; pisca uma vez | 560 ms · 1,2 s |
+| Carrossel | cartão desliza; altura acompanha | 280 ms |
+| Arrastar e soltar | levanta inclinado; entra no alvo encolhendo, ou volta para o lugar | 220 · 280 ms |
 | Avisos rápidos | sobem e aparecem | 280 ms |
 | Item atual da navegação | a cor desliza | 280 ms |
 
