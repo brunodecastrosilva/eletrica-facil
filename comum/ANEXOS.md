@@ -36,7 +36,7 @@ os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
 | Conta Fácil | Comandas (comanda ao vivo, guia do app, atalho para Cadastros) | Conta e perfil: "Você nas comandas" |
 | Elétrica Fácil | Pix · Veículo e deslocamento · Adicionais · Orçamento novo · Textos dos documentos | Conta e perfil: "Seus dados na proposta" |
 | Estudo Fácil | Rotina e metas · Revisões | Notificações: som e vibração no fim do tempo · Privacidade e segurança: apagar todos os dados, inclusive na nuvem |
-| Guitarra Fácil | Menu e efeitos · Prática | — |
+| Guitarra Fácil | Prática | — |
 
 ## ANEXO II — Sistema de design e peças do Kit
 

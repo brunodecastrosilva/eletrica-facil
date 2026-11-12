@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 2.22.3 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 0.2.1 · Kit Fácil 0.5.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md).
