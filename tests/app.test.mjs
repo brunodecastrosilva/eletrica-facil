@@ -10,7 +10,7 @@ let amb, versao;
 before(async () => { amb = await preparar(); versao = JSON.parse(await readFile(RAIZ + '/package.json', 'utf8')).version; });
 after(async () => { await amb?.encerrar(); });
 const esperar = async (cond, ms = 8000) => { const fim = Date.now() + ms; while (Date.now() < fim) { if (await cond()) return true; await new Promise(r => setTimeout(r, 50)); } return false; };
-const TELAS = [[{ width: 360, height: 740 }, 'celular pequeno'], [{ width: 390, height: 844 }, 'celular'], [{ width: 820, height: 1180 }, 'tablet'], [{ width: 1440, height: 900 }, 'computador']];
+const TELAS = [[{ width: 320, height: 568 }, 'celular mínimo (zoom 400%)'], [{ width: 360, height: 740 }, 'celular pequeno'], [{ width: 390, height: 844 }, 'celular'], [{ width: 820, height: 1180 }, 'tablet'], [{ width: 1440, height: 900 }, 'computador']];
 // Ajustes fica na navegação: barra de baixo (celular e tablet) ou pé do trilho (computador)
 const AJ = '.kf-nav [data-kf="ajustes"]:visible, .kf-trilho [data-kf="ajustes"]:visible';
 const abrirPainel = async (p, chave) => { const d = p.locator(`details[data-panel="${chave}"]`); if (!(await d.getAttribute('open') !== null)) await d.locator('summary').first().click(); };
@@ -795,4 +795,25 @@ test('2.22: quantidade com ponto de milhar, garantia só números, parcelas sem 
   assert.deepEqual(r.catalogo, [false, false]);
   assert.deepEqual(a.erros, []);
   await a.fechar();
+});
+
+test('guia escolhida: o sublinhado tem contraste de pelo menos 3:1 com o fundo, no tema claro e no escuro (Art. 16, V)', async () => {
+  for (const tema of ['light', 'dark']) {
+    const a = await aparelho(amb);
+    const p = a.page;
+    await p.emulateMedia({ colorScheme: tema });
+    const r = await p.evaluate(() => {
+      const w = document.createElement('div');
+      w.innerHTML = KitFacil.ui.abas({ itens: [['a', 'Mão de obra'], ['b', 'Material']], atual: 'a', rotulo: 'Teste' });
+      document.querySelector('#view, main, body').appendChild(w);
+      const rgb = s => s.match(/[\d.]+/g).slice(0, 3).map(Number);
+      const lum = c => { const [r, g, b] = c.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+      const linha = rgb(getComputedStyle(w.querySelector('[aria-selected="true"]')).borderBottomColor);
+      const fundo = rgb(getComputedStyle(document.body).backgroundColor);
+      const [l1, l2] = [lum(linha), lum(fundo)].sort((x, y) => y - x);
+      return (l1 + 0.05) / (l2 + 0.05);
+    });
+    assert.ok(r >= 3, `tema ${tema}: contraste do sublinhado ${r.toFixed(2)}:1`);
+    await a.fechar();
+  }
 });

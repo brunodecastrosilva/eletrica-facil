@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **0.3 (rascunho)** · 11/11/2026 · Kit Fácil **0.4.0**
+Versão **0.4 (rascunho)** · 11/11/2026 · Kit Fácil **0.5.0**
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
@@ -60,7 +60,8 @@ e este Código), `tests/`, `package.json` (sem dependências de produção), `RE
 
 **Variáveis que o app liga** (claro e escuro): `--kf-bg`, `--kf-surface`, `--kf-surface-2`, `--kf-line`, `--kf-line-2`,
 `--kf-ink`, `--kf-muted`, `--kf-accent`, `--kf-accent-ink`, `--kf-accent-soft`, `--kf-accent-texto`, `--kf-focus`,
-`--kf-scrim`, `--kf-shadow`. Tema de fábrica: `KitFacil.tema.iniciar({ chave, cores, padrao: 'escuro' })`; o app escuro
+`--kf-scrim`, `--kf-shadow`; opcional, `--kf-aba-linha` (sublinhado da guia escolhida), quando o destaque não alcança 3:1
+sobre o fundo (o Elétrica Fácil usa o amarelo de texto). Tema de fábrica: `KitFacil.tema.iniciar({ chave, cores, padrao: 'escuro' })`; o app escuro
 de fábrica põe `data-theme="dark"` na tag `<html>`. Fonte dos títulos: licença livre (SIL OFL), no mesmo `<link>` da
 Atkinson, com a Atkinson logo depois na lista, legível em 20 px, com acentos.
 
@@ -85,7 +86,7 @@ Atkinson, com a Atkinson logo depois na lista, legível em 20 px, com acentos.
 | Hora | `<input type="time">`, trocado pelo Kit (`KitFacil.hora`) | passo de 5 min por padrão; valor HH:MM |
 | Seções | `<details data-kf-secao>`, `data-kf-secao="grupo"`, `KitFacil.secao` | ao rolar até a seção, desconta a barra de cima e o cabeçalho fixo do app, marcado em `scroll-margin-top` da seção ou de um pai |
 | Janelas | `KitFacil.dialogo.abrir({ contexto, titulo, sub, corpo, pe, classe, aoMontar, aoFechar })`, `.confirmar` | `kf-alto`, `kf-largo`; `contexto` acima do título, `sub` abaixo; com o teclado aberto num campo da janela (celular e tablet), `html.kf-teclado` e a camada ocupa só a área acima do teclado (`--kf-vv-top`, `--kf-vv-h`) |
-| Aviso rápido | `KitFacil.avisar(msg, { label, run })` | some em 3,2 s (6 s com ação); com janela aberta, fica acima do pé dela |
+| Aviso rápido | `KitFacil.avisar(msg, { label, run })` | some em 3,2 s (6 s com ação), mas não some enquanto tem o foco ou o ponteiro em cima; com janela aberta, fica acima do pé dela |
 | Linha de adicionar | `KitFacil.ui.adicionar({ rotulo, attrs })` | no fim de cada lista, em tela com duas ou mais listas (Art. 64, II, b); 48 px, fundo leve e contorno fino |
 | Fato | `KitFacil.ui.fato({ marcado, marcar, desmarcar, attrs })` | botão contornado com `aria-pressed`; marcado na cor `--kf-ok`; o app avisa com "Desfazer" |
 | Item novo | `KitFacil.destacar(el)` | rola até ele se estiver fora da tela e pisca uma vez em `--kf-accent-soft` |
@@ -185,11 +186,15 @@ Node 22 ou mais novo; testes com Playwright (Chromium).
 | Comando | O que faz |
 |---|---|
 | `npm start` | sobe o app em `http://localhost:8080/<app>/` |
-| `npm test` | testes do Kit e do app, sem internet (GitHub e Firebase simulados) |
+| `npm test` | testes do Kit e do app, sem internet (GitHub e Firebase simulados), com a varredura de acessibilidade |
 | `npm run verificar` | pasta `comum/` igual, sem segredos, versão nos quatro lugares, arquivos do service worker, idioma, zoom, fonte, moldura, barra de cima, Ajustes em guias, componentes nas medidas do Kit, CSP e SRI |
 | `npm run testar-regras` | testa as regras do Firestore no projeto de verdade, sem deixar nada gravado (precisa de internet) |
 
-- Telas de referência: 360 × 740, 390 × 844, 820 × 1180 e 1440 × 900; áreas seguras respeitadas.
+- Telas de referência: 320 × 568 (equivale ao zoom de 400%), 360 × 740, 390 × 844, 820 × 1180 e 1440 × 900; áreas
+  seguras respeitadas.
+- Varredura de acessibilidade (`comum/testes/acessibilidade.test.mjs`): axe-core com as regras WCAG 2.2 A e AA, na
+  abertura, na tela inicial e nos Ajustes, nos temas claro e escuro. Precisa do pacote de desenvolvimento
+  `@axe-core/playwright` (`npm install`); sem ele, o teste é pulado com aviso e não conta como aprovado.
 - Testes comuns: `conferirTopo`, `conferirNavAjustes`, `guiasAjustes` e o teste de tela principal do Kit.
 - Mudar o Kit: alterar `comum/` num repositório, `node comum/verificar.mjs --gerar`, copiar `comum/` para os outros,
   `npm run verificar` e `npm test` em todos.

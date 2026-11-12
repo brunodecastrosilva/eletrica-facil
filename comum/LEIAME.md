@@ -152,6 +152,11 @@ pelo app em `aplicar`.
 
 ## Mudanças do kit
 
+- **0.5.0 · 11/11/2026** (Código 0.4; copiado aos quatro apps): o aviso rápido não some enquanto tem o foco ou o
+  ponteiro em cima, e a contagem recomeça ao sair; varredura de acessibilidade com axe-core
+  (`comum/testes/acessibilidade.test.mjs`, precisa de `npm install`); tela de 320 px nos testes do topo; variável
+  opcional `--kf-aba-linha` documentada no Anexo II.
+
 - **0.4.0 · 11/11/2026** (Código 0.3, propostas do Laboratório do Conta Fácil; copiado aos quatro apps): janela acima
   do teclado no celular e no tablet; janela que muda de lugar desliza em 240 ms; aviso rápido acima do pé da janela
   aberta; subtítulo da janela abaixo do título, com `contexto` opcional acima; seções descontam o cabeçalho fixo do

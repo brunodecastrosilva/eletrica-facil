@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.3 (rascunho)** · 11/11/2026 · Kit Fácil **0.4.0**
+Versão **0.4 (rascunho)** · 11/11/2026 · Kit Fácil **0.5.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -11,7 +11,7 @@ oficial.
 
 Onde fica cada arquivo:
 
-| Arquivo | Projeto Integrador | Repositórios (pasta `comum/`) | Instruções dos Projetos dos apps |
+| Arquivo | Projeto Integrador | Repositórios (pasta `comum/`) | Skill `codigo-projeto-facil` |
 |---|---|---|---|
 | Código (artigos) | `claude/codigo-do-projeto-facil.md` | `CODIGO.md` | sim |
 | Anexos do Código | `claude/anexos-do-codigo.md` | `ANEXOS.md` | não |
@@ -88,12 +88,13 @@ II – o registro da mudança no Painel;
 
 III – a cópia nova em `comum/CODIGO.md` e `comum/ANEXOS.md` dos quatro repositórios, conforme o Art. 30;
 
-IV – as instruções dos Projetos dos aplicativos atualizadas, mantendo as regras de cada aplicativo;
+IV – a skill `codigo-projeto-facil` atualizada com o texto integral novo, que leva o Código a todos os Projetos;
 
 V – a situação da propagação marcada no Painel.
 
-**Art. 9º** Os Projetos dos aplicativos não leem o projeto Integrador nem a memória dele. Tudo o que precisa valer lá
-tem de estar nas instruções deles.
+**Art. 9º** Os Projetos dos aplicativos não leem o projeto Integrador nem a memória dele. O Código chega a eles pela
+skill `codigo-projeto-facil`; as instruções de cada Projeto trazem só as regras do aplicativo e a linha "Siga a skill
+codigo-projeto-facil".
 
 ---
 
@@ -130,12 +131,12 @@ mesma cor e o mesmo traço dos outros ícones. Há um atalho também em *Sobre o
 
 **Art. 15.** Os textos seguem estas regras:
 
-I – frases curtas, tom direto e respeitoso;
+I – frases curtas, de até cerca de 14 palavras, com tom direto e respeitoso;
 
-II – botões com verbo ("Salvar", "Enviar", "Ativar sincronização") e sem descrição dentro: só o rótulo; a explicação,
-quando precisa, fica fora do botão;
+II – botões com verbo, de 2 a 4 palavras ("Salvar", "Enviar", "Ativar sincronização"), e sem descrição dentro: só o
+rótulo; a explicação, quando precisa, fica fora do botão;
 
-III – mensagem de erro diz o que fazer;
+III – mensagem de erro diz o que aconteceu e o que fazer, sem culpar a pessoa e sem código técnico solto;
 
 IV – os nomes das guias dos Ajustes, dos estados da nuvem e das opções do balão são exatamente os deste Código.
 
@@ -151,7 +152,8 @@ III – foco visível em tudo que é clicável;
 
 IV – alvos de toque de pelo menos 44 px e campos com letra de 16 px;
 
-V – contraste AA nos textos;
+V – contraste AA nos textos e de pelo menos 3:1 nos ícones, nos contornos e nas marcas que indicam estado (como o
+sublinhado da guia escolhida) e no foco;
 
 VI – informação nunca só pela cor;
 
@@ -162,7 +164,12 @@ VIII – modo escuro em todas as telas;
 IX – janelas com o foco preso dentro, Esc fecha e o foco volta para quem abriu; com o teclado aberto, a janela fica
 acima dele e o campo não é coberto;
 
-X – toda ação de arrastar tem também um jeito sem arrastar, com botão e lista de marcar.
+X – toda ação de arrastar tem também um jeito sem arrastar, com botão e lista de marcar;
+
+XI – o elemento com foco nunca fica escondido atrás da barra de cima, da navegação de baixo, do botão de criar ou de
+outra barra fixa;
+
+XII – avisos, erros e mudanças de estado são anunciados ao leitor de tela, sem tirar o foco do lugar.
 
 ---
 
@@ -212,12 +219,17 @@ I – rodar a verificação do padrão e os testes automáticos (Anexo VII);
 
 II – abrir o aplicativo no celular e no computador;
 
-III – conferir o modo escuro.
+III – conferir o modo escuro;
+
+IV – revisar o código alterado com foco em segurança (Capítulo III do Título IV).
 
 **Parágrafo único.** Depois de publicar, o aplicativo é aberto no ar e confere-se que ele abre sem erros no console
 do navegador.
 
 **Art. 24.** Publicar é enviar direto para a branch `main`, sem repositório nem branch de homologação.
+
+**Parágrafo único.** Se, depois de publicar, o aplicativo abrir com erro no ar, desfaz-se o envio na hora (`git revert`)
+e só depois se investiga a causa.
 
 **Art. 25.** Cada versão nova:
 
@@ -507,7 +519,8 @@ VI – grupos de dados: **seções que abrem e fecham**, uma embaixo da outra;
 
 VII – aviso dentro da tela: **faixa** do Kit, com no máximo um botão, contornado;
 
-VIII – confirmar antes de apagar: **janela de confirmação** do Kit;
+VIII – confirmar antes de apagar: **janela de confirmação** do Kit, que diz o que será apagado e se dá para desfazer,
+com o botão nomeando a ação ("Apagar comanda", nunca "OK" ou "Sim");
 
 IX – percorrer cartões que se mostram um de cada vez, como cupons: **carrossel** do Kit, com setas, contador e pontos;
 dados de consulta continuam em seções que abrem e fecham;
@@ -692,5 +705,5 @@ II – o guia em três níveis (Essencial, Exploração e Completo), no lugar do
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 11/11/2026 como rascunho (versão 0.3). Regras e textos anteriores (Leis Globais,
+**Art. 95.** Este Código vale desde 11/11/2026 como rascunho (versão 0.4). Regras e textos anteriores (Leis Globais,
 Padrão, Código 3.x) são histórico.

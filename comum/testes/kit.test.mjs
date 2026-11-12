@@ -16,7 +16,7 @@ const CELULAR = { width: 390, height: 844 }, COMPUTADOR = { width: 1280, height:
 
 /* ---------------- área superior direita ---------------- */
 test('topo: nuvem, chopp e balão no canto superior direito, nessa ordem; Ajustes na navegação, no celular e no computador', async () => {
-  for (const viewport of [{ width: 360, height: 740 }, CELULAR, { width: 820, height: 1180 }, COMPUTADOR]) {
+  for (const viewport of [{ width: 320, height: 568 }, { width: 360, height: 740 }, CELULAR, { width: 820, height: 1180 }, COMPUTADOR]) {
     const a = await aparelho(amb, { viewport, caminho: pagina() + '&apoio=1' });
     const t = await conferirTopo(a.page, { chopp: true });
     assert.deepEqual(t.erros, [], `largura ${viewport.width}: ${t.erros.join('; ')}`);
@@ -960,6 +960,22 @@ test('Kit 0.4.0 · seção desconta o cabeçalho fixo do app (scroll-margin-top)
   await p.waitForTimeout(800);
   const topo = await p.evaluate(() => document.querySelector('#g details:nth-child(2)').getBoundingClientRect().top);
   assert.ok(topo >= 198 && topo <= 212, `a seção parou em ${topo}px, embaixo do cabeçalho fixo (200 px)`);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.5.0 · aviso rápido com "Desfazer" não some enquanto tem o foco ou o ponteiro em cima', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => KitFacil.avisar('Item apagado.', { label: 'Desfazer', run() { window.__desfeito = true; } }));
+  await p.locator('.kf-toast-acao').focus();
+  await p.waitForTimeout(6600);
+  assert.equal(await p.locator('.kf-toast').isVisible(), true, 'o aviso sumiu com o foco no Desfazer');
+  await p.locator('.kf-toast-acao').press('Enter');
+  assert.equal(await p.evaluate(() => window.__desfeito), true);
+  await p.evaluate(() => KitFacil.avisar('Salvo.'));
+  await p.waitForTimeout(3600);
+  assert.equal(await p.locator('.kf-toast').isVisible(), false, 'aviso sem foco nem ponteiro deve sumir sozinho');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });

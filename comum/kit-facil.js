@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '0.4.0';
+  const VERSAO = '0.5.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -153,19 +153,34 @@
   /* ================= avisos (toast) ================= */
   let toastT;
   /* avisar(msg, acao): aviso rápido, igual em todos os apps, acima da barra de baixo.
-     acao = { label: 'Desfazer', run() {...} } mostra um botão e deixa o aviso mais tempo na tela (6 s). */
+     acao = { label: 'Desfazer', run() {...} } mostra um botão e deixa o aviso mais tempo na tela (6 s).
+     Enquanto o aviso estiver com o foco ou com o ponteiro em cima, ele não some; ao sair, a contagem recomeça. */
   function avisar(msg, acao) {
     if (typeof C.toast === 'function') { try { C.toast(msg, acao); return; } catch {} }
     let el = $('.kf-toast');
-    if (!el) { el = document.createElement('div'); el.className = 'kf-toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
-    el.textContent = msg; el.hidden = false; clearTimeout(toastT);
+    if (!el) {
+      el = document.createElement('div'); el.className = 'kf-toast'; el.setAttribute('role', 'status'); document.body.appendChild(el);
+      const pausar = () => { el.dataset.kfPausado = '1'; clearTimeout(toastT); };
+      const seguir = () => {
+        if (el.matches(':hover') || el.contains(document.activeElement)) return;
+        delete el.dataset.kfPausado; if (!el.hidden) contarAviso(el);
+      };
+      el.addEventListener('pointerenter', pausar); el.addEventListener('focusin', pausar);
+      el.addEventListener('pointerleave', seguir); el.addEventListener('focusout', () => setTimeout(seguir, 0));
+    }
+    el.textContent = msg; el.hidden = false; clearTimeout(toastT); delete el.dataset.kfPausado;
+    el.dataset.kfMs = acao && acao.label ? 6000 : 3200;
     posicionarAviso(el);
     if (acao && acao.label) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'kf-toast-acao'; b.textContent = acao.label;
-      b.onclick = () => { el.hidden = true; clearTimeout(toastT); try { acao.run(); } catch (e) { console.error(e); } };
+      b.onclick = () => { el.hidden = true; clearTimeout(toastT); delete el.dataset.kfPausado; try { acao.run(); } catch (e) { console.error(e); } };
       el.appendChild(b);
     }
-    toastT = setTimeout(() => { el.hidden = true; }, acao ? 6000 : 3200);
+    contarAviso(el);
+  }
+  function contarAviso(el) {
+    clearTimeout(toastT);
+    toastT = setTimeout(() => { if (!el.dataset.kfPausado) el.hidden = true; }, +el.dataset.kfMs || 3200);
   }
 
   /* Kit 0.4.0: com uma janela aberta, o aviso sobe e fica acima dos botões do pé dela (ou acima da janela, sem pé),
