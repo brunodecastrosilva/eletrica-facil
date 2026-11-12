@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **0.4 (rascunho)** · 11/11/2026 · Kit Fácil **0.5.0**
+Versão **0.5 (rascunho)** · 12/11/2026 · Kit Fácil **0.6.0**
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
@@ -69,7 +69,7 @@ Atkinson, com a Atkinson logo depois na lista, legível em 20 px, com acentos.
 
 | Peça | Função ou classe | Regras |
 |---|---|---|
-| Barra de cima | `KitFacil.topo.html({ principal })` | área de toque 44 × 44, ícones de 24 px, até 24 px da borda; nomes acessíveis "Sincronização: <estado>. Ver detalhes", "Pague um chopp para o criador", "Avaliação e feedback" |
+| Barra de cima | `KitFacil.topo.html({ principal })` | área de toque 44 × 44, ícones de 24 px, até 24 px da borda; nomes acessíveis "Sincronização: <estado>. Ver detalhes", "Mande um presente para o criador", "Avaliação e feedback" |
 | Navegação | `kf-barra`, `kf-nav`, `kf-trilho`, `body.kf-casca`; `KitFacil.nav.ajustes('nav' \| 'trilho')`; seções do "Mais" com `data-kf-mais` | |
 | Ajustes | `KitFacil.ajustes` (guias comuns e próprias, `extras`) | |
 | Cabeçalho de tela | `KitFacil.ui.cabecalho({ titulo, sub, acoes, criar })` | |
@@ -93,8 +93,9 @@ Atkinson, com a Atkinson logo depois na lista, legível em 20 px, com acentos.
 | Carrossel | `KitFacil.carrossel(el, { rotulos, aoMudar, inicio, rotulo })` | filhos de `el` são os cartões; setas de 44 px, contador "2 de 5 · Nome", pontos, altura do cartão da vez, setas do teclado; vai ao vizinho ao andar um quarto da largura ou num gesto rápido; devolve `{ ir, atual }` |
 | Arrastar e soltar | `KitFacil.arrastar({ area, item, alvo, aoSoltar, aoFora })` | no toque, segurar 300 ms; o alvo fica todo colorido; vibração curta onde houver; devolve a função que desliga; o app sempre oferece também o jeito sem arrastar |
 | Texto só para leitor de tela | classe `kf-so-leitor` | ex.: "Falta pagar" ao lado de um valor tachado |
-| Ícones | traço de 2 px, 24 × 24 (`kf-i`) | |
-| Apoio | `KitFacil.apoio`; chave, nome e cidade em `APOIO_PADRAO` | BR Code sem valor; QR com `qrcode-generator` 1.4.4 do cdnjs |
+| Ícones | traço de 2 px, 24 × 24 (`kf-i`); o presente do apoio é a única exceção (colorido, 3D) | |
+| Apoio | `KitFacil.apoio`; chave, nome e cidade em `APOIO_PADRAO` | BR Code sem valor; QR com `qrcode-generator` 1.4.4 do cdnjs; textos: "Mande um presente para o criador!" (janela) e "Mandar um presente" (botão em *Sobre o aplicativo*) |
+| Presente | `KitFacil.apoio.presente(t)` (HTML), `KitFacil.apoio.girar(el)`; classes `kf-presente`, `kf-pr-*` | caixa de lado `t` montada em CSS 3D, sem imagem, vista isométrica (`rotateX(-28deg) rotateY(-45deg)`); cores fixas nos dois temas: papel `#7F77DD`/`#534AB7`, tampa `#9A93E8`/`#6259C9`/`#CECBF6`, fita e laço `#EF9F27`/`#BA7517`/`#FAC775`; tamanhos: barra 14, *Sobre* 40, janela 44; grande (`t` ≥ 30) com bolinhas, pontas da fita, brilho da tampa, verso do laço e sombra; `aria-hidden`, o nome fica no botão |
 
 ## ANEXO III — Sincronização e cópia de segurança
 
@@ -155,6 +156,7 @@ Curva `cubic-bezier(.45,0,.2,1)` (`KitFacil.movimento`).
 | Arrastar e soltar | levanta inclinado; entra no alvo encolhendo, ou volta para o lugar | 220 · 280 ms |
 | Avisos rápidos | sobem e aparecem | 280 ms |
 | Item atual da navegação | a cor desliza | 280 ms |
+| Presente do apoio | uma volta (sobe um pouco e gira 360°); na barra, só na primeira vez que o app abre; na janela e em *Sobre*, ao aparecer; ao tocar ou passar o ponteiro, sempre; parado com movimento reduzido | 1,4 s |
 
 O que sai é um "fantasma" desenhado pelo Kit; o elemento de verdade sai na hora, então o código e os testes não
 esperam a animação.

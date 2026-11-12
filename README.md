@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 0.2.1 · Kit Fácil 0.5.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+**Fase de testes** · versão 0.3.0 · Kit Fácil 0.6.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md).
@@ -27,7 +27,7 @@ Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e
 - **Avalie o app e relate problemas** pelo balão no alto da tela (ou em Ajustes → Avaliação e feedback)
 - **Nuvem no alto da tela:** mostra se os dados estão sincronizados, sincronizando, pendentes, com erro ou sem internet
 - **Ajustes na barra de baixo** (no computador, no pé do menu lateral), com as mesmas guias nos três apps
-- **Pague um chopp para o criador!** O app é gratuito; o chopp no alto da tela, entre a nuvem e o balão, abre o Pix (QR code e copia e cola), se você quiser apoiar
+- **Mande um presente para o criador!** O app é gratuito; o presente no alto da tela, entre a nuvem e o balão, abre o Pix (QR code e copia e cola), se você quiser apoiar
 - **Novidades:** depois de cada atualização, o app mostra uma vez o que mudou
 - Listas de escolha desenhadas pelo próprio app e o mesmo caminho (categoria, depois item) para cadastrar preço, material e ferramenta
 - Tema claro, escuro ou automático; funciona sem internet depois da primeira visita
@@ -77,7 +77,7 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 
 Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
 
-- **Alto da tela, à direita:** nuvem da sincronização, chopp para o criador e balão de avaliação, nessa ordem; Ajustes fica na barra de baixo (no computador, no pé do menu lateral). No orçamento e na
+- **Alto da tela, à direita:** nuvem da sincronização, presente para o criador e balão de avaliação, nessa ordem; Ajustes fica na barra de baixo (no computador, no pé do menu lateral). No orçamento e na
   proposta, só a nuvem e o balão (o Voltar e o menu do orçamento ficam à esquerda deles)
 - **Navegação:** Orçamentos, Preços e Gestão na barra de baixo (celular e tablet) ou no menu lateral (computador, a partir de 1024 px), com Ajustes por último
 - **Ajustes:** as oito guias comuns e as guias próprias **Pix**, **Veículo e deslocamento**, **Adicionais**,

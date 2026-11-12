@@ -148,24 +148,25 @@ export async function semRolagemLateral(page) {
 }
 
 /* ---------- conferências do padrão de interface, usadas pelos testes de cada app ---------- */
-/* área superior direita (Kit Fácil 2.1.3): nuvem · chopp · balão. Ajustes não fica mais no topo, e sim na navegação.
-   o.chopp: true = o chopp tem de aparecer; false = não pode aparecer (telas internas); undefined = tanto faz.
-   (o antigo { comAjustes: false } vale como tela interna: sem chopp) */
+/* área superior direita (Código, Art. 58): nuvem · presente · balão. Ajustes fica na navegação.
+   o.presente: true = o presente tem de aparecer; false = não pode aparecer (telas internas); undefined = tanto faz.
+   (o.chopp, nome antigo, e { comAjustes: false } continuam valendo) */
 export async function conferirTopo(page, o = {}) {
-  const chopp = o.chopp !== undefined ? o.chopp : o.comAjustes === false ? false : undefined;
-  return page.evaluate(chopp => {
+  const ped = o.presente !== undefined ? o.presente : o.chopp;
+  const presente = ped !== undefined ? ped : o.comAjustes === false ? false : undefined;
+  return page.evaluate(presente => {
     const vis = el => el && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden';
     const um = sel => [...document.querySelectorAll(sel)].filter(vis);
-    const nuvens = um('[data-kf-nuvem]'), baloes = um('[data-kf="feedback"].kf-topo-btn'), choppes = um('.kf-topo [data-kf="apoio"]'), noTopo = um('.kf-topo [data-kf="ajustes"]');
+    const nuvens = um('[data-kf-nuvem]'), baloes = um('[data-kf="feedback"].kf-topo-btn'), presentes = um('.kf-topo [data-kf="apoio"]'), noTopo = um('.kf-topo [data-kf="ajustes"]');
     const erros = [];
     if (nuvens.length !== 1) erros.push(`nuvens visíveis: ${nuvens.length}`);
     if (baloes.length !== 1) erros.push(`balões visíveis: ${baloes.length}`);
     if (noTopo.length) erros.push('Ajustes ainda aparece no topo (deve ficar na navegação)');
-    if (chopp === true && choppes.length !== 1) erros.push(`chopp visível: ${choppes.length}`);
-    if (chopp === false && choppes.length) erros.push('chopp aparece numa tela interna');
+    if (presente === true && presentes.length !== 1) erros.push(`presente visível: ${presentes.length}`);
+    if (presente === false && presentes.length) erros.push('presente aparece numa tela interna');
     if (erros.length) return { erros };
     const r = el => { const b = el.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height, d: b.right }; };
-    const n = r(nuvens[0]), b = r(baloes[0]), c = choppes[0] ? r(choppes[0]) : null;
+    const n = r(nuvens[0]), b = r(baloes[0]), c = presentes[0] ? r(presentes[0]) : null;
     const vw = document.documentElement.clientWidth;
     if (!(n.d <= b.x + 1)) erros.push('a nuvem não está à esquerda do balão');
     if (!c && b.x - n.d > 6) erros.push(`nuvem e balão afastados (${Math.round(b.x - n.d)} px)`);
@@ -174,15 +175,16 @@ export async function conferirTopo(page, o = {}) {
     if (vw - b.d > 24) erros.push(`balão longe da borda direita (${Math.round(vw - b.d)} px)`);
     if (n.y > 80) erros.push(`ícones abaixo do topo (${Math.round(n.y)} px)`);
     if (c) {
-      if (!(n.d <= c.x + 1 && c.d <= b.x + 1)) erros.push('o chopp não está entre a nuvem e o balão');
-      if (c.x - n.d > 6 || b.x - c.d > 6) erros.push('chopp afastado da nuvem ou do balão');
+      if (!(n.d <= c.x + 1 && c.d <= b.x + 1)) erros.push('o presente não está entre a nuvem e o balão');
+      if (c.x - n.d > 6 || b.x - c.d > 6) erros.push('presente afastado da nuvem ou do balão');
       const cor = el => getComputedStyle(el).color;
-      if (cor(choppes[0]) !== cor(nuvens[0]) || cor(choppes[0]) !== cor(baloes[0])) erros.push('o chopp não tem a mesma cor dos outros ícones do topo');
-      if (c.w !== 44 || c.h !== 44) erros.push(`área de toque do chopp diferente de 44 px: ${c.w}x${c.h}`);
-      if (choppes[0].getAttribute('aria-label') !== 'Pague um chopp para o criador') erros.push('chopp sem descrição acessível');
+      if (cor(nuvens[0]) !== cor(baloes[0])) erros.push('a nuvem e o balão não têm a mesma cor');
+      if (!presentes[0].querySelector('.kf-presente .kf-pr-cubo')) erros.push('o apoio não usa o presente do Kit');
+      if (c.w !== 44 || c.h !== 44) erros.push(`área de toque do presente diferente de 44 px: ${c.w}x${c.h}`);
+      if (presentes[0].getAttribute('aria-label') !== 'Mande um presente para o criador') erros.push('presente sem descrição acessível');
     }
     // telas principais: a barra de cima tem só a marca (ícone e nome visível) e a área superior; nada de ícones a mais
-    if (chopp !== false) {
+    if (presente !== false) {
       const barra = nuvens[0].closest('.kf-barra-in');
       if (barra) {
         const extras = [...barra.querySelectorAll('button, a')].filter(el => vis(el) && !el.closest('.kf-topo'));
@@ -194,8 +196,8 @@ export async function conferirTopo(page, o = {}) {
     const estado = nuvens[0].dataset.estado, rotulo = nuvens[0].getAttribute('aria-label');
     if (!rotulo || !rotulo.startsWith('Sincronização:')) erros.push('nuvem sem descrição acessível');
     if (baloes[0].getAttribute('aria-label') !== 'Avaliação e feedback') erros.push('balão sem descrição acessível');
-    return { erros, estado, nuvem: n, balao: b, chopp: c };
-  }, chopp);
+    return { erros, estado, nuvem: n, balao: b, presente: c };
+  }, presente);
 }
 /* barra de baixo (Kit Fácil 2.2): no máximo 5 posições e nenhum nome cortado. Com até 5 itens, Ajustes é o último;
    com mais, o 5º item é "Mais" e Ajustes é o último lá dentro. No computador (trilho), Ajustes é o último item. */

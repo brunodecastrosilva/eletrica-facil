@@ -15,10 +15,10 @@ const estadoNuvem = p => p.getAttribute('[data-kf-nuvem]', 'data-estado');
 const CELULAR = { width: 390, height: 844 }, COMPUTADOR = { width: 1280, height: 860 };
 
 /* ---------------- área superior direita ---------------- */
-test('topo: nuvem, chopp e balão no canto superior direito, nessa ordem; Ajustes na navegação, no celular e no computador', async () => {
+test('topo: nuvem, presente e balão no canto superior direito, nessa ordem; Ajustes na navegação, no celular e no computador', async () => {
   for (const viewport of [{ width: 320, height: 568 }, { width: 360, height: 740 }, CELULAR, { width: 820, height: 1180 }, COMPUTADOR]) {
     const a = await aparelho(amb, { viewport, caminho: pagina() + '&apoio=1' });
-    const t = await conferirTopo(a.page, { chopp: true });
+    const t = await conferirTopo(a.page, { presente: true });
     assert.deepEqual(t.erros, [], `largura ${viewport.width}: ${t.erros.join('; ')}`);
     const n = await conferirNavAjustes(a.page);
     assert.deepEqual(n.erros, [], `largura ${viewport.width}: ${n.erros.join('; ')}`);
@@ -501,9 +501,9 @@ test('cópia de segurança: envelope padrão', async () => {
 });
 
 /* ---------------- Kit Fácil 2.1: apoio ao criador, novidades e boas-vindas ---------------- */
-test('chopp: sem chave Pix não aparece; com chave fica entre a nuvem e o balão e não aparece nas telas internas', async () => {
+test('presente: sem chave Pix não aparece; com chave fica entre a nuvem e o balão e não aparece nas telas internas', async () => {
   const a = await aparelho(amb, { caminho: pagina() });
-  assert.deepEqual((await conferirTopo(a.page, { chopp: false })).erros, []);
+  assert.deepEqual((await conferirTopo(a.page, { presente: false })).erros, []);
   assert.equal(await a.page.evaluate(() => KitFacil.topo.html({ principal: true }).includes('data-kf="apoio"')), false);
   await a.fechar();
   const b = await aparelho(amb, { caminho: pagina() + '&apoio=1' });
@@ -512,7 +512,7 @@ test('chopp: sem chave Pix não aparece; com chave fica entre a nuvem e o balão
   await b.fechar();
 });
 
-test('chopp: código Pix copia e cola no padrão do Banco Central (CRC confere) e janela com um só botão, Copiar código Pix', async () => {
+test('presente: código Pix copia e cola no padrão do Banco Central (CRC confere) e janela com um só botão, Copiar código Pix', async () => {
   const a = await aparelho(amb, { caminho: pagina() + '&apoio=1' });
   const p = a.page;
   const cod = await p.evaluate(() => KitFacil.apoio.codigo());
@@ -526,7 +526,8 @@ test('chopp: código Pix copia e cola no padrão do Banco Central (CRC confere) 
   await p.click('.kf-topo [data-kf="apoio"]');
   const dlg = p.locator('[data-kf-dialogo="apoio"]');
   await dlg.waitFor();
-  assert.equal(await dlg.locator('h2').textContent(), 'Pague um chopp para o criador!');
+  assert.equal(await dlg.locator('h2').textContent(), 'Mande um presente para o criador!');
+  assert.equal(await dlg.locator('.kf-apoio-presente .kf-presente.kf-pr-g[aria-hidden="true"]').count(), 1, 'a janela mostra o presente grande');
   // sem internet (bibliotecas bloqueadas nos testes): o QR dá lugar ao aviso e o código continua copiável
   assert.ok(await esperar(() => dlg.locator('[data-kf-qr]').textContent().then(t => /Sem internet/.test(t))));
   await p.evaluate(() => { window.__copiado = ''; navigator.clipboard.writeText = t => { window.__copiado = t; return Promise.resolve(); }; });
@@ -978,4 +979,32 @@ test('Kit 0.5.0 · aviso rápido com "Desfazer" não some enquanto tem o foco ou
   assert.equal(await p.locator('.kf-toast').isVisible(), false, 'aviso sem foco nem ponteiro deve sumir sozinho');
   assert.deepEqual(a.erros, []);
   await a.fechar();
+});
+
+/* ---------------- Kit 0.6.0: o presente do apoio (Código, Art. 13) ---------------- */
+test('presente: 3D, colorido, gira uma vez na barra e ao passar o ponteiro, parado com movimento reduzido', async () => {
+  const a = await aparelho(amb, { caminho: pagina() + '&apoio=1' });
+  const p = a.page;
+  const info = await p.evaluate(() => {
+    const b = document.querySelector('.kf-topo [data-kf="apoio"]'), c = b.querySelector('.kf-pr-cubo');
+    const cs = getComputedStyle(c);
+    return { estilo: cs.transformStyle, anim: cs.animationName, cor: getComputedStyle(b.querySelector('.kf-pr-c1')).backgroundColor,
+      laco: b.querySelectorAll('.kf-pr-a').length, pontas: b.querySelectorAll('.kf-pr-p').length, oculto: b.querySelector('.kf-presente').getAttribute('aria-hidden') };
+  });
+  assert.equal(info.estilo, 'preserve-3d');
+  assert.equal(info.anim, 'kf-pr-volta');
+  assert.equal(info.cor, 'rgb(127, 119, 221)');
+  assert.equal(info.laco, 2, 'barra: laço só com a frente das alças');
+  assert.equal(info.pontas, 0, 'barra: sem as pontas da fita');
+  assert.equal(info.oculto, 'true');
+  // a barra desenhada de novo não gira de novo; passar o ponteiro gira
+  assert.equal(await p.evaluate(() => KitFacil.topo.html({ principal: true }).includes('kf-pr-gira')), false);
+  const grande = await p.evaluate(() => { const d = document.createElement('div'); d.innerHTML = KitFacil.apoio.presente(56); return { a: d.querySelectorAll('.kf-pr-a').length, p: d.querySelectorAll('.kf-pr-p').length, g: !!d.querySelector('.kf-pr-g') }; });
+  assert.deepEqual(grande, { a: 4, p: 2, g: true });
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+  const r = await aparelho(amb, { caminho: pagina() + '&apoio=1', antes: () => {} });
+  await r.page.emulateMedia({ reducedMotion: 'reduce' });
+  assert.equal(await r.page.evaluate(() => getComputedStyle(document.querySelector('.kf-topo .kf-pr-cubo')).animationName), 'none');
+  await r.fechar();
 });

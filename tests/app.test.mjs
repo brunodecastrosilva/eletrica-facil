@@ -49,7 +49,7 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral; topo 
     const id = await criarOrcamento(p, 'Cliente Teste', 'Troca de tomada');
     await p.evaluate(id => go('/q/' + id), id);
     await p.locator('[data-menu]').waitFor();
-    const interno = await conferirTopo(p, { chopp: false });
+    const interno = await conferirTopo(p, { presente: false });
     assert.deepEqual(interno.erros, [], `área superior do orçamento no ${nome}`);
     assert.ok(await semRolagemLateral(p), `rolagem lateral no orçamento no ${nome}`);
     assert.deepEqual(a.erros, [], `erros no ${nome}`);

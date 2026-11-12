@@ -4,9 +4,9 @@
    Sem dependências e sem etapa de build: script clássico que cria window.KitFacil.
 
    O que tem aqui (veja comum/CODIGO.md, o Código do Projeto Fácil):
-   - área superior direita padronizada: nuvem (estado real da sincronização), chopp (apoio ao criador, só nas telas
+   - área superior direita padronizada: nuvem (estado real da sincronização), presente (apoio ao criador, só nas telas
      principais) e balão (avaliação e feedback); Ajustes fica na navegação (barra de baixo e trilho)
-   - apoio ao criador: "Pague um chopp para o criador!", com QR code e código Pix copia e cola
+   - apoio ao criador: "Mande um presente para o criador!", com o presente 3D do Kit, QR code e código Pix copia e cola
    - novidades de cada versão (uma vez, na primeira abertura depois de atualizar) e boas-vindas no primeiro uso
    - avaliação e feedback: escolha entre "Avaliar o app" e "Relatar um problema", com os mesmos componentes
    - tela de Ajustes em guias: as guias comuns, sempre na mesma ordem, e as guias próprias de cada app
@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '0.5.0';
+  const VERSAO = '0.6.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -43,7 +43,7 @@
 
   /* Apoio ao criador (lei 13): Pix do criador, igual em todos os apps. A chave é ALEATÓRIA, de propósito: o repositório é
      público e uma chave de CPF, telefone ou e-mail exporia dado pessoal. Nome (até 25 letras) e cidade (até 15) entram no
-     código Pix copia e cola, como manda o padrão do Banco Central. Sem chave, o chopp não aparece. */
+     código Pix copia e cola, como manda o padrão do Banco Central. Sem chave, o presente não aparece. */
   // nome não pessoal de propósito (decisão do criador): o banco de quem paga mostra o nome real, vindo do cadastro da chave
   const APOIO_PADRAO = { chave: '35b9f895-679e-478f-8bc0-4cc62745a031', nome: 'Projeto Facil', cidade: 'Gama' };
   const QR_LIB = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
@@ -86,7 +86,6 @@
     sino: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
     escudo: '<path d="M12 3 5 6v5.5c0 4.3 3 7.6 7 9.5 4-1.9 7-5.2 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.1"/>',
-    chopp: '<path d="M5.5 8.5h10v11a1.5 1.5 0 0 1-1.5 1.5H7a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M15.5 11h1.6a2.4 2.4 0 0 1 2.4 2.4v1.7a2.4 2.4 0 0 1-2.4 2.4h-1.6"/><path d="M5.5 8.5A2.4 2.4 0 0 1 7.6 4.7a3 3 0 0 1 5.3-.4 2.4 2.4 0 0 1 2.6 4.2"/><path d="M9 12.5v5M12 12.5v5"/>',
     mais: '<circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/>',
     estrelaNova: '<path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3M6 6l2.1 2.1M15.9 15.9 18 18M18 6l-2.1 2.1M8.1 15.9 6 18"/><circle cx="12" cy="12" r="2.2"/>',
   };
@@ -100,7 +99,6 @@
     balao: svg(P.balao),
     msg: svg(P.balao),
     ajustes: svg(P.ajustes),
-    chopp: svg(P.chopp),
     novidades: svg(P.estrelaNova),
     pessoa: svg(P.pessoa),
     aparencia: svg(P.aparencia),
@@ -559,7 +557,7 @@
       <dl class="kf-dados"><div><dt>Termos de uso</dt><dd>Ainda não publicados: o app está em fase de testes.</dd></div>
         <div><dt>Privacidade</dt><dd>O resumo de como o app trata os seus dados está em <b>Privacidade e segurança</b>.</dd></div></dl>
       ${novidadesDaVersao() ? `<h3 class="kf-sub">Novidades desta versão</h3>${listaNovidades(novidadesDaVersao())}` : ''}
-      ${apoioAtivo() ? `<h3 class="kf-sub">Apoie o criador</h3><p class="kf-ajuda">O ${esc(C.nome)} é gratuito. Gostando do app? Pague um chopp para o criador!</p><button type="button" class="kf-btn kf-sec" data-kf="apoio">${IC.chopp}Pagar um chopp</button>` : ''}
+      ${apoioAtivo() ? `<h3 class="kf-sub">Apoie o criador</h3><div class="kf-apoio-sobre">${presenteHTML(40)}<p class="kf-ajuda">O ${esc(C.nome)} é gratuito. Gostando do app? Mande um presente para o criador!</p></div><button type="button" class="kf-btn kf-sec" data-kf="apoio">Mandar um presente</button>` : ''}
       <h3 class="kf-sub">Como reconhecer o app oficial</h3>
       <dl class="kf-dados"><div><dt>Endereço oficial</dt><dd>${esc(ENDERECO_OFICIAL + (C.app || '') + '/')}</dd></div>
         ${apoioAtivo() ? `<div><dt>Chave Pix do apoio</dt><dd>termina em ${esc(String(C.apoio.chave).slice(-4))}</dd></div>` : ''}</dl>
@@ -725,8 +723,8 @@
     const e = estadoNuvem(), r = ESTADOS[e].rotulo;
     return `<button type="button" class="kf-topo-btn kf-nuvem" data-kf="nuvem" data-kf-nuvem data-estado="${e}" aria-label="${esc(`Sincronização: ${r}. Ver detalhes`)}" title="${esc(`Sincronização: ${r}`)}">${iconeNuvem(e)}</button>`;
   }
-  /* Área superior, igual em todos os apps: nuvem · chopp · balão.
-     o = { principal: true } nas telas principais (mostra o chopp); { principal: false } nas telas internas (só nuvem e balão).
+  /* Área superior, igual em todos os apps: nuvem · presente · balão.
+     o = { principal: true } nas telas principais (mostra o presente); { principal: false } nas telas internas (só nuvem e balão).
      Sem a opção, vale como tela principal. Ajustes fica na navegação (KitFacil.nav.ajustes). */
   function topoHTML(o = {}) {
     const principal = o.principal !== false;
@@ -889,9 +887,41 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', vigiarNav); else vigiarNav();
 
-  /* ================= apoio ao criador: "Pague um chopp para o criador!" ================= */
+  /* ================= apoio ao criador: "Mande um presente para o criador!" (Código, Art. 13) ================= */
   const apoioAtivo = () => !!(C.apoio && String(C.apoio.chave || '').trim());
-  const botaoApoio = () => `<button type="button" class="kf-topo-btn kf-chopp" data-kf="apoio" aria-label="Pague um chopp para o criador" title="Pague um chopp para o criador">${IC.chopp}</button>`;
+  /* O presente do Kit, igual em todos os apps: colorido, em 3D e em vista isométrica, montado com CSS (sem imagem).
+     t = lado da caixa em px. Grande (t >= 30): papel de bolinhas, pontas da fita, brilho da tampa, verso do laço e
+     sombra. Pequeno (barra de cima): caixa, tampa, fita e laço, que é o que se lê em 24 px.
+     Dá uma volta ao aparecer (só na primeira vez que o app abre, na barra; sempre, na janela e em Sobre) e ao
+     tocar ou passar o ponteiro; depois fica parado. Com movimento reduzido, fica sempre parado (no CSS). */
+  let presenteJaGirou = false;
+  function presenteHTML(t = 14, o = {}) {
+    const g = t >= 30, gira = o.gira !== undefined ? o.gira : true, f = (c, d = '') => `<span class="kf-pr-f ${c}">${d}</span>`;
+    const alcas = (g ? ['f', 'v'] : ['f']).map(z => f(`kf-pr-a kf-pr-ae kf-pr-a${z}`) + f(`kf-pr-a kf-pr-ad kf-pr-a${z}`)).join('');
+    return `<span class="kf-presente${g ? ' kf-pr-g' : ''}" style="--s:${t}px" aria-hidden="true"><span class="kf-pr-cubo${gira ? ' kf-pr-gira' : ''}">`
+      + (g ? f('kf-pr-sb') : '')
+      + f('kf-pr-c kf-pr-c1') + f('kf-pr-c kf-pr-c2') + f('kf-pr-c kf-pr-c3') + f('kf-pr-c kf-pr-c4')
+      + f('kf-pr-t kf-pr-t1') + f('kf-pr-t kf-pr-t2') + f('kf-pr-t kf-pr-t3') + f('kf-pr-t kf-pr-t4')
+      + f('kf-pr-tt', g ? '<span class="kf-pr-p kf-pr-p1"></span><span class="kf-pr-p kf-pr-p2"></span>' : '')
+      + alcas
+      + f('kf-pr-n kf-pr-n1') + f('kf-pr-n kf-pr-n2') + f('kf-pr-n kf-pr-n3') + f('kf-pr-n kf-pr-n4') + f('kf-pr-n kf-pr-n5')
+      + '</span></span>';
+  }
+  function girarPresente(el) {
+    const c = el && el.querySelector('.kf-pr-cubo'); if (!c) return;
+    c.classList.remove('kf-pr-gira'); void c.offsetWidth; c.classList.add('kf-pr-gira');
+  }
+  const botaoApoio = () => {
+    const gira = !presenteJaGirou; presenteJaGirou = true;
+    return `<button type="button" class="kf-topo-btn kf-apoio-btn" data-kf="apoio" aria-label="Mande um presente para o criador" title="Mande um presente para o criador">${presenteHTML(14, { gira })}</button>`;
+  };
+  if (typeof document !== 'undefined') {
+    document.addEventListener('pointerover', e => {
+      const b = e.target.closest && e.target.closest('[data-kf="apoio"]');
+      if (b && !(e.relatedTarget && b.contains(e.relatedTarget))) girarPresente(b);
+    });
+    document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-kf="apoio"]'); if (b) girarPresente(b); }, true);
+  }
   /* código Pix copia e cola (BR Code, padrão EMV do Banco Central), sem valor: quem paga escolhe quanto */
   const semAcento = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9 .\-]/g, '').trim();
   const campo = (id, v) => id + String(v.length).padStart(2, '0') + v;
@@ -920,8 +950,9 @@
   function abrirApoio() {
     if (!apoioAtivo()) return;
     const codigo = codigoPix();
-    abrirDialogo({ titulo: 'Pague um chopp para o criador!', classe: 'kf-curto kf-apoio', nome: 'apoio',
-      corpo: `<p class="kf-texto">Gostando do ${esc(C.nome)}? O app é gratuito e feito por uma pessoa só. Se ele ajuda você, pague um chopp para o criador pelo Pix. Qualquer valor ajuda.</p>
+    abrirDialogo({ titulo: 'Mande um presente para o criador!', classe: 'kf-curto kf-apoio', nome: 'apoio',
+      corpo: `<div class="kf-apoio-presente">${presenteHTML(44)}</div>
+        <p class="kf-texto">Gostando do ${esc(C.nome)}? O app é gratuito e feito por uma pessoa só. Se ele ajuda você, mande um presente para o criador pelo Pix. Qualquer valor ajuda.</p>
         <div class="kf-qr" data-kf-qr role="img" aria-label="QR code do Pix do criador"><span class="kf-carregando">Preparando o QR code…</span></div>
         <p class="kf-ajuda">Abra o app do seu banco, escolha <b>Pix</b> e leia o QR code, ou copie o código e cole em <b>Pix copia e cola</b>.</p>
         <p class="kf-ajuda">É opcional: o ${esc(C.nome)} continua igual para todos, pagando ou não.</p>`,
@@ -2641,7 +2672,7 @@
     hora: { ligar: horaLigar },
     secao: { abrir: secaoAbrir, fechar: secaoFechar, alternar: secaoAlternar, aberta: secaoAberta },
     movimento: { ms: MOV.ms, curto: MOV.curto, curva: MOV.curva, css: MOV.css, reduzido: semMovimento, entrar },
-    apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix },
+    apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix, presente: presenteHTML, girar: girarPresente },
     novidades: { abrir: abrirNovidades, daVersao: novidadesDaVersao },
     boasVindas: { abrir: abrirBoasVindas },
     apresentacao: { abrir: abrirApresentacao, ligada: apresLigada, definir: apresDefinir },

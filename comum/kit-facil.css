@@ -330,8 +330,7 @@ textarea.kf-entrada{min-height:110px;resize:vertical}
   .kf-aj-sec-h{margin-top:4px}
 }
 
-/* ================= Kit Fácil 2.1: chopp, item Ajustes na navegação, QR do Pix, novidades ================= */
-/* chopp: entre a nuvem e o balão, só nas telas principais (lei 13); mesma cor e traço dos outros ícones do topo */
+/* ================= Kit Fácil 2.1: item Ajustes na navegação, QR do Pix, novidades ================= */
 /* barra de baixo: no máximo 5 posições (4 seções + "Mais"); os itens que foram para o "Mais" ficam escondidos */
 .kf-nav-it.kf-nav-oculto{display:none}
 .kf-mais-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
@@ -598,3 +597,59 @@ body.kf-arrastando{-webkit-user-select:none;user-select:none}
 @keyframes kf-arr-pisca{0%{scale:1.04}50%{scale:.98}100%{scale:1}}
 .kf-arr-pisca{animation:kf-arr-pisca .5s cubic-bezier(.45,0,.2,1)}
 @media (prefers-reduced-motion:reduce){.kf-arr-fantasma,.kf-arr-fantasma.kf-arr-no-ar{transition:none;rotate:0deg;scale:1}.kf-arr-pisca{animation:none}.kf-arr-origem{transition:none}}
+
+/* ================= Kit Fácil 0.6.0: presente do apoio (Código, Art. 13) =================
+   Colorido, em 3D e em vista isométrica, igual em todos os apps e nos dois temas. --s = lado da caixa.
+   Só ele é colorido na barra de cima (Art. 58, II). Uma volta (1,4 s) ao aparecer e ao tocar; depois, parado. */
+.kf-presente{--s:14px;display:inline-grid;place-items:center;width:calc(var(--s)*2);height:calc(var(--s)*2);perspective:calc(var(--s)*12);flex:none;pointer-events:none}
+.kf-pr-cubo{position:relative;display:block;width:var(--s);height:var(--s);margin-top:calc(var(--s)*.55);transform-style:preserve-3d;transform:rotateX(-28deg) rotateY(-45deg)}
+.kf-pr-gira{animation:kf-pr-volta 1.4s cubic-bezier(.45,0,.2,1) 1}
+@keyframes kf-pr-volta{0%{transform:translateY(0) rotateX(-28deg) rotateY(-45deg)}50%{transform:translateY(-8%) rotateX(-28deg) rotateY(135deg)}100%{transform:translateY(0) rotateX(-28deg) rotateY(315deg)}}
+@media (prefers-reduced-motion:reduce){.kf-pr-gira{animation:none}}
+.kf-pr-f{position:absolute;left:50%;top:50%;display:block;box-sizing:border-box;width:var(--w);height:var(--h);margin:calc(var(--h)/-2) 0 0 calc(var(--w)/-2);overflow:hidden}
+/* caixa: papel violeta, faces claras e escuras alternadas; fita dourada no meio */
+.kf-pr-c{--w:var(--s);--h:calc(var(--s)*.72);background:#7F77DD}
+.kf-pr-c1{transform:translateY(calc(var(--s)*.14)) rotateY(0deg) translateZ(calc(var(--s)*.5))}
+.kf-pr-c2{transform:translateY(calc(var(--s)*.14)) rotateY(90deg) translateZ(calc(var(--s)*.5));background:#534AB7}
+.kf-pr-c3{transform:translateY(calc(var(--s)*.14)) rotateY(180deg) translateZ(calc(var(--s)*.5))}
+.kf-pr-c4{transform:translateY(calc(var(--s)*.14)) rotateY(270deg) translateZ(calc(var(--s)*.5));background:#534AB7}
+/* tampa: um pouco maior que a caixa, com aba */
+.kf-pr-t{--w:calc(var(--s)*1.14);--h:calc(var(--s)*.26);background:#9A93E8}
+.kf-pr-t1{transform:translateY(calc(var(--s)*-.33)) rotateY(0deg) translateZ(calc(var(--s)*.57))}
+.kf-pr-t2{transform:translateY(calc(var(--s)*-.33)) rotateY(90deg) translateZ(calc(var(--s)*.57));background:#6259C9}
+.kf-pr-t3{transform:translateY(calc(var(--s)*-.33)) rotateY(180deg) translateZ(calc(var(--s)*.57))}
+.kf-pr-t4{transform:translateY(calc(var(--s)*-.33)) rotateY(270deg) translateZ(calc(var(--s)*.57));background:#6259C9}
+.kf-pr-tt{--w:calc(var(--s)*1.14);--h:calc(var(--s)*1.14);background:#CECBF6;overflow:visible;transform:translateY(calc(var(--s)*-.46)) rotateX(90deg)}
+.kf-pr-c::before,.kf-pr-t::before,.kf-pr-tt::before{content:"";position:absolute;top:0;bottom:0;left:40%;width:20%;background:#EF9F27}
+.kf-pr-tt::after{content:"";position:absolute;left:0;right:0;top:40%;height:20%;background:#FAC775}
+.kf-pr-c2::before,.kf-pr-c4::before,.kf-pr-t2::before,.kf-pr-t4::before{background:#BA7517}
+.kf-pr-t1::before,.kf-pr-t3::before,.kf-pr-tt::before{background:#FAC775}
+/* laço: duas alças em gota presas ao nó; no grande, cada alça tem frente clara e verso escuro */
+.kf-pr-a{--w:calc(var(--s)*.44);--h:calc(var(--s)*.32);overflow:visible;background:transparent;border:max(1.5px,calc(var(--s)*.065)) solid #EF9F27}
+.kf-pr-ae{border-radius:65% 55% 8% 55%;transform:translateY(calc(var(--s)*-.6)) rotateY(45deg) translateZ(var(--z,0px)) translateX(calc(var(--s)*-.22)) rotateZ(22deg)}
+.kf-pr-ad{border-radius:55% 65% 55% 8%;transform:translateY(calc(var(--s)*-.6)) rotateY(45deg) translateZ(var(--z,0px)) translateX(calc(var(--s)*.22)) rotateZ(-22deg)}
+.kf-pr-g .kf-pr-af{--z:calc(var(--s)*.05)}
+.kf-pr-av{--z:calc(var(--s)*-.05);border-color:#BA7517}
+/* nó: cubinho no meio do laço */
+.kf-pr-n{--w:calc(var(--s)*.16);--h:calc(var(--s)*.16);background:#EF9F27}
+.kf-pr-n1{transform:translateY(calc(var(--s)*-.54)) rotateY(0deg) translateZ(calc(var(--s)*.08))}
+.kf-pr-n2{transform:translateY(calc(var(--s)*-.54)) rotateY(90deg) translateZ(calc(var(--s)*.08));background:#BA7517}
+.kf-pr-n3{transform:translateY(calc(var(--s)*-.54)) rotateY(180deg) translateZ(calc(var(--s)*.08))}
+.kf-pr-n4{transform:translateY(calc(var(--s)*-.54)) rotateY(270deg) translateZ(calc(var(--s)*.08));background:#BA7517}
+.kf-pr-n5{transform:translateY(calc(var(--s)*-.62)) rotateX(90deg);background:#FAC775}
+/* detalhes do tamanho grande */
+.kf-pr-g .kf-pr-c{background-image:radial-gradient(circle,rgba(255,255,255,.22) 15%,transparent 17%);background-size:calc(var(--s)*.28) calc(var(--s)*.28)}
+.kf-pr-g .kf-pr-c::after{content:"";position:absolute;left:0;right:0;top:0;height:9%;background:rgba(0,0,0,.2)}
+.kf-pr-g .kf-pr-t::after{content:"";position:absolute;left:0;right:0;top:0;height:16%;background:rgba(255,255,255,.28)}
+.kf-pr-g .kf-pr-c::before,.kf-pr-g .kf-pr-t::before,.kf-pr-g .kf-pr-tt::before{box-shadow:inset 2px 0 rgba(255,255,255,.4),inset -2px 0 rgba(0,0,0,.15)}
+.kf-pr-g .kf-pr-tt::after{box-shadow:inset 0 2px rgba(255,255,255,.4),inset 0 -2px rgba(0,0,0,.15)}
+.kf-pr-p{position:absolute;z-index:1;left:50%;top:50%;width:calc(var(--s)*.17);height:calc(var(--s)*.5);margin-left:calc(var(--s)*-.085);transform-origin:50% 0;background:#EF9F27;clip-path:polygon(0 0,100% 0,100% 100%,50% 80%,0 100%);box-shadow:inset 2px 0 rgba(255,255,255,.4),inset -2px 0 rgba(0,0,0,.18)}
+.kf-pr-p1{transform:rotate(-22deg)}
+.kf-pr-p2{transform:rotate(-68deg)}
+.kf-pr-sb{--w:calc(var(--s)*1.5);--h:calc(var(--s)*1.5);border-radius:50%;background:rgba(0,0,0,.12);transform:translateY(calc(var(--s)*.5)) rotateX(90deg)}
+/* onde o presente aparece */
+.kf-topo-btn.kf-apoio-btn .kf-presente{--s:14px}
+.kf-apoio-presente{display:flex;justify-content:center;margin:-4px 0 4px}
+.kf-apoio-presente .kf-presente{width:132px;height:110px}
+.kf-apoio-sobre{display:flex;align-items:center;gap:12px}
+.kf-apoio-sobre .kf-presente{width:84px;height:84px}

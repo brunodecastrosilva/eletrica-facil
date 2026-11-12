@@ -26,7 +26,7 @@ Estudo Fácil e no Guitarra Fácil.** Não altere só num repositório: siga o A
 <body class="kf-casca">
 <header class="kf-barra"><div class="kf-barra-in">
   <div class="kf-marca"><span class="kf-marca-ic">…ícone…</span><span class="kf-marca-nome">Nome do app</span></div>
-  <div id="topo"></div>            <!-- KitFacil.topo.html({ principal: true }): chopp, nuvem e balão -->
+  <div id="topo"></div>            <!-- KitFacil.topo.html({ principal: true }): nuvem, presente e balão -->
 </div></header>
 <aside class="kf-trilho">…marca e kf-trilho-it…</aside>   <!-- computador -->
 <main>…</main>

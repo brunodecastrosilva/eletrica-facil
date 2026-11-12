@@ -1,18 +1,18 @@
 {
-  "kit": "0.5.0",
+  "kit": "0.6.0",
   "arquivos": {
-    "kit-facil.js": "0438eecc8c22a0c1576ee5d1ff3d7862f58a65b99e427894daa5dccb244808b5",
-    "kit-facil.css": "58d6353984769a80697a3e5fbeb149bfcbea55a71fd969e8770cc46dcb3919a1",
+    "kit-facil.js": "97305e3f8b9f91fa6c3f5980c430e40ffe193a5e2176925b75d3e63081b46b5c",
+    "kit-facil.css": "b253c50181c3d5366dde63f0e093214fe4abeeb6e42c1cf89305bbd2f710f925",
     "regras-firestore-feedback.txt": "ba70201d3c09369af60df78d7c14ffe01a3fd10349f5accb7b6fe2c6e6cf8cc7",
     "servidor.mjs": "b6cc0deb2154acb2a59d00ad2223d2a69214d40c28680bc05b29777e2b273b57",
-    "verificar.mjs": "9544b3d6f91e9373e98b6e168b3b8adc2e5fd5907d9b9347879a3da2413fa066",
+    "verificar.mjs": "359a22047476211320d3a32ee32395a8fce401cdc3082c93a46a002c0b2698c4",
     "testar.mjs": "53f0ed2efb8b8baaecaabe416fc373b3bc95a574025acf8dd5aec97f68a3642b",
     "testar-regras.mjs": "cb2880a786a2cf0554cc5f8878911c14b01764ad6a6a6b1d100ea2965bd11253",
-    "CODIGO.md": "549e9b6191ecfa2615510dbef01b4cd33c28bffc9745949d3759e167636d0177",
-    "ANEXOS.md": "191e4aa3804251250853386d6a01210b463930fb8404ac055c353b758f1a7fe5",
-    "LEIAME.md": "0e04995a7a672763738c79434187f9b4df068fe6fbcdd6de7fbcf099fa995d23",
-    "testes/ambiente.mjs": "97f3186955a84a57cc9ee88e308a0bca58e63ddf8bdbc52465b3e120c3e0d08c",
-    "testes/kit.test.mjs": "7e1cea46bbf9932f4f55e1ae98a8597b7c72fc70e89a0b1ac4155778cb3b1773",
+    "CODIGO.md": "cbdbca98ba6d5bf6ea5fb78633dc445aab4acffc8569bbd092847efa740a8a23",
+    "ANEXOS.md": "11ef4e04ac8fc3f14c5d891d2a0f25e3cb965ef1642abab4d5541a46ba12866d",
+    "LEIAME.md": "971741909933d02dd026689633a1cbbcf9fc6509e1959e2468285df58ea4fc5c",
+    "testes/ambiente.mjs": "a4b4fb81c2032ef4ede38c386027372426b2a8a07a123b3f2b8600c13204e60f",
+    "testes/kit.test.mjs": "4072489c01d75d387124d386ea3405451623632ebbfe62c16bbb4874c287f28d",
     "testes/pagina-kit.html": "0adc22fa988f655c715da04da7a2fbb03b367ba09de7f72ab566aaef9e807547"
   }
 }

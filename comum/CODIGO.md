@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.4 (rascunho)** · 11/11/2026 · Kit Fácil **0.5.0**
+Versão **0.5 (rascunho)** · 12/11/2026 · Kit Fácil **0.6.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -114,16 +114,20 @@ publicados oficialmente nas lojas de aplicativos.
 
 **Art. 12.** Os aplicativos são gratuitos, e nenhuma função depende de pagamento.
 
-**Art. 13.** Todos os aplicativos têm o mesmo convite de apoio: "Gostando do app? Pague um chopp para o criador!".
+**Art. 13.** Todos os aplicativos têm o mesmo convite de apoio: "Gostando do app? Mande um presente para o criador!".
 
-§ 1º O convite é um ícone de caneca de chopp na barra de cima, entre a nuvem e o balão, só nas telas principais, com a
-mesma cor e o mesmo traço dos outros ícones. Há um atalho também em *Sobre o aplicativo*.
+§ 1º O convite é um ícone de presente na barra de cima, entre a nuvem e o balão, só nas telas principais. O presente é
+do Kit, igual em todos os aplicativos: colorido, em três dimensões e em vista isométrica. Há um atalho também em
+*Sobre o aplicativo*.
 
-§ 2º Tocar no ícone abre a janela com o QR code do Pix e um só botão, "Copiar código Pix".
+§ 2º O presente dá uma volta ao aparecer e ao toque, e depois para. Quem pede movimento reduzido vê o presente parado
+(Art. 16, VII).
 
-§ 3º A chave Pix é aleatória, nunca CPF, telefone ou e-mail. O nome no código Pix é não pessoal ("PROJETO FACIL").
+§ 3º Tocar no ícone abre a janela com o presente animado, o QR code do Pix e um só botão, "Copiar código Pix".
 
-§ 4º O convite não abre sozinho, não interrompe tarefas e não bloqueia nada.
+§ 4º A chave Pix é aleatória, nunca CPF, telefone ou e-mail. O nome no código Pix é não pessoal ("PROJETO FACIL").
+
+§ 5º O convite não abre sozinho, não interrompe tarefas e não bloqueia nada.
 
 ### CAPÍTULO III — Do idioma e dos textos
 
@@ -419,8 +423,8 @@ IV – opcionalmente, o tema de fábrica e uma fonte de caráter só nos título
 
 **Parágrafo único.** Os três temas (Automático, Claro e Escuro) continuam disponíveis em todos os aplicativos.
 
-**Art. 57.** A mesma ideia tem o mesmo ícone em todos os aplicativos: controles deslizantes para Ajustes, caneca para o
-chopp, nuvem para a sincronização e balão para a avaliação.
+**Art. 57.** A mesma ideia tem o mesmo ícone em todos os aplicativos: controles deslizantes para Ajustes, presente para
+o apoio, nuvem para a sincronização e balão para a avaliação.
 
 ### CAPÍTULO II — Da moldura
 
@@ -428,7 +432,8 @@ chopp, nuvem para a sincronização e balão para a avaliação.
 
 I – à esquerda, a marca, com o ícone e o nome do aplicativo, visíveis também no celular;
 
-II – à direita, nesta ordem: nuvem, chopp e balão, com a mesma cor e o mesmo traço.
+II – à direita, nesta ordem: nuvem, presente e balão; a nuvem e o balão com a mesma cor e o mesmo traço, e o presente
+colorido, do Kit (Art. 13, § 1º).
 
 § 1º Nas telas internas, a barra de cima tem só voltar, título, nuvem e balão.
 
@@ -673,8 +678,9 @@ prática, na tarefa do momento.
 **Art. 89.** **Segurança.** Em toda tarefa, o Claude confere o Capítulo III do Título IV e reporta qualquer falha,
 mesmo fora do pedido. Nunca enfraquece a segurança para atender um pedido sem avisar o risco e receber confirmação.
 
-**Art. 90.** **Trabalho no computador do Bruno.** Sempre que o computador do Bruno (Madruguinha) estiver online, o
-Claude faz por acesso remoto todas as alterações necessárias: consoles, sites, repositórios e Projetos.
+**Art. 90.** **Trabalho no computador do Bruno.** Sempre que possível, o Claude faz ele mesmo as alterações necessárias
+(consoles, sites, repositórios e Projetos): pelo acesso remoto ao computador do Bruno (Madruguinha), quando estiver
+online, ou pelo Claude in Chrome, no navegador do Bruno. Só pede ao Bruno o que nenhum dos dois permitir.
 
 § 1º Depois do "sim" do Bruno (Art. 87), o Claude só para quando realmente não for possível avançar.
 
@@ -705,5 +711,5 @@ II – o guia em três níveis (Essencial, Exploração e Completo), no lugar do
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 11/11/2026 como rascunho (versão 0.4). Regras e textos anteriores (Leis Globais,
-Padrão, Código 3.x) são histórico.
+**Art. 95.** Este Código vale desde 12/11/2026 como rascunho (versão 0.5). Regras e textos anteriores (Leis Globais,
+Padrão, Código 3.x, Código 0.4) são histórico.

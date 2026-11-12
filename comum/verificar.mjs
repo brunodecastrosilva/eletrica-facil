@@ -6,7 +6,7 @@
    3. se a versão é a mesma no package.json, no app, no service worker e no CHANGELOG;
    4. se o service worker guarda arquivos que existem;
    5. regras de acessibilidade da página (idioma e zoom liberado) e se o Kit Fácil está carregado;
-   6. a interface comum: fonte da família, moldura (barra, navegação e trilho), área superior com chopp,
+   6. a interface comum: fonte da família, moldura (barra, navegação e trilho), área superior com presente,
       nuvem e balão, Ajustes na navegação (barra de baixo e trilho) e a tela de Ajustes em guias;
    7. o manifesto do app web: id, start_url e scope do próprio caminho (os três apps dividem o mesmo endereço);
    8. componentes (Kit 2.10): botão, segmento, cartão, faixa e guias com as medidas comuns do Kit.
@@ -157,8 +157,8 @@ if (/fonts\.googleapis\.com\/css2\?[^"']*family=Atkinson\+Hyperlegible\+Next/.te
 else falha('index.html não carrega a fonte comum (Atkinson Hyperlegible Next) — veja o CODIGO.md, Título VI e Anexo II');
 if (/class="kf-casca"/.test(html) && /kf-barra/.test(codigo) && /kf-nav/.test(codigo) && /kf-trilho/.test(codigo)) ok('moldura comum: barra de cima, navegação embaixo e trilho lateral');
 else falha('moldura comum incompleta: use body.kf-casca, kf-barra, kf-nav e kf-trilho (CODIGO.md, Título VI)');
-if (/KitFacil\.topo\.html\(\s*\{\s*principal:\s*true/.test(codigo)) ok('área superior direita: chopp, nuvem e balão (KitFacil.topo)');
-else falha('a tela principal não usa KitFacil.topo.html({ principal: true }) (chopp, nuvem e balão)');
+if (/KitFacil\.topo\.html\(\s*\{\s*principal:\s*true/.test(codigo)) ok('área superior direita: nuvem, presente e balão (KitFacil.topo)');
+else falha('a tela principal não usa KitFacil.topo.html({ principal: true }) (nuvem, presente e balão)');
 const navAj = (codigo.match(/KitFacil\.nav\.ajustes\(/g) || []).length;
 if (navAj >= 2 || (/KitFacil\.nav\.ajustes\(\s*['"]nav['"]/.test(codigo) && /KitFacil\.nav\.ajustes\(\s*['"]trilho['"]/.test(codigo))) ok('Ajustes na navegação: barra de baixo e trilho (KitFacil.nav.ajustes)');
 else falha('Ajustes precisa estar na barra de baixo e no trilho: use KitFacil.nav.ajustes("nav") e KitFacil.nav.ajustes("trilho")');
