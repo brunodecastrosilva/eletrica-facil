@@ -94,7 +94,7 @@ function homeListHTML() {
 const IN = {
   casa: ic('<path d="M4 11 12 4.500 20 11v8.500h-5.500v-5h-5v5H4z"/>'),
   folhas: ic('<path d="M8 3.500h7l4 4v13H8z"/><path d="M15 3.500v4h4M5 7v13.500h9M11.500 12.500h4M11.500 16.500h4"/>'),
-  quadro: ic('<rect x="3.500" y="4.500" width="17" height="15" rx="2"/><path d="M8 9v6M12 9v6M16 9v6"/><path d="M6.500 9h3M10.500 15h3M14.500 9h3"/>'),
+  lampada: ic('<path d="M9 17.500h6M10 20.500h4"/><path d="M12 3.500a6 6 0 0 0-3.500 10.900c.600.500 1 1.200 1 2v1.100h5v-1.100c0-.800.400-1.500 1-2A6 6 0 0 0 12 3.500z"/>'),
   livro: ic('<path d="M4 5.500c2.500-1 5-1 8 .500 3-1.500 5.500-1.500 8-.500v13c-2.500-1-5-1-8 .500-3-1.500-5.500-1.500-8-.500z"/><path d="M12 6v13"/>'),
   exemplo: ic('<rect x="5" y="4.500" width="14" height="16" rx="2"/><path d="M9 4.500V3.500h6v1"/><path d="m10.500 10 4 2.500-4 2.500z"/>'),
 };
@@ -150,7 +150,7 @@ VIEWS.home = {
       ${j ? `<button type="button" class="card nivel-card nivel-ir" data-ir-conq aria-label="Conquistas: nível ${j.nivel}, ${esc(j.nome)}. ${esc(nivelTexto(j))}">${medidorHTML(j)}
         <span class="nivel-tx"><b class="nivel-nome">${esc(j.nome)}</b>
           <span class="barra-xp" aria-hidden="true"><i style="width:${j.prox ? j.prox.pct : 100}%"></i></span>
-          <span class="hint">${j.proxima ? 'Próximo disjuntor: ' + esc(j.proxima.nome) : 'Quadro completo: todos ligados'}</span></span>
+          <span class="hint">${j.proxima ? 'Próxima lâmpada: ' + esc(j.proxima.nome) : 'Varal completo: todas acesas'}</span></span>
         <span class="lc" aria-hidden="true">${I.chev}</span></button>` : ''}
       ${!reais.length ? `<section class="card atalhos" aria-label="Para conhecer o app">
         <button type="button" class="kf-mais-lin" data-guia><span class="kf-mais-ic">${IN.livro}</span><span class="kf-mais-tx"><b>Ver o guia</b><small>O app faz cada passo na tela e explica.</small></span>${I.chev}</button>

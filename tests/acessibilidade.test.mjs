@@ -36,7 +36,7 @@ for (const tema of ['light', 'dark']) {
     await p.evaluate(() => go('/', true)); await p.locator('.prancheta').waitFor();
     await varrer(p, `Início (${nome})`);
     for (const [id, tela] of [['orcamentos', 'Orçamentos'], ['conquistas', 'Conquistas'], ['mais', 'Mais']]) { await p.click('#kf-nav-' + id); await p.waitForTimeout(300); await varrer(p, `${tela} (${nome})`); }
-    await p.click('#kf-nav-conquistas'); await p.click('[data-dj="pix"]'); await p.locator('.kf-dlg .dj-novo').waitFor(); await p.waitForTimeout(300); await varrer(p, `Ficha do disjuntor (${nome})`); await p.click('.kf-dlg [data-kf-fechar]');
+    await p.click('#kf-nav-conquistas'); await p.click('[data-lp="pix"]'); await p.locator('.kf-dlg .lp-nova').waitFor(); await p.waitForTimeout(300); await varrer(p, `Ficha da lâmpada (${nome})`); await p.click('.kf-dlg [data-kf-fechar]');
     for (const [id, tela] of [['precos', 'Preços'], ['gestao', 'Gestão']]) { await p.click('#kf-nav-mais'); await p.locator(`.kf-mais [data-kf-ir="${id}"]`).click(); await p.waitForTimeout(300); await varrer(p, `${tela} (${nome})`); }
     await p.click('#kf-nav-mais'); await p.locator('.kf-mais [data-kf="ajustes"]').click(); await p.locator('.kf-aj-h').waitFor();
     await varrer(p, `Ajustes (${nome})`);

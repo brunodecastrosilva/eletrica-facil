@@ -460,7 +460,7 @@ const NOVIDADES = [{ versao: '1.0.0', itens: [
   'Elétrica Fácil refeito: o orçamento agora é uma folha só, presa na prancheta, com o total sempre à vista.',
   'Início novo: diga para quem é o serviço e comece. O mês aparece logo abaixo: aprovado, aguardando resposta e a receber.',
   'Navegação nova: Início, Orçamentos, o botão de novo orçamento no centro, Conquistas e Mais (Preços, Gestão, guia e Ajustes).',
-  'Conquistas: cada passo bem dado no app liga um disjuntor do seu quadro e conta para o seu nível. Dá para desligar nos Ajustes.',
+  'Conquistas: cada passo bem dado no app acende uma lâmpada do seu varal e conta para o seu nível. Toque numa lâmpada e gire com o dedo. Dá para desligar nos Ajustes.',
   'Apresentação em quatro telas na primeira abertura e um guia só, que faz cada passo na tela sem gravar nada.',
   'Seus orçamentos, preços, materiais, ferramentas e ajustes continuam os mesmos.',
 ] }];

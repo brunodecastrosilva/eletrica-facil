@@ -1,9 +1,9 @@
-/* Elétrica Fácil · conquistas: o quadro de disjuntores e os níveis. Cada passo bem dado no app liga um disjuntor.
+/* Elétrica Fácil · conquistas: o varal de lâmpadas e os níveis. Cada passo bem dado no app acende uma lâmpada.
    Nenhuma conquista premia cobrar mais: todas premiam organização e trabalho entregue. Dá para desligar nos Ajustes. */
 'use strict';
 
 /* ---------- estado ---------- */
-// flags: marcas que não saem dos dados (guia visto, cópia baixada); vistas: quando cada disjuntor foi ligado
+// flags: marcas que não saem dos dados (guia visto, cópia baixada); vistas: quando cada lâmpada acendeu
 let jogo = { flags: {}, vistas: {}, off: false, pronto: false, ...LS.get('jogo', {}) };
 const jogoSalvar = () => { if (!semSalvar) LS.set('jogo', jogo); };
 const jogoLigado = () => !jogo.off;
@@ -18,8 +18,8 @@ function nivelDe(xp) {
   return { i, nivel: i + 1, nome: NIVEIS[i].nome, prox: prox ? { nome: prox.nome, falta: prox.xp - xp, pct: Math.round((xp - NIVEIS[i].xp) / (prox.xp - NIVEIS[i].xp) * 100) } : null };
 }
 
-/* ---------- os disjuntores do quadro ---------- */
-const DJ_IC = {
+/* ---------- as lâmpadas do varal: o filamento de cada uma tem a forma do ícone da conquista ---------- */
+const LP_IC = {
   lampada: '<path d="M9 17.500h6M10 20.500h4"/><path d="M12 3.500a6 6 0 0 0-3.500 10.900c.600.500 1 1.200 1 2v1.100h5v-1.100c0-.800.400-1.500 1-2A6 6 0 0 0 12 3.500z"/>',
   folha: '<path d="M7 3.500h7l4 4v13H7z"/><path d="M14 3.500v4h4M10 12.500h5M10 16.500h5"/>',
   enviar: '<path d="M20.500 3.500 3.500 10.500l6.500 3 3 6.500z"/><path d="m10 13.500 4.500-4"/>',
@@ -39,10 +39,9 @@ const DJ_IC = {
   livro: '<path d="M4 5.500c2.500-1 5-1 8 .500 3-1.500 5.500-1.500 8-.500v13c-2.500-1-5-1-8 .500-3-1.500-5.500-1.500-8-.500z"/><path d="M12 6v13"/>',
   volta: '<path d="M4.500 12a7.500 7.500 0 0 1 13-5.200L19.500 9"/><path d="M19.500 4.500V9H15M19.500 12a7.500 7.500 0 0 1-13 5.200L4.500 15"/><path d="M4.500 19.500V15H9"/>',
 };
-const djIc = n => `<svg class="i dj-ic" viewBox="0 0 24 24" aria-hidden="true">${DJ_IC[n] || DJ_IC.lampada}</svg>`;
-// ok(s): já ligou? prog(s): [feito, meta] para mostrar o caminho
+// ok(s): já acendeu? prog(s): [feito, meta] para mostrar o caminho
 const CONQUISTAS = [
-  { id: 'luz', nome: 'Luz acesa', etq: 'Seu nome', ic: 'lampada', como: 'Diga como você assina os seus orçamentos, na apresentação ou em Ajustes.', ok: s => s.eu },
+  { id: 'luz', nome: 'Primeira luz', etq: 'Seu nome', ic: 'lampada', como: 'Diga como você assina os seus orçamentos, na apresentação ou em Ajustes.', ok: s => s.eu },
   { id: 'primeiro', nome: 'Primeiro orçamento', etq: 'Orçamento', ic: 'folha', como: 'Monte o primeiro orçamento com pelo menos um item.', ok: s => s.comItens >= 1 },
   { id: 'enviado', nome: 'Na mão do cliente', etq: 'Enviado', ic: 'enviar', como: 'Envie uma proposta ao cliente, em PDF ou pelo WhatsApp.', ok: s => s.enviados >= 1 },
   { id: 'aprovado', nome: 'Fechado', etq: 'Aprovado', ic: 'aperto', como: 'Marque o primeiro orçamento aprovado pelo cliente.', ok: s => s.aprovados >= 1 },
@@ -89,72 +88,81 @@ function jogoEstado() {
   return s;
 }
 
-/* ---------- o disjuntor: corpo, alavanca (para cima = ligado), janela I/O e etiqueta ---------- */
-function djHTML(c, { ligado = false, grande = false, anima = false } = {}) {
-  return `<span class="dj ${ligado ? 'on' : 'off'} ${grande ? 'dj-g' : ''} ${anima ? 'dj-liga' : ''}" aria-hidden="true">
-    <span class="dj-corpo"><span class="dj-jan">${ligado ? 'I' : 'O'}</span><span class="dj-fenda"><span class="dj-alav"></span></span>${djIc(c.ic)}</span>
-    <span class="dj-etq">${esc(c.etq)}</span></span>`;
+/* ---------- a lâmpada desenhada (varal, apresentação): pende do fio, com o ícone no lugar do filamento ---------- */
+function lampSVG(c, { acesa = false } = {}) {
+  return `<svg class="lp ${acesa ? 'on' : 'off'}" viewBox="0 0 60 84" aria-hidden="true">
+    ${acesa ? '<circle class="lp-halo" cx="30" cy="54" r="29"/>' : ''}
+    <path class="lp-fio" d="M30 0v8"/><rect class="lp-soq" x="22" y="7" width="16" height="9" rx="2.500"/>
+    <rect class="lp-rosca" x="23.500" y="16" width="13" height="10" rx="1.500"/><path class="lp-risco" d="M23.500 19.500l13 -1.500M23.500 23l13 -1.500"/>
+    <path class="lp-vidro" d="M24 26c0 5-4.500 7-9 11.500a20.500 20.500 0 1 0 30 0C40.500 33 36 31 36 26z"/>
+    <path class="lp-brilho" d="M17.500 46a13.500 13.500 0 0 1 6-7.500"/>
+    <g class="lp-ic" transform="translate(19 41) scale(.917)">${LP_IC[c.ic] || LP_IC.lampada}</g></svg>`;
 }
+// a lâmpada em 3D (ficha e lâmpada nova): gira com o dedo; o motor fica em lampada.js
+const lamp3dHTML = (c, { acesa = false, D = 200 } = {}) => Lampada.html({ icone: c.ic, nome: c.nome, acesa, D });
 
-/* ---------- disjuntor novo: a alavanca sobe; ficha do disjuntor ---------- */
-let djFila = [];
+/* ---------- lâmpada nova: gira, pisca e acende; ficha da lâmpada ---------- */
+let lpFila = [];
 function jogoConferir({ silencioso = false } = {}) {
   if (!jogoLigado()) return;
   const s = jogoEstado(), novas = s.ganhas.filter(id => !jogo.vistas[id]);
   if (!novas.length) { if (!jogo.pronto) { jogo.pronto = true; jogoSalvar(); } return; }
   const agora = Date.now(); novas.forEach(id => { jogo.vistas[id] = agora; });
-  // quem já usava o app chega com os disjuntores que os dados dele já ligam, sem uma janela para cada um
+  // quem já usava o app chega com as lâmpadas que os dados dele já acendem, sem uma janela para cada uma
   const calado = silencioso || !jogo.pronto;
   jogo.pronto = true; jogoSalvar();
-  if (!calado) { djFila.push(...novas.map(id => CONQUISTAS.find(c => c.id === id))); djFilaMostrar(); }
+  if (!calado) { lpFila.push(...novas.map(id => CONQUISTAS.find(c => c.id === id))); lpFilaMostrar(); }
 }
-function djFilaMostrar() {
-  if (!djFila.length || KitFacil.dialogo.aberto() || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof aberturaAtiva === 'function' && aberturaAtiva())) return;
-  const L = djFila; djFila = []; djNovo(L);
+function lpFilaMostrar() {
+  if (!lpFila.length || KitFacil.dialogo.aberto() || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof aberturaAtiva === 'function' && aberturaAtiva())) return;
+  const L = lpFila; lpFila = []; lpNova(L);
 }
-function djNovo(lista, aoFechar) {
+function lpNova(lista, aoFechar) {
   const c = lista[0], resto = lista.slice(1), s = jogoEstado();
   try { KitFacil.jogo && KitFacil.jogo.vibrar && KitFacil.jogo.vibrar([18, 40, 18]); } catch {}
-  openSheet({ title: 'Disjuntor ligado', onClose: () => { if (aoFechar) aoFechar(); else setTimeout(djFilaMostrar, 500); },
-    body: `<div class="dj-novo"><div class="dj-palco" id="dj-palco">${djHTML(c, { ligado: true, grande: true, anima: !semMovimento() })}</div>
-      <b class="dj-nome">${esc(c.nome)}</b><p class="hint">${esc(c.como.replace(/\.$/, ''))}: feito. +${XP.conquista} pontos.</p>
-      ${resto.length ? `<p class="dj-mais">E mais ${plural(resto.length, 'disjuntor', 'disjuntores')}: ${esc(resto.map(x => x.nome).join(', '))}.</p>` : ''}
-      <p class="hint">${s.ganhas.length} de ${CONQUISTAS.length} ligados · nível ${s.nivel}, ${esc(s.nome)}</p></div>`,
-    foot: `<button type="button" class="btn ghost" id="dj-ver">Ver o quadro</button><button type="button" class="btn primary" id="dj-ok">Boa</button>`,
+  openSheet({ title: 'Lâmpada acesa', onClose: () => { if (aoFechar) aoFechar(); else setTimeout(lpFilaMostrar, 500); },
+    body: `<div class="lp-nova"><div class="lp-palco" id="lp-palco">${lamp3dHTML(c, { acesa: true })}</div>
+      <b class="lp-nome">${esc(c.nome)}</b><p class="hint">${esc(c.como.replace(/\.$/, ''))}: feito. +${XP.conquista} pontos.</p>
+      ${resto.length ? `<p class="lp-mais">E mais ${plural(resto.length, 'lâmpada', 'lâmpadas')}: ${esc(resto.map(x => x.nome).join(', '))}.</p>` : ''}
+      <p class="hint">${s.ganhas.length} de ${CONQUISTAS.length} acesas · nível ${s.nivel}, ${esc(s.nome)}</p></div>`,
+    foot: `<button type="button" class="btn ghost" id="lp-ver">Ver o varal</button><button type="button" class="btn primary" id="lp-ok">Boa</button>`,
     onMount: d => {
-      try { KitFacil.jogo && KitFacil.jogo.confete && KitFacil.jogo.confete($('#dj-palco', d), 26, ['#FFC400', '#17150F', '#FFE27A', '#FFFFFF', '#E8A800']); } catch {}
-      $('#dj-ok', d).onclick = () => closeSheet(); $('#dj-ver', d).onclick = () => { closeSheet(true); go('/conquistas', true); };
+      // a lâmpada chega apagada, dá uma volta e acende piscando; com movimento reduzido, já aparece acesa
+      const g = Lampada.girar(d, { auto: false, inicio: semMovimento() ? -0.4 : 0, apagada: !semMovimento() });
+      if (g) { if (semMovimento()) g.acender(); else { g.peteleco(1); setTimeout(() => { g.acender(); try { KitFacil.jogo && KitFacil.jogo.confete && KitFacil.jogo.confete($('#lp-palco', d), 24, ['#FFC400', '#FFE27A', '#FFFFFF', '#E8A800', '#17150F']); } catch {} }, 650); } }
+      $('#lp-ok', d).onclick = () => closeSheet(); $('#lp-ver', d).onclick = () => { closeSheet(true); go('/conquistas', true); };
     } });
 }
-function djSheet(c) {
+function lpSheet(c) {
   const s = jogoEstado(), tem = s.ganhas.includes(c.id), p = c.prog && !tem ? c.prog(s) : null, quando = jogo.vistas[c.id];
-  openSheet({ title: c.nome, sub: tem ? `Ligado${quando ? ' desde ' + fmtDate(quando) : ''}` : 'Ainda desligado',
-    body: `<div class="dj-novo"><div class="dj-palco">${djHTML(c, { ligado: tem, grande: true })}</div>
-      <p class="dj-como">${esc(c.como)}</p>
-      ${p ? `<div class="barra-xp" role="img" aria-label="${p[0]} de ${p[1]}"><i style="width:${Math.round(p[0] / p[1] * 100)}%"></i></div><p class="hint">${p[0]} de ${p[1]}</p>` : ''}</div>` });
+  openSheet({ title: c.nome, sub: tem ? `Acesa${quando ? ' desde ' + fmtDate(quando) : ''}` : 'Ainda apagada',
+    body: `<div class="lp-nova"><div class="lp-palco">${lamp3dHTML(c, { acesa: tem })}</div><p class="lp-dica" aria-hidden="true">Deslize o dedo para girar</p>
+      <p class="lp-como">${esc(c.como)}</p>
+      ${p ? `<div class="barra-xp" role="img" aria-label="${p[0]} de ${p[1]}"><i style="width:${Math.round(p[0] / p[1] * 100)}%"></i></div><p class="hint">${p[0]} de ${p[1]}</p>` : ''}</div>`,
+    onMount: d => { Lampada.girar(d); } });
 }
 
 /* ---------- medidor do nível: um anel que enche até o próximo nível ---------- */
 const medidorHTML = (s, g = false) => `<span class="medidor ${g ? 'medidor-g' : ''}" style="--pct:${s.prox ? s.prox.pct : 100}" aria-hidden="true"><span class="medidor-n">${s.nivel}</span><span class="medidor-l">nível</span></span>`;
 const nivelTexto = s => s.prox ? `Faltam ${plural(s.prox.falta, 'ponto', 'pontos')} para ${s.prox.nome}` : 'Você chegou ao último nível';
 
-/* ---------- tela Conquistas ---------- */
+/* ---------- tela Conquistas: o varal vai se iluminando ---------- */
 VIEWS.conquistas = {
   html() {
     const s = jogoEstado();
     return `${barraTopo()}<main class="page conq">
-      ${KitFacil.ui.cabecalho({ titulo: 'Conquistas', sub: 'Cada passo bem dado liga um disjuntor do seu quadro.' })}
+      ${KitFacil.ui.cabecalho({ titulo: 'Conquistas', sub: 'Cada passo bem dado acende uma lâmpada do seu varal.' })}
       <section class="card nivel-card" aria-label="Seu nível">${medidorHTML(s, true)}
         <div class="nivel-tx"><b class="nivel-nome">${esc(s.nome)}</b>
           <div class="barra-xp" role="img" aria-label="${s.prox ? s.prox.pct + '% do caminho até ' + s.prox.nome : 'Último nível'}"><i style="width:${s.prox ? s.prox.pct : 100}%"></i></div>
           <span class="hint">${nivelTexto(s)} · ${plural(s.xp, 'ponto', 'pontos')}</span></div></section>
-      <section class="quadro" aria-labelledby="quadro-t">
-        <div class="quadro-topo"><h2 id="quadro-t">Seu quadro</h2><span class="quadro-n">${s.ganhas.length} de ${CONQUISTAS.length} ligados</span></div>
-        <div class="quadro-trilho">${CONQUISTAS.map(c => { const tem = s.ganhas.includes(c.id);
-          return `<button type="button" class="dj-btn" data-dj="${c.id}" aria-label="${esc(c.nome)}: ${tem ? 'ligado' : 'desligado'}. Ver como ligar">${djHTML(c, { ligado: tem })}</button>`; }).join('')}</div>
+      <section class="varal" aria-labelledby="varal-t">
+        <div class="varal-topo"><h2 id="varal-t">Seu varal</h2><span class="varal-n">${s.ganhas.length} de ${CONQUISTAS.length} acesas</span></div>
+        <div class="varal-fio">${CONQUISTAS.map(c => { const tem = s.ganhas.includes(c.id);
+          return `<button type="button" class="lp-btn ${tem ? 'on' : 'off'}" data-lp="${c.id}" aria-label="${esc(c.nome)}: ${tem ? 'acesa' : 'apagada'}. Ver como acender">${lampSVG(c, { acesa: tem })}<span class="lp-etq">${esc(c.etq)}</span></button>`; }).join('')}</div>
       </section>
       <p class="hint conq-nota">As conquistas são uma brincadeira e não mudam nada nos seus orçamentos. Dá para desligar em Ajustes, em Conquistas e apresentação.</p>
     </main>`;
   },
-  bind(v) { $$('[data-dj]', v).forEach(b => b.onclick = () => djSheet(CONQUISTAS.find(c => c.id === b.dataset.dj))); },
+  bind(v) { $$('[data-lp]', v).forEach(b => b.onclick = () => lpSheet(CONQUISTAS.find(c => c.id === b.dataset.lp))); },
 };

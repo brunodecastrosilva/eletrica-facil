@@ -25,8 +25,9 @@ referência da família (Código, Art. 93, § 2º): a estrutura é a comum, e a 
 - **Preços:** a sua tabela; os preços que vêm com o app aparecem em cinza e ficam em preto quando você muda
 - **Gestão:** materiais em estoque (com marcas, custo, repasse e mínimo), ferramentas, lista de compras e checklist de
   ida e volta da obra; ao concluir um serviço, o app oferece dar baixa no material usado
-- **Conquistas:** cada passo bem dado liga um disjuntor do seu quadro (18 ao todo) e conta para o nível, de Aprendiz a
-  Mestre. Nenhuma premia cobrar mais; dá para desligar em Ajustes → Conquistas e apresentação
+- **Conquistas:** cada passo bem dado acende uma lâmpada do seu varal (18 ao todo) e conta para o nível, de Aprendiz a
+  Mestre. Cada lâmpada é um objeto 3D (WebGL) que gira com o dedo, com o filamento na forma do ícone da conquista.
+  Nenhuma premia cobrar mais; dá para desligar em Ajustes → Conquistas e apresentação
 - **Apresentação na primeira abertura** (quatro telas, com uma demonstração para tocar) e **um guia só,** que faz cada
   passo na tela, do começo ao fim, numa demonstração que não grava nada
 - **Use em vários aparelhos (opcional):** orçamentos, preços e ajustes sincronizados, criptografados, num gist secreto
@@ -50,7 +51,7 @@ Sem a sincronização, os dados ficam só no aparelho; toque na **nuvem** no alt
 |---|---|
 | Orçamentos, dados dos clientes, tabela de preços (com o estoque), ferramentas, checklist e ajustes | neste aparelho (armazenamento do navegador, chaves `eletricafacil.*`) |
 | Os mesmos dados, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
-| Conquistas (quando cada disjuntor foi ligado, guia visto) e apresentação vista | só neste aparelho (`eletricafacil.jogo` e `eletricafacil.abertura`); os disjuntores são calculados dos seus dados, então acompanham a sincronização |
+| Conquistas (quando cada lâmpada acendeu, guia visto) e apresentação vista | só neste aparelho (`eletricafacil.jogo` e `eletricafacil.abertura`); as lâmpadas são calculadas dos seus dados, então acompanham a sincronização |
 | Propostas, relatórios e recibos em PDF | gerados no aparelho; só saem quando o usuário compartilha |
 | Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback`; apagados depois de 2 anos |
 
@@ -81,7 +82,7 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)) e 
 
 - **Identidade:** ferramenta de obra. Grafite, papel e amarelo de segurança; títulos em Barlow Semi Condensed (letra de
   placa de obra), texto em Atkinson Hyperlegible Next. A prancheta segura a folha do orçamento; as conquistas são
-  disjuntores de um quadro de distribuição
+  lâmpadas de um varal, que vai se iluminando
 - **Duas cores de botão (Art. 66):** amarelo para a ação principal da tela (Ver proposta, Continuar, Salvar) e grafite
   com letra amarela para a ação que começa o trabalho (Começar orçamento, o botão do centro). Vermelho só para excluir
 - **Alto da tela:** a marca à esquerda; nuvem, presente e balão à direita. Na folha e na proposta, voltar, título, nuvem
@@ -101,17 +102,18 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)) e 
 | Arquivo | Conteúdo |
 |---|---|
 | `index.html` | moldura da página e a política de segurança (CSP); nenhum script dentro da página |
-| `estilo.css` | estilo do app; a identidade da 1.0 (prancheta, folha, quadro de disjuntores, moldura) fica no fim |
+| `estilo.css` | estilo do app; a identidade da 1.0 (prancheta, folha, varal de lâmpadas, moldura) fica no fim |
 | `motor.js` | utilidades, tabela de preços inicial, dados, sincronização, contas, rotas e janelas |
 | `orcamento.js` | criar, a folha do orçamento, itens, ambientes, deslocamento, proposta, mensagens, Pix, PDF e recibo |
 | `telas.js` | Preços e Gestão (materiais, ferramentas e checklist) |
-| `jogo.js` | conquistas: os disjuntores, os níveis e a tela Conquistas |
+| `lampada.js` | a lâmpada em 3D das conquistas: malha gerada no código, WebGL com vidro transparente e giro com o dedo; sem WebGL, desenho em canvas comum |
+| `jogo.js` | conquistas: as lâmpadas, os níveis e a tela Conquistas (o varal) |
 | `inicio.js` | Início (a prancheta), Orçamentos (a lista) e Mais |
 | `guia.js` | roteiro do guia, na ordem de uso |
 | `casca.js` | troca de tela, navegação, Ajustes, abertura (onboarding), guia e arranque |
 | `comum/` | **Kit Fácil**: sistema de design, barra de cima, navegação, Ajustes, avaliação, sincronização, janelas, abertura, guia e a verificação. Igual nos quatro apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
-| `tests/` | testes do app: `app.test.mjs` (contas, janelas e Ajustes), `novo.test.mjs` (Início, navegação, conquistas, abertura e guia) e `acessibilidade.test.mjs` |
+| `tests/` | testes do app: `app.test.mjs` (contas, janelas e Ajustes), `novo.test.mjs` (Início, navegação, conquistas e lâmpada 3D, abertura e guia) e `acessibilidade.test.mjs` |
 
 ## Serviços externos e configuração
 
@@ -122,6 +124,11 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)) e 
 | Google Fonts, cdnjs | fontes, QR code e PDF | gratuito | nada |
 
 ## Peças do Kit passadas por cima (Art. 30-A)
+
+- **Objeto 3D próprio:** o motor 3D do Kit (`comum/kit-jogo.js`) só conhece a tampinha e o presente, e não desenha vidro
+  transparente. A lâmpada das conquistas segue o mesmo caminho das tampinhas do Conta Fácil (malha gerada no código,
+  luz por pixel, giro com o dedo, inércia e volta a girar sozinha), num arquivo do app (`lampada.js`). Proposta para o
+  Integrador: o Kit aceitar malhas do app e materiais transparentes, para o motor ser um só.
 
 - **Testes comuns que ainda procuram a navegação antiga:** `abrirAjustesPelaNav` e `irPelaNav`
   (`comum/testes/ambiente.mjs`) e a varredura `comum/testes/acessibilidade.test.mjs` procuram os Ajustes na barra de

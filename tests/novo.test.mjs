@@ -1,4 +1,4 @@
-/* Elétrica Fácil 1.0 · testes da parte nova: Início (prancheta), navegação, folha do orçamento, conquistas, abertura e guia.
+/* Elétrica Fácil 1.0 · testes da parte nova: Início (prancheta), navegação, folha do orçamento, conquistas (lâmpadas em 3D), abertura e guia.
    Rodam num Chromium, sem internet (comum/testes/ambiente.mjs). */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -79,26 +79,42 @@ test('navegação: cinco posições com o orçamento novo no centro, Mais é uma
   }
 });
 
-test('conquistas: o primeiro orçamento liga um disjuntor, o quadro mostra o nível e dá para desligar nos Ajustes', async () => {
+test('conquistas: o primeiro orçamento acende uma lâmpada em 3D, o varal mostra o nível e dá para desligar nos Ajustes', async () => {
   const a = await aparelho(amb);
   const p = a.page;
   await p.locator('.nivel-ir').waitFor();
   assert.deepEqual(await p.evaluate(() => { const s = jogoEstado(); return [s.ganhas.length, s.nivel, s.nome, CONQUISTAS.length]; }), [0, 1, 'Aprendiz', 18]);
   await p.evaluate(() => { const q = blankQuote(); q.num = ++settings.seq; q.client.name = 'Ana'; q.items = [{ id: uid(), kind: 'svc', name: 'Troca de tomada', unit: 'un', qty: 1, price: 5000, room: '' }]; quotes.push(q); saveSettings(); saveQuotes(); render(); });
-  await p.locator('.kf-dlg .dj-novo').waitFor({ timeout: 5000 });
-  assert.equal(await p.textContent('.kf-dlg .dj-nome'), 'Primeiro orçamento');
-  assert.equal(await p.evaluate(() => document.querySelector('.kf-dlg .dj').classList.contains('on')), true);
-  await p.click('#dj-ver'); await p.locator('.quadro').waitFor();
-  assert.equal(await p.textContent('.quadro-n'), '1 de 18 ligados');
-  assert.equal(await p.locator('.quadro .dj.on').count(), 1);
-  assert.equal(await p.getAttribute('[data-dj="primeiro"]', 'aria-label'), 'Primeiro orçamento: ligado. Ver como ligar');
+  // lâmpada nova: chega apagada, dá uma volta e acende
+  await p.locator('.kf-dlg .lp-nova .ef-o3d').waitFor({ timeout: 5000 });
+  assert.equal(await p.textContent('.kf-dlg .kf-dlg-tt, .kf-dlg h2'), 'Lâmpada acesa');
+  assert.equal(await p.textContent('.kf-dlg .lp-nome'), 'Primeiro orçamento');
+  assert.ok(['webgl', 'canvas'].includes(await p.getAttribute('.kf-dlg .ef-o3d', 'data-motor')), 'a lâmpada tem desenho com ou sem WebGL');
+  assert.ok(await esperar(() => p.evaluate(() => document.querySelector('.kf-dlg .ef-o3d').classList.contains('acesa')), 5000), 'a lâmpada nova acende');
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.kf-dlg .ef-o3d')).getPropertyValue('--luz').trim()), '1.000');
+  await p.click('#lp-ver'); await p.locator('.varal').waitFor();
+  assert.equal(await p.textContent('.varal-n'), '1 de 18 acesas');
+  assert.equal(await p.locator('.varal .lp.on').count(), 1);
+  assert.equal(await p.getAttribute('[data-lp="primeiro"]', 'aria-label'), 'Primeiro orçamento: acesa. Ver como acender');
   // a janela não volta para a mesma conquista
   await p.evaluate(() => render()); await p.waitForTimeout(1200);
   assert.equal(await p.locator('.kf-dlg').count(), 0);
-  // ficha de um disjuntor desligado, com o caminho
-  await p.click('[data-dj="precos"]'); await p.locator('.kf-dlg .barra-xp').waitFor();
+  // ficha de uma lâmpada apagada: 3D que gira com o dedo e com as setas, e o caminho para acender
+  await p.click('[data-lp="precos"]'); await p.locator('.kf-dlg .barra-xp').waitFor();
   assert.ok((await p.textContent('.kf-dlg')).includes('0 de 10'));
+  const o = p.locator('.kf-dlg .ef-o3d');
+  assert.equal(await o.getAttribute('aria-label'), 'Lâmpada Tabela com a sua cara, apagada. Deslize o dedo ou use as setas para girar.');
+  assert.equal(await o.evaluate(e => e.classList.contains('acesa')), false);
+  await o.focus(); const a0 = +(await o.getAttribute('data-ang'));
+  await p.keyboard.press('ArrowRight'); await p.waitForTimeout(120);
+  const a1 = +(await o.getAttribute('data-ang'));
+  assert.ok(a1 - a0 > 0.25, `a seta para a direita gira a lâmpada (${a0} → ${a1})`);
+  const cx = await o.boundingBox();
+  await p.mouse.move(cx.x + cx.width / 2, cx.y + cx.height / 2); await p.mouse.down(); await p.mouse.move(cx.x + cx.width / 2 - 60, cx.y + cx.height / 2, { steps: 6 }); await p.mouse.up();
+  assert.ok(+(await o.getAttribute('data-ang')) < a1 - 0.3, 'arrastar para a esquerda gira para o outro lado');
   await p.click('.kf-dlg [data-kf-fechar]');
+  // o filamento de cada lâmpada tem o desenho da conquista (um ícone para cada uma)
+  assert.equal(await p.evaluate(() => CONQUISTAS.every(c => !!LP_IC[c.ic]) && new Set(CONQUISTAS.map(c => c.ic)).size === CONQUISTAS.length), true);
   // nenhuma conquista premia cobrar mais: o valor do orçamento não entra em nenhuma regra
   assert.equal(await p.evaluate(() => CONQUISTAS.some(c => /total|price|valor/i.test(String(c.ok) + String(c.prog || '')))), false);
   // desligar: sai da barra e do Início; nada é apagado
@@ -109,7 +125,21 @@ test('conquistas: o primeiro orçamento liga um disjuntor, o quadro mostra o ní
   await a.fechar();
 });
 
-test('abertura: quatro telas uma vez só, a demonstração soma e o nome liga o primeiro disjuntor', async () => {
+test('lâmpada 3D: a malha é uma só para todas, com o vidro por último, e cabe num índice de 16 bits', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  await p.locator('.prancheta').waitFor();
+  const r = await p.evaluate(() => CONQUISTAS.map(c => { const o = document.createElement('div'); o.dataset.acesa = '1'; o._icone = LP_IC[c.ic]; const { M } = Lampada._malha(o); return [c.id, M.p.length / 3, M.i.length, M.vidro, M.p.some(v => !isFinite(v)), M.n.some(v => !isFinite(v))]; }));
+  for (const [id, verts, idx, vidro, pRuim, nRuim] of r) {
+    assert.ok(verts > 3000 && verts < 65536, `${id}: ${verts} pontos`);
+    assert.ok(vidro > 0 && vidro < idx && idx % 3 === 0, `${id}: o vidro vem depois das peças opacas`);
+    assert.equal(pRuim || nRuim, false, `${id}: a malha tem número inválido`);
+  }
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('abertura: quatro telas uma vez só, a demonstração soma e o nome acende a primeira lâmpada', async () => {
   const a = await aparelho(amb, { antes: () => { window.EF_TESTE_ABERTURA = 1; } });
   const p = a.page;
   await p.locator('.kf-abertura').waitFor();
@@ -124,10 +154,10 @@ test('abertura: quatro telas uma vez só, a demonstração soma e o nome liga o 
   await p.locator('#ab-eu').waitFor();
   assert.equal(await p.locator('#kf-ab-pular').isHidden(), true, 'a última tela não tem Pular');
   await p.fill('#ab-eu', 'Carlos Pereira'); await p.click('#kf-ab-prox');
-  await p.locator('.kf-dlg .dj-novo').waitFor({ timeout: 6000 });
-  assert.equal(await p.textContent('.kf-dlg .dj-nome'), 'Luz acesa');
+  await p.locator('.kf-dlg .lp-nova').waitFor({ timeout: 6000 });
+  assert.equal(await p.textContent('.kf-dlg .lp-nome'), 'Primeira luz');
   assert.deepEqual(await p.evaluate(() => [settings.name, KitFacil.abertura.vista(), JSON.parse(localStorage.getItem('eletricafacil.settings')).name]), ['Carlos Pereira', true, 'Carlos Pereira']);
-  await p.click('#dj-ok');
+  await p.click('#lp-ok');
   await p.reload(); await p.locator('.prancheta').waitFor(); await p.waitForTimeout(600);
   assert.equal(await p.locator('.kf-abertura').count(), 0, 'a abertura não volta sozinha');
   assert.ok((await p.textContent('.saud')).includes('Carlos'));

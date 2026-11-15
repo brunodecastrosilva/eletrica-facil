@@ -1,4 +1,4 @@
-/* Elétrica Fácil · estilo do app. A identidade nova (prancheta, folha, quadro de disjuntores, moldura) fica no fim, em "1.0". */
+/* Elétrica Fácil · estilo do app. A identidade nova (prancheta, folha, varal de lâmpadas, moldura) fica no fim, em "1.0". */
 /* Ferramenta de bolso: lista de orçamentos → editor de uma página → proposta em A4.
    Amarelo de segurança só onde importa (resumo do mês, ação principal, total); o resto é grafite e papel. */
 :root{
@@ -691,7 +691,7 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
 
 /* =====================================================================================================================
    1.0 · IDENTIDADE NOVA: ferramenta de obra. Grafite, papel e amarelo de segurança.
-   A prancheta segura a folha do orçamento; as conquistas são disjuntores de um quadro. Títulos em Barlow Semi Condensed
+   A prancheta segura a folha do orçamento; as conquistas são lâmpadas de um varal. Títulos em Barlow Semi Condensed
    (letra de placa e de etiqueta de obra), texto em Atkinson Hyperlegible Next.
    ===================================================================================================================== */
 :root{
@@ -703,16 +703,13 @@ a.link{display:inline-flex;align-items:center;min-height:44px}
   --kf-presente:#FFC400; --kf-presente-fita:#1D1B15; --kf-guia-tempo:var(--volt-text);
   --kf-nav-atual:var(--volt-text); --kf-nav-centro-on:var(--volt);
   --tabua:#2A2721; --tabua-2:#3A362E; --clipe:#C9C5B8; --clipe-2:#8F8A7C;
-  --dj-corpo:#F4F2EC; --dj-linha:#BEB9AA; --dj-off:#8E897B; --trilho-din:#B9B4A6;
-}
+  }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --comecar:#F3F0E7; --comecar-ink:#16140E; --kf-presente-fita:#F3F0E7;
-  --tabua:#2E2B24; --tabua-2:#454137; --clipe:#A8A392; --clipe-2:#6E6A5D;
-  --dj-corpo:#2B2922; --dj-linha:#57534A; --dj-off:#6E6A5D; --trilho-din:#57534A}}
+  --tabua:#2E2B24; --tabua-2:#454137; --clipe:#A8A392; --clipe-2:#6E6A5D;}}
 :root[data-theme="dark"]{
   --comecar:#F3F0E7; --comecar-ink:#16140E; --kf-presente-fita:#F3F0E7;
-  --tabua:#2E2B24; --tabua-2:#454137; --clipe:#A8A392; --clipe-2:#6E6A5D;
-  --dj-corpo:#2B2922; --dj-linha:#57534A; --dj-off:#6E6A5D; --trilho-din:#57534A}
+  --tabua:#2E2B24; --tabua-2:#454137; --clipe:#A8A392; --clipe-2:#6E6A5D;}
 .mono{font-family:var(--kf-font-mono);font-variant-numeric:tabular-nums}
 .pular{position:absolute;left:8px;top:-60px;z-index:100;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-weight:700;text-decoration:none}
 .pular:focus{top:8px}
@@ -783,40 +780,45 @@ button.nivel-card{cursor:pointer}
 .fo-excluir{margin-top:4px}
 .quote-fim{display:flex;flex-direction:column;gap:10px}
 
-/* ---------- conquistas: o quadro de distribuição e os disjuntores ---------- */
-.quadro{background:var(--tabua);border-radius:22px;padding:14px 12px 16px;box-shadow:inset 0 0 0 1.5px var(--tabua-2),var(--shadow);color:#F3F0E7}
-.quadro-topo{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:2px 6px 12px}
-.quadro-topo h2{margin:0;font-family:var(--f-display);font-weight:800;font-size:22px}
-.quadro-n{font-size:14px;font-weight:600;color:#D9D4C4}
-.quadro-trilho{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:14px 6px;padding:12px 6px 6px;border-radius:14px;
-  background:linear-gradient(var(--trilho-din),var(--trilho-din)) 0 46px/100% 8px repeat-y,var(--surface-2);background-size:100% 150px,auto;box-shadow:inset 0 0 0 1px var(--line)}
-.dj-btn{border:0;background:none;padding:0;cursor:pointer;display:flex;justify-content:center;border-radius:12px;color:var(--ink);min-height:44px}
-.dj-btn:focus-visible{outline:2.5px solid var(--volt-text);outline-offset:2px}
-.dj{display:inline-flex;flex-direction:column;align-items:center;gap:6px;width:78px}
-.dj-corpo{position:relative;width:52px;height:92px;border-radius:8px;background:var(--dj-corpo);box-shadow:inset 0 0 0 1.5px var(--dj-linha),0 2px 3px rgba(0,0,0,.18);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:7px 0 8px}
-.dj-jan{width:20px;height:16px;border-radius:3px;display:grid;place-items:center;font:700 11px/1 var(--kf-font-mono);background:var(--dj-off);color:#fff}
-.dj.on .dj-jan{background:var(--ink);color:var(--volt)}
-.dj-fenda{position:relative;width:18px;height:34px;border-radius:5px;background:rgba(0,0,0,.2);box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
-.dj-alav{position:absolute;left:1px;right:1px;height:19px;border-radius:4px;bottom:1px;background:var(--dj-off);box-shadow:inset 0 -3px 0 rgba(0,0,0,.22)}
-.dj.on .dj-alav{bottom:14px;background:var(--volt);box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 0 0 1px rgba(23,21,15,.35)}
-.dj-ic{width:19px!important;height:19px!important;color:var(--dj-off)}
-.dj.on .dj-ic{color:var(--ink)}
-.dj-etq{font:700 11px/1.15 var(--kf-font);text-align:center;color:var(--muted);background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);border-radius:4px;padding:3px 5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dj.on .dj-etq{color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
-.dj-g{width:150px}.dj-g .dj-corpo{width:96px;height:168px;border-radius:14px;padding:14px 0 16px}
-.dj-g .dj-jan{width:34px;height:26px;font-size:17px;border-radius:5px}.dj-g .dj-fenda{width:32px;height:62px;border-radius:8px}
-.dj-g .dj-alav{height:34px;left:2px;right:2px;bottom:2px;border-radius:6px}.dj-g.on .dj-alav{bottom:26px}
-.dj-g .dj-ic{width:32px!important;height:32px!important}.dj-g .dj-etq{font-size:14px;padding:5px 9px}
-@keyframes dj-sobe{0%,35%{bottom:1px;background:var(--dj-off)}70%{bottom:17px}100%{bottom:14px}}
-@keyframes dj-sobe-g{0%,35%{bottom:2px;background:var(--dj-off)}70%{bottom:31px}100%{bottom:26px}}
-.dj-liga .dj-alav{animation:dj-sobe .9s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(var(--i,0) * .16s + .25s)}
-.dj-g.dj-liga .dj-alav{animation-name:dj-sobe-g}
-.dj-novo{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:6px 0 4px}
-.dj-palco{position:relative;display:grid;place-items:center;min-height:216px;width:100%;overflow:hidden}
-.dj-nome{font-family:var(--f-display);font-weight:800;font-size:26px;line-height:1.1}
-.dj-como{margin:0;font-size:16px;text-wrap:balance}
-.dj-mais{margin:0;font-weight:600}
-.dj-novo .barra-xp{width:min(220px,70%)}
+/* ---------- conquistas: o varal de lâmpadas (de noite, para as acesas brilharem) ---------- */
+.varal{background:var(--tabua);border-radius:22px;padding:14px 10px 12px;box-shadow:inset 0 0 0 1.5px var(--tabua-2),var(--shadow);color:#F3F0E7}
+.varal-topo{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:2px 8px 12px}
+.varal-topo h2{margin:0;font-family:var(--f-display);font-weight:800;font-size:22px}
+.varal-n{font-size:14px;font-weight:600;color:#D9D4C4}
+.varal-fio{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:14px 0}
+.lp-btn{position:relative;border:0;background:none;padding:0 2px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:inherit;font:inherit;border-radius:12px;min-height:44px}
+/* o fio do varal passa por cima de cada lâmpada e emenda na vizinha */
+.lp-btn::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:#6E6A5D}
+button.lp-btn:focus-visible{outline:2.5px solid var(--volt);outline-offset:-2px}
+.lp{width:62px;height:87px;flex:none;overflow:visible}
+.lp-fio{stroke:#6E6A5D;stroke-width:2;fill:none}
+.lp-soq{fill:#14130F;stroke:#6E6A5D;stroke-width:1}
+.lp-rosca{fill:#A8A392}.lp-risco{stroke:#57534A;stroke-width:1.2;fill:none}
+.lp-vidro{fill:rgba(255,255,255,.07);stroke:#8E897B;stroke-width:1.6}
+.lp-brilho{stroke:rgba(255,255,255,.28);stroke-width:2.4;stroke-linecap:round;fill:none}
+.lp-ic{stroke:#8E897B;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.lp.on .lp-vidro{fill:#FFD94D;stroke:#FFF1B8}
+.lp.on .lp-brilho{stroke:rgba(255,255,255,.8)}
+.lp.on .lp-ic{stroke:#3A2A02;stroke-width:2.1}
+.lp.on .lp-rosca{fill:#D8CFA8}
+.lp-halo{fill:rgba(255,196,0,.2)}
+.lp-etq{font:700 11.5px/1.15 var(--kf-font);text-align:center;color:#A8A392;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+.lp-btn.on .lp-etq{color:#FFE9A6}
+@keyframes lp-pisca{0%,100%{opacity:1}50%{opacity:.72}}
+.lp.on .lp-halo{animation:lp-pisca 3.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * .4s)}
+/* a lâmpada em 3D (ficha e lâmpada nova): o canvas é do motor (lampada.js); o halo acompanha a luz */
+.ef-o3d{position:relative;display:block;touch-action:pan-y;cursor:grab;-webkit-user-select:none;user-select:none;outline:none;border-radius:20px;-webkit-tap-highlight-color:transparent}
+.ef-o3d.ef-pegou{cursor:grabbing}
+.ef-o3d:focus-visible{outline:2.5px solid var(--volt-text);outline-offset:2px}
+.ef-o3d canvas{position:relative;display:block;width:100%;height:100%}
+.ef-o3d-halo{position:absolute;left:50%;top:66%;width:92%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:var(--luz,0);background:radial-gradient(closest-side,rgba(255,206,60,.6),rgba(255,196,0,.2) 55%,rgba(255,196,0,0))}
+.lp-nova{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:2px 0 4px}
+.lp-palco{position:relative;display:grid;place-items:center;width:100%;overflow:hidden;border-radius:20px;background:var(--tabua);box-shadow:inset 0 0 0 1.5px var(--tabua-2)}
+.lp-nome{font-family:var(--f-display);font-weight:800;font-size:26px;line-height:1.1}
+.lp-como{margin:0;font-size:16px;text-wrap:balance}
+.lp-mais{margin:0;font-weight:600}
+.lp-dica{margin:-4px 0 0;font-size:13px;color:var(--muted)}
+.lp-nova .barra-xp{width:min(220px,70%)}
 .conq-nota{text-align:center;text-wrap:balance}
 .aj-chave{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:56px;cursor:pointer}
 .lin-tx{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
@@ -848,16 +850,16 @@ button.nivel-card{cursor:pointer}
   repeating-conic-gradient(var(--ink) 0 25%,transparent 0 50%) 50%/12px 12px;box-shadow:inset 0 0 0 4px var(--surface)}
 .ab-pix{text-align:center;font-size:11px;color:var(--muted)}
 .ab-carimbo{position:absolute;right:8px;top:44px;transform:rotate(-12deg);border:2.5px solid var(--kf-ok);color:var(--kf-ok);font:800 13px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;padding:4px 7px;border-radius:5px;background:var(--surface)}
-.ab-quadro{width:min(330px,90vw)}
-.ab-quadro .quadro-trilho{grid-template-columns:repeat(5,1fr);gap:4px;padding:12px 2px 8px}
-.ab-quadro .dj{width:58px}.ab-quadro .dj-corpo{width:44px;height:80px}.ab-quadro .dj-etq{font-size:11px;padding:2px 3px}
+.ab-varal{width:min(340px,90vw);padding:18px 6px 10px}
+.ab-varal .varal-fio{grid-template-columns:repeat(5,1fr);gap:0}
+.ab-varal .lp{width:54px;height:76px}
 .ab-nome{margin-top:14px;text-align:left}
 
 @media (min-width:1024px){
   .kf-trilho{background:var(--surface)}
   .inicio{max-width:620px}
 }
-@media (prefers-reduced-motion:reduce){.dj-liga .dj-alav{animation:none}}
+@media (prefers-reduced-motion:reduce){.lp.on .lp-halo{animation:none}}
 /* todo botão que exclui, remove ou apaga é vermelho e cheio (Código, Art. 66, § 1º) */
 .btn.danger-text,.btn.danger{background:var(--kf-perigo-fundo,#B3362B);color:#fff;box-shadow:none}
 .btn.danger-text svg,.btn.danger svg{color:#fff}
@@ -865,5 +867,4 @@ button.nivel-card{cursor:pointer}
 /* celular estreito (320 px): os cinco nomes da barra cabem inteiros, sem cortar (Código, Art. 60) */
 @media (max-width:359px){.kf-nav-com-centro .kf-nav-it{padding-left:0;padding-right:0;letter-spacing:-.02em}.kf-nav-in.kf-nav-com-centro{grid-template-columns:1fr 1.25fr 60px 1.25fr .8fr}}
 .add-btn.room-ops{color:var(--muted);margin-top:6px}
-.ab-quadro .dj-etq{display:none}
 @media (max-width:359px){.kf-marca-nome{font-size:19px}}

@@ -37,7 +37,7 @@ function render(opts = {}) {
   if (r.key !== curKey) { KitFacil.movimento.entrar(app, { de: 'tela' }); document.title = TITULOS[r.name] ? `${TITULOS[r.name]} · Elétrica Fácil` : 'Elétrica Fácil'; }
   curKey = r.key;
   onScroll();
-  clearTimeout(render.t); render.t = setTimeout(() => { if (!guiaAtivo() && !aberturaAtiva()) jogoConferir(); djFilaMostrar(); }, 700);
+  clearTimeout(render.t); render.t = setTimeout(() => { if (!guiaAtivo() && !aberturaAtiva()) jogoConferir(); lpFilaMostrar(); }, 700);
 }
 function rerender() {
   const y = window.scrollY, f = document.activeElement && document.activeElement.id;
@@ -54,7 +54,7 @@ const ROTAS = { inicio: '/', orcamentos: '/orcamentos', precos: '/precos', gesta
 function pintarNav(r = route()) {
   const n = r.name, noOrc = n === 'lista' || n === 'quote' || n === 'preview';
   const it = (id, rotulo, icone, atual) => ({ id, rotulo, icone, atual });
-  const quarto = jogoLigado() ? it('conquistas', 'Conquistas', IN.quadro, n === 'conquistas') : it('precos', 'Preços', I.tag, n === 'prices');
+  const quarto = jogoLigado() ? it('conquistas', 'Conquistas', IN.lampada, n === 'conquistas') : it('precos', 'Preços', I.tag, n === 'prices');
   const naMais = n === 'mais' || n === 'gestao' || (n === 'prices' && quarto.id !== 'precos');
   const html = KitFacil.nav.barra({ itens: [it('inicio', 'Início', IN.casa, n === 'home'), it('orcamentos', 'Orçamentos', IN.folhas, noOrc), quarto],
     centro: { id: 'novo', rotulo: 'Novo', nome: 'Novo orçamento', icone: I.plus },
@@ -62,7 +62,7 @@ function pintarNav(r = route()) {
   const nav = $('#nav'); if (nav.dataset.h !== html) { nav.innerHTML = html; nav.dataset.h = html; }
   const lado = KitFacil.nav.trilho({ destaque: { id: 'novo', rotulo: 'Novo orçamento', icone: I.plus },
     itens: [it('inicio', 'Início', IN.casa, n === 'home'), it('orcamentos', 'Orçamentos', IN.folhas, noOrc), it('precos', 'Preços', I.tag, n === 'prices'), it('gestao', 'Gestão', I.box, n === 'gestao'),
-      ...(jogoLigado() ? [it('conquistas', 'Conquistas', IN.quadro, n === 'conquistas')] : [])],
+      ...(jogoLigado() ? [it('conquistas', 'Conquistas', IN.lampada, n === 'conquistas')] : [])],
     mais: { atual: n === 'mais' } });
   const t = $('#trilho-lista'); if (t.dataset.h !== lado) { t.innerHTML = lado; t.dataset.h = lado; }
 }
@@ -124,7 +124,7 @@ function settingsSums() {
     adicionais: s.surUrgent || s.surNight || s.surWeekend ? [s.surUrgent && `urgência ${s.surUrgent}%`, s.surNight && `noturno ${s.surNight}%`, s.surWeekend && `fim de semana ${s.surWeekend}%`].filter(Boolean).join(' · ').replace(/^./, c => c.toUpperCase()) : 'Urgência, noturno e fim de semana',
     padrao: `Prazo ${prazoTxt({ n: Math.max(1, s.prazoN || 1), u: PRAZO_U[s.prazoU] ? s.prazoU : 'uteis' })} · validade ${s.validity} dias · garantia ${s.warranty} dias · ${payShort({ mode: s.payMode, entryPct: s.entryPct, installments: s.installments }).toLowerCase()}`,
     textos: 'Termo de aceite e condições da garantia',
-    conquistas: (() => { if (!jogoLigado()) return 'Conquistas desligadas'; const j = jogoEstado(); return `Nível ${j.nivel} · ${j.ganhas.length} de ${CONQUISTAS.length} disjuntores ligados`; })(),
+    conquistas: (() => { if (!jogoLigado()) return 'Conquistas desligadas'; const j = jogoEstado(); return `Nível ${j.nivel} · ${j.ganhas.length} de ${CONQUISTAS.length} lâmpadas acesas`; })(),
   };
 }
 function pintarResumos() { const S = settingsSums(); for (const k in S) KitFacil.ajustes.resumo(k, S[k]); }
@@ -306,9 +306,9 @@ function aberturaAbrir({ rever = false } = {}) {
     { arte: `<div class="ab-leque"><div class="folha ab-doc d1"><span class="mono">Recibo</span><span class="ab-f-linha"></span><span class="mono ab-l"><span>Recebido</span><span>1.948,91</span></span></div>
         <div class="folha ab-doc d2"><span class="mono">Proposta</span><span class="ab-f-linha"></span><span class="mono ab-l"><span>Total</span><span>1.948,91</span></span><span class="ab-pixfig" aria-hidden="true"></span><span class="mono ab-pix">Pix copia e cola</span><span class="ab-carimbo">Aprovado</span></div></div>`,
       titulo: 'Da proposta ao recibo', texto: 'Envie a proposta em PDF ou pelo WhatsApp, com Pix, prazo e garantia. Marque a resposta do cliente e, no fim, gere o relatório e o recibo.' },
-    { arte: `<div class="quadro ab-quadro"><div class="quadro-trilho">${mini.map((c, k) => `<span class="ab-dj" style="--i:${k}">${djHTML(c, { ligado: k < 3, anima: k < 3 && !semMovimento() })}</span>`).join('')}</div></div>`,
-      titulo: veterano && j.ganhas.length ? `Você já chega com ${plural(j.ganhas.length, 'disjuntor ligado', 'disjuntores ligados')}` : 'Ligue os disjuntores do seu quadro',
-      texto: 'Cada passo bem dado no app liga um disjuntor e conta para o seu nível. É só uma brincadeira, e dá para desligar nos Ajustes.',
+    { arte: `<div class="varal ab-varal"><div class="varal-fio">${mini.map((c, k) => `<span class="lp-btn ${k < 3 ? 'on' : 'off'}" style="--i:${k}">${lampSVG(c, { acesa: k < 3 })}</span>`).join('')}</div></div>`,
+      titulo: veterano && j.ganhas.length ? `Você já chega com ${plural(j.ganhas.length, 'lâmpada acesa', 'lâmpadas acesas')}` : 'Acenda as lâmpadas do seu varal',
+      texto: 'Cada passo bem dado no app acende uma lâmpada e conta para o seu nível. É só uma brincadeira, e dá para desligar nos Ajustes.',
       extra: settings.name ? '' : `<div class="field ab-nome"><label for="ab-eu">Como você assina os orçamentos? (opcional)</label><input id="ab-eu" class="kf-entrada" type="text" autocapitalize="words" autocomplete="off" maxlength="60" placeholder="Seu nome"></div>` },
   ];
   KitFacil.abertura.abrir({ telas, rever, rotulo: 'Apresentação do Elétrica Fácil',
@@ -323,12 +323,12 @@ function aberturaAbrir({ rever = false } = {}) {
       const disse = !!nome && !settings.name;
       if (disse) { settings.name = nome; saveSettings(); }
       if (tocouDemo) jogo.flags.abertura = jogo.flags.abertura || Date.now();
-      // quem já usava chega com os disjuntores que os dados dele ligam; "Luz acesa" aparece para quem acabou de dizer o nome
+      // quem já usava chega com as lâmpadas que os dados dele acendem; "Primeira luz" aparece para quem acabou de dizer o nome
       const antes = { ...jogo.vistas }; jogoSalvar(); jogoConferir({ silencioso: true });
       rerender();
       const depois = como === 'extra' ? () => createExample() : como === 'fim' && !rever ? () => { const c = $('#novo-nome'); if (c) KitFacil.destacar(c.closest('.prancheta')); } : null;
       const luz = disse && jogoLigado() && !antes.luz && CONQUISTAS.find(c => c.id === 'luz');
-      return () => { if (luz) setTimeout(() => djNovo([luz], () => { depois && depois(); }), semMovimento() ? 0 : 320); else depois && depois(); };
+      return () => { if (luz) setTimeout(() => lpNova([luz], () => { depois && depois(); }), semMovimento() ? 0 : 320); else depois && depois(); };
     } });
 }
 
@@ -343,7 +343,7 @@ function guiaPor(o) {
   if (o.gestaoAba) gestaoAba = o.gestaoAba;
   for (const k in PANEL) delete PANEL[k]; Object.assign(PANEL, o.PANEL || {});
 }
-function guiaLimparTela() { closeSheet(true); $$('.kf-toast').forEach(e => { e.hidden = true; }); djFila = []; }
+function guiaLimparTela() { closeSheet(true); $$('.kf-toast').forEach(e => { e.hidden = true; }); lpFila = []; }
 function guiaIniciar() {
   if (guiaAtivo() || aberturaAtiva()) return;
   KitFacil.guia.demonstrar({
