@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **0.8 (rascunho)** · 15/11/2026 · Kit Fácil **0.8.0** (com as peças do Conta Fácil)
+Versão **0.9 (rascunho)** · 15/11/2026 · Kit Fácil **0.9.0** (com as peças do Conta Fácil)
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
@@ -81,7 +81,7 @@ Atkinson, com a Atkinson logo depois na lista, legível em 20 px, com acentos.
 | Segmento | `kf-seg` | escolhido com `--kf-seg-on` |
 | Faixa | `KitFacil.ui.faixa({ tipo, html, acao })` | tipos dica, info, alerta, erro, ok |
 | Botões | `kf-btn` + `kf-pri`, `kf-sec`, `kf-perigo`, `kf-perigo-sec`, `kf-link` | `kf-perigo` e `kf-perigo-sec` são cheios, fundo `--kf-perigo-fundo` (#B3362B nos três temas) e texto branco, 5,9:1 (Kit 0.8.0; Art. 66, § 1º) |
-| Campos | `kf-entrada`, `kf-rotulo`, `kf-ajuda`, `kf-opcional`, `kf-check` | |
+| Campos | `kf-entrada`, `kf-rotulo`, `kf-ajuda`, `kf-opcional`, `kf-check` | o app pode ligar `--kf-campo-fundo`, `--kf-campo-linha`, `--kf-campo-traco` e `--kf-campo-anel`, para os campos do Kit (inclusive a caixa de texto grande) ficarem iguais aos dele (Kit 0.9.0) |
 | Cartão | `kf-cartao`, `kf-bloco`, `kf-dados` | |
 | Lista de escolha | `<select>` comum, trocada pelo Kit (`KitFacil.escolha`) | opção vazia `<option value="" hidden>`; exceção com `data-kf-nativa` |
 | Data | `<input type="date">`, trocado pelo Kit (`KitFacil.data`) | Hoje e Limpar; valor AAAA-MM-DD |
@@ -112,7 +112,7 @@ Saíram do Conta Fácil 1.7.0 sem nada próprio do Conta; o Conta Fácil 1.8.0 u
 | Barra de cima com nuvem, presente e balão em traço, na mesma cor | `KitFacil.topo.html({ principal: true })` | 13, § 1º; 58 |
 | Presente em 3D e janela do apoio | `KitFacil.apoio.abrir`, `comum/kit-jogo.js` | 13, §§ 2º e 3º |
 | Abertura de quatro telas | `KitFacil.abertura.abrir({ telas, fim, extra, aoMontar, aoFechar })`, `.ativa()`, `.vista()`; chave `<prefixo>abertura` | 75 |
-| Guia único de janela fixa | `KitFacil.guia.demonstrar({ passos, comecar, terminar, foto, restaurar, limpar, maos, cabecalhoFixo })`, `.emDemonstracao()`, `.pararDemonstracao()`, `.estado()` | 77 a 79 |
+| Guia único de janela fixa | `KitFacil.guia.demonstrar({ passos, comecar, terminar, foto, restaurar, limpar, maos, cabecalhoFixo })`, `.emDemonstracao()`, `.pararDemonstracao()`, `.estado()`; passo `{ t, d, se, continua, acao }` (Anexo VI) | 77 a 79 |
 | Trecho redesenhado com movimento | `KitFacil.movimento.redesenhar(raiz, fn, { marca })`; `[data-kf-exp]` e `[data-kf-morf]` | 72 |
 | Relógio único de 600 ms | `KitFacil.movimento.ms`, `--kf-ms`, `--kf-curva` (Anexo V); saiu o ajuste provisório de `Element.prototype.animate` do Conta | 72, § 1º |
 | Campo com sugestões | `KitFacil.sugestoes(campo, itens, aoEscolher)`; abaixo da linha inteira quando o pai é `.kf-linha` | 65, XII |
@@ -136,6 +136,21 @@ Saíram do Conta Fácil 1.8.2 a 1.8.7; o Conta Fácil 1.9.0 usa as do Kit.
 | Cursor só com a janela parada | classe `kf-sem-cursor` (`caret-color:transparent`) enquanto a janela do campo está a caminho | 68, § 3º; 72-A |
 | Pé recolhido com o teclado | `html.kf-tk body:not(.kf-com-guia) .kf-dlg > .kf-dlg-pe{display:none}` | 16, IX; 68, § 3º |
 | Vermelho de excluir | `--kf-perigo-fundo` | 16, V; 66, § 1º |
+
+**Peças da Proposta 4 do Conta Fácil no Kit 0.9.0 (Código 0.9, 15/11/2026)**
+
+Saíram do Conta Fácil 1.9.1 a 1.9.6; o Conta Fácil 1.10.0 usa as do Kit e não passa por cima de nenhuma peça (Art. 30-A).
+
+| Peça | No Kit | Artigos |
+|---|---|---|
+| Opção da janela de Avaliação e feedback | classes `kf-fb-ops`, `kf-fb-op`, `kf-fb-op-ic` e `kf-fb-op-tx`: linha com ícone, título, apoio e seta, separadas por uma linha fina; `kf-escolha` é só a pílula de escolher um valor (`KitFacil.ui.escolha`) | 52; 71 |
+| Janela do Kit sem "Fechar" sozinho no pé | Avaliação e feedback, Sobre o aplicativo, Mensagem enviada e o "Mais" antigo fecham pelo X | 68, § 1º |
+| "O que é enviado e para onde" | `kf-det` com a seta do Kit no lugar do marcador do navegador; alvo de 44 px | 16, IV; 71 |
+| Guia: o alvo vem para a parte à vista | `mostrar` usa os limites de quem rola de verdade (o conteúdo da janela, uma tela cheia do app ou a página), sempre acima da janela do guia | 78; 79 |
+| Guia: janela aberta de um passo para o outro | passo com `continua: true`: o Kit não fecha a janela antes dele; ao voltar um passo a janela é fechada, e o passo confere `KitFacil.dialogo.aberto()` e se põe no lugar sozinho | 78, IV |
+| Guia: destaque de área | `m.apontar` aceita um elemento, uma lista de elementos ou um trecho de texto (`Range`); o anel abraça a união, medida a cada quadro | 79 |
+| Guia: tela cheia do app | a tela cheia leva `data-kf-tela-cheia`; no guia, `body.kf-com-guia [data-kf-tela-cheia]{bottom:var(--kf-pe)}` deixa livre o pé, onde fica a janela do guia | 68, § 4º; 79 |
+| CSS do Kit sem regra repetida | saíram 184 regras escritas duas ou três vezes (o arquivo ficou com 19 kB a menos); `npm run verificar` falha se uma regra do Kit voltar a se repetir | Anexo VII |
 
 Ficam só no Conta Fácil, por serem do assunto dele: contas da comanda, cupons, comanda ao vivo, sorteio, a lista das
 tampinhas e a festa de fechamento. O carrossel dos cupons e o arrastar para juntar pessoas continuam os do Conta, presos
@@ -216,11 +231,12 @@ esperam a animação.
   para o lado troca de tela; a segunda tela é uma demonstração em que se toca; a última pergunta o nome (opcional) e dá
   a primeira recompensa a quem responde. Chave `<prefixo>abertura` = `1`; quem entra por um convite (link) vai direto
   para o que foi aberto. "Rever a apresentação" fica na guia própria dos Ajustes.
-- Guia (Arts. 77 a 79): passos `{ t, d, sel, ir, acao }` na ordem de uso; a janela do guia ocupa um espaço só dela
-  acima da barra de baixo (`--guia-h`), pisca antes de cada passo e a moldura se esvazia como um relógio; o estado do
-  app é fotografado ao começar e devolvido ao terminar, sem gravar nada. "Mãos" do guia: `apontar`, `tocar`,
-  `digitar`, `escolher`, `arrastar`, `esperar`, `destacar` e `voltar`. Movimento reduzido: o dedo não desliza e as
-  esperas ficam curtas.
+- Guia (Arts. 77 a 79): passos `{ t, d, se, continua, acao }` na ordem de uso (`se` decide se o passo entra;
+  `continua: true` mantém aberta a janela do passo anterior: Art. 78, IV); a janela do guia ocupa um espaço só dela
+  acima da barra de baixo (`--kf-gu-h`), pisca antes de cada passo e a moldura se esvazia como um relógio; o estado do
+  app é fotografado ao começar e devolvido ao terminar, sem gravar nada. "Mãos" do guia: `acha`, `some`, `tocar`,
+  `digitar`, `apontar` (um elemento, uma lista ou um trecho de texto), `arrastar`, `rolar`, `fechar` e `espera`; o app
+  pode juntar as suas em `maos`. Movimento reduzido: o dedo não desliza e as esperas ficam curtas.
 
 **No Kit 0.7.0:** `KitFacil.abertura.abrir` e `KitFacil.guia.demonstrar` (Anexo II). A janela do guia usa `--kf-gu-h` e as classes `kf-gu-*`.
 
@@ -249,7 +265,7 @@ Node 22 ou mais novo; testes com Playwright (Chromium; sem ele, o Google Chrome 
 | `npm start` | sobe o app em `http://localhost:8080/<app>/` |
 | `npm test` | testes do Kit e do app, sem internet (GitHub e Firebase simulados), com a varredura de acessibilidade |
 | `node --test <arquivos>` | só os testes da parte alterada (Art. 23, I); o guia inteiro e a bateria completa ficam para quando a mudança mexe neles |
-| `npm run verificar` | pasta `comum/` igual, sem segredos, versão nos quatro lugares, arquivos do service worker, idioma, zoom, fonte, moldura, barra de cima, Ajustes em guias, componentes nas medidas do Kit, CSP e SRI, navegação do Kit 0.7.0 (`KitFacil.nav.barra` e `.trilho`) e um relógio só (o app não troca `Element.prototype.animate`). App em `1.x` sem a navegação nova é falha; app em `0.x` recebe aviso até a sua vez (Art. 93, § 2º) |
+| `npm run verificar` | pasta `comum/` igual, sem segredos, versão nos quatro lugares, arquivos do service worker, idioma, zoom, fonte, moldura, barra de cima, Ajustes em guias, componentes nas medidas do Kit, CSP e SRI, navegação do Kit 0.7.0 (`KitFacil.nav.barra` e `.trilho`) e um relógio só (o app não troca `Element.prototype.animate`) e CSS do Kit sem regra repetida (Kit 0.9.0). App em `1.x` sem a navegação nova é falha; app em `0.x` recebe aviso até a sua vez (Art. 93, § 2º) |
 | `npm run testar-regras` | testa as regras do Firestore no projeto de verdade, sem deixar nada gravado (precisa de internet) |
 
 - Telas de referência: 320 × 568 (equivale ao zoom de 400%), 360 × 740, 390 × 844, 820 × 1180 e 1440 × 900; áreas

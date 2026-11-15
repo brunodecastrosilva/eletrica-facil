@@ -58,6 +58,25 @@ try {
   else ok(`comum/ igual ao manifesto (Kit Fácil ${agora.kit})`);
 } catch (e) { falha('comum/MANIFESTO.json ausente ou inválido: ' + e.message); }
 
+/* ---------- CSS do Kit sem regra repetida (Kit 0.9.0) ---------- */
+{
+  const css = (await readFile(join(COMUM, 'kit-facil.css'), 'utf8')).replace(/\/\*[\s\S]*?\*\//g, '');
+  const vistas = new Map(), rep = [];
+  (function andar(t, ctx) {
+    let i = 0, ini = 0;
+    while (i < t.length) {
+      if (t[i] !== '{') { i++; continue; }
+      const sel = t.slice(ini, i).replace(/\s+/g, ' ').trim(); let n = 1, j = i + 1;
+      while (n && j < t.length) { if (t[j] === '{') n++; else if (t[j] === '}') n--; j++; }
+      const corpo = t.slice(i + 1, j - 1);
+      if (/^@(media|supports)/.test(sel)) andar(corpo, ctx + sel + ' ');
+      else { const k = ctx + sel + '{' + corpo.replace(/\s+/g, ' ').trim() + '}'; if (vistas.has(k)) rep.push(ctx + sel); else vistas.set(k, 1); }
+      i = ini = j;
+    }
+  })(css, '');
+  if (rep.length) falha(`kit-facil.css tem ${rep.length} regra(s) repetida(s): ${rep.slice(0, 4).join(' · ')}`); else ok('kit-facil.css sem regra repetida');
+}
+
 /* ---------- segredos ---------- */
 console.log('Segredos');
 async function arquivosDoRepo() {

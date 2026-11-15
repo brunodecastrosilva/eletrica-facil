@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '0.8.0';
+  const VERSAO = '0.9.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -459,16 +459,15 @@
   }
   /* as duas opções do balão: os mesmos botões aparecem na guia "Avaliação e feedback" dos Ajustes */
   function escolhasHTML() {
-    return `<div class="kf-escolhas">
-        <button type="button" class="kf-escolha" data-kf="avaliar"><span class="kf-escolha-ic">${IC.estrela}</span><span class="kf-escolha-tx"><b>Avaliar o app</b><small>Dê uma nota de 1 a 5 e, se quiser, deixe um comentário.</small></span>${IC.chev}</button>
-        <button type="button" class="kf-escolha" data-kf="problema"><span class="kf-escolha-ic">${IC.alerta}</span><span class="kf-escolha-tx"><b>Relatar um problema</b><small>Conte o que deu errado para a gente corrigir.</small></span>${IC.chev}</button>
+    return `<div class="kf-fb-ops">
+        <button type="button" class="kf-fb-op" data-kf="avaliar"><span class="kf-fb-op-ic">${IC.estrela}</span><span class="kf-fb-op-tx"><b>Avaliar o app</b><small>Dê uma nota de 1 a 5 e, se quiser, deixe um comentário.</small></span>${IC.chev}</button>
+        <button type="button" class="kf-fb-op" data-kf="problema"><span class="kf-fb-op-ic">${IC.alerta}</span><span class="kf-fb-op-tx"><b>Relatar um problema</b><small>Conte o que deu errado para a gente corrigir.</small></span>${IC.chev}</button>
       </div>
       <p class="kf-ajuda" data-kf-pendentes aria-live="polite"${fila.quantos() ? '' : ' hidden'}>${textoPendentes(fila.quantos())}</p>`;
   }
   function abrirEscolhaFeedback() {
     abrirDialogo({ titulo: 'Avaliação e feedback', classe: 'kf-curto', nome: 'feedback',
-      corpo: `<p class="kf-texto">Sua mensagem vai direto para quem faz o ${esc(C.nome)}.</p>${escolhasHTML()}`,
-      pe: `<button type="button" class="kf-btn kf-sec" data-kf-fechar>Fechar</button>` });
+      corpo: `<p class="kf-texto">Sua mensagem vai direto para quem faz o ${esc(C.nome)}.</p>${escolhasHTML()}` });
   }
   const opcoesHTML = (nome, lista, marcado = '') => `<div class="kf-opcoes">${lista.map(([k, l]) => `<label class="kf-opcao"><input type="radio" name="${nome}" value="${k}"${k === marcado ? ' checked' : ''}><span>${esc(l)}</span></label>`).join('')}</div>`;
   /* Os dois formulários usam os mesmos componentes e a mesma ordem: classificação, texto, contato, informações técnicas.
@@ -552,7 +551,7 @@
       : `<div class="kf-fim"><span class="kf-fim-ic kf-alerta">${r === 'offline' ? IC.nuvem : IC.alerta}</span>
           <p class="kf-texto"><b>${r === 'offline' ? 'Você está sem internet.' : 'Não foi possível enviar agora.'}</b></p>
           <p class="kf-texto">A mensagem ficou guardada neste aparelho e o app envia sozinho ${r === 'offline' ? 'quando a conexão voltar' : 'numa próxima tentativa'}.${C.suporteEmail ? ' Se preferir, mande por e-mail.' : ' Se preferir, copie o texto e mande por outro meio.'}</p></div>`;
-    const pe = ok ? `<button type="button" class="kf-btn kf-pri" data-kf-fechar autofocus>Fechar</button>`
+    const pe = ok ? '' // janela que só precisa ser fechada não tem "Fechar" no pé: o X fecha (Código, Art. 68, § 1º)
       : `<button type="button" class="kf-btn kf-sec" data-kf-copiar>${IC.copiar}Copiar mensagem</button>${C.suporteEmail ? `<a class="kf-btn kf-sec" href="mailto:${esc(C.suporteEmail)}?subject=${encodeURIComponent(C.nome + ' ' + C.versao)}&body=${encodeURIComponent(textoDoRegistro(dados))}">${IC.email}Enviar por e-mail</a>` : ''}<button type="button" class="kf-btn kf-pri" data-kf-fechar autofocus>Fechar</button>`;
     abrirDialogo({ titulo: ok ? 'Mensagem enviada' : 'Mensagem guardada', corpo, pe, classe: 'kf-curto', nome: 'feedback-resultado',
       aoMontar: d => { const c = $('[data-kf-copiar]', d); if (c) c.onclick = () => copiar(textoDoRegistro(dados), 'Mensagem copiada.'); } });
@@ -594,8 +593,7 @@
   }
   function abrirSobre() {
     abrirDialogo({ titulo: 'Sobre o aplicativo', nome: 'sobre',
-      corpo: `${sobreHTML()}<h3 class="kf-sub">Seus dados e sua privacidade</h3><ul class="kf-lista">${itensPrivacidade().map(t => `<li>${esc(t)}</li>`).join('')}</ul>`,
-      pe: `<button type="button" class="kf-btn kf-pri" data-kf-fechar>Fechar</button>` });
+      corpo: `${sobreHTML()}<h3 class="kf-sub">Seus dados e sua privacidade</h3><ul class="kf-lista">${itensPrivacidade().map(t => `<li>${esc(t)}</li>`).join('')}</ul>` });
   }
 
   /* ================= tema: automático, claro ou escuro (vale só neste aparelho) =================
@@ -892,7 +890,6 @@
     abrirDialogo({ titulo: 'Mais', classe: 'kf-curto kf-mais', nome: 'mais',
       corpo: `<ul class="kf-mais-lista">${ocultos.map((el, i) => `<li><button type="button" class="kf-aj-item" data-kf-mais-i="${i}"${ativoNav(el) ? ' aria-current="true"' : ''}${el.getAttribute('aria-disabled') === 'true' ? ' aria-disabled="true"' : ''}>
           <span class="kf-aj-ic">${(el.querySelector('.kf-nav-ic') || {}).innerHTML || ''}</span><span class="kf-aj-tx"><b>${esc(rotuloNav(el))}</b></span>${IC.chev}</button></li>`).join('')}</ul>`,
-      pe: `<button type="button" class="kf-btn kf-sec" data-kf-fechar>Fechar</button>`,
       aoMontar: d => d.addEventListener('click', e => {
         const b = e.target.closest('[data-kf-mais-i]'); if (!b) return;
         const alvo = ocultos[+b.dataset.kfMaisI];
@@ -3269,7 +3266,7 @@
   }
 
   /* ================= guia único, numa demonstração que não grava nada (Código, Arts. 77 a 79; Anexo VI) =================
-     guia.demonstrar({ passos: [{ t, d, se?, acao: async m => {…} }], comecar(), terminar({ concluiu }), foto(), restaurar(f),
+     guia.demonstrar({ passos: [{ t, d, se?, continua?, acao: async m => {…} }], comecar(), terminar({ concluiu }), foto(), restaurar(f),
        limpar(), maos(m, g) => ({ … mãos próprias }), cabecalhoFixo() => elemento, aoConcluir() })
      A janela do guia tem um lugar só dela, acima da barra de baixo: não cobre nada e não sai do lugar. Antes de cada passo
      ela pisca e a moldura se esvazia no sentido do relógio; só então o passo acontece, de verdade.
@@ -3374,21 +3371,35 @@
       };
       const some = async (q, prazo = 2500) => { const fim = Date.now() + prazo; while (Date.now() < fim) { vivo(); if (!$$(q).some(visivel)) return; await dorme(40); } };
       const suave = () => (G.rapido || semMovimento() ? 'auto' : 'smooth');
-      const mostrar = async el => {
+      /* Kit 0.9.0 (Proposta 4 do Conta Fácil, itens 2 e 4): o alvo vem para a parte à vista de quem rola de verdade. Numa
+         janela, o conteúdo rola por baixo do pé: o alvo podia estar "na tela" e escondido atrás dele. Agora os limites são os
+         da caixa que rola (o conteúdo da janela, uma tela cheia do app ou a página), sempre acima da janela do guia. */
+      const rolavel = el => { for (let p = el.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) { const oy = getComputedStyle(p).overflowY; if ((oy === 'auto' || oy === 'scroll') && p.scrollHeight > p.clientHeight + 1) return p; } return null; };
+      const mostrar = async (el, caixa = () => el.getBoundingClientRect()) => {
         if (el.closest('.kf-nav, .kf-barra, .kf-trilho')) return;
-        const naJanela = el.closest('.kf-dlg, [data-kf-tela-cheia]');
-        const cab = naJanela ? null : (cfg.cabecalhoFixo && cfg.cabecalhoFixo());
+        const doca = $('#kf-gu-doca')?.getBoundingClientRect().top || innerHeight, cx = rolavel(el); let r = caixa();
+        if (cx) {
+          const c = cx.getBoundingClientRect(), folga = 14, topo = c.top + folga, fundo = Math.min(c.bottom, doca) - folga;
+          if (!(r.top >= topo && r.bottom <= fundo)) {
+            const d = r.height > fundo - topo ? r.top - topo : r.top + r.height / 2 - (topo + fundo) / 2;
+            cx.scrollTo({ top: Math.max(0, cx.scrollTop + d), behavior: suave() });
+            await espera(520);
+          }
+        }
+        // janela e tela cheia ficam presas na tela: a página não rola por elas
+        for (let p = el; p && p !== document.body; p = p.parentElement) if (p.matches('.kf-dlg, [data-kf-tela-cheia]') || getComputedStyle(p).position === 'fixed') return;
+        r = caixa();
+        const cab = cfg.cabecalhoFixo && cfg.cabecalhoFixo();
         const barra = $$('.kf-barra').find(x => x.getClientRects().length);
-        const r = el.getBoundingClientRect(), topo = Math.max(barra ? barra.getBoundingClientRect().bottom : 0, cab ? cab.getBoundingClientRect().bottom : 0) + 10, fundo = ($('#kf-gu-doca')?.getBoundingClientRect().top || innerHeight) - 12;
+        const topo = Math.max(barra ? barra.getBoundingClientRect().bottom : 0, cab ? cab.getBoundingClientRect().bottom : 0) + 10, fundo = doca - 12;
         if (r.top >= topo && r.bottom <= fundo) return;
-        if (naJanela) el.scrollIntoView({ block: 'center', behavior: suave() });
-        else global.scrollBy({ top: r.top + Math.min(r.height, fundo - topo) / 2 - (topo + fundo) / 2, behavior: suave() });
+        global.scrollBy({ top: r.top + Math.min(r.height, fundo - topo) / 2 - (topo + fundo) / 2, behavior: suave() });
         await espera(480);
       };
       const por = (x, y) => { dedo.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px)`; };
-      const levar = async el => {
-        await mostrar(el); vivo();
-        const r = el.getBoundingClientRect();
+      const levar = async (el, caixa = () => el.getBoundingClientRect()) => {
+        await mostrar(el, caixa); vivo();
+        const r = caixa();
         dedo.classList.add('kf-ver'); por(Math.max(20, Math.min(innerWidth - 20, r.left + r.width / 2)), r.top + Math.min(r.height / 2, 80));
         await espera(620);
       };
@@ -3416,11 +3427,20 @@
       };
       // destaque: um anel que acompanha o alvo, desenhado por cima de tudo
       const anel = $('#kf-gu-anel');
+      /* Kit 0.9.0 (Proposta 4, item 4): o alvo pode ser um elemento, uma lista de elementos ou um trecho de texto (Range);
+         o anel abraça a união de todos, medida a cada quadro, e por isso acompanha a rolagem. */
       const apontar = async (q, ms = 1400, o) => {
-        const el = await acha(q, o); if (!el) return null;
-        await levar(el);
-        const segue = () => { if (!el.isConnected) return; const r = el.getBoundingClientRect(), f = 5, x = Math.max(3, r.left - f), y = Math.max(3, r.top - f), w = Math.min(innerWidth - 3, r.right + f) - x, h = r.bottom + f - y;
-          anel.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; anel.style.width = w.toFixed(1) + 'px'; anel.style.height = h.toFixed(1) + 'px'; anel.style.borderRadius = Math.min(18, (parseFloat(getComputedStyle(el).borderRadius) || 8) + f) + 'px'; };
+        const L = [];
+        for (const x of Array.isArray(q) ? q : [q]) { const e = x instanceof Range ? x : await acha(x, o); if (e) L.push(e); }
+        if (!L.length) return null;
+        const no = L[0] instanceof Range ? L[0].commonAncestorContainer : L[0], el = no.nodeType === 1 ? no : no.parentElement, um = L.length === 1 && L[0] === el;
+        const caixa = () => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+          for (const e of L) { const r = e.getBoundingClientRect(); if (!r.width && !r.height) continue; x0 = Math.min(x0, r.left); y0 = Math.min(y0, r.top); x1 = Math.max(x1, r.right); y1 = Math.max(y1, r.bottom); }
+          return x0 === Infinity ? el.getBoundingClientRect() : { left: x0, top: y0, right: x1, bottom: y1, width: x1 - x0, height: y1 - y0 }; };
+        await levar(el, caixa);
+        const raio = Math.min(18, (um ? parseFloat(getComputedStyle(el).borderRadius) || 8 : 8) + 5) + 'px';
+        const segue = () => { if (!el.isConnected) return; const r = caixa(), f = 5, x = Math.max(3, r.left - f), y = Math.max(3, r.top - f), w = Math.min(innerWidth - 3, r.right + f) - x, h = r.bottom + f - y;
+          anel.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; anel.style.width = w.toFixed(1) + 'px'; anel.style.height = h.toFixed(1) + 'px'; anel.style.borderRadius = raio; };
         let ligado = true; const laco = () => { if (!ligado) return; segue(); requestAnimationFrame(laco); };
         segue(); anel.classList.add('kf-ver'); laco();
         try { await espera(ms); } finally { ligado = false; anel.classList.remove('kf-ver'); }
@@ -3456,7 +3476,10 @@
       while (g === G && G.i < G.passos.length) {
         const tk = G.tk = {}, p = G.passos[G.i], m = maos(G, tk);
         try {
-          if (dialogoAberto()) limparTela(); // todo passo termina com as janelas fechadas; isto é só garantia
+          /* Kit 0.9.0 (Código, Art. 78, IV): o passo com `continua: true` acontece na janela que o passo anterior deixou
+             aberta, e o Kit não a fecha. Ao voltar um passo a janela é fechada; por isso o passo que continua confere se
+             ela está aberta (KitFacil.dialogo.aberto()) e, se não estiver, abre e se põe no lugar sozinho. */
+          if (dialogoAberto() && !p.continua) limparTela();
           if (!G.fotos[G.i] && cfg.foto) G.fotos[G.i] = cfg.foto();
           G.fase = 'conta'; pintar();
           await contagem(G, tk, p);

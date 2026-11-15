@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.8 (rascunho)** · 15/11/2026 · Kit Fácil **0.8.0**
+Versão **0.9 (rascunho)** · 15/11/2026 · Kit Fácil **0.9.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -688,7 +688,10 @@ I – cada passo executa a função de verdade, numa demonstração que não gra
 
 II – o ritmo é calmo, com um dedo que se move até o alvo e toca;
 
-III – todo passo tem ação, inclusive a troca de tela, feita tocando na barra, como a pessoa faria.
+III – todo passo tem ação, inclusive a troca de tela, feita tocando na barra, como a pessoa faria;
+
+IV – passos seguidos que acontecem na mesma janela não a fecham e reabrem: a janela fica aberta de um passo para o
+outro.
 
 **Art. 79.** O texto do guia fica numa janela fixa, num espaço só dela, acima da barra de baixo, que não cobre o
 conteúdo nem muda de lugar. O destaque aponta partes pequenas da tela (campo, botão, cabeçalho), acompanha a rolagem
@@ -781,8 +784,7 @@ para o Projeto daquele aplicativo ou vira proposta de padrão, se servir aos out
 **Art. 93.** O Conta Fácil é a referência do Projeto Fácil (decisão do Bruno, de 14/11/2026): o que foi decidido nele é
 regra, não exceção. Na dúvida sobre como cumprir este Código, faz-se como no Conta Fácil.
 
-§ 1º Até o Kit 0.7.0 trazer as peças do Conta Fácil (Anexo II, Peças a levar ao Kit), o Conta Fácil usa as suas
-próprias, e a verificação do padrão pode acusar nele as diferenças da navegação e da barra de cima.
+§ 1º (Revogado no Código 0.9: o Kit já traz as peças do Conta Fácil.)
 
 § 2º A revisão dos outros aplicativos é feita um por vez. Até a vez de cada um, pode ainda haver nele o que este
 Código trocou: dados lado a lado, o guia em dois ou três níveis, a janela a cada abertura, o presente colorido, a
@@ -793,5 +795,5 @@ próprios de excluir que não são vermelhos e janelas com "Pronto" ou "Fechar" 
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 15/11/2026 como rascunho (versão 0.8). Regras e textos anteriores (Leis Globais,
-Padrão, Código 3.x, Códigos 0.4 a 0.7) são histórico.
+**Art. 95.** Este Código vale desde 15/11/2026 como rascunho (versão 0.9). Regras e textos anteriores (Leis Globais,
+Padrão, Código 3.x, Códigos 0.4 a 0.8) são histórico.

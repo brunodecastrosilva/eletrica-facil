@@ -3,6 +3,14 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 0.5.1 · 2026-11-15
+
+- **Kit Fácil 0.9.0 (Código 0.9, Proposta 4 do Conta Fácil):** para quem usa este app, muda:
+  - **Avaliação e feedback:** as duas opções ("Avaliar o app" e "Relatar um problema") são linhas com ícone, título, apoio e seta. Antes saíam amassadas, com borda de pílula e o apoio em negrito.
+  - **Janelas sem "Fechar" sozinho no pé:** Avaliação e feedback, Sobre o aplicativo, Mensagem enviada e Mais fecham pelo X (Código, Art. 68, § 1º).
+  - **"O que é enviado e para onde":** a linha abre com a seta do Kit.
+- **Por dentro:** o CSS do Kit perdeu 184 regras repetidas (19 kB a menos), sem mudar o desenho, e a verificação passou a acusá-las. O guia único do Kit ganhou o que o Conta Fácil pediu (alvo à vista dentro da janela, janela aberta de um passo para o outro, destaque de área e tela cheia); este app passa a usá-lo na sua vez (Art. 93, § 2º).
+
 ## 0.5.0 · 2026-11-15
 
 - **Kit Fácil 0.8.0 (Código 0.8, Proposta 3 do Conta Fácil):** para quem usa este app, muda:

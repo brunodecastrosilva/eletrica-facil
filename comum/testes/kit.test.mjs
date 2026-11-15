@@ -99,7 +99,7 @@ test('balão: abre a escolha entre "Avaliar o app" e "Relatar um problema"', asy
   const dlg = p.locator('.kf-dlg[data-kf-dialogo="feedback"]');
   await dlg.waitFor();
   assert.equal(await dlg.locator('h2').textContent(), 'Avaliação e feedback');
-  assert.deepEqual(await dlg.locator('.kf-escolha b').allTextContents(), ['Avaliar o app', 'Relatar um problema']);
+  assert.deepEqual(await dlg.locator('.kf-fb-op b').allTextContents(), ['Avaliar o app', 'Relatar um problema']);
   await dlg.locator('[data-kf="problema"]').click();
   await p.locator('.kf-dlg[data-kf-dialogo="problema"]').waitFor();
   await p.click('[data-kf-voltar-fb]');
@@ -1290,5 +1290,98 @@ test('Kit 0.8.0 · janela no celular: barrinha, puxar pelo cabeçalho fecha ou v
   await p.evaluate(() => document.activeElement.blur()); await teclado(p, false); await p.waitForTimeout(700);
   assert.notEqual(await p.evaluate(() => getComputedStyle(document.querySelector('.kf-dlg > .kf-dlg-pe')).display), 'none', 'sem teclado o pé volta');
   assert.equal(await p.evaluate(() => document.querySelectorAll('.kf-sem-cursor').length), 0, 'sem foco não sobra marca de cursor');
+  assert.deepEqual(a.erros, []); await a.fechar();
+});
+
+/* ---------------- Kit 0.9.0 · Proposta 4 do Conta Fácil ---------------- */
+test('Kit 0.9.0 · Avaliação e feedback: opções em linha, com título e apoio inteiros, apoio em peso 400 e nenhum botão no pé', async () => {
+  const a = await aparelho(amb, { caminho: pagina(), viewport: CELULAR });
+  const p = a.page;
+  await p.click('.kf-topo [data-kf="feedback"]'); await p.locator('.kf-dlg .kf-fb-op').first().waitFor(); await assentar(p);
+  const r = await p.evaluate(() => [...document.querySelectorAll('.kf-dlg .kf-fb-op')].map(b => { const c = getComputedStyle(b), q = b.getBoundingClientRect();
+    const dentro = [...b.querySelectorAll('b, small')].every(e => { const t = e.getBoundingClientRect(); return t.top >= q.top - 0.5 && t.bottom <= q.bottom + 0.5 && t.left >= q.left - 0.5 && t.right <= q.right + 0.5; });
+    return { dentro, raio: parseFloat(c.borderTopLeftRadius), alt: q.height, apoio: getComputedStyle(b.querySelector('small')).fontWeight, seta: !!b.querySelector(':scope > svg') }; }));
+  assert.equal(r.length, 2);
+  for (const o of r) { assert.ok(o.dentro, 'título e apoio cabem inteiros na opção'); assert.ok(o.raio < 20, 'a opção é uma linha, não uma pílula'); assert.ok(o.alt >= 60, `linha com pelo menos 60 px (${o.alt})`); assert.equal(o.apoio, '400'); assert.ok(o.seta, 'seta à direita (Art. 71)'); }
+  assert.equal(await p.locator('.kf-dlg > .kf-dlg-pe').count(), 0, 'janela que só fecha não tem botão no pé (Art. 68, § 1º)');
+  // a pílula de escolher um valor continua com o nome kf-escolha e o desenho dela
+  assert.ok(await p.evaluate(() => { const d = document.createElement('div'); d.innerHTML = KitFacil.ui.escolha('Teste', true); document.body.append(d); const c = parseFloat(getComputedStyle(d.firstElementChild).borderTopLeftRadius); d.remove(); return c; }) > 20, 'a pílula continua redonda');
+  // nenhuma janela do Kit tem o pé só com "Fechar" (Sobre o aplicativo, Mensagem enviada, Mais)
+  const fonte = await readFile(new URL('../kit-facil.js', import.meta.url), 'utf8');
+  assert.equal(/pe: `<button type="button" class="kf-btn kf-(sec|pri)" data-kf-fechar( autofocus)?>Fechar<\/button>`/.test(fonte), false, 'janela do Kit com o pé só de "Fechar"');
+  assert.deepEqual(a.erros, []); await a.fechar();
+});
+
+test('Kit 0.9.0 · guia: o alvo escondido atrás do pé da janela vem para a parte à vista antes do toque, e o destaque abraça uma área', async () => {
+  const a = await aparelho(amb, { caminho: pagina() + '&moldura=nova', viewport: CELULAR });
+  const p = a.page;
+  await p.evaluate(() => {
+    window.M = {};
+    const mede = (el, nome) => { const r = el.getBoundingClientRect(), c = el.closest('.kf-dlg-corpo').getBoundingClientRect(), d = document.querySelector('#kf-gu-doca').getBoundingClientRect(); M[nome] = { visto: r.top >= c.top - 0.5 && r.bottom <= Math.min(c.bottom, d.top) + 0.5 }; };
+    KitFacil.guia.demonstrar({ passos: [
+      { t: 'Alvo no fim da janela', d: 'Ele começa escondido atrás do pé.', acao: async m => {
+        KitFacil.dialogo.abrir({ titulo: 'Janela comprida', corpo: Array.from({ length: 30 }, (_, i) => `<p id="l${i}">Linha ${i}</p>`).join('') + '<button type="button" id="alvo" class="kf-btn kf-sec">Alvo</button><p id="fim">fim</p>', pe: '<button type="button" class="kf-btn kf-pri" id="salvar">Salvar</button>' });
+        await new Promise(r => setTimeout(r, 900)); // a janela acaba de nascer antes das medidas
+        const alvo = await m.acha('#alvo'); alvo.addEventListener('click', () => { M.clicou = true; mede(alvo, 'toque'); });
+        document.querySelector('#salvar').addEventListener('click', () => { M.salvou = true; });
+        const c = alvo.closest('.kf-dlg-corpo').getBoundingClientRect(); M.antes = alvo.getBoundingClientRect().top >= c.bottom;
+        await m.tocar('#alvo');
+        // destaque de área: três linhas seguidas num anel só; depois, só o texto de uma linha
+        const L = ['#l3', '#l4', '#l5'].map(q => document.querySelector(q));
+        const ver = async nome => { await m.espera(120); const an = document.querySelector('#kf-gu-anel').getBoundingClientRect(); M[nome] = [an.top, an.bottom, an.left, an.right]; };
+        const p1 = m.apontar(L, 1600); await m.espera(1300); await ver('anelArea'); M.area = [L[0].getBoundingClientRect().top, L[2].getBoundingClientRect().bottom]; await p1;
+        const rg = document.createRange(); rg.selectNodeContents(document.querySelector('#l4'));
+        const p2 = m.apontar(rg, 1600); await m.espera(1300); await ver('anelTexto'); const t = rg.getBoundingClientRect(); M.texto = [t.left, t.right, document.querySelector('#l4').getBoundingClientRect().right]; await p2;
+        await m.fechar(); } },
+    ] });
+  });
+  await p.locator('#kf-gu-doca').waitFor();
+  // no ritmo normal, sem pular: as esperas do guia valem, e o anel fica à vista o tempo pedido
+  for (let i = 0; i < 120 && await p.evaluate(() => !!KitFacil.guia.estado()); i++) await p.waitForTimeout(250);
+  const M = await p.evaluate(() => M);
+  assert.equal(M.antes, true, 'o alvo começa abaixo da parte à vista da janela');
+  assert.equal(M.clicou, true); assert.equal(M.toque.visto, true, 'no toque, o alvo está à vista no conteúdo da janela');
+  assert.notEqual(M.salvou, true, 'o botão do pé não é tocado');
+  assert.ok(M.anelArea[0] <= M.area[0] && M.anelArea[1] >= M.area[1] && M.anelArea[1] - M.anelArea[0] < M.area[1] - M.area[0] + 14, `o anel abraça as três linhas (${M.anelArea} · ${M.area})`);
+  assert.ok(M.anelTexto[3] < M.texto[2] - 40 && M.anelTexto[3] >= M.texto[1], `o anel abraça só o texto, não a linha inteira (${M.anelTexto} · ${M.texto})`);
+  assert.deepEqual(a.erros, []); await a.fechar();
+});
+
+test('Kit 0.9.0 · guia: com `continua`, a janela fica aberta de um passo para o outro; sem ele, fecha; voltar um passo fecha', async () => {
+  const a = await aparelho(amb, { caminho: pagina() + '&moldura=nova', viewport: CELULAR });
+  const p = a.page;
+  await p.evaluate(() => {
+    window.L = [];
+    const aberta = () => KitFacil.dialogo.aberto() && !!document.querySelector('#jx');
+    KitFacil.guia.demonstrar({ restaurar: () => L.push('restaurou'), passos: [
+      { t: 'Abre', d: 'Abre a janela e deixa aberta.', acao: async m => { KitFacil.dialogo.abrir({ titulo: 'Janela', corpo: '<p id="jx">x</p>' }); document.querySelector('#jx').dataset.marca = 'a mesma'; await m.apontar('#jx', 200); } },
+      { t: 'Continua', d: 'Acontece na mesma janela.', continua: true, acao: async m => { L.push(['continua', aberta(), document.querySelector('#jx')?.dataset.marca || '']); if (!aberta()) KitFacil.dialogo.abrir({ titulo: 'Janela', corpo: '<p id="jx">x</p>' }); await m.apontar('#jx', 200); if (window.VOLTAR) { window.VOLTAR = false; document.querySelector('#kf-gu-volta').click(); await m.espera(50); } } },
+      { t: 'Outro assunto', d: 'Passo comum: a janela é fechada antes.', acao: async m => { L.push(['comum', aberta()]); await m.espera(100); } },
+    ] });
+    window.VOLTAR = true;
+  });
+  await p.locator('#kf-gu-doca').waitFor();
+  for (let i = 0; i < 80 && await p.evaluate(() => !!KitFacil.guia.estado()); i++) { await p.evaluate(() => { const e = KitFacil.guia.estado(); if (e && e.fase === 'conta' && !e.rapido) document.querySelector('#kf-gu-pula').click(); }); await p.waitForTimeout(250); }
+  assert.equal(await p.evaluate(() => !!KitFacil.guia.estado()), false, 'o guia não chegou ao fim');
+  assert.deepEqual(await p.evaluate(() => L), [['continua', true, 'a mesma'], 'restaurou', ['continua', false, ''], ['comum', false]],
+    'o passo que continua encontra a mesma janela; depois de voltar, encontra a tela sem janela e abre sozinho; o passo comum começa sem janela');
+  assert.deepEqual(a.erros, []); await a.fechar();
+});
+
+test('Kit 0.9.0 · guia: numa tela cheia do app, a tela rola até o botão e deixa livre o pé, onde fica a janela do guia', async () => {
+  const a = await aparelho(amb, { caminho: pagina() + '&moldura=nova', viewport: CELULAR });
+  const p = a.page;
+  await p.evaluate(() => {
+    window.M = {};
+    KitFacil.guia.demonstrar({ limpar: () => document.querySelector('#tc')?.remove(), passos: [
+      { t: 'Tela cheia', d: 'O botão fica no fim dela.', acao: async m => {
+        document.body.insertAdjacentHTML('beforeend', '<style>#tc{position:fixed;inset:0;z-index:88;overflow:auto;background:#123}</style><div id="tc" data-kf-tela-cheia role="dialog" aria-label="Tela cheia"><div style="height:1400px"></div><button type="button" id="ok" class="kf-btn kf-pri">Concluir</button></div>');
+        const ok = document.querySelector('#ok'); ok.addEventListener('click', () => { const r = ok.getBoundingClientRect(), d = document.querySelector('#kf-gu-doca').getBoundingClientRect(), t = document.querySelector('#tc').getBoundingClientRect(); M.toque = r.top >= 0 && r.bottom <= d.top + 0.5; M.pe = Math.abs(t.bottom - d.top) <= 1; });
+        await m.tocar('#ok'); document.querySelector('#tc').remove(); } },
+    ] });
+  });
+  await p.locator('#kf-gu-doca').waitFor();
+  for (let i = 0; i < 60 && await p.evaluate(() => !!KitFacil.guia.estado()); i++) { await p.evaluate(() => { const e = KitFacil.guia.estado(); if (e && e.fase === 'conta' && !e.rapido) document.querySelector('#kf-gu-pula').click(); }); await p.waitForTimeout(250); }
+  assert.deepEqual(await p.evaluate(() => M), { toque: true, pe: true }, 'o botão é tocado à vista, acima da janela do guia, e a tela cheia termina onde ela começa');
   assert.deepEqual(a.erros, []); await a.fechar();
 });

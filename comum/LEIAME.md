@@ -153,6 +153,14 @@ pelo app em `aplicar`.
 
 ## Mudanças do kit
 
+- **0.9.0 · 15/11/2026** (Código 0.9, Proposta 4 do Conta Fácil; copiado aos quatro apps): a opção da janela de
+  Avaliação e feedback tem nome próprio (`kf-fb-op`) e é uma linha com seta; antes dividia a classe `kf-escolha` com a
+  pílula de escolher um valor, que a amassava. Nenhuma janela do Kit tem "Fechar" sozinho no pé. `kf-det` com a seta do
+  Kit. Campos do Kit com `--kf-campo-fundo`, `--kf-campo-linha`, `--kf-campo-traco` e `--kf-campo-anel`. No guia único:
+  o alvo vem para a parte à vista de quem rola (o conteúdo da janela, uma tela cheia ou a página); o passo com
+  `continua: true` acontece na janela que o passo anterior deixou aberta (Art. 78, IV); `m.apontar` aceita uma lista
+  de elementos ou um `Range`; a tela cheia com `data-kf-tela-cheia` deixa livre o pé. Saíram 184 regras de CSS
+  repetidas, e a verificação passou a acusá-las. Quatro testes novos.
 - **0.8.0 · 15/11/2026** (Código 0.8, Proposta 3 do Conta Fácil; copiado aos quatro apps): a cópia da janela que
   fecha mantém as marcas de campo ligado, e a lista de escolha, a data e a hora não ligam nada dentro de `#kf-saidas`
   (fim do pulo ao fechar); `KitFacil.apontar(campo)` aponta o campo que falta preencher (contorno e `aria-invalid`), sem
