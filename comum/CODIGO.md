@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.9 (rascunho)** · 15/11/2026 · Kit Fácil **0.9.0**
+Versão **0.9.1 (rascunho)** · 15/11/2026 · Kit Fácil **0.9.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -694,8 +694,8 @@ IV – passos seguidos que acontecem na mesma janela não a fecham e reabrem: a 
 outro.
 
 **Art. 79.** O texto do guia fica numa janela fixa, num espaço só dela, acima da barra de baixo, que não cobre o
-conteúdo nem muda de lugar. O destaque aponta partes pequenas da tela (campo, botão, cabeçalho), acompanha a rolagem
-sem atraso e fica acima das janelas abertas pelo guia.
+conteúdo nem muda de lugar. O destaque aponta só a parte da tela de que o passo fala (campo, botão, cabeçalho ou um
+bloco), acompanha a rolagem sem atraso e fica acima das janelas abertas pelo guia.
 
 **Art. 80.** Função nova entra no guia na mesma versão.
 
@@ -795,5 +795,5 @@ próprios de excluir que não são vermelhos e janelas com "Pronto" ou "Fechar" 
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 15/11/2026 como rascunho (versão 0.9). Regras e textos anteriores (Leis Globais,
+**Art. 95.** Este Código vale desde 15/11/2026 como rascunho (versão 0.9.1). Regras e textos anteriores (Leis Globais,
 Padrão, Código 3.x, Códigos 0.4 a 0.8) são histórico.
