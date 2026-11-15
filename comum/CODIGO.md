@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.6 (rascunho)** · 14/11/2026 · Kit Fácil **0.6.0** (as peças do Conta Fácil entram no Kit 0.7.0: Art. 93)
+Versão **0.7 (rascunho)** · 15/11/2026 · Kit Fácil **0.6.0** (as peças do Conta Fácil entram no Kit 0.7.0: Art. 93)
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -164,8 +164,9 @@ VII – movimento reduzido respeitado;
 
 VIII – modo escuro em todas as telas;
 
-IX – janelas com o foco preso dentro, Esc fecha e o foco volta para quem abriu; com o teclado aberto, a janela fica
-acima dele e o campo em foco fica à vista (Art. 68, § 3º);
+IX – janelas com o foco preso dentro, Esc fecha e o foco volta para quem abriu; nenhuma janela abre com a caixa de
+texto selecionada (Art. 68, § 5º); com o teclado aberto, a janela fica acima dele e o campo em foco fica à vista
+(Art. 68, § 3º);
 
 X – toda ação de arrastar tem também um jeito sem arrastar, com botão e lista de marcar;
 
@@ -562,7 +563,13 @@ dados de consulta continuam em seções que abrem e fecham;
 X – registrar um fato que aconteceu (pago, feito, estudado): **botão contornado** que troca de texto ("Marcar como
 pago" / "Desmarcar pago"), com "Desfazer" no aviso; a chave liga e desliga só ajustes que valem dali em diante;
 
-XI – juntar ou reordenar arrastando: **arrastar e soltar** do Kit, sempre com outro jeito sem arrastar (Art. 16, X).
+XI – juntar ou reordenar arrastando: **arrastar e soltar** do Kit, sempre com outro jeito sem arrastar (Art. 16, X);
+
+XII – digitar com ajuda de itens já usados: **campo com sugestões** do Kit; a lista abre abaixo do campo e, quando o
+campo divide a linha com um botão, abaixo da linha inteira, com o botão alinhado ao campo e da mesma altura;
+
+XIII – valores em dinheiro, porcentagem e quantidade: **campo de dinheiro**, **campo de porcentagem** e **passo a
+passo de quantidade** (− e +) do Kit; ligar e desligar: **chave** do Kit.
 
 **Art. 66.** Os botões cheios têm duas cores, cada uma com o seu papel, e as duas com contraste AA:
 
@@ -588,16 +595,22 @@ II – as coleções para ver de relance (tiras, grades, pódios), que não são
 de marca do § 4º.
 
 § 1º Na janela, o título vem primeiro e a linha de apoio fica abaixo dele; acima do título, só um rótulo curto de
-contexto, quando houver.
+contexto, quando houver. Janela que só precisa ser fechada não tem "Pronto" nem "Fechar" no pé: o X fecha. O pé fica
+para ações (Salvar, Adicionar, Fechar comanda).
 
 § 2º Com uma janela aberta, o aviso rápido aparece acima dos botões do pé dela.
 
 § 3º Um mecanismo só cuida das janelas: nascer, acompanhar o teclado, mudar de altura e trocar uma janela por outra. O
 movimento é feito só com `transform`, num relógio só, sem transições de CSS de posição ou de altura; nada salta, some
-ou volta no caminho. Com o teclado aberto, o campo em foco fica à vista.
+ou volta no caminho. Com o teclado aberto, o campo em foco fica à vista. A janela que fecha desce pelo pé da tela, no
+mesmo relógio e na mesma curva de quando nasceu, e o fundo clareia junto. O comportamento é um só para todas as
+janelas, as do Kit e as do aplicativo.
 
 § 4º Momentos de marca (no Conta Fácil, a abertura e a festa de fechamento) podem ser telas cheias, com o foco preso,
 Esc e o leitor de tela tratados.
+
+§ 5º Nenhuma janela abre com a caixa de texto selecionada, no celular e no computador: ao abrir, o foco vai para a
+janela (ou para um botão marcado), e o teclado só sobe quando a pessoa toca no campo.
 
 **Art. 69.** Nenhum aplicativo mostra a lista de escolha, o calendário nem o relógio do sistema: usa os do Kit, iguais
 em todo aparelho.
@@ -617,9 +630,16 @@ trocas de tela e de guia, seções, listas, calendário, janelas (inclusive quan
 arrastar e soltar, todo trecho redesenhado e o item novo de uma lista, que a tela mostra rolando até ele, se estiver
 fora da tela, e que pisca uma vez.
 
-§ 1º Quem pede movimento reduzido vê a troca direta.
+§ 1º **Um relógio só:** tudo o que o aplicativo abre ou fecha dura 600 ms, na mesma curva do Kit: janelas (nascer,
+sair, trocar e mudar de altura), o fundo escuro, seções e trechos que abrem e recolhem, troca de tela e de guia, avisos,
+menus, listas e calendário. Nenhum arquivo escreve outra duração de abrir ou fechar: usa a do Kit.
 
-§ 2º O aplicativo pode ter animações próprias (momentos de marca, objetos em 3D, jogos), sempre respeitando o movimento
+§ 2º Ficam fora do § 1º o que não abre nem fecha (toque no botão, chaves, arrastar, destaques, carrossel) e a janela
+que acompanha o teclado do sistema, que segue o relógio do teclado (cerca de 300 ms).
+
+§ 3º Quem pede movimento reduzido vê a troca direta.
+
+§ 4º O aplicativo pode ter animações próprias (momentos de marca, objetos em 3D, jogos), sempre respeitando o movimento
 reduzido.
 
 **Art. 72-A.** O aplicativo é fluido em todas as telas: nenhum tranco, salto ou corte ao abrir janelas, teclado,
@@ -650,7 +670,8 @@ valor padrão e se muda nos Ajustes.
 
 ### CAPÍTULO II — Do guia
 
-**Art. 77.** Todo aplicativo tem um guia só, do começo ao fim, com os passos na ordem de uso.
+**Art. 77.** Todo aplicativo tem um guia só, do começo ao fim, na ordem de uso: cada função aparece no ponto em que a
+pessoa a usaria (no Conta Fácil, serviço, couvert e desconto vêm antes de fechar a comanda).
 
 **Art. 78.** No guia:
 
@@ -762,5 +783,5 @@ navegação antiga e uma só cor de botão. Na vez de cada aplicativo, ele passa
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 14/11/2026 como rascunho (versão 0.6). Regras e textos anteriores (Leis Globais,
-Padrão, Código 3.x, Códigos 0.4 e 0.5) são histórico.
+**Art. 95.** Este Código vale desde 15/11/2026 como rascunho (versão 0.7). Regras e textos anteriores (Leis Globais,
+Padrão, Código 3.x, Códigos 0.4 a 0.6) são histórico.

@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **0.6 (rascunho)** · 14/11/2026 · Kit Fácil **0.6.0** (peças do Conta Fácil a levar ao Kit 0.7.0)
+Versão **0.7 (rascunho)** · 15/11/2026 · Kit Fácil **0.6.0** (peças do Conta Fácil a levar ao Kit 0.7.0)
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
@@ -11,7 +11,7 @@ os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
 | II | Sistema de design e peças do Kit | 27 a 31, 55 a 72-A |
 | III | Sincronização e cópia de segurança | 32 a 37 |
 | IV | Avaliação e feedback | 51 a 54 |
-| V | Movimento | 72 |
+| V | Movimento | 72 e 72-A |
 | VI | Abertura e guia | 75 a 80 |
 | VII | Comandos, verificação e testes | 23, 30, 30-A, 31, 73 |
 | VIII | Segurança | 43 a 50, 89 |
@@ -101,7 +101,7 @@ Atkinson, com a Atkinson logo depois na lista, legível em 20 px, com acentos.
 
 **Peças a levar ao Kit (Kit 0.7.0; Art. 93, § 1º)**
 
-Estão prontas no Conta Fácil 1.6.1. Ao entrar no Kit, viram funções `KitFacil.*` sem nada próprio do Conta, e o Conta
+Estão prontas no Conta Fácil 1.7.0. Ao entrar no Kit, viram funções `KitFacil.*` sem nada próprio do Conta, e o Conta
 passa a usá-las como os outros.
 
 | Peça | Onde está no Conta Fácil | Artigos |
@@ -117,6 +117,20 @@ passa a usá-las como os outros.
 | `comMovimento` (anima todo trecho redesenhado) | `app.js` | 72 |
 | Carrossel e arrastar e soltar do Conta | `app.js` (cupons e juntar pessoas) | 65, IX e XI |
 | Tokens novos (cantos, navegação) e verificação do padrão da moldura nova | `estilo.css` seção 1; `comum/verificar.mjs` | Anexo II; Anexo VII |
+| Relógio único de 600 ms | `app.js` (`MOVE`, `MV`), `estilo.css` (`--cf-ms`, `--cf-curva`, seção 18); some o ajuste provisório de `Element.prototype.animate` | 72, § 1º; Anexo V |
+| Saída das janelas (desce pelo pé, fundo clareia junto) | `casca.js`, bloco "janelas", parte 4 (`sair`, `#cf-saidas`); o Kit deixa de usar `sairDialogo` | 68, § 3º |
+| Janela sem campo selecionado | `app.js` (`openSheet`); `dialogo.abrir` ignora `autofocus` em campo de texto | 16, IX; 68, § 5º |
+| Campo com sugestões: `KitFacil.sugestoes(campo, itens, aoEscolher)` | `app.js` (`attachSuggest`), `comanda.css` (`.sg-*`) | 65, XII |
+| Campo de dinheiro e de porcentagem: `KitFacil.campo.dinheiro` e `.porcento` | `app.js` (`maskMoney`, `maskPct`, `prepFields`) | 65, XIII |
+| Passo a passo de quantidade (− e +) | `app.js` (`.stepper`), `comanda.css` | 65, XIII |
+| Chave liga e desliga e botões de escolha | `comanda.css` (`.switch`), `estilo.css` (`.chip-b`) | 65, XIII |
+| Confirmação no desenho novo; o app deixa a sua (`confirmSheet`) e usa `KitFacil.dialogo.confirmar` | `app.js` | 65, VIII |
+| Aviso rápido: o app chama `KitFacil.avisar` direto, sem o repasse `toast` | `app.js` | 68 |
+| Pix copia e cola e QR code de cobrança: `KitFacil.pix`, junto com o do apoio | `app.js` | 13 |
+| Tampinhas, níveis e festa de fechamento: `KitFacil.jogo`, peça opcional | `jogo.js` | 68, § 4º; 72, § 4º |
+| Medição de movimento quadro a quadro (janelas, teclado, 600 ms) | `tests/app.test.mjs` | Anexo VII |
+
+Ficam só no Conta Fácil, por serem do assunto dele: contas da comanda, cupons, comanda ao vivo e sorteio.
 
 ## ANEXO III — Sincronização e cópia de segurança
 
@@ -162,22 +176,25 @@ Fila: até 30 tentativas ou 60 dias; identificador próprio por mensagem, sem du
 
 ## ANEXO V — Movimento
 
-Curva `cubic-bezier(.45,0,.2,1)` (`KitFacil.movimento`).
+**Um relógio só (Art. 72, § 1º):** 600 ms na curva `cubic-bezier(.45,0,.2,1)` para tudo o que abre ou fecha. No Kit
+0.7.0: `KitFacil.movimento.ms` = 600 (`MOV.ms`, `MOV.curto` e `MOV_SAIDA` iguais), variáveis CSS `--kf-ms` e
+`--kf-curva`; as cópias que saem (janelas, listas, calendário) só são removidas no fim do movimento. No Kit 0.6.0 os
+valores ainda são os da coluna "Kit 0.6.0"; o Conta Fácil 1.7.0 já usa 600 ms (Art. 30-A).
 
-| O quê | Como | Duração |
-|---|---|---|
-| Seções e rolagem até um título | `KitFacil.secao` | 560 ms (`movimento.ms`) |
-| Troca de tela | `KitFacil.movimento.entrar(area, { de: 'tela' })` | 280 ms (`movimento.curto`) |
-| Guias dos Ajustes, mês do calendário | `de: 'lado'` | 280 ms |
-| Listas, calendário, menus | descem ao abrir, sobem ao fechar | 280 / 200 ms |
-| Janelas | um mecanismo só (Art. 68, § 3º): o desenho muda de uma vez e só a diferença se anima, com `transform`, num relógio só, para a janela, o conteúdo, o rodapé e a borda de baixo; sem transição de CSS de posição ou de altura; se o teclado muda no meio do caminho, o movimento parte de onde a janela está | como no Conta Fácil 1.6.1 |
-| Trecho redesenhado (lista, cupom, linha que abre) | `comMovimento`: mede antes, redesenha, anima a diferença | 280 ms |
-| Item novo | a tela rola até ele; pisca uma vez | 560 ms · 1,2 s |
-| Carrossel | cartão desliza; altura acompanha | 280 ms |
-| Arrastar e soltar | levanta inclinado; entra no alvo encolhendo, ou volta para o lugar | 220 · 280 ms |
-| Avisos rápidos | sobem e aparecem | 280 ms |
-| Item atual da navegação | a cor desliza | 280 ms |
-| Presente do apoio | na barra, parado (ícone de traço); na janela, gira com o dedo e para quando é solto; parado com movimento reduzido | — |
+| O quê | Como | Duração | Kit 0.6.0 |
+|---|---|---|---|
+| Seções e rolagem até um título | `KitFacil.secao` | 600 ms | 560 ms |
+| Troca de tela | `KitFacil.movimento.entrar(area, { de: 'tela' })` | 600 ms | 280 ms |
+| Guias dos Ajustes, mês do calendário | `de: 'lado'` | 600 ms | 280 ms |
+| Listas, calendário, menus | descem ao abrir, sobem ao fechar | 600 ms | 280 / 200 ms |
+| Janelas e fundo escuro | um mecanismo só (Art. 68, § 3º): o desenho muda de uma vez e só a diferença se anima, com `transform`, para a janela, o conteúdo, o rodapé e a borda de baixo; sem transição de CSS de posição ou de altura; nasce subindo e sai descendo pelo pé, com o fundo escurecendo e clareando junto; se o teclado muda no meio do caminho, o movimento parte de onde a janela está | 600 ms (com o teclado do sistema, o relógio dele, cerca de 300 ms) | 240 / 200 ms |
+| Trecho redesenhado (lista, cupom, linha que abre) | `comMovimento`: mede antes, redesenha, anima a diferença | 600 ms | — |
+| Avisos rápidos | sobem e aparecem | 600 ms | 280 ms |
+| Item novo (destaque, fora do § 1º) | a tela rola até ele; pisca uma vez | 600 ms · 1,2 s | 560 ms · 1,2 s |
+| Carrossel (fora do § 1º) | cartão desliza; altura acompanha | 280 ms | 280 ms |
+| Arrastar e soltar (fora do § 1º) | levanta inclinado; entra no alvo encolhendo, ou volta para o lugar | 220 · 280 ms | 220 · 280 ms |
+| Item atual da navegação (fora do § 1º) | a cor desliza | 280 ms | 280 ms |
+| Presente do apoio | na barra, parado (ícone de traço); na janela, gira com o dedo e para quando é solto; parado com movimento reduzido | — | — |
 
 O que sai é um "fantasma" desenhado pelo Kit; o elemento de verdade sai na hora, então o código e os testes não
 esperam a animação.
@@ -229,7 +246,9 @@ Node 22 ou mais novo; testes com Playwright (Chromium).
   abertura, na tela inicial e nos Ajustes (procurados em Mais, onde ficam agora; no Conta Fácil, por enquanto, em
   `tests/acessibilidade.test.mjs`), nos temas claro e escuro. Precisa do pacote de desenvolvimento
   `@axe-core/playwright` (`npm install`); sem ele, o teste é pulado com aviso e não conta como aprovado.
-- Testes comuns: `conferirTopo`, `conferirNavAjustes`, `guiasAjustes` e o teste de tela principal do Kit.
+- Testes comuns: `conferirTopo`, `conferirNavAjustes`, `guiasAjustes` e o teste de tela principal do Kit. No Kit 0.7.0,
+  também a medição de movimento quadro a quadro do Conta Fácil (janelas, teclado e 600 ms) e a conferência de que
+  nenhuma janela abre com campo de texto em foco.
 - Mudar o Kit: alterar `comum/` num repositório, `node comum/verificar.mjs --gerar`, copiar `comum/` para os outros,
   `npm run verificar` e `npm test` em todos.
 - App novo: copiar `comum/`, o `package.json` (nome e versão), o modelo do `sw.js` e do README; incluir o app em
