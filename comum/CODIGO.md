@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.5 (rascunho)** · 12/11/2026 · Kit Fácil **0.6.0**
+Versão **0.6 (rascunho)** · 14/11/2026 · Kit Fácil **0.6.0** (as peças do Conta Fácil entram no Kit 0.7.0: Art. 93)
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -116,14 +116,13 @@ publicados oficialmente nas lojas de aplicativos.
 
 **Art. 13.** Todos os aplicativos têm o mesmo convite de apoio: "Gostando do app? Mande um presente para o criador!".
 
-§ 1º O convite é um ícone de presente na barra de cima, entre a nuvem e o balão, só nas telas principais. O presente é
-do Kit, igual em todos os aplicativos: colorido, em três dimensões e em vista isométrica. Há um atalho também em
-*Sobre o aplicativo*.
+§ 1º O convite é um ícone de presente na barra de cima, entre a nuvem e o balão, só nas telas principais, desenhado em
+traço e na mesma cor da nuvem e do balão (Art. 58, II). Há um atalho também em *Sobre o aplicativo*.
 
-§ 2º O presente dá uma volta ao aparecer e ao toque, e depois para. Quem pede movimento reduzido vê o presente parado
-(Art. 16, VII).
+§ 2º A janela do apoio é do Kit, igual em todos os aplicativos: um presente em três dimensões que gira com o dedo, o
+convite, o QR code do Pix e um só botão, "Copiar código Pix".
 
-§ 3º Tocar no ícone abre a janela com o presente animado, o QR code do Pix e um só botão, "Copiar código Pix".
+§ 3º Quem pede movimento reduzido vê o presente parado; ele só gira com o dedo (Art. 16, VII).
 
 § 4º A chave Pix é aleatória, nunca CPF, telefone ou e-mail. O nome no código Pix é não pessoal ("PROJETO FACIL").
 
@@ -166,7 +165,7 @@ VII – movimento reduzido respeitado;
 VIII – modo escuro em todas as telas;
 
 IX – janelas com o foco preso dentro, Esc fecha e o foco volta para quem abriu; com o teclado aberto, a janela fica
-acima dele e o campo não é coberto;
+acima dele e o campo em foco fica à vista (Art. 68, § 3º);
 
 X – toda ação de arrastar tem também um jeito sem arrastar, com botão e lista de marcar;
 
@@ -214,12 +213,15 @@ por CDN, com versão fixa, só quando a função é usada.
 **Art. 22.** A versão segue o formato `maior.menor.correção` e é igual em quatro lugares: `package.json`, a constante
 `VERSAO` do código, o cache do service worker e o topo do CHANGELOG.
 
-**Parágrafo único.** Versão que começa com `0.` indica fase de testes. Os aplicativos e o Kit recomeçaram em 0.1.0 em
-08/11/2026.
+§ 1º Versão que começa com `0.` indica fase de testes. Os aplicativos e o Kit recomeçaram em 0.1.0 em 08/11/2026.
+
+§ 2º Aplicativo pronto para a publicação oficial usa versão `1.x`. Cada aplicativo sobe para 1.0.0 quando chega ao
+padrão deste Código (o Conta Fácil, em 14/11/2026).
 
 **Art. 23.** Antes de publicar:
 
-I – rodar a verificação do padrão e os testes automáticos (Anexo VII);
+I – rodar a verificação do padrão e só os testes da parte alterada (Anexo VII): o guia inteiro só roda quando a
+mudança mexe no guia, e a bateria completa, quando mexe nas contas do aplicativo ou na pasta `comum/`;
 
 II – abrir o aplicativo no celular e no computador;
 
@@ -227,8 +229,9 @@ III – conferir o modo escuro;
 
 IV – revisar o código alterado com foco em segurança (Capítulo III do Título IV).
 
-**Parágrafo único.** Depois de publicar, o aplicativo é aberto no ar e confere-se que ele abre sem erros no console
-do navegador.
+§ 1º O relatório de cada versão diz quais testes foram pulados.
+
+§ 2º Depois de publicar, o aplicativo é aberto no ar e confere-se que ele abre sem erros no console do navegador.
 
 **Art. 24.** Publicar é enviar direto para a branch `main`, sem repositório nem branch de homologação.
 
@@ -248,9 +251,10 @@ III – atualiza o arquivo de contexto do Projeto do aplicativo.
 ### CAPÍTULO III — Do Kit Fácil
 
 **Art. 27.** O Kit Fácil é o código comum da pasta `comum/`: sistema de design, barra de cima, Ajustes, avaliação,
-sincronização, apoio, janelas, avisos, listas, datas, guia e a verificação do padrão (Anexo II).
+sincronização, apoio, navegação, janelas, avisos, listas, datas, seções, carrossel, arrastar e soltar, abertura, guia e
+a verificação do padrão (Anexo II).
 
-**Art. 28.** Os aplicativos usam as peças do Kit em vez de criar versões próprias.
+**Art. 28.** Os aplicativos usam as peças do Kit em vez de criar versões próprias, salvo o caso do Art. 30-A.
 
 **Art. 29.** Se uma solução de um aplicativo servir aos outros, ela vira padrão no Integrador, como proposta. Soluções
 divergentes sem motivo não são aceitas.
@@ -269,6 +273,12 @@ no CHANGELOG.
 **Parágrafo único.** O Claude de um Projeto de aplicativo não altera `comum/` só para aquele aplicativo; se o comum
 precisa mudar, escreve uma Proposta para o Integrador.
 
+**Art. 30-A.** Quando uma peça do Kit atrapalha a qualidade de um aplicativo, o aplicativo passa por cima dela, sem
+alterar a pasta `comum/`, e a solução vira Proposta para o Integrador, para entrar no Kit (Art. 29).
+
+**Parágrafo único.** Até o Kit absorver a solução, o README e o CHANGELOG do aplicativo dizem qual peça foi substituída
+e por quê.
+
 **Art. 31.** Aplicativo novo copia a pasta `comum/`, o modelo do `package.json`, do service worker e do README, entra
 na família do Kit e na regra do Firestore e monta a moldura, os Ajustes e a abertura deste Código (Anexo VII).
 
@@ -280,6 +290,11 @@ na família do Kit e na regra do Firestore e monta a moldura, os Ajustes e a abe
 
 **Art. 32.** Os dados ficam no aparelho, no armazenamento do navegador, com o prefixo do aplicativo. O aplicativo
 funciona sem conta e sem internet.
+
+**Art. 32-A.** Enquanto só o Bruno usa os aplicativos, não é preciso manter formatos antigos de dados: a versão nova
+pode trocar o formato sem migrar o que estava guardado.
+
+**Parágrafo único.** Quando houver outras pessoas usando, toda troca de formato vem com migração.
 
 **Art. 33.** A sincronização entre aparelhos é opcional e igual em todos os aplicativos (Anexo III):
 
@@ -413,18 +428,23 @@ texto, espaços, cantos, cores de estado e ícones comuns (Anexo II).
 
 **Art. 56.** Cada aplicativo muda apenas:
 
-I – a cor de destaque e os neutros tingidos por ela (Anexo I);
+I – a cor de destaque, a cor de começar (Art. 66) e os neutros tingidos por elas (Anexo I);
 
 II – a marca (ícone e nome);
 
 III – as guias próprias dos Ajustes;
 
-IV – opcionalmente, o tema de fábrica e uma fonte de caráter só nos títulos, na marca e nos números grandes.
+IV – opcionalmente, o tema de fábrica e uma fonte de caráter só nos títulos, na marca e nos números grandes;
+
+V – a ideia visual do aplicativo (no Conta Fácil, a comanda de papel), que pode ter fonte e cores próprias dentro
+desse elemento, mantidos o contraste AA e o modo escuro no resto da tela.
 
 **Parágrafo único.** Os três temas (Automático, Claro e Escuro) continuam disponíveis em todos os aplicativos.
 
 **Art. 57.** A mesma ideia tem o mesmo ícone em todos os aplicativos: controles deslizantes para Ajustes, presente para
 o apoio, nuvem para a sincronização e balão para a avaliação.
+
+**Parágrafo único.** Os ícones são desenhados num traço só: grade de 24, traço de 2 e pontas redondas (Anexo II).
 
 ### CAPÍTULO II — Da moldura
 
@@ -432,8 +452,7 @@ o apoio, nuvem para a sincronização e balão para a avaliação.
 
 I – à esquerda, a marca, com o ícone e o nome do aplicativo, visíveis também no celular;
 
-II – à direita, nesta ordem: nuvem, presente e balão; a nuvem e o balão com a mesma cor e o mesmo traço, e o presente
-colorido, do Kit (Art. 13, § 1º).
+II – à direita, nesta ordem: nuvem, presente e balão, os três em traço e na mesma cor (Art. 57, parágrafo único).
 
 § 1º Nas telas internas, a barra de cima tem só voltar, título, nuvem e balão.
 
@@ -441,16 +460,16 @@ colorido, do Kit (Art. 13, § 1º).
 
 § 3º O balão mostra um ponto quando há mensagem guardada à espera de envio.
 
-**Art. 59.** No celular e no tablet, a navegação é uma barra fixa embaixo; no computador, um trilho lateral com a marca
-e todas as seções.
+**Art. 59.** No celular e no tablet, a navegação é uma barra baixa, colada ao pé da tela; no computador, um trilho
+lateral com a marca e todas as seções.
 
-**Art. 60.** A barra de baixo tem no máximo 5 posições, sem encolher nem cortar nomes:
+**Art. 60.** A barra de baixo tem até 5 posições, sem encolher nem cortar nomes:
 
-I – com até 5 itens, todos aparecem;
+I – no centro, a ação principal do aplicativo (no Conta Fácil, a comanda);
 
-II – com mais, aparecem as 4 seções principais e "Mais", que lista o resto;
+II – na última posição, "Mais", que é uma tela com o que não cabe na barra e, por último, os Ajustes;
 
-III – Ajustes é sempre o último, da barra ou do "Mais"; no computador, fica no pé do trilho.
+III – no computador, os Ajustes ficam no pé do trilho.
 
 **Art. 61.** Barras e botões fixos do aplicativo ficam acima da navegação de baixo e, no computador, começam depois do
 trilho.
@@ -494,25 +513,35 @@ mudam.
 
 I – título grande, igual ao nome do item na navegação, com uma linha de apoio dizendo para que a tela serve;
 
-II – um só jeito de criar por lista, com verbo ou "Novo/Nova":
+II – um só jeito de criar, com verbo ou "Novo/Nova":
 
-a) com uma lista na tela, um botão de criar, que flutua acima da barra de baixo no celular e no tablet, sem cobrir o
-fim da lista, e fica no cabeçalho ou no topo da lista no computador;
+a) o objeto principal do aplicativo (comanda, orçamento, sessão, treino) nasce na tela inicial e no botão do centro
+da barra de baixo (Art. 60, I);
 
-b) com duas ou mais listas na mesma tela, sem botão flutuante: cada lista tem no fim a sua linha de adicionar
-("+ Pessoa", "+ Novo item"), e o item novo entra no fim da lista;
+b) nas outras listas, sem botão flutuante: cada lista tem no fim a sua linha de adicionar ("+ Pessoa", "+ Novo item"),
+e o item novo entra no fim da lista;
 
 III – lista vazia que explica o que aparece ali e o que fazer para começar.
 
 **Parágrafo único.** As ações das telas internas (⋯, editar) ficam na barra de baixo da tela.
 
+**Art. 64-A.** A interface é mínima e se explica sozinha. O aplicativo prevê os casos que podem acontecer (no Conta
+Fácil: valor pago a mais ou a menos, conta que muda depois de paga, pessoa que foi embora) e oferece o caminho para
+cada um.
+
+**Art. 64-B.** Cada função fica num lugar só: nada de botões, atalhos ou telas repetidas.
+
+**Art. 64-C.** O aplicativo não decide pela pessoa. Quando há mais de um caminho (quem entra num sorteio, quem cobre
+uma diferença), a escolha é dela, com um padrão marcado quando houver.
+
 ### CAPÍTULO V — Dos componentes
 
 **Art. 65.** Cada coisa tem um só jeito, igual em todos os aplicativos:
 
-I – trocar a parte de uma mesma tela: **guias do Kit**, sublinhadas na cor de destaque;
+I – trocar a parte de uma mesma tela com muitas partes: **guias do Kit**, sublinhadas na cor de destaque;
 
-II – filtrar uma lista ou escolher um valor: **segmento**, com o escolhido claro;
+II – filtrar uma lista, escolher um valor ou trocar entre poucas partes de uma tela: **segmento**, com o escolhido
+claro;
 
 III – escolher um item numa lista de dados: **lista suspensa** do Kit;
 
@@ -520,7 +549,7 @@ IV – marcar várias pessoas ou coisas: **lista de marcar**, uma linha por item
 
 V – resumo de valores: **lista vertical**, rótulo à esquerda e valor à direita;
 
-VI – grupos de dados: **seções que abrem e fecham**, uma embaixo da outra;
+VI – grupos de dados: **seções que abrem e fecham**, uma embaixo da outra (Art. 70);
 
 VII – aviso dentro da tela: **faixa** do Kit, com no máximo um botão, contornado;
 
@@ -535,40 +564,66 @@ pago" / "Desmarcar pago"), com "Desfazer" no aviso; a chave liga e desliga só a
 
 XI – juntar ou reordenar arrastando: **arrastar e soltar** do Kit, sempre com outro jeito sem arrastar (Art. 16, X).
 
-**Art. 66.** Há uma só cor de botão principal, a de destaque, para a ação principal da tela; os demais botões são
-contornados. Botões, segmentos e cartões seguem as medidas comuns do Kit (Anexo II).
+**Art. 66.** Os botões cheios têm duas cores, cada uma com o seu papel, e as duas com contraste AA:
+
+I – a de destaque (no Conta Fácil, verde), para a ação principal da tela;
+
+II – a de começar (no Conta Fácil, âmbar), para a ação que começa o trabalho (abrir, sortear).
+
+§ 1º Vermelho é só para excluir. Os demais botões são contornados.
+
+§ 2º Cada aplicativo define o seu par de cores (Anexo I). Botões, segmentos e cartões seguem as medidas comuns do Kit
+(Anexo II).
 
 **Art. 67.** Nada lado a lado: dados nunca ficam em vários cartões, chips ou quadrinhos lado a lado, em nenhuma
 largura de tela.
 
-**Parágrafo único.** Podem ficar lado a lado só os controles: segmento, botões de ação no pé e a área da barra de cima.
+**Parágrafo único.** Podem ficar lado a lado:
 
-**Art. 68.** Avisos rápidos e janelas são só os do Kit. Nenhum aplicativo tem aviso ou janela própria.
+I – os controles: segmento, botões de ação no pé e a área da barra de cima;
+
+II – as coleções para ver de relance (tiras, grades, pódios), que não são dados para comparar linha a linha.
+
+**Art. 68.** Avisos rápidos e janelas são os do Kit. Nenhum aplicativo tem aviso ou janela própria, salvo os momentos
+de marca do § 4º.
 
 § 1º Na janela, o título vem primeiro e a linha de apoio fica abaixo dele; acima do título, só um rótulo curto de
 contexto, quando houver.
 
 § 2º Com uma janela aberta, o aviso rápido aparece acima dos botões do pé dela.
 
+§ 3º Um mecanismo só cuida das janelas: nascer, acompanhar o teclado, mudar de altura e trocar uma janela por outra. O
+movimento é feito só com `transform`, num relógio só, sem transições de CSS de posição ou de altura; nada salta, some
+ou volta no caminho. Com o teclado aberto, o campo em foco fica à vista.
+
+§ 4º Momentos de marca (no Conta Fácil, a abertura e a festa de fechamento) podem ser telas cheias, com o foco preso,
+Esc e o leitor de tela tratados.
+
 **Art. 69.** Nenhum aplicativo mostra a lista de escolha, o calendário nem o relógio do sistema: usa os do Kit, iguais
 em todo aparelho.
 
 **Parágrafo único.** A exceção, campo a campo, exige justificativa no README.
 
-**Art. 70.** Seções que abrem e fecham usam a seção do Kit, sem botão "Próximo": a pessoa toca na seção que quer.
+**Art. 70.** Seções que abrem e fecham usam a seção do Kit, sem botão "Próximo": a pessoa toca na seção que quer. Abre
+uma linha por vez, e o título tocado fica sempre à vista, sem a tela saltar.
 
 **Art. 71.** Cadastro de item que pertence a uma categoria segue a ordem 1. Categoria, 2. Item; linhas que abrem
 alguma coisa têm a seta à direita.
 
 ### CAPÍTULO VI — Do movimento
 
-**Art. 72.** Tudo o que muda na tela se move com o movimento comum do Kit (Anexo V): menus, trocas de tela e de guia,
-seções, listas, calendário, janelas (inclusive quando mudam de lugar), avisos, carrossel, arrastar e soltar e o item
-novo de uma lista, que a tela mostra rolando até ele, se estiver fora da tela, e que pisca uma vez.
+**Art. 72.** Tudo o que abre, recolhe ou muda na tela tem movimento, com o movimento comum do Kit (Anexo V): menus,
+trocas de tela e de guia, seções, listas, calendário, janelas (inclusive quando mudam de lugar), avisos, carrossel,
+arrastar e soltar, todo trecho redesenhado e o item novo de uma lista, que a tela mostra rolando até ele, se estiver
+fora da tela, e que pisca uma vez.
 
 § 1º Quem pede movimento reduzido vê a troca direta.
 
-§ 2º O aplicativo não cria animação própria para essas situações.
+§ 2º O aplicativo pode ter animações próprias (momentos de marca, objetos em 3D, jogos), sempre respeitando o movimento
+reduzido.
+
+**Art. 72-A.** O aplicativo é fluido em todas as telas: nenhum tranco, salto ou corte ao abrir janelas, teclado,
+linhas ou chaves.
 
 ### CAPÍTULO VII — Da web e da responsividade
 
@@ -583,40 +638,31 @@ referência do Anexo VII, sem rolagem lateral.
 
 ### CAPÍTULO I — Da abertura
 
-**Art. 75.** Nenhum aplicativo tem tela de primeiro uso. Quem abre o aplicativo pela primeira vez já vê a tela inicial
-normal, com as listas vazias explicando como começar (Art. 64, III).
+**Art. 75.** Na primeira vez que o aplicativo abre, aparece a abertura: quatro telas, uma vez só, com "Pular" em
+todas, menos na última. Depois dela, a tela inicial explica, nas listas vazias, como começar (Art. 64, III).
 
-**Art. 76.** Toda vez que o aplicativo abre, aparece a janela do Kit com o nome do aplicativo, o que ele faz numa
-linha e três pontos, com os botões "Fazer o guia" e "Começar".
+§ 1º Quem diz o nome na abertura já recebe ali a primeira recompensa, se o aplicativo tiver recompensas.
 
-§ 1º Na primeira vez, a janela tem o título "Boas-vindas ao <aplicativo>", lembra que os dados ficam no aparelho e,
-se o aplicativo tiver exemplo, traz o botão do exemplo.
+§ 2º A abertura não volta sozinha; dá para revê-la nos Ajustes, na guia própria do aplicativo.
 
-§ 2º A pessoa pode desligar a janela na própria janela ("Mostrar esta apresentação ao abrir o app") ou em *Ajustes →
-Preferências gerais → Ao abrir o app*.
-
-§ 3º Na primeira abertura depois de uma atualização, a janela de novidades aparece no lugar dela, uma vez.
-
-§ 4º Ajuste que antes era pedido numa tela de primeiro uso começa com um valor padrão e se muda nos Ajustes.
+**Art. 76.** Não há janela a cada abertura do aplicativo. Ajuste que antes era pedido no primeiro uso começa com um
+valor padrão e se muda nos Ajustes.
 
 ### CAPÍTULO II — Do guia
 
-**Art. 77.** Todo aplicativo tem o guia interativo do Kit em dois níveis, mostrados em lista, só com o nome:
+**Art. 77.** Todo aplicativo tem um guia só, do começo ao fim, com os passos na ordem de uso.
 
-I – **Simplificado**: poucos passos, só com destaque;
+**Art. 78.** No guia:
 
-II – **Completo**: o aplicativo faz cada ação na tela, ao vivo, numa demonstração que não salva nada.
-
-**Art. 78.** No guia completo:
-
-I – a pessoa lê o passo antes, e a ação só começa quando ela toca em "Mostrar";
+I – cada passo executa a função de verdade, numa demonstração que não grava nada, e mostra só o que precisa;
 
 II – o ritmo é calmo, com um dedo que se move até o alvo e toca;
 
 III – todo passo tem ação, inclusive a troca de tela, feita tocando na barra, como a pessoa faria.
 
-**Art. 79.** O destaque do guia aponta partes pequenas da tela (campo, botão, cabeçalho), acompanha a rolagem sem
-atraso, fica acima das janelas abertas pelo guia, e o cartão do guia nunca cobre o destaque.
+**Art. 79.** O texto do guia fica numa janela fixa, num espaço só dela, acima da barra de baixo, que não cobre o
+conteúdo nem muda de lugar. O destaque aponta partes pequenas da tela (campo, botão, cabeçalho), acompanha a rolagem
+sem atraso e fica acima das janelas abertas pelo guia.
 
 **Art. 80.** Função nova entra no guia na mesma versão.
 
@@ -626,20 +672,22 @@ atraso, fica acima das janelas abertas pelo guia, e o cartão do guia nunca cobr
 
 **Art. 81.** Este Título vale no Integrador e em todos os Projetos dos aplicativos.
 
-**Art. 82.** **Perguntar antes de presumir.** Sempre que houver dúvida, lacuna ou ambiguidade no pedido, nas regras ou
-no código, o Claude pergunta antes de seguir, de forma objetiva e com opções quando possível.
+**Art. 82.** **Decidir desenho e texto; perguntar o resto.** O Claude decide o desenho e os textos dos aplicativos e
+relata o que decidiu. Pergunta antes de seguir só quando a decisão custa dinheiro, não tem volta ou muda uma regra, e
+quando há dúvida, lacuna ou ambiguidade no pedido, nas regras ou no código; pergunta de forma objetiva e com opções
+quando possível.
 
-**Parágrafo único.** Só segue sem perguntar quando o Bruno não está presente (tarefa agendada ou sem resposta): aí toma
-a leitura mais razoável, diz qual foi e registra a dúvida.
+**Parágrafo único.** Sem o Bruno presente (tarefa agendada ou sem resposta), toma a leitura mais razoável, diz qual
+foi e registra a dúvida; decisão sem volta fica preparada, à espera dele.
 
 **Art. 83.** **Reportar e propor sempre.** O Claude informa os erros que encontrar, mesmo fora do que foi pedido, e
 propõe melhorias de qualquer espécie: design e experiência de uso, funções novas, melhorias das existentes, código,
 segurança e textos.
 
-**Parágrafo único.** As propostas vêm separadas do que foi feito, no fim da entrega, e só são aplicadas com o "sim" do
-Bruno.
+**Parágrafo único.** As propostas vêm separadas do que foi feito, no fim da entrega. As de desenho e de texto o Claude
+aplica e relata (Art. 82); as demais só são aplicadas com o "sim" do Bruno.
 
-**Art. 84.** **Opções com imagem.** Sempre que o Bruno precisar escolher entre opções, cada opção vem com um desenho de
+**Art. 84.** **Opções com imagem.** Sempre que o Bruno precisar escolher entre opções (Art. 82), cada opção vem com um desenho de
 verdade que a represente: maquete da tela, ícone, esquema, diagrama ou comparação ilustrada.
 
 § 1º O desenho é feito com a ferramenta de visual da conversa (ou, sem ela, um artefato), em cartões lado a lado, um
@@ -654,19 +702,19 @@ pergunta como se fosse a imagem.
 § 4º Quando a opção não é de tela, o desenho mostra o efeito de cada uma: fluxo, antes e depois ou quadro comparativo.
 
 **Art. 85.** **Revisar a redação.** Sempre que for oportuno, ao mexer numa tela, num guia, num aviso ou num documento,
-o Claude revisa os textos que encontrar e propõe redações mais claras, concisas e precisas, com o texto atual e a
-alternativa lado a lado.
+o Claude revisa os textos que encontrar e aplica redações mais claras, concisas e precisas (Art. 82).
 
-**Parágrafo único.** Como toda proposta, só entra com o "sim" do Bruno; erro de texto que o próprio Claude acabou de
-introduzir é corrigido na hora e informado.
+**Parágrafo único.** O relato mostra o texto antigo e o novo lado a lado. Texto que muda uma regra (Código, Regras do
+aplicativo, termos de uso e política de privacidade) só muda com o "sim" do Bruno.
 
 **Art. 86.** **Professor.** O Claude ensina algo novo em linguagem simples, explicando cada termo técnico no ponto do
 texto em que ele aparece. Dá dicas de como usar melhor o Claude e aponta os maus hábitos do Bruno, com a mudança
 sugerida.
 
 **Art. 87.** **Orientador.** O Claude não executa o pedido de forma automática: analisa se ele é pertinente e se há um
-caminho melhor. Quando há, para antes de executar e mostra o pedido como veio e a alternativa, com desenho (Art. 84).
-Só segue com o "sim".
+caminho melhor. Quando há e a escolha custa dinheiro, não tem volta ou muda uma regra, para antes de executar e mostra
+o pedido como veio e a alternativa, com desenho (Art. 84), e só segue com o "sim"; nos demais casos, segue pelo
+caminho melhor e relata.
 
 **Parágrafo único.** Sem o Bruno presente, executa o pedido como veio e registra a alternativa (Art. 82, parágrafo
 único).
@@ -700,16 +748,19 @@ para o Projeto daquele aplicativo ou vira proposta de padrão, se servir aos out
 
 ## TÍTULO IX — DISPOSIÇÕES FINAIS E TRANSITÓRIAS
 
-**Art. 93.** A revisão dos aplicativos é feita um por vez. Até a vez de cada aplicativo, pode ainda haver nele:
+**Art. 93.** O Conta Fácil é a referência do Projeto Fácil (decisão do Bruno, de 14/11/2026): o que foi decidido nele é
+regra, não exceção. Na dúvida sobre como cumprir este Código, faz-se como no Conta Fácil.
 
-I – dados lado a lado (Art. 67);
+§ 1º Até o Kit 0.7.0 trazer as peças do Conta Fácil (Anexo II, Peças a levar ao Kit), o Conta Fácil usa as suas
+próprias, e a verificação do padrão pode acusar nele as diferenças da navegação e da barra de cima.
 
-II – o guia em três níveis (Essencial, Exploração e Completo), no lugar dos dois níveis do Art. 77.
-
-**Parágrafo único.** O Conta Fácil já cumpre os dois. Na vez de cada aplicativo, o que restar é trocado.
+§ 2º A revisão dos outros aplicativos é feita um por vez. Até a vez de cada um, pode ainda haver nele o que este
+Código trocou: dados lado a lado, o guia em dois ou três níveis, a janela a cada abertura, o presente colorido, a
+navegação antiga e uma só cor de botão. Na vez de cada aplicativo, ele passa a seguir o Conta Fácil e sobe para
+1.0.0 (Art. 22, § 2º).
 
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 12/11/2026 como rascunho (versão 0.5). Regras e textos anteriores (Leis Globais,
-Padrão, Código 3.x, Código 0.4) são histórico.
+**Art. 95.** Este Código vale desde 14/11/2026 como rascunho (versão 0.6). Regras e textos anteriores (Leis Globais,
+Padrão, Código 3.x, Códigos 0.4 e 0.5) são histórico.
