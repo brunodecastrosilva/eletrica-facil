@@ -4,7 +4,8 @@
    O que é próprio da lâmpada: o vidro é transparente (desenhado depois do resto, primeiro o lado de trás), o filamento
    tem a forma do ícone da conquista e, acesa, ele brilha e enche o vidro de luz.
    Quem pede movimento reduzido vê a lâmpada parada: ela só gira com o dedo ou com as setas.
-   Tudo fica em Lampada: html({ icone, nome, acesa, D }), girar(raiz, { auto, inicio, apagada }) -> { peteleco, acender, angulo }.
+   Tudo fica em Lampada: html({ icone, nome, acesa, D }), girar(raiz, { auto, inicio, apagada }) -> { peteleco, acender, angulo }
+   e miniatura(canvas, { icone, acesa }), que desenha a mesma lâmpada, parada, para o varal.
    Peça própria do app (o motor 3D do Kit só conhece a tampinha e o presente): Proposta para o Integrador (Art. 30-A). */
 'use strict';
 const Lampada = (() => {
@@ -78,9 +79,13 @@ const Lampada = (() => {
     const linhas = linhasDoIcone(o._icone || ''), pt = ([x, y]) => [(x - 12) * ESC, CY - (y - 12) * ESC, 0];
     const corFil = apagada ? [0.42, 0.42, 0.42] : [0.95, 0.7, 0.2];
     let esq = null, dir = null;
-    for (const L of linhas) { const P = L.map(pt); tubo(M, P, 0.027, { cor: corFil, mat: FIL }); for (const p of P) { if (p[0] <= 0 && (!esq || p[1] > esq[1])) esq = p; if (p[0] >= 0 && (!dir || p[1] > dir[1])) dir = p; } }
+    const fios = [];
+    for (const L of linhas) { const P = L.map(pt); fios.push(P); tubo(M, P, 0.027, { cor: corFil, mat: FIL }, 9); for (const p of P) { if (p[0] <= 0 && (!esq || p[1] > esq[1])) esq = p; if (p[0] >= 0 && (!dir || p[1] > dir[1])) dir = p; } }
     // duas hastes finas de metal, da haste até o ponto mais alto do ícone de cada lado
     for (const [p, s] of [[esq, -1], [dir, 1]]) if (p) tubo(M, [[s * 0.03, 0.11, 0], [s * 0.05, (0.11 + p[1]) / 2 + 0.04, 0], [p[0], p[1], 0]], 0.0075, { cor: [0.6, 0.6, 0.58], mat: METAL }, 5);
+    // o clarão do filamento: um tubo largo em volta de cada linha, somado à imagem só quando a lâmpada está acesa
+    M.brilho = M.i.length;
+    for (const P of fios) for (const r of [0.06, 0.125]) tubo(M, P, r, { cor: [1, 1, 1], mat: [0, 1, 0, 0] }, 10);
     // o vidro: bulbo e pescoço num perfil só, de baixo para cima
     M.vidro = M.i.length;
     const perfil = [], T0 = 130 * Math.PI / 180;
@@ -111,33 +116,39 @@ const Lampada = (() => {
   vec3 R=reflect(-V,N);float ceu=smoothstep(-.3,.9,R.y);float faixa=smoothstep(.35,.62,R.y)*(1.-smoothstep(.7,.98,R.y));
   float fr=pow(1.-max(dot(N,V),0.),3.);
   vec3 LUZ=vec3(1.,.8,.24);
+  if(uVidro>1.5){float a=pow(max(dot(N,V),0.),2.6)*.2*uAceso;gl_FragColor=vec4(vec3(1.,.68,.2),a);return;}
   if(uVidro>.5){
-    vec3 tinta=mix(vec3(.84,.89,.92),LUZ,uAceso*.9);
-    float cheio=uAceso*(.13+.13*(1.-fr));
-    vec3 cor=tinta*(.72+.28*d1)+vec3(sp)+faixa*.3+uAceso*vec3(.42,.3,.06);
-    float alfa=clamp(.06+.5*fr+cheio+sp*.9+faixa*.28,0.,.96);
+    vec3 tinta=mix(vec3(.84,.89,.92),vec3(1.,.87,.56),uAceso);
+    vec3 cor=tinta*(.74+.26*d1)+vec3(sp)+faixa*.3+uAceso*vec3(.3,.2,.04)*fr;
+    float alfa=clamp(.05+.52*fr+uAceso*(.05+.2*fr)+sp*.9+faixa*.26,0.,.95);
     gl_FragColor=vec4(clamp(cor,0.,1.),alfa);return;}
   vec3 amb=mix(vec3(.34,.35,.36),vec3(.58,.6,.62),N.y*.5+.5);
   vec3 cor=vC*(amb+d1*.72+d2*.2+d3*.12)+vec3(sp)+vM.z*mix(vC,vec3(1.),.55)*(ceu*.42+faixa*.7-.22)+fr*.07;
-  cor=mix(cor,vec3(1.,.97,.8),vM.w*uAceso);
-  cor+=(1.-vM.w)*uAceso*LUZ*.16*(1.-smoothstep(.1,.75,vPo.y));
+  cor=mix(cor,mix(vec3(1.,.8,.36),vec3(1.,.97,.8),pow(max(dot(N,V),0.),1.5)),vM.w*uAceso);
+  cor+=(1.-vM.w)*uAceso*LUZ*.24*(1.-smoothstep(.05,.8,vPo.y));
   gl_FragColor=vec4(clamp(cor,0.,1.),1.);}`;
-  let GL = null; // { cv, gl, loc } · false quando o aparelho não tem WebGL
-  function gl3() {
-    if (GL !== null) return GL || null;
+  // dois desenhistas: um para a lâmpada que gira (GL) e outro para as miniaturas do varal (GLM); false quando não há WebGL
+  let GL = null, GLM = null;
+  function criaGL() {
     try {
       const cv = document.createElement('canvas'), gl = cv.getContext('webgl', { antialias: true, alpha: true, preserveDrawingBuffer: true });
-      if (!gl) { GL = false; return null; }
-      const sh = (tipo, src) => { const s = gl.createShader(tipo); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+      if (!gl) return false;
+      const sh = (tipo, src) => { const x = gl.createShader(tipo); gl.shaderSource(x, src); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
       const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(pr);
       if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
       gl.useProgram(pr);
       const loc = {}; ['aP', 'aN', 'aC', 'aM'].forEach(a => { loc[a] = gl.getAttribLocation(pr, a); }); ['uMVP', 'uMV', 'uAceso', 'uVidro'].forEach(u => { loc[u] = gl.getUniformLocation(pr, u); });
       cv.setAttribute('aria-hidden', 'true');
-      cv.addEventListener('webglcontextlost', e => { e.preventDefault(); GL = null; }); // se o sistema tomar o contexto, o próximo giro monta outro
-      GL = { cv, gl, loc, cena: null };
-      return GL;
-    } catch (x) { console.warn('3d', x); GL = false; return null; }
+      return { cv, gl, loc, cena: null };
+    } catch (x) { console.warn('3d', x); return false; }
+  }
+  function gl3() {
+    if (GL === null) { GL = criaGL(); if (GL) GL.cv.addEventListener('webglcontextlost', e => { e.preventDefault(); GL = null; }); } // se o sistema tomar o contexto, o próximo giro monta outro
+    return GL || null;
+  }
+  function glMini() {
+    if (GLM === null) { GLM = criaGL(); if (GLM) GLM.cv.addEventListener('webglcontextlost', e => { e.preventDefault(); GLM = null; minis.clear(); }); }
+    return GLM || null;
   }
   // põe a malha na placa de vídeo (uma cena por vez: só há uma lâmpada 3D na tela)
   function glCena(G, cena) {
@@ -158,9 +169,12 @@ const Lampada = (() => {
     gl.uniform1f(loc.uAceso, luz);
     // o que é opaco primeiro
     gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE); gl.depthMask(true); gl.uniform1f(loc.uVidro, 0);
-    gl.drawElements(gl.TRIANGLES, M.vidro, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, M.brilho, gl.UNSIGNED_SHORT, 0);
+    // o clarão em volta do filamento: soma luz, sem esconder nada
+    gl.enable(gl.BLEND); gl.depthMask(false);
+    if (luz > 0.01) { gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.uniform1f(loc.uVidro, 2); gl.drawElements(gl.TRIANGLES, M.vidro - M.brilho, gl.UNSIGNED_SHORT, M.brilho * 2); }
     // depois o vidro, sem esconder o que está dentro: o lado de trás e, por cima, o lado da frente
-    gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); gl.enable(gl.CULL_FACE); gl.uniform1f(loc.uVidro, 1);
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.enable(gl.CULL_FACE); gl.uniform1f(loc.uVidro, 1);
     for (const lado of [gl.FRONT, gl.BACK]) { gl.cullFace(lado); gl.drawElements(gl.TRIANGLES, M.i.length - M.vidro, gl.UNSIGNED_SHORT, M.vidro * 2); }
     gl.depthMask(true); gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE);
   }
@@ -230,10 +244,27 @@ const Lampada = (() => {
     const acender = (dur = 1100) => { if (quieto) { luz = 1; o.classList.add('acesa'); pintar(); return; } acende = { t: 0, dur }; andar(); };
     return { girar: v => { sozinho = false; vel = v; andar(); }, peteleco, acender, angulo: () => ang, luz: () => luz };
   }
+  /* miniatura: a mesma lâmpada 3D, desenhada uma vez num canvas pequeno (o varal mostra as 18). Guardadas por ícone,
+     estado e tamanho; devolve false sem WebGL, e o varal fica com o desenho de traço. */
+  const minis = new Map();
+  function miniatura(cv, { icone = 'lampada', acesa = false, ang = -0.42 } = {}) {
+    const G = glMini(); if (!G) return false;
+    const dpr = Math.min(3, window.devicePixelRatio || 1), w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr); if (!w || !h) return false;
+    const chave = `${icone}:${acesa ? 1 : 0}:${w}x${h}`;
+    let img = minis.get(chave);
+    if (!img) {
+      const o = { dataset: acesa ? { acesa: '1' } : {}, _icone: (typeof LP_IC !== 'undefined' && LP_IC[icone]) || '' };
+      G.cv.width = w; G.cv.height = h; glPintar(G, malhaLampada(o), ang, acesa ? 1 : 0);
+      img = document.createElement('canvas'); img.width = w; img.height = h; img.getContext('2d').drawImage(G.cv, 0, 0);
+      minis.set(chave, img);
+    }
+    cv.width = w; cv.height = h; cv.getContext('2d').drawImage(img, 0, 0);
+    return true;
+  }
   // a lâmpada em 3D: o desenho entra quando girar() liga
   function html({ icone = 'lampada', nome = '', acesa = false, D = 200 } = {}) {
     const esc = KitFacil.esc;
     return `<div class="ef-o3d${acesa ? ' acesa' : ''}" data-ic="${esc(icone)}" ${acesa ? 'data-acesa="1"' : ''} tabindex="0" role="img" aria-label="Lâmpada ${esc(nome)}, ${acesa ? 'acesa' : 'apagada'}. Deslize o dedo ou use as setas para girar." style="width:${D}px;height:${Math.round(D * 1.16)}px"><span class="ef-o3d-halo" aria-hidden="true"></span><canvas aria-hidden="true"></canvas></div>`;
   }
-  return { html, girar, _malha: malhaLampada };
+  return { html, girar, miniatura, _malha: malhaLampada };
 })();

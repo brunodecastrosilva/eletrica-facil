@@ -20,44 +20,46 @@ function nivelDe(xp) {
 
 /* ---------- as lâmpadas do varal: o filamento de cada uma tem a forma do ícone da conquista ---------- */
 const LP_IC = {
+  // desenhados para serem filamento: poucas linhas, grossas e contínuas, ocupando a grade de 24 inteira
   lampada: '<path d="M9 17.500h6M10 20.500h4"/><path d="M12 3.500a6 6 0 0 0-3.500 10.900c.600.500 1 1.200 1 2v1.100h5v-1.100c0-.800.400-1.500 1-2A6 6 0 0 0 12 3.500z"/>',
-  folha: '<path d="M7 3.500h7l4 4v13H7z"/><path d="M14 3.500v4h4M10 12.500h5M10 16.500h5"/>',
-  enviar: '<path d="M20.500 3.500 3.500 10.500l6.500 3 3 6.500z"/><path d="m10 13.500 4.500-4"/>',
-  aperto: '<path d="m4.500 12.500 4.500 4.500 10.500-11"/>',
-  chave: '<path d="M14.700 6.300a1 1 0 0 0 0 1.400l1.600 1.600a1 1 0 0 0 1.400 0l3.800-3.800a6 6 0 0 1-7.900 7.900l-6.900 6.900a2.100 2.100 0 0 1-3-3l6.900-6.900a6 6 0 0 1 7.900-7.900z"/>',
-  moeda: '<circle cx="12" cy="12" r="8.500"/><path d="M14.500 9.500c-.500-1-1.500-1.500-2.500-1.500-1.500 0-2.500.900-2.500 2s1 1.700 2.500 2 2.500.900 2.500 2-1 2-2.500 2c-1 0-2-.500-2.500-1.500M12 6.500V8M12 16v1.500"/>',
-  pix: '<path d="m12 3.500 8.500 8.500-8.500 8.500-8.500-8.500z"/><path d="m8.500 12 3.500-3.500 3.500 3.500-3.500 3.500z"/>',
-  etiqueta: '<path d="M3.500 12V4.500h7.500l9.500 9.500-7.500 7.500z"/><circle cx="7.500" cy="8.500" r="1.300"/>',
-  casa: '<path d="M4 11 12 4.500 20 11v8.500H4z"/><path d="M12 11v8.500M4 14.500h16"/>',
-  carro: '<path d="M5 16v-5l2-5h10l2 5v5"/><path d="M3.500 16h17v3h-17zM7.500 19v1.500M16.500 19v1.500"/>',
-  prancheta: '<rect x="5" y="4.500" width="14" height="16" rx="2"/><path d="M9 4.500V3.500h6v1M8.500 10h7M8.500 13.500h7M8.500 17h4"/>',
-  caixa: '<path d="m3.500 7.500 8.500-4 8.500 4-8.500 4z"/><path d="M3.500 7.500V16.500l8.500 4 8.500-4V7.500M12 11.500v9"/>',
-  maleta: '<rect x="3.500" y="7.500" width="17" height="12" rx="2"/><path d="M9 7.500V5h6v2.500M3.500 12.500h17"/>',
-  lista: '<path d="M10 6.500h10M10 12h10M10 17.500h10"/><path d="m3.500 6.500 1.500 1.500 2.500-2.500M3.500 12l1.500 1.500L7.500 11M3.500 17.500 5 19l2.500-2.500"/>',
-  nuvem: '<path d="M7 18.500a4.300 4.300 0 0 1-.600-8.500 5.800 5.800 0 0 1 11.200-1.300A4.500 4.500 0 0 1 17.500 18.500z"/>',
-  agenda: '<rect x="3.500" y="5" width="17" height="15.500" rx="2"/><path d="M3.500 10h17M8 3.500v3M16 3.500v3M8 14h3M8 17h6"/>',
-  livro: '<path d="M4 5.500c2.500-1 5-1 8 .500 3-1.500 5.500-1.500 8-.500v13c-2.500-1-5-1-8 .500-3-1.500-5.500-1.500-8-.500z"/><path d="M12 6v13"/>',
-  volta: '<path d="M4.500 12a7.500 7.500 0 0 1 13-5.200L19.500 9"/><path d="M19.500 4.500V9H15M19.500 12a7.500 7.500 0 0 1-13 5.200L4.500 15"/><path d="M4.500 19.500V15H9"/>',
+  pessoa: '<circle cx="12" cy="8" r="4.300"/><path d="M3.800 20.800a8.200 8.200 0 0 1 16.400 0"/>',
+  prancheta: '<rect x="4.500" y="5" width="15" height="16" rx="2.500"/><path d="M8.800 5V3h6.400v2"/><path d="M8.500 11h7M8.500 15.500h4.500"/>',
+  enviar: '<path d="M21 3 3 10.200l7.200 3.600 3.600 7.200z"/><path d="M10.200 13.800 21 3"/>',
+  visto: '<path d="m3.500 12.800 5.700 5.700L20.500 6"/>',
+  raio: '<path d="M13.800 2.500 4.200 13.800h6.900l-1.300 7.700 10-11.800h-6.900z"/>',
+  moeda: '<circle cx="12" cy="12" r="9"/><path d="M15.200 9.300c-.500-1.300-1.700-2-3.200-2-1.800 0-3.200 1-3.200 2.400s1.300 2 3.200 2.300 3.200 1 3.200 2.400-1.400 2.400-3.200 2.400c-1.500 0-2.700-.700-3.200-2"/><path d="M12 5.300v2M12 16.800v1.900"/>',
+  qr: '<rect x="3.500" y="3.500" width="7" height="7" rx="1.500"/><rect x="13.500" y="3.500" width="7" height="7" rx="1.500"/><rect x="3.500" y="13.500" width="7" height="7" rx="1.500"/><path d="M13.500 13.500h3.200v3.200h-3.200z"/><path d="M20.500 17.200v3.300h-3.300"/>',
+  etiqueta: '<path d="M3.500 12.500V4h8.500l8.500 8.500-8 8z"/><circle cx="8.200" cy="8.700" r="1.500"/>',
+  casa: '<path d="M2.800 11.500 12 3.500l9.200 8"/><path d="M5.200 9.800V20.500h13.600V9.800"/><path d="M9.800 20.500v-6h4.400v6"/>',
+  pino: '<path d="M12 21.500s-7-6.300-7-11.800a7 7 0 0 1 14 0c0 5.500-7 11.800-7 11.800z"/><circle cx="12" cy="9.700" r="2.600"/>',
+  laudo: '<path d="M6 3h8l4.500 4.500V21H6z"/><path d="m9.200 14.200 2.300 2.300 3.800-4.500"/>',
+  caixa: '<path d="m3 7.500 9-4.300 9 4.300-9 4.300z"/><path d="M3 7.500v9.200l9 4.300 9-4.300V7.500"/><path d="M12 11.800V21"/>',
+  maleta: '<rect x="3" y="8" width="18" height="12" rx="2.500"/><path d="M8.800 8V5.200h6.400V8"/><path d="M3 13.200h18"/>',
+  caixaVisto: '<rect x="3.500" y="3.500" width="17" height="17" rx="3.500"/><path d="m7.800 12.300 3 3 5.400-6.300"/>',
+  nuvem: '<path d="M7 19a4.700 4.700 0 0 1-.700-9.350A6.300 6.300 0 0 1 18.400 8.800 5.100 5.100 0 0 1 17.500 19z"/>',
+  coracao: '<path d="M12 20.800s-8.500-5-8.500-11.100A4.700 4.700 0 0 1 12 7a4.700 4.700 0 0 1 8.500 2.700c0 6.100-8.500 11.100-8.500 11.100z"/>',
+  estrela: '<path d="m12 2.800 2.800 5.800 6.400.900-4.600 4.500 1.100 6.300L12 17.300l-5.700 3 1.100-6.300L2.800 9.500l6.400-.900z"/>',
+  livro: '<path d="M3 5.500c3.200-1.100 6-.800 9 .800 3-1.600 5.800-1.900 9-.800v13.300c-3.200-1.100-6-.800-9 .800-3-1.600-5.800-1.900-9-.800z"/><path d="M12 6.300v13.300"/>',
 };
 // ok(s): já acendeu? prog(s): [feito, meta] para mostrar o caminho
 const CONQUISTAS = [
-  { id: 'luz', nome: 'Primeira luz', etq: 'Seu nome', ic: 'lampada', como: 'Diga como você assina os seus orçamentos, na apresentação ou em Ajustes.', ok: s => s.eu },
-  { id: 'primeiro', nome: 'Primeiro orçamento', etq: 'Orçamento', ic: 'folha', como: 'Monte o primeiro orçamento com pelo menos um item.', ok: s => s.comItens >= 1 },
+  { id: 'luz', nome: 'Primeira luz', etq: 'Seu nome', ic: 'pessoa', como: 'Diga como você assina os seus orçamentos, na apresentação ou em Ajustes.', ok: s => s.eu },
+  { id: 'primeiro', nome: 'Primeiro orçamento', etq: 'Orçamento', ic: 'prancheta', como: 'Monte o primeiro orçamento com pelo menos um item.', ok: s => s.comItens >= 1 },
   { id: 'enviado', nome: 'Na mão do cliente', etq: 'Enviado', ic: 'enviar', como: 'Envie uma proposta ao cliente, em PDF ou pelo WhatsApp.', ok: s => s.enviados >= 1 },
-  { id: 'aprovado', nome: 'Fechado', etq: 'Aprovado', ic: 'aperto', como: 'Marque o primeiro orçamento aprovado pelo cliente.', ok: s => s.aprovados >= 1 },
-  { id: 'concluido', nome: 'Serviço entregue', etq: 'Concluído', ic: 'chave', como: 'Conclua o primeiro serviço.', ok: s => s.concluidos >= 1 },
+  { id: 'aprovado', nome: 'Fechado', etq: 'Aprovado', ic: 'visto', como: 'Marque o primeiro orçamento aprovado pelo cliente.', ok: s => s.aprovados >= 1 },
+  { id: 'concluido', nome: 'Serviço entregue', etq: 'Concluído', ic: 'raio', como: 'Conclua o primeiro serviço.', ok: s => s.concluidos >= 1 },
   { id: 'quitado', nome: 'Conta acertada', etq: 'Recebido', ic: 'moeda', como: 'Registre o recebimento total de um serviço concluído.', ok: s => s.quitados >= 1 },
-  { id: 'pix', nome: 'Pix na proposta', etq: 'Chave Pix', ic: 'pix', como: 'Cadastre a sua chave Pix em Ajustes. Ela sai na proposta com QR code.', ok: s => s.pix },
+  { id: 'pix', nome: 'Pix na proposta', etq: 'Chave Pix', ic: 'qr', como: 'Cadastre a sua chave Pix em Ajustes. Ela sai na proposta com QR code.', ok: s => s.pix },
   { id: 'precos', nome: 'Tabela com a sua cara', etq: 'Preços', ic: 'etiqueta', como: 'Ajuste 10 preços da tabela aos seus valores.', ok: s => s.precos >= 10, prog: s => [Math.min(10, s.precos), 10] },
   { id: 'ambientes', nome: 'Casa dividida', etq: 'Ambientes', ic: 'casa', como: 'Separe um orçamento por ambientes, com dois ou mais.', ok: s => s.ambientes >= 1 },
-  { id: 'estrada', nome: 'Na estrada', etq: 'Estrada', ic: 'carro', como: 'Calcule o deslocamento de um orçamento pela distância e o combustível.', ok: s => s.viagens >= 1 },
-  { id: 'relatorio', nome: 'Serviço documentado', etq: 'Relatório', ic: 'prancheta', como: 'Preencha o relatório de um serviço concluído, com o que foi feito e os testes.', ok: s => s.relatorios >= 1 },
+  { id: 'estrada', nome: 'Na estrada', etq: 'Estrada', ic: 'pino', como: 'Calcule o deslocamento de um orçamento pela distância e o combustível.', ok: s => s.viagens >= 1 },
+  { id: 'relatorio', nome: 'Serviço documentado', etq: 'Relatório', ic: 'laudo', como: 'Preencha o relatório de um serviço concluído, com o que foi feito e os testes.', ok: s => s.relatorios >= 1 },
   { id: 'estoque', nome: 'Estoque em dia', etq: 'Materiais', ic: 'caixa', como: 'Registre a quantidade de 5 materiais que você tem guardados.', ok: s => s.estoque >= 5, prog: s => [Math.min(5, s.estoque), 5] },
   { id: 'maleta', nome: 'Maleta conferida', etq: 'Maleta', ic: 'maleta', como: 'Marque 10 ferramentas em Minhas ferramentas.', ok: s => s.ferramentas >= 10, prog: s => [Math.min(10, s.ferramentas), 10] },
-  { id: 'checklist', nome: 'Nada esquecido', etq: 'Checklist', ic: 'lista', como: 'Monte o seu checklist de ida e volta da obra, com 5 itens.', ok: s => s.checklist >= 5, prog: s => [Math.min(5, s.checklist), 5] },
+  { id: 'checklist', nome: 'Nada esquecido', etq: 'Checklist', ic: 'caixaVisto', como: 'Monte o seu checklist de ida e volta da obra, com 5 itens.', ok: s => s.checklist >= 5, prog: s => [Math.min(5, s.checklist), 5] },
   { id: 'nuvem', nome: 'À prova de queda', etq: 'Cópia', ic: 'nuvem', como: 'Ligue a sincronização ou baixe uma cópia de segurança dos seus dados.', ok: s => s.sync || !!s.flags.copia },
-  { id: 'volta', nome: 'Cliente que volta', etq: 'De novo', ic: 'volta', como: 'Tenha dois orçamentos aprovados para o mesmo cliente.', ok: s => s.voltou },
-  { id: 'dez', nome: 'Agenda cheia', etq: '10 feitos', ic: 'agenda', como: 'Conclua 10 serviços.', ok: s => s.concluidos >= 10, prog: s => [Math.min(10, s.concluidos), 10] },
+  { id: 'volta', nome: 'Cliente que volta', etq: 'De novo', ic: 'coracao', como: 'Tenha dois orçamentos aprovados para o mesmo cliente.', ok: s => s.voltou },
+  { id: 'dez', nome: 'Agenda cheia', etq: '10 feitos', ic: 'estrela', como: 'Conclua 10 serviços.', ok: s => s.concluidos >= 10, prog: s => [Math.min(10, s.concluidos), 10] },
   { id: 'guia', nome: 'Leu o manual', etq: 'Guia', ic: 'livro', como: 'Veja o guia do app até o fim.', ok: s => !!s.flags.guia },
 ];
 
@@ -97,6 +99,18 @@ function lampSVG(c, { acesa = false } = {}) {
     <path class="lp-vidro" d="M24 26c0 5-4.500 7-9 11.500a20.500 20.500 0 1 0 30 0C40.500 33 36 31 36 26z"/>
     <path class="lp-brilho" d="M17.500 46a13.500 13.500 0 0 1 6-7.500"/>
     <g class="lp-ic" transform="translate(19 41) scale(.917)">${LP_IC[c.ic] || LP_IC.lampada}</g></svg>`;
+}
+// a lâmpada pendurada no varal: a miniatura em 3D por cima e, por baixo, o desenho de traço (que vale sem WebGL)
+const lampPendHTML = (c, { acesa = false } = {}) => `<span class="lp-pend"><canvas class="lp-mini" data-ic="${c.ic}" ${acesa ? 'data-acesa="1"' : ''} aria-hidden="true"></canvas>${lampSVG(c, { acesa })}</span>`;
+// desenha as miniaturas que ainda faltam, poucas por quadro, para a tela não engasgar
+function lpPintarMinis(raiz) {
+  const fila = $$('.lp-mini:not([data-ok])', raiz); let k = 0;
+  const passo = () => {
+    for (let n = 0; n < 3 && k < fila.length; n++, k++) { const cv = fila[k]; if (!cv.isConnected) continue; cv.dataset.ok = '1';
+      if (Lampada.miniatura(cv, { icone: cv.dataset.ic, acesa: !!cv.dataset.acesa })) cv.parentElement.classList.add('lp-3d'); else return; }
+    if (k < fila.length) requestAnimationFrame(passo);
+  };
+  if (fila.length) requestAnimationFrame(passo);
 }
 // a lâmpada em 3D (ficha e lâmpada nova): gira com o dedo; o motor fica em lampada.js
 const lamp3dHTML = (c, { acesa = false, D = 200 } = {}) => Lampada.html({ icone: c.ic, nome: c.nome, acesa, D });
@@ -158,11 +172,11 @@ VIEWS.conquistas = {
           <span class="hint">${nivelTexto(s)} · ${plural(s.xp, 'ponto', 'pontos')}</span></div></section>
       <section class="varal" aria-labelledby="varal-t">
         <div class="varal-topo"><h2 id="varal-t">Seu varal</h2><span class="varal-n">${s.ganhas.length} de ${CONQUISTAS.length} acesas</span></div>
-        <div class="varal-fio">${CONQUISTAS.map(c => { const tem = s.ganhas.includes(c.id);
-          return `<button type="button" class="lp-btn ${tem ? 'on' : 'off'}" data-lp="${c.id}" aria-label="${esc(c.nome)}: ${tem ? 'acesa' : 'apagada'}. Ver como acender">${lampSVG(c, { acesa: tem })}<span class="lp-etq">${esc(c.etq)}</span></button>`; }).join('')}</div>
+        <div class="varal-fio">${CONQUISTAS.map((c, k) => { const tem = s.ganhas.includes(c.id);
+          return `<button type="button" class="lp-btn ${tem ? 'on' : 'off'}" data-lp="${c.id}" aria-label="${esc(c.nome)}: ${tem ? 'acesa' : 'apagada'}. Ver como acender" style="--i:${k % 7}">${lampPendHTML(c, { acesa: tem })}<span class="lp-etq">${esc(c.etq)}</span></button>`; }).join('')}</div>
       </section>
       <p class="hint conq-nota">As conquistas são uma brincadeira e não mudam nada nos seus orçamentos. Dá para desligar em Ajustes, em Conquistas e apresentação.</p>
     </main>`;
   },
-  bind(v) { $$('[data-lp]', v).forEach(b => b.onclick = () => lpSheet(CONQUISTAS.find(c => c.id === b.dataset.lp))); },
+  bind(v) { $$('[data-lp]', v).forEach(b => b.onclick = () => lpSheet(CONQUISTAS.find(c => c.id === b.dataset.lp))); lpPintarMinis(v); },
 };

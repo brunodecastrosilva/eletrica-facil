@@ -781,16 +781,23 @@ button.nivel-card{cursor:pointer}
 .quote-fim{display:flex;flex-direction:column;gap:10px}
 
 /* ---------- conquistas: o varal de lâmpadas (de noite, para as acesas brilharem) ---------- */
-.varal{background:var(--tabua);border-radius:22px;padding:14px 10px 12px;box-shadow:inset 0 0 0 1.5px var(--tabua-2),var(--shadow);color:#F3F0E7}
+.varal{background:radial-gradient(140% 60% at 50% 0%,#37332B 0%,#24221C 60%,#1B1A15 100%);border-radius:22px;padding:14px 10px 12px;box-shadow:inset 0 0 0 1.5px var(--tabua-2),var(--shadow);color:#F3F0E7}
 .varal-topo{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:2px 8px 12px}
 .varal-topo h2{margin:0;font-family:var(--f-display);font-weight:800;font-size:22px}
 .varal-n{font-size:14px;font-weight:600;color:#D9D4C4}
-.varal-fio{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:14px 0}
-.lp-btn{position:relative;border:0;background:none;padding:0 2px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:inherit;font:inherit;border-radius:12px;min-height:44px}
-/* o fio do varal passa por cima de cada lâmpada e emenda na vizinha */
-.lp-btn::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:#6E6A5D}
+.varal-fio{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:12px 0}
+.lp-btn{position:relative;border:0;background:none;padding:10px 2px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:inherit;font:inherit;border-radius:12px;min-height:44px}
+/* o fio do varal faz uma barriga entre uma lâmpada e outra, e cada lâmpada pende do ponto mais baixo */
+.lp-btn::before{content:"";position:absolute;left:0;right:0;top:0;height:11px;border-bottom:2px solid #6E6A5D;border-radius:0 0 50% 50%/0 0 100% 100%;pointer-events:none}
 button.lp-btn:focus-visible{outline:2.5px solid var(--volt);outline-offset:-2px}
-.lp{width:62px;height:87px;flex:none;overflow:visible}
+.lp-pend{position:relative;display:grid;place-items:start center;width:84px;height:100px;transform-origin:50% 0;animation:lp-balanca 6.4s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.9s)}
+.lp-pend::before{content:"";position:absolute;left:50%;top:62%;width:104%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:0;background:radial-gradient(closest-side,rgba(255,200,60,.5),rgba(255,190,30,.16) 58%,rgba(255,190,30,0))}
+.lp-btn.on .lp-pend::before{opacity:1;animation:lp-pisca 4.2s ease-in-out infinite;animation-delay:calc(var(--i,0) * -.6s)}
+.lp-mini{position:absolute;inset:0;width:100%;height:100%;opacity:0}
+.lp-3d .lp-mini{opacity:1}
+.lp-3d .lp{visibility:hidden}
+@keyframes lp-balanca{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
+.lp{width:62px;height:87px;flex:none;overflow:visible;margin-top:2px}
 .lp-fio{stroke:#6E6A5D;stroke-width:2;fill:none}
 .lp-soq{fill:#14130F;stroke:#6E6A5D;stroke-width:1}
 .lp-rosca{fill:#A8A392}.lp-risco{stroke:#57534A;stroke-width:1.2;fill:none}
@@ -801,11 +808,10 @@ button.lp-btn:focus-visible{outline:2.5px solid var(--volt);outline-offset:-2px}
 .lp.on .lp-brilho{stroke:rgba(255,255,255,.8)}
 .lp.on .lp-ic{stroke:#3A2A02;stroke-width:2.1}
 .lp.on .lp-rosca{fill:#D8CFA8}
-.lp-halo{fill:rgba(255,196,0,.2)}
+.lp-halo{fill:none}
 .lp-etq{font:700 11.5px/1.15 var(--kf-font);text-align:center;color:#A8A392;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
 .lp-btn.on .lp-etq{color:#FFE9A6}
-@keyframes lp-pisca{0%,100%{opacity:1}50%{opacity:.72}}
-.lp.on .lp-halo{animation:lp-pisca 3.6s ease-in-out infinite;animation-delay:calc(var(--i,0) * .4s)}
+@keyframes lp-pisca{0%,100%{opacity:1}50%{opacity:.78}}
 /* a lâmpada em 3D (ficha e lâmpada nova): o canvas é do motor (lampada.js); o halo acompanha a luz */
 .ef-o3d{position:relative;display:block;touch-action:pan-y;cursor:grab;-webkit-user-select:none;user-select:none;outline:none;border-radius:20px;-webkit-tap-highlight-color:transparent}
 .ef-o3d.ef-pegou{cursor:grabbing}
@@ -813,7 +819,7 @@ button.lp-btn:focus-visible{outline:2.5px solid var(--volt);outline-offset:-2px}
 .ef-o3d canvas{position:relative;display:block;width:100%;height:100%}
 .ef-o3d-halo{position:absolute;left:50%;top:66%;width:92%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:var(--luz,0);background:radial-gradient(closest-side,rgba(255,206,60,.6),rgba(255,196,0,.2) 55%,rgba(255,196,0,0))}
 .lp-nova{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:2px 0 4px}
-.lp-palco{position:relative;display:grid;place-items:center;width:100%;overflow:hidden;border-radius:20px;background:var(--tabua);box-shadow:inset 0 0 0 1.5px var(--tabua-2)}
+.lp-palco{position:relative;display:grid;place-items:center;width:100%;overflow:hidden;border-radius:20px;background:radial-gradient(120% 85% at 50% 0%,#3B372E 0%,#24221C 55%,#171612 100%);box-shadow:inset 0 0 0 1.5px var(--tabua-2)}
 .lp-nome{font-family:var(--f-display);font-weight:800;font-size:26px;line-height:1.1}
 .lp-como{margin:0;font-size:16px;text-wrap:balance}
 .lp-mais{margin:0;font-weight:600}
@@ -852,14 +858,15 @@ button.lp-btn:focus-visible{outline:2.5px solid var(--volt);outline-offset:-2px}
 .ab-carimbo{position:absolute;right:8px;top:44px;transform:rotate(-12deg);border:2.5px solid var(--kf-ok);color:var(--kf-ok);font:800 13px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;padding:4px 7px;border-radius:5px;background:var(--surface)}
 .ab-varal{width:min(340px,90vw);padding:18px 6px 10px}
 .ab-varal .varal-fio{grid-template-columns:repeat(5,1fr);gap:0}
-.ab-varal .lp{width:54px;height:76px}
+.ab-varal .lp-pend{width:62px;height:76px}
+.ab-varal .lp{width:54px;height:74px}
 .ab-nome{margin-top:14px;text-align:left}
 
 @media (min-width:1024px){
   .kf-trilho{background:var(--surface)}
   .inicio{max-width:620px}
 }
-@media (prefers-reduced-motion:reduce){.lp.on .lp-halo{animation:none}}
+@media (prefers-reduced-motion:reduce){.lp-pend,.lp-btn.on .lp-pend::before{animation:none}}
 /* todo botão que exclui, remove ou apaga é vermelho e cheio (Código, Art. 66, § 1º) */
 .btn.danger-text,.btn.danger{background:var(--kf-perigo-fundo,#B3362B);color:#fff;box-shadow:none}
 .btn.danger-text svg,.btn.danger svg{color:#fff}

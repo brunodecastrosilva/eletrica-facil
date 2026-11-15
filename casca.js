@@ -306,7 +306,7 @@ function aberturaAbrir({ rever = false } = {}) {
     { arte: `<div class="ab-leque"><div class="folha ab-doc d1"><span class="mono">Recibo</span><span class="ab-f-linha"></span><span class="mono ab-l"><span>Recebido</span><span>1.948,91</span></span></div>
         <div class="folha ab-doc d2"><span class="mono">Proposta</span><span class="ab-f-linha"></span><span class="mono ab-l"><span>Total</span><span>1.948,91</span></span><span class="ab-pixfig" aria-hidden="true"></span><span class="mono ab-pix">Pix copia e cola</span><span class="ab-carimbo">Aprovado</span></div></div>`,
       titulo: 'Da proposta ao recibo', texto: 'Envie a proposta em PDF ou pelo WhatsApp, com Pix, prazo e garantia. Marque a resposta do cliente e, no fim, gere o relatório e o recibo.' },
-    { arte: `<div class="varal ab-varal"><div class="varal-fio">${mini.map((c, k) => `<span class="lp-btn ${k < 3 ? 'on' : 'off'}" style="--i:${k}">${lampSVG(c, { acesa: k < 3 })}</span>`).join('')}</div></div>`,
+    { arte: `<div class="varal ab-varal"><div class="varal-fio">${mini.map((c, k) => `<span class="lp-btn ${k < 3 ? 'on' : 'off'}" style="--i:${k}">${lampPendHTML(c, { acesa: k < 3 })}</span>`).join('')}</div></div>`,
       titulo: veterano && j.ganhas.length ? `Você já chega com ${plural(j.ganhas.length, 'lâmpada acesa', 'lâmpadas acesas')}` : 'Acenda as lâmpadas do seu varal',
       texto: 'Cada passo bem dado no app acende uma lâmpada e conta para o seu nível. É só uma brincadeira, e dá para desligar nos Ajustes.',
       extra: settings.name ? '' : `<div class="field ab-nome"><label for="ab-eu">Como você assina os orçamentos? (opcional)</label><input id="ab-eu" class="kf-entrada" type="text" autocapitalize="words" autocomplete="off" maxlength="60" placeholder="Seu nome"></div>` },
@@ -315,6 +315,8 @@ function aberturaAbrir({ rever = false } = {}) {
     fim: () => rever ? 'Concluir' : 'Começar um orçamento',
     extra: { rotulo: 'Ver um orçamento de exemplo', mostrar: () => !rever },
     aoMontar: (el, { redesenharArte }) => {
+      // as lâmpadas da última tela são as mesmas do varal, em 3D: desenha quando a tela entra
+      const palco = $('#kf-ab-palco', el); if (palco) { new MutationObserver(() => lpPintarMinis(palco)).observe(palco, { childList: true, subtree: true }); lpPintarMinis(palco); }
       el.addEventListener('click', e => { const b = e.target.closest('[data-ab-q]'); if (!b) return; const k = +b.dataset.abQ, d = +b.dataset.d; qtd[k] = Math.max(0, Math.min(9, qtd[k] + d)); tocouDemo = true; redesenharArte();
         ($(`[data-ab-q="${k}"][data-d="${d}"]:not([disabled])`, el) || $(`[data-ab-q="${k}"]:not([disabled])`, el))?.focus({ preventScroll: true }); });
     },
