@@ -91,8 +91,10 @@ function desenhar() {
     m.innerHTML = KitFacil.ui.cabecalho({ titulo: 'Notas', sub: 'Tudo o que você anotou.', criar: { rotulo: 'Nova nota', attrs: 'data-nova-nota' } })
       + (itens.length ? `<ul id="notas">${itens.map(t => `<li style="min-height:56px">${KitFacil.esc(t)}</li>`).join('')}</ul>`
         : KitFacil.ui.vazio({ titulo: 'Nenhuma nota ainda', texto: 'Suas notas aparecem aqui.', acao: '<button class="kf-btn kf-sec" data-nova-nota>Criar a primeira nota</button>' }));
-  } else m.innerHTML = `<h1>${tela === 'inicio' ? 'Início' : tela}</h1><ul id="notas">${notas.map(n => `<li data-id="${KitFacil.esc(n.id)}">${KitFacil.esc(n.t)}</li>`).join('')}</ul>`;
+  } else if (tela === 'mais') m.innerHTML = '<h1>Mais</h1>' + KitFacil.nav.mais({ linhas: [{ id: 'lista', titulo: 'Lista', texto: 'Todas as notas' }] });
+  else m.innerHTML = `<h1>${tela === 'inicio' ? 'Início' : tela}</h1><ul id="notas">${notas.map(n => `<li data-id="${KitFacil.esc(n.id)}">${KitFacil.esc(n.t)}</li>`).join('')}</ul>`;
   KitFacil.topo.atualizar();
+  if (window.pintarNav) window.pintarNav();
 }
 const SY = KitFacil.sync.criar({ app: fam.app, nome: fam.nome, chave: CH + 'sync', dados: 'as notas de teste',
   carimbar, aplicar, pacote: () => ({ notas, st: SY.estado.st, del: SY.estado.del }),
@@ -110,8 +112,23 @@ document.getElementById('topo').innerHTML = KitFacil.topo.html({ principal: true
 // ?secoes=N cria N seções a mais na barra de baixo (testa o "Mais"); as de número par são marcadas como secundárias
 const extras = +(Q.get('secoes') || 0);
 document.getElementById('nav-extras').outerHTML = Array.from({ length: extras }, (_, i) => `<button class="kf-nav-it" data-ir="extra${i + 1}"${i % 2 ? ' data-kf-mais' : ''}><span class="kf-nav-ic"></span><span class="kf-nav-l">Seção ${i + 1}</span></button>`).join('');
-document.getElementById('nav-ajustes').outerHTML = KitFacil.nav.ajustes('nav');
-document.getElementById('trilho-ajustes').outerHTML = KitFacil.nav.ajustes('trilho');
+if (Q.get('moldura') === 'nova') {
+  // Kit 0.7.0: barra baixa com a ação principal no centro, "Mais" por último e o trilho com Mais e Ajustes no pé
+  const ic = d => `<svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+  window.pintarNav = () => {
+    const it = (id, rotulo, d) => ({ id, rotulo, icone: ic(d), atual: tela === id });
+    const itens = [it('inicio', 'Início', '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>'), it('notas', 'Notas', '<path d="M6 4h12v16H6z"/>'), it('lista', 'Lista', '<path d="M8 6h12M8 12h12M8 18h12"/>')];
+    const centro = { id: 'novo', rotulo: 'Novo', nome: 'Nova nota', icone: ic('<path d="M12 5v14M5 12h14"/>'), atual: tela === 'novo' };
+    document.querySelector('.kf-nav').innerHTML = KitFacil.nav.barra({ itens, centro, mais: { atual: tela === 'mais' } });
+    const tr = document.querySelector('.kf-trilho'); tr.querySelectorAll('.kf-trilho-it, .kf-trilho-fim, #trilho-ajustes').forEach(x => x.remove());
+    tr.insertAdjacentHTML('beforeend', KitFacil.nav.trilho({ destaque: centro, itens, mais: { atual: tela === 'mais' } }));
+  };
+  document.addEventListener('click', e => { const b = e.target.closest('[data-kf-ir]'); if (b) ir(b.dataset.kfIr); });
+  window.pintarNav();
+} else {
+  document.getElementById('nav-ajustes').outerHTML = KitFacil.nav.ajustes('nav');
+  document.getElementById('trilho-ajustes').outerHTML = KitFacil.nav.ajustes('trilho');
+}
 history.replaceState({ tela: 'inicio' }, '');
 desenhar();
 const link = SY.tokenDoLink();

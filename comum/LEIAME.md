@@ -7,6 +7,7 @@ Estudo Fácil e no Guitarra Fácil.** Não altere só num repositório: siga o A
 |---|---|
 | `kit-facil.js` | área superior (Ajustes, nuvem, balão), tela de Ajustes em guias, avaliação e relato de problema, Sobre, tema, instalar, cópia de segurança, apagar dados do aparelho e o motor de sincronização |
 | `kit-facil.css` | sistema de design comum: tokens, moldura (barra, navegação, trilho) e componentes. Usa as variáveis `--kf-*` de cada app |
+| `kit-jogo.js` | peça opcional (Kit 0.7.0): objetos em 3D que giram com o dedo (o presente do apoio e as tampinhas), confetes, vibração e níveis. O Kit busca sozinho para o presente; quem usa tampinhas carrega logo depois do `kit-facil.js` |
 | `CODIGO.md` | o Código do Projeto Fácil, em artigos |
 | `ANEXOS.md` | os anexos técnicos do Código (interface, dados, avaliação, movimento, abertura e guia, comandos e segurança) |
 | `regras-firestore-feedback.txt` | regras inteiras do Firestore: avaliações e comanda ao vivo (colar no console do Firebase) |
@@ -173,3 +174,56 @@ pelo app em `aplicar`.
   guia ao vivo com o dedo na ponta direita do campo de texto, sem cobrir o que é digitado; o cartão do guia protege a
   área inteira do passo (ou a janela aberta) e encolhe para o título enquanto o app faz o passo; com o trilho, as
   janelas se centram na área do app, à direita dele.
+
+
+## Kit 0.7.0: as peças do Conta Fácil (Código 0.7, Art. 93)
+
+O Conta Fácil é a referência do Projeto Fácil; estas peças saíram dele e servem a todos os apps. Os apps ainda em `0.x`
+continuam com a navegação, o guia em níveis e a apresentação do Kit 0.6.0 até a vez de cada um (Art. 93, § 2º).
+
+```html
+<nav class="kf-nav" aria-label="Seções" id="tabs"></nav>      <!-- KitFacil.nav.barra(...) -->
+<aside class="kf-trilho">…marca…<nav id="trilho"></nav></aside>  <!-- KitFacil.nav.trilho(...) -->
+<script src="comum/kit-facil.js"></script>
+<script src="comum/kit-jogo.js"></script>   <!-- só se o app usar tampinhas e níveis -->
+```
+
+```js
+// um relógio só (Art. 72, § 1º): 600 ms na curva do Kit; no CSS, var(--kf-ms) e var(--kf-curva)
+KitFacil.movimento.ms;                                       // 600
+KitFacil.movimento.redesenhar(raiz, () => { /* redesenha */ });  // [data-kf-exp] cresce/encolhe; [data-kf-morf] muda de altura
+
+// janelas: um mecanismo só (nascer, teclado, altura, troca e saída pelo pé); nenhuma abre com campo selecionado
+KitFacil.dialogo.abrir({ titulo, sub, corpo, pe, aoMontar, aoFechar });
+KitFacil.dialogo.confirmar({ titulo: 'Apagar nota?', texto: 'A nota sai deste aparelho.', desfaz: 'Não dá para desfazer.', ok: 'Apagar nota', perigo: true, aoConfirmar });
+KitFacil.janela.ocupada(ms);       // o app anima a altura de um trecho da janela: o Kit não desliza a janela por cima
+
+// barra de baixo (ação principal no centro, Mais por último) e trilho (Mais e Ajustes no pé); botões com data-kf-ir="<id>"
+nav.innerHTML = KitFacil.nav.barra({ itens: [{ id, rotulo, icone, atual }, …], centro: { id, rotulo, nome, icone, atual, selo }, mais: { atual } });
+trilho.innerHTML = KitFacil.nav.trilho({ destaque: { … }, itens: [ … ], mais: { atual } });
+tela.innerHTML = KitFacil.nav.mais({ linhas: [{ id, titulo, texto, icone }] });   // a tela Mais, com os Ajustes por último
+
+// campos (Art. 65, XII e XIII)
+KitFacil.campo.dinheiro.html({ id, valor });   // <input data-kf-dinheiro>: dígitos entram como centavos
+KitFacil.campo.porcento.html({ id, valor });   // <input data-kf-pct>
+KitFacil.ui.quantidade({ id, valor, min, max });   // − e +; avisa o app com o evento input
+KitFacil.ui.chave({ attrs, on, rotulo });  KitFacil.ui.escolha({ rotulo, on, attrs });
+KitFacil.sugestoes(campo, () => [{ label, right, dim }], escolhido => {});   // abaixo da linha, se o pai for .kf-linha
+KitFacil.campo.ligar();  KitFacil.campo.preparar(raiz);   // opcional: tocar no fundo recolhe o teclado, Enter confirma
+
+// Pix (do apoio e de cobrança)
+KitFacil.pix.codigo({ chave: KitFacil.pix.chave(k), nome, cidade, valor });   // valor em centavos
+KitFacil.pix.janela({ titulo, sub, codigo, aoFechar });
+
+// abertura de quatro telas, uma vez só (Art. 75) e guia único numa demonstração (Arts. 77 a 79)
+KitFacil.abertura.abrir({ telas: [{ arte, titulo, texto, extra }], fim, extra: { rotulo, mostrar }, aoFechar: ({ como, el }) => {} });
+KitFacil.guia.demonstrar({ passos: [{ t, d, acao: async m => { await m.tocar('#botao'); } }], comecar, terminar, foto, restaurar, limpar, maos });
+
+// peça opcional (comum/kit-jogo.js)
+KitFacil.jogo.girar(el);  KitFacil.jogo.tampaHTML({ id, nome, cores, icone });  KitFacil.jogo.nivel(xp, NIVEIS);  KitFacil.jogo.confete(caixa);
+```
+
+Variáveis novas que o app pode ligar: `--kf-comecar` e `--kf-comecar-ink` (botão de começar, Art. 66, II), `--kf-nav-bg`,
+`--kf-nav-ink`, `--kf-nav-on`, `--kf-nav-atual` e `--kf-nav-atual-bg` (navegação), `--kf-presente` e `--kf-presente-fita`
+(o presente do apoio) e `--kf-chave-off`. Nos testes, `comum/testes/ambiente.mjs` traz a medição de movimento quadro a
+quadro (`filmarJanela`, `teclado`, `animacoes`, `assentar`, `semCampoEmFoco`).

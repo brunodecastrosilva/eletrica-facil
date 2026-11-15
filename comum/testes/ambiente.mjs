@@ -20,7 +20,9 @@ export async function carregarPlaywright() {
 export async function preparar() {
   const pw = await carregarPlaywright();
   const servidor = await servir(RAIZ, { porta: 0 });
-  const browser = await pw.chromium.launch();
+  // sem o Chromium do Playwright (que pede download), usa o Google Chrome instalado no computador
+  const canal = process.env.PLAYWRIGHT_CHANNEL;
+  const browser = await (canal ? pw.chromium.launch({ channel: canal }) : pw.chromium.launch().catch(() => pw.chromium.launch({ channel: 'chrome' })));
   return { ...servidor, browser, encerrar: async () => { await browser.close(); await servidor.fechar(); } };
 }
 
@@ -179,7 +181,10 @@ export async function conferirTopo(page, o = {}) {
       if (c.x - n.d > 6 || b.x - c.d > 6) erros.push('presente afastado da nuvem ou do balão');
       const cor = el => getComputedStyle(el).color;
       if (cor(nuvens[0]) !== cor(baloes[0])) erros.push('a nuvem e o balão não têm a mesma cor');
-      if (!presentes[0].querySelector('.kf-presente .kf-pr-cubo')) erros.push('o apoio não usa o presente do Kit');
+      // Kit 0.7.0: o presente da barra é um ícone de traço, da mesma cor e com o mesmo traço da nuvem e do balão (Art. 58, II)
+      const tr = el => { const s = el && el.querySelector(':scope > svg'); return s ? getComputedStyle(s).color + '|' + getComputedStyle(s).strokeWidth : ''; };
+      if (!presentes[0].querySelector(':scope > svg.kf-i')) erros.push('o presente da barra não é o ícone de traço do Kit');
+      else if (tr(presentes[0]) !== tr(nuvens[0]) || tr(presentes[0]) !== tr(baloes[0])) erros.push('nuvem, presente e balão sem a mesma cor e o mesmo traço');
       if (c.w !== 44 || c.h !== 44) erros.push(`área de toque do presente diferente de 44 px: ${c.w}x${c.h}`);
       if (presentes[0].getAttribute('aria-label') !== 'Mande um presente para o criador') erros.push('presente sem descrição acessível');
     }
@@ -210,6 +215,24 @@ export async function conferirNavAjustes(page) {
     if (!vis(cont)) return { erros: [`${largo ? 'trilho' : 'barra de baixo'} não está visível`] };
     const todos = [...cont.querySelectorAll(largo ? '.kf-trilho-it' : '.kf-nav-it')];
     const itens = todos.filter(vis);
+    /* Kit 0.7.0 (Arts. 59 e 60): barra baixa com a ação principal no centro e "Mais" por último (os Ajustes ficam na tela
+       Mais); no computador, o trilho termina com Mais e Ajustes */
+    if (cont.querySelector('.kf-nav-com-centro') || cont.querySelector('.kf-trilho-fim')) {
+      if (largo) {
+        const fim = cont.querySelector('.kf-trilho-fim'), aj = fim && fim.querySelector('[data-kf="ajustes"]');
+        if (!aj || !vis(aj)) erros.push('trilho sem Ajustes no pé');
+        else if (itens[itens.length - 1] !== aj) erros.push('Ajustes não é o último item do trilho');
+        if (!fim || !fim.querySelector('[data-kf-ir="mais"]')) erros.push('trilho sem Mais no pé');
+        return { erros, onde: 'trilho' };
+      }
+      if (itens.length > 5) erros.push(`barra de baixo com ${itens.length} itens (máximo 5)`);
+      if (itens[itens.length - 1] !== cont.querySelector('[data-kf-ir="mais"]')) erros.push('"Mais" não é o último item da barra');
+      const centro = cont.querySelector('.kf-nav-centro'); if (!centro || itens.indexOf(centro) !== Math.floor(itens.length / 2)) erros.push('a ação principal não está no centro da barra');
+      if (cont.querySelector('[data-kf="ajustes"]')) erros.push('Ajustes na barra de baixo: fica na tela Mais');
+      itens.forEach(b => { const l = b.querySelector('.kf-nav-l:not(.kf-so-leitor)'); if (l && l.scrollWidth > l.clientWidth + 1) erros.push(`nome cortado: ${l.textContent.trim()}`); if (b.getBoundingClientRect().height < 44) erros.push(`item com menos de 44 px: ${b.textContent.trim()}`); });
+      const r = cont.getBoundingClientRect(); if (Math.abs(innerHeight - r.bottom) > 1) erros.push('a barra de baixo não está colada ao pé da tela');
+      return { erros, onde: 'barra com centro' };
+    }
     const aj = todos.filter(b => b.dataset.kf === 'ajustes');
     if (aj.length !== 1) return { erros: [`itens Ajustes: ${aj.length}`] };
     if (largo) {
@@ -228,7 +251,6 @@ export async function conferirNavAjustes(page) {
     return { erros, onde: mais ? 'mais' : 'barra de baixo' };
   });
 }
-/* abre os Ajustes pela navegação: item visível (barra ou trilho) ou, se estiver no "Mais", pelo "Mais" */
 export async function abrirAjustesPelaNav(page) {
   const direto = page.locator('.kf-nav [data-kf="ajustes"], .kf-trilho [data-kf="ajustes"]').locator('visible=true');
   if (await direto.count()) return direto.first().click();
@@ -260,3 +282,22 @@ export async function escolher(page, seletor, valor) {
   if ((await w.locator('.kf-esc-lista').getAttribute('hidden')) !== null) await w.locator('.kf-esc-btn').click();
   await w.locator(`.kf-esc-op[data-k="${k}"]`).click();
 }
+
+/* ---------- Kit 0.7.0: medição de movimento quadro a quadro (do Conta Fácil; Anexo VII) ---------- */
+/* o teclado do celular: a área visível encolhe (é assim que o navegador avisa) sem a página mudar de tamanho */
+export const TECLADO = 336;
+export const teclado = (page, on) => page.evaluate(([on, T]) => { const vv = window.visualViewport; if (!window.__kb) { window.__kb = { on: false }; Object.defineProperty(vv, 'height', { get: () => innerHeight - (window.__kb.on ? T : 0), configurable: true }); } window.__kb.on = on; vv.dispatchEvent(new Event('resize')); }, [on, TECLADO]);
+/* filma o topo da janela aberta quadro a quadro durante uma ação e conta as vezes em que ela foi e voltou (inv);
+   de: onde ela estava no primeiro quadro; n: quadros filmados */
+export async function filmarJanela(page, acao, ms = 800) {
+  await page.evaluate(() => { window.__q = []; window.__on = true; const f = () => { const d = [...document.querySelectorAll('.kf-dlg')].find(x => !x.closest('#kf-saidas')); if (d) __q.push(d.getBoundingClientRect().top); if (__on) requestAnimationFrame(f); }; requestAnimationFrame(f); });
+  await acao(); await page.waitForTimeout(ms);
+  // conta as trocas de sentido entre passos de mais de meio pixel (tremidas de centésimos de pixel não contam)
+  return page.evaluate(() => { __on = false; let inv = 0, ant = 0; for (let i = 1; i < __q.length; i++) { const d = __q[i] - __q[i - 1]; if (Math.abs(d) < .5) continue; const s = Math.sign(d); if (ant && s !== ant) inv++; ant = s; } return { inv, de: Math.round(__q[0]), n: __q.length }; });
+}
+/* durações e curvas das animações de um elemento: [[ms, curva], …] */
+export const animacoes = (page, sel) => page.evaluate(sel => { const e = document.querySelector(sel); return e ? e.getAnimations().map(x => { const t = x.effect.getTiming(); return [t.duration, String(t.easing)]; }) : null; }, sel);
+/* espera a janela aberta chegar ao lugar */
+export const assentar = page => page.waitForFunction(() => { const d = [...document.querySelectorAll('.kf-dlg')].find(x => !x.closest('#kf-saidas')); return d && d.getAnimations().length === 0; });
+/* nenhum campo de texto com o foco (Código, Art. 68, § 5º) */
+export const semCampoEmFoco = page => page.evaluate(() => { const f = document.activeElement; return !(f && f.matches && f.matches('input:not([type=checkbox]):not([type=radio]), textarea, select')); });

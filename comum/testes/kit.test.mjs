@@ -4,7 +4,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { preparar, aparelho, githubFalso, firestoreFalso, TOKEN_TESTE, conferirTopo, conferirNavAjustes, abrirAjustesPelaNav, irPelaNav, guiasAjustes, GUIAS_COMUNS, semRolagemLateral } from './ambiente.mjs';
+import { preparar, aparelho, githubFalso, firestoreFalso, TOKEN_TESTE, conferirTopo, conferirNavAjustes, abrirAjustesPelaNav, irPelaNav, guiasAjustes, GUIAS_COMUNS, semRolagemLateral, teclado, TECLADO, filmarJanela, animacoes, assentar, semCampoEmFoco } from './ambiente.mjs';
 
 let amb;
 before(async () => { amb = await preparar(); });
@@ -527,7 +527,8 @@ test('presente: código Pix copia e cola no padrão do Banco Central (CRC confer
   const dlg = p.locator('[data-kf-dialogo="apoio"]');
   await dlg.waitFor();
   assert.equal(await dlg.locator('h2').textContent(), 'Mande um presente para o criador!');
-  assert.equal(await dlg.locator('.kf-apoio-presente .kf-presente.kf-pr-g[aria-hidden="true"]').count(), 1, 'a janela mostra o presente grande');
+  assert.equal(await dlg.locator('.kf-ap .kf-o3d[data-o3d="presente"][role="img"]').count(), 1, 'a janela mostra o presente em 3D');
+  assert.match(await dlg.textContent(), /continua igual para todos, com presente ou sem\./, 'texto do apoio (D12)');
   // sem internet (bibliotecas bloqueadas nos testes): o QR dá lugar ao aviso e o código continua copiável
   assert.ok(await esperar(() => dlg.locator('[data-kf-qr]').textContent().then(t => /Sem internet/.test(t))));
   await p.evaluate(() => { window.__copiado = ''; navigator.clipboard.writeText = t => { window.__copiado = t; return Promise.resolve(); }; });
@@ -846,7 +847,7 @@ test('Kit 2.10: guias do Kit (setas do teclado), faixa com botão contornado e m
     const cs = s => getComputedStyle(document.querySelector(s));
     return { bh: cs('#bp').minHeight, br: cs('#bp').borderTopLeftRadius, cr: cs('#ct').borderTopLeftRadius, fx: cs('#fx').backgroundColor, faixa: document.querySelector('.kf-faixa').className };
   });
-  assert.equal(m.bh, '48px'); assert.equal(m.br, '12px'); assert.equal(m.cr, '16px');
+  assert.equal(m.bh, '48px'); assert.equal(m.br, '14px'); assert.equal(m.cr, '20px');
   assert.match(m.faixa, /kf-dica/);
   assert.deepEqual(a.erros, []);
   await a.fechar();
@@ -981,30 +982,242 @@ test('Kit 0.5.0 · aviso rápido com "Desfazer" não some enquanto tem o foco ou
   await a.fechar();
 });
 
-/* ---------------- Kit 0.6.0: o presente do apoio (Código, Art. 13) ---------------- */
-test('presente: 3D, colorido, gira uma vez na barra e ao passar o ponteiro, parado com movimento reduzido', async () => {
+
+/* ======================= Kit 0.7.0: peças do Conta Fácil (Código 0.7, Art. 93; Anexo II) ======================= */
+const CURVA = 'cubic-bezier(0.45, 0, 0.2, 1)';
+
+test('Kit 0.7.0 · presente: ícone de traço na barra, em 3D na janela do apoio, que gira com o dedo; parado com movimento reduzido', async () => {
   const a = await aparelho(amb, { caminho: pagina() + '&apoio=1' });
   const p = a.page;
-  const info = await p.evaluate(() => {
-    const b = document.querySelector('.kf-topo [data-kf="apoio"]'), c = b.querySelector('.kf-pr-cubo');
-    const cs = getComputedStyle(c);
-    return { estilo: cs.transformStyle, anim: cs.animationName, cor: getComputedStyle(b.querySelector('.kf-pr-c1')).backgroundColor,
-      laco: b.querySelectorAll('.kf-pr-a').length, pontas: b.querySelectorAll('.kf-pr-p').length, oculto: b.querySelector('.kf-presente').getAttribute('aria-hidden') };
-  });
-  assert.equal(info.estilo, 'preserve-3d');
-  assert.equal(info.anim, 'kf-pr-volta');
-  assert.equal(info.cor, 'rgb(127, 119, 221)');
-  assert.equal(info.laco, 2, 'barra: laço só com a frente das alças');
-  assert.equal(info.pontas, 0, 'barra: sem as pontas da fita');
-  assert.equal(info.oculto, 'true');
-  // a barra desenhada de novo não gira de novo; passar o ponteiro gira
-  assert.equal(await p.evaluate(() => KitFacil.topo.html({ principal: true }).includes('kf-pr-gira')), false);
-  const grande = await p.evaluate(() => { const d = document.createElement('div'); d.innerHTML = KitFacil.apoio.presente(56); return { a: d.querySelectorAll('.kf-pr-a').length, p: d.querySelectorAll('.kf-pr-p').length, g: !!d.querySelector('.kf-pr-g') }; });
-  assert.deepEqual(grande, { a: 4, p: 2, g: true });
+  const tr = await p.evaluate(() => [...document.querySelectorAll('.kf-topo .kf-topo-btn > svg')].map(s => getComputedStyle(s).color + '|' + getComputedStyle(s).strokeWidth));
+  assert.equal(tr.length, 3); assert.equal(new Set(tr).size, 1, 'nuvem, presente e balão: mesma cor e mesmo traço');
+  await p.click('.kf-topo [data-kf="apoio"]');
+  const o = p.locator('.kf-dlg .kf-o3d[data-o3d="presente"]'); await o.waitFor();
+  // o motor de 3D (comum/kit-jogo.js) chega sozinho e troca o desenho parado pelo canvas
+  assert.ok(await esperar(() => p.evaluate(() => !!document.querySelector('.kf-dlg .kf-o3d').dataset.motor)), 'o presente em 3D não ligou');
+  assert.equal(await p.evaluate(() => !!document.querySelector('.kf-dlg .kf-o3d .kf-presente-mini')), false);
+  await p.keyboard.press('Escape');
+  await p.emulateMedia({ reducedMotion: 'reduce' });
+  await p.click('.kf-topo [data-kf="apoio"]'); await o.waitFor();
+  await esperar(() => p.evaluate(() => !!document.querySelector('.kf-dlg .kf-o3d').dataset.ang));
+  const ang = () => p.evaluate(() => document.querySelector('.kf-dlg .kf-o3d').dataset.ang);
+  const g0 = await ang(); await p.waitForTimeout(400);
+  assert.equal(await ang(), g0, 'com movimento reduzido o presente fica parado');
+  await o.focus(); await p.keyboard.press('ArrowLeft');
+  assert.notEqual(await ang(), g0, 'mas gira com as setas (e com o dedo)');
+  // Sobre o aplicativo: o presente pequeno, nas cores do app
+  assert.ok((await p.evaluate(() => KitFacil.apoio.mini())).includes('kf-presente-mini'));
   assert.deepEqual(a.erros, []);
   await a.fechar();
-  const r = await aparelho(amb, { caminho: pagina() + '&apoio=1', antes: () => {} });
-  await r.page.emulateMedia({ reducedMotion: 'reduce' });
-  assert.equal(await r.page.evaluate(() => getComputedStyle(document.querySelector('.kf-topo .kf-pr-cubo')).animationName), 'none');
-  await r.fechar();
+});
+
+test('Kit 0.7.0 · um relógio só: janelas nascem e saem pelo pé em 600 ms, o fundo junto; nenhuma abre com a caixa de texto selecionada', async () => {
+  const a = await aparelho(amb, { caminho: pagina(), toque: true });
+  const p = a.page;
+  assert.deepEqual(await p.evaluate(() => [KitFacil.movimento.ms, KitFacil.movimento.curto, getComputedStyle(document.documentElement).getPropertyValue('--kf-ms').trim()]), [600, 600, '600ms']);
+  const abrir = () => p.evaluate(() => KitFacil.dialogo.abrir({ titulo: 'Nome', corpo: '<label class="kf-rotulo" for="cx">Nome</label><input id="cx" class="kf-entrada" autofocus>', pe: '<button class="kf-btn kf-pri">Salvar</button>' }));
+  await abrir();
+  const n = await animacoes(p, '.kf-dlg');
+  assert.ok(n.length && n.every(x => x[0] === 600 && x[1] === CURVA), 'a janela nasce em 600 ms: ' + JSON.stringify(n));
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.kf-ov'), '::before').animationDuration), '0.6s');
+  await assentar(p);
+  assert.ok(await semCampoEmFoco(p), 'a janela abriu com o campo selecionado');
+  assert.equal(await p.evaluate(() => document.activeElement.classList.contains('kf-dlg')), true, 'o foco vai para a janela');
+  await p.click('.kf-dlg [data-kf-fechar]');
+  const s = await animacoes(p, '#kf-saidas .kf-dlg-x');
+  assert.ok(s && s.length === 1 && s[0][0] === 600 && s[0][1] === CURVA, 'a janela sai em 600 ms: ' + JSON.stringify(s));
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('#kf-saidas .kf-ov'), '::before').animationName), 'kf-apaga', 'o fundo clareia junto');
+  await p.waitForFunction(() => !document.querySelector('#kf-saidas > .kf-ov'));
+  // nasce abaixo da tela e sobe sem ir e voltar; com o teclado, termina encostada nele, num caminho só
+  const H = await p.evaluate(() => innerHeight);
+  let f = await filmarJanela(p, async () => { await abrir(); await p.waitForTimeout(40); await p.focus('#cx'); await teclado(p, true); });
+  assert.equal(f.inv, 0, 'a janela foi e voltou ao nascer'); assert.ok(f.de >= H - 40, `a janela nasce abaixo da tela (${f.de})`);
+  assert.equal(await p.evaluate(() => Math.round(document.querySelector('.kf-dlg').getBoundingClientRect().bottom)), H - TECLADO, 'a janela termina encostada no teclado');
+  assert.ok(await p.evaluate(() => document.documentElement.classList.contains('kf-tk')));
+  f = await filmarJanela(p, async () => { await p.evaluate(() => document.activeElement.blur()); await teclado(p, false); });
+  assert.equal(f.inv, 0, 'ao fechar o teclado, a janela desce de uma vez');
+  // uma janela no lugar de outra: não nasce de novo lá de baixo
+  f = await filmarJanela(p, () => p.evaluate(() => KitFacil.dialogo.confirmar({ titulo: 'Apagar nota?', texto: 'A nota sai deste aparelho.', ok: 'Apagar nota', perigo: true })), 600);
+  assert.ok(f.de < H - 100, `a janela que entra no lugar de outra não nasce abaixo da tela (${f.de})`);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.7.0 · confirmação: o botão nomeia a ação, diz se dá para desfazer, Cancelar fecha sem fazer nada', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => { window.R = []; KitFacil.dialogo.confirmar({ titulo: 'Apagar nota?', texto: 'A nota "Mercado" sai deste aparelho.', desfaz: 'Não dá para desfazer.', ok: 'Apagar nota', perigo: true, aoConfirmar: () => R.push('ok'), aoCancelar: () => R.push('cancelou') }); });
+  const d = p.locator('[data-kf-dialogo="confirmar"]'); await d.waitFor();
+  assert.deepEqual(await d.locator('.kf-dlg-pe button').allTextContents(), ['Cancelar', 'Apagar nota']);
+  assert.match(await d.textContent(), /Não dá para desfazer\./);
+  assert.equal(await p.evaluate(() => document.activeElement.dataset.kfOk !== undefined), true, 'o foco fica no botão da ação');
+  assert.match(await d.locator('[data-kf-ok]').getAttribute('class'), /kf-perigo/);
+  await d.locator('[data-kf-cancelar]').click(); assert.deepEqual(await p.evaluate(() => R), ['cancelou']);
+  await p.evaluate(() => KitFacil.dialogo.confirmar({ titulo: 'Apagar?', texto: 'x', ok: 'Apagar', aoConfirmar: () => R.push('ok') }));
+  await p.locator('[data-kf-ok]').click(); assert.deepEqual(await p.evaluate(() => R), ['cancelou', 'ok']);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.7.0 · campos: dinheiro e porcentagem entram como centavos; quantidade com − e +; chave e botões de escolha', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => {
+    document.getElementById('main').innerHTML = `<label class="kf-rotulo" for="v">Valor</label>${KitFacil.campo.dinheiro.html({ id: 'v' })}
+      <label class="kf-rotulo" for="pc">Serviço</label>${KitFacil.campo.porcento.html({ id: 'pc', valor: 10 })}
+      <label class="kf-rotulo" for="q">Quantidade</label>${KitFacil.ui.quantidade({ id: 'q', valor: 1, min: 1, max: 3 })}
+      <label class="kf-check" id="lc"><span>Paga serviço</span>${KitFacil.ui.chave({ attrs: 'id="ch"', on: true, rotulo: 'Paga serviço' })}</label>
+      <div>${KitFacil.ui.escolha({ rotulo: 'Ana', on: true })}${KitFacil.ui.escolha({ rotulo: 'Bruno' })}</div>`;
+    window.QT = []; document.getElementById('q').addEventListener('input', e => QT.push(e.target.value));
+  });
+  await p.locator('#v').pressSequentially('1234');
+  assert.match(await p.inputValue('#v'), /^R\$\s12,34$/);
+  assert.equal(await p.evaluate(() => KitFacil.campo.dinheiro.ler(document.getElementById('v').value)), 1234);
+  assert.match(await p.inputValue('#pc'), /^10,00%$/);
+  await p.click('#pc'); await p.keyboard.type('1250');
+  assert.equal(await p.inputValue('#pc'), '12,50%', 'o primeiro número substitui o valor sugerido');
+  assert.equal(await p.evaluate(() => KitFacil.campo.porcento.ler(document.getElementById('pc').value)), 12.5);
+  // quantidade: − começa desligado no mínimo; + avisa o app e para no máximo
+  assert.equal(await p.locator('[data-kf-passo="-1"]').isDisabled(), true);
+  for (let i = 0; i < 3; i++) await p.click('[data-kf-passo="1"]', { force: true });
+  assert.equal(await p.inputValue('#q'), '3'); assert.deepEqual(await p.evaluate(() => QT), ['2', '3']);
+  assert.equal(await p.locator('[data-kf-passo="1"]').isDisabled(), true);
+  const alvo = await p.evaluate(() => [...document.querySelectorAll('.kf-quantidade button')].map(b => Math.round(b.getBoundingClientRect().height)));
+  assert.ok(alvo.every(h => h >= 44), 'botões de − e + com 44 px: ' + alvo);
+  assert.equal(await p.getAttribute('#ch', 'role'), 'switch');
+  await p.click('#lc'); assert.equal(await p.isChecked('#ch'), false);
+  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.kf-escolha')].map(b => b.getAttribute('aria-pressed'))), ['true', 'false']);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.7.0 · campo com sugestões: filtra ao digitar, abre abaixo da linha com o botão, escolhe com toque ou teclado', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => {
+    KitFacil.dialogo.abrir({ titulo: 'Pessoas', corpo: '<div class="kf-linha"><div style="flex:1"><label class="kf-rotulo" for="nm">Nome</label><input id="nm" class="kf-entrada"></div><button class="kf-btn kf-pri" id="ad">Adicionar</button></div><p id="esc"></p>' });
+    window.ES = []; KitFacil.sugestoes(document.getElementById('nm'), () => [{ label: 'Ana Paula', right: '3 vezes' }, { label: 'Ângela' }, { label: 'Bruno' }], x => ES.push(x.label));
+  });
+  await p.click('#nm');
+  await p.waitForFunction(() => !document.querySelector('.kf-sg-lista').hidden);
+  assert.deepEqual(await animacoes(p, '.kf-sg-lista').then(x => x.map(y => y[0])), [600], 'a lista abre em 600 ms');
+  await p.keyboard.type('an');
+  assert.deepEqual(await p.locator('.kf-sg-item span').allTextContents(), ['Ana Paula', 'Ângela'], 'filtra sem acento e sem maiúscula');
+  const al = await p.evaluate(() => { const r = q => document.querySelector(q).getBoundingClientRect(), i = r('#nm'), b = r('#ad'), l = r('.kf-sg-lista'); return { base: Math.abs(i.bottom - b.bottom), abaixo: l.top >= b.bottom - 1, larga: l.width > i.width }; });
+  assert.ok(al.base <= 1 && al.abaixo && al.larga, 'a lista abre abaixo da linha inteira: ' + JSON.stringify(al));
+  await p.keyboard.press('ArrowDown'); await p.keyboard.press('Enter');
+  assert.equal(await p.inputValue('#nm'), 'Ana Paula'); assert.deepEqual(await p.evaluate(() => ES), ['Ana Paula']);
+  await p.fill('#nm', ''); await p.keyboard.type('b');
+  await p.locator('.kf-sg-item').first().click();
+  assert.deepEqual(await p.evaluate(() => ES), ['Ana Paula', 'Bruno']);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.7.0 · Pix de cobrança: valor no código, chave do jeito do Banco Central, janela com QR code e copia e cola', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  const r = await p.evaluate(() => ({ cod: KitFacil.pix.codigo({ chave: KitFacil.pix.chave('ana@Exemplo.com'), nome: 'Ana Ávila', cidade: 'Brasil', valor: 4250 }),
+    cpf: KitFacil.pix.chave('529.982.247-25'), tel: KitFacil.pix.chave('(11) 98888-7777'), cnpj: KitFacil.pix.chave('12.345.678/0001-95') }));
+  assert.ok(r.cod.includes('0115ana@exemplo.com') && r.cod.includes('540542.50') && r.cod.includes('5909ANA AVILA'), r.cod);
+  const corpo = r.cod.slice(0, -4); let c = 0xFFFF;
+  for (let i = 0; i < corpo.length; i++) { c ^= corpo.charCodeAt(i) << 8; for (let j = 0; j < 8; j++) c = c & 0x8000 ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF; }
+  assert.equal(r.cod.slice(-4), c.toString(16).toUpperCase().padStart(4, '0'));
+  assert.deepEqual([r.cpf, r.tel, r.cnpj], ['52998224725', '+5511988887777', '12345678000195']);
+  await p.evaluate(c => KitFacil.pix.janela({ titulo: 'Pix para Ana', sub: 'R$ 42,50', codigo: c }), r.cod);
+  const d = p.locator('[data-kf-dialogo="pix"]'); await d.waitFor();
+  assert.ok(await esperar(() => d.locator('[data-kf-qr]').textContent().then(t => /QR code agora/.test(t))), 'sem internet, o QR dá lugar ao aviso');
+  assert.equal(await d.locator('textarea').inputValue(), r.cod);
+  await p.evaluate(() => { window.__copiado = ''; navigator.clipboard.writeText = t => { window.__copiado = t; return Promise.resolve(); }; });
+  await d.locator('[data-kf-pix-copiar]').click(); assert.equal(await p.evaluate(() => window.__copiado), r.cod);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.7.0 · moldura: barra baixa com a ação principal no centro e Mais por último; trilho com Mais e Ajustes no pé', async () => {
+  for (const viewport of [{ width: 320, height: 568 }, CELULAR, { width: 820, height: 1180 }, COMPUTADOR]) {
+    const a = await aparelho(amb, { viewport, caminho: pagina() + '&apoio=1&moldura=nova' });
+    const p = a.page;
+    const n = await conferirNavAjustes(p);
+    assert.deepEqual(n.erros, [], `largura ${viewport.width}: ${n.erros.join('; ')}`);
+    assert.deepEqual((await conferirTopo(p, { presente: true })).erros, []);
+    assert.ok(await semRolagemLateral(p));
+    if (viewport.width < 1024) {
+      assert.equal(await p.evaluate(() => document.querySelector('.kf-nav').getBoundingClientRect().height <= 64), true, 'barra de baixo baixa');
+      await p.click('#kf-nav-mais');
+      assert.equal(await p.getAttribute('#kf-nav-mais', 'aria-current'), 'page');
+      const linhas = await p.locator('#main .kf-mais-lin b').allTextContents();
+      assert.equal(linhas[linhas.length - 1], 'Ajustes', 'Ajustes por último na tela Mais');
+      await p.click('#main [data-kf="ajustes"]');
+      assert.ok(await esperar(() => p.evaluate(() => !!document.querySelector('.kf-aj'))), 'Ajustes abre pela tela Mais');
+      assert.equal(await p.getAttribute('#kf-nav-mais', 'aria-current'), 'page', 'Mais fica marcado nos Ajustes');
+    } else {
+      await p.click('#kf-trilho-ajustes'); assert.ok(await esperar(() => p.evaluate(() => !!document.querySelector('.kf-aj'))));
+    }
+    assert.deepEqual(a.erros, []);
+    await a.fechar();
+  }
+});
+
+test('Kit 0.7.0 · trecho redesenhado com movimento: o que aparece cresce, o que some encolhe, a caixa que troca desliza', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => { const m = document.getElementById('main'); m.innerHTML = '<div id="cx"><div data-kf-morf="c"><p>um</p></div><p data-kf-exp="x">some</p></div>'; });
+  await p.evaluate(() => KitFacil.movimento.redesenhar(document.getElementById('cx'), () => { document.getElementById('cx').innerHTML = '<div data-kf-morf="c"><p>um</p><p>dois</p><p>três</p></div><p data-kf-exp="y">aparece</p>'; }));
+  const r = await p.evaluate(() => ({ fantasma: document.querySelectorAll('.kf-exp-fantasma').length, cresce: document.querySelector('[data-kf-exp="y"]').getAnimations().map(x => x.effect.getTiming().duration), muda: document.querySelector('[data-kf-morf="c"]').getAnimations().length }));
+  assert.deepEqual(r, { fantasma: 1, cresce: [600], muda: 1 });
+  assert.ok(await esperar(() => p.evaluate(() => !document.querySelector('.kf-exp-fantasma'))), 'o trecho que some sai depois do movimento');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.7.0 · abertura de quatro telas: Pular em todas menos na última, Voltar, Esc, deslizar e uma vez só', async () => {
+  const a = await aparelho(amb, { caminho: pagina() });
+  const p = a.page;
+  await p.evaluate(() => { window.FIM = []; KitFacil.abertura.abrir({ fim: 'Começar', extra: { rotulo: 'Ver um exemplo' }, telas: [1, 2, 3, 4].map(n => ({ arte: `<div>Arte ${n}</div>`, titulo: `Tela ${n}`, texto: `Texto ${n}.`, extra: n === 4 ? '<label for="ab-nome">Seu nome</label><input id="ab-nome">' : '' })), aoFechar: i => { FIM.push([i.como, i.ultima, i.el.querySelector('#ab-nome') ? i.el.querySelector('#ab-nome').value : null]); } }); });
+  await p.locator('.kf-abertura').waitFor();
+  assert.equal(await p.textContent('#kf-ab-t'), 'Tela 1'); assert.equal(await p.isVisible('#kf-ab-volta'), false); assert.equal(await p.isVisible('#kf-ab-pular'), true);
+  assert.equal(await p.evaluate(() => document.activeElement.id), 'kf-ab-t', 'o foco vai para o título da tela');
+  await p.click('#kf-ab-prox'); await p.keyboard.press('ArrowRight'); await p.click('#kf-ab-prox');
+  assert.equal(await p.textContent('#kf-ab-t'), 'Tela 4');
+  assert.equal(await p.isVisible('#kf-ab-pular'), false, 'a última tela não tem Pular');
+  assert.equal(await p.textContent('#kf-ab-prox'), 'Começar'); assert.equal(await p.isVisible('#kf-ab-ex'), true);
+  await p.fill('#ab-nome', 'Bruno'); await p.click('#kf-ab-prox');
+  assert.deepEqual(await p.evaluate(() => FIM), [['fim', true, 'Bruno']]);
+  assert.equal(await p.evaluate(() => [KitFacil.abertura.ativa(), KitFacil.abertura.vista(), document.body.classList.contains('kf-com-abertura')].join()), 'false,true,false');
+  await p.evaluate(() => KitFacil.abertura.abrir({ telas: [{ titulo: 'A', texto: 'a' }, { titulo: 'B', texto: 'b' }], aoFechar: i => FIM.push([i.como]) }));
+  await p.keyboard.press('Escape'); assert.deepEqual(await p.evaluate(() => FIM.at(-1)), ['pular']);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Kit 0.7.0 · guia único: janela fixa acima da barra, cada passo de verdade, voltar, pular, Esc e os dados devolvidos', async () => {
+  const a = await aparelho(amb, { caminho: pagina() + '&moldura=nova' });
+  const p = a.page;
+  await p.evaluate(() => {
+    window.L = []; window.DADO = 'real';
+    KitFacil.guia.demonstrar({
+      comecar: () => { L.push('comecou'); DADO = 'demo'; },
+      foto: () => DADO, restaurar: f => { DADO = f; L.push('restaurou'); },
+      terminar: ({ concluiu }) => { DADO = 'real'; L.push(concluiu ? 'concluiu' : 'saiu'); },
+      passos: [
+        { t: 'Abra as notas', d: 'Toque em Notas na barra de baixo.', acao: async m => { await m.tocar('#kf-nav-notas'); } },
+        { t: 'Escreva', d: 'O guia escreve de verdade.', acao: async m => { document.getElementById('main').insertAdjacentHTML('beforeend', '<input id="gx" aria-label="Teste">'); await m.digitar('#gx', 'Oi'); } },
+        { t: 'Abra uma janela', d: 'E feche pelo X.', acao: async m => { KitFacil.dialogo.abrir({ titulo: 'Janela do guia', corpo: '<p>x</p>' }); await m.apontar('.kf-dlg h2', 300); await m.fechar(); } },
+      ] });
+  });
+  await p.locator('#kf-gu-doca').waitFor();
+  const g = await p.evaluate(() => { const d = document.querySelector('#kf-gu-doca').getBoundingClientRect(), n = document.querySelector('.kf-nav').getBoundingClientRect(); return { encosta: Math.abs(d.bottom - n.top) <= 1, est: KitFacil.guia.estado() }; });
+  assert.ok(g.encosta, 'a janela do guia encosta na barra de baixo'); assert.equal(g.est.fase, 'conta'); assert.equal(g.est.n, 3);
+  assert.equal(await p.evaluate(() => DADO), 'demo');
+  for (let i = 0; i < 40 && await p.evaluate(() => !!KitFacil.guia.estado()); i++) { await p.evaluate(() => { const e = KitFacil.guia.estado(); if (e && e.fase === 'conta' && !e.rapido) document.querySelector('#kf-gu-pula').click(); }); await p.waitForTimeout(250); }
+  assert.equal(await p.evaluate(() => !!KitFacil.guia.estado()), false, 'o guia não chegou ao fim');
+  assert.deepEqual(await p.evaluate(() => [L, DADO, document.querySelectorAll('#kf-gu-doca, #kf-gu-dedo, #kf-gu-anel, .kf-dlg').length, document.body.classList.contains('kf-com-guia')]), [['comecou', 'concluiu'], 'real', 0, false]);
+  assert.equal(await p.evaluate(() => [tela, document.getElementById('gx') && document.getElementById('gx').value].join()), 'notas,Oi', 'os passos aconteceram de verdade');
+  // sair no meio com Esc
+  await p.evaluate(() => KitFacil.guia.demonstrar({ terminar: ({ concluiu }) => L.push(concluiu ? 'concluiu' : 'saiu'), passos: [{ t: 'Um', d: 'Um passo.', acao: async m => { await m.espera(5000); } }] }));
+  await p.locator('#kf-gu-doca').waitFor(); await p.keyboard.press('Escape');
+  assert.deepEqual(await p.evaluate(() => L.at(-1)), 'saiu');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
 });

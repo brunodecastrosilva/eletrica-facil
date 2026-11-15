@@ -1,18 +1,19 @@
 {
-  "kit": "0.6.0",
+  "kit": "0.7.0",
   "arquivos": {
-    "kit-facil.js": "97305e3f8b9f91fa6c3f5980c430e40ffe193a5e2176925b75d3e63081b46b5c",
-    "kit-facil.css": "b253c50181c3d5366dde63f0e093214fe4abeeb6e42c1cf89305bbd2f710f925",
+    "kit-facil.js": "41cd8c17b7b9f245911cd10db6b8f664c28889518537098e49c72f85d7215f10",
+    "kit-facil.css": "2f4e45ed5be61aaadf48904004e35456ae2816c5356d88d1a49f1cd693fac98e",
+    "kit-jogo.js": "734c45912999f01878410feed5f0593b80c32d4eddde977ade20457aa4657513",
     "regras-firestore-feedback.txt": "ba70201d3c09369af60df78d7c14ffe01a3fd10349f5accb7b6fe2c6e6cf8cc7",
     "servidor.mjs": "b6cc0deb2154acb2a59d00ad2223d2a69214d40c28680bc05b29777e2b273b57",
-    "verificar.mjs": "359a22047476211320d3a32ee32395a8fce401cdc3082c93a46a002c0b2698c4",
+    "verificar.mjs": "d3b211edc133d885241f57d324b240e6b58b6913fa9127a11325506f72b68e50",
     "testar.mjs": "53f0ed2efb8b8baaecaabe416fc373b3bc95a574025acf8dd5aec97f68a3642b",
     "testar-regras.mjs": "cb2880a786a2cf0554cc5f8878911c14b01764ad6a6a6b1d100ea2965bd11253",
     "CODIGO.md": "d1c44d23f56c2c5a2bc5eea277d493c28bc1ffc3c053716e8cb58eec5b06391b",
-    "ANEXOS.md": "d9f3cd15206828d5e9aca5f26426dea6c35c3a2f6d82926e248364b243b51ee3",
-    "LEIAME.md": "971741909933d02dd026689633a1cbbcf9fc6509e1959e2468285df58ea4fc5c",
-    "testes/ambiente.mjs": "a4b4fb81c2032ef4ede38c386027372426b2a8a07a123b3f2b8600c13204e60f",
-    "testes/kit.test.mjs": "4072489c01d75d387124d386ea3405451623632ebbfe62c16bbb4874c287f28d",
-    "testes/pagina-kit.html": "0adc22fa988f655c715da04da7a2fbb03b367ba09de7f72ab566aaef9e807547"
+    "ANEXOS.md": "b32876afef3370f163c538d68ccb738550ce5c7f481fb9a0b36f3e8deb0342ad",
+    "LEIAME.md": "46c1bb52195a64f3b5ebf6143961b6813f0dcdea77cc7c08dafa1fbba79a25c6",
+    "testes/ambiente.mjs": "320f30db751a654747a0931b1f7577be6ce46370e4fc185e719e7db9f70a8551",
+    "testes/kit.test.mjs": "2d95438e21cce32ad120d05fda32baf3d02799d12eafbfbbce60c62761759fa4",
+    "testes/pagina-kit.html": "4a231c1d11efba94db3d536e21c44d03cc6900019e3f81013858ea82389fd988"
   }
 }

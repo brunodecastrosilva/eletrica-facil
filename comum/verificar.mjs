@@ -6,8 +6,9 @@
    3. se a versão é a mesma no package.json, no app, no service worker e no CHANGELOG;
    4. se o service worker guarda arquivos que existem;
    5. regras de acessibilidade da página (idioma e zoom liberado) e se o Kit Fácil está carregado;
-   6. a interface comum: fonte da família, moldura (barra, navegação e trilho), área superior com presente,
-      nuvem e balão, Ajustes na navegação (barra de baixo e trilho) e a tela de Ajustes em guias;
+   6. a interface comum: fonte da família, moldura (barra, navegação e trilho), área superior com nuvem, presente e
+      balão, a navegação do Kit 0.7.0 (barra baixa com a ação principal no centro e Mais; trilho com Mais e Ajustes no
+      pé), a tela de Ajustes em guias e um relógio só (nada de trocar a duração das animações do Kit);
    7. o manifesto do app web: id, start_url e scope do próprio caminho (os três apps dividem o mesmo endereço);
    8. componentes (Kit 2.10): botão, segmento, cartão, faixa e guias com as medidas comuns do Kit.
    Para atualizar o manifesto depois de mudar o kit: node comum/verificar.mjs --gerar */
@@ -19,7 +20,7 @@ import { execFileSync } from 'node:child_process';
 
 const COMUM = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(COMUM, '..');
-const COMPARTILHADOS = ['kit-facil.js', 'kit-facil.css', 'regras-firestore-feedback.txt', 'servidor.mjs', 'verificar.mjs', 'testar.mjs', 'testar-regras.mjs', 'CODIGO.md', 'ANEXOS.md', 'LEIAME.md',
+const COMPARTILHADOS = ['kit-facil.js', 'kit-facil.css', 'kit-jogo.js', 'regras-firestore-feedback.txt', 'servidor.mjs', 'verificar.mjs', 'testar.mjs', 'testar-regras.mjs', 'CODIGO.md', 'ANEXOS.md', 'LEIAME.md',
   'testes/ambiente.mjs', 'testes/kit.test.mjs', 'testes/pagina-kit.html'];
 
 const sha = b => createHash('sha256').update(b).digest('hex');
@@ -112,7 +113,7 @@ const lista = (sw.match(/const APP = \[([^\]]*)\]/) || [])[1] || '';
 const guardados = [...lista.matchAll(/'([^']+)'/g)].map(m => m[1]);
 let faltam = 0;
 for (const g of guardados) { if (g === './') continue; if (!(await existe(g))) { falha(`sw.js guarda ${g}, que não existe`); faltam++; } }
-for (const k of ['./comum/kit-facil.js', './comum/kit-facil.css']) if (!guardados.includes(k)) { falha(`sw.js não guarda ${k} (o app não abriria sem internet)`); faltam++; }
+for (const k of ['./comum/kit-facil.js', './comum/kit-facil.css', './comum/kit-jogo.js']) if (!guardados.includes(k)) { falha(`sw.js não guarda ${k} (o app não abriria sem internet)`); faltam++; }
 if (!faltam) ok(`${guardados.length} arquivos guardados para uso sem internet`);
 
 /* ---------- página ---------- */
@@ -159,9 +160,22 @@ if (/class="kf-casca"/.test(html) && /kf-barra/.test(codigo) && /kf-nav/.test(co
 else falha('moldura comum incompleta: use body.kf-casca, kf-barra, kf-nav e kf-trilho (CODIGO.md, Título VI)');
 if (/KitFacil\.topo\.html\(\s*\{\s*principal:\s*true/.test(codigo)) ok('área superior direita: nuvem, presente e balão (KitFacil.topo)');
 else falha('a tela principal não usa KitFacil.topo.html({ principal: true }) (nuvem, presente e balão)');
+/* Kit 0.7.0 (Código, Arts. 59, 60 e 93): barra baixa com a ação principal no centro e "Mais" (tela com os Ajustes por
+   último); trilho com Mais e Ajustes no pé. Os apps ainda em 0.x seguem a navegação antiga até a vez de cada um
+   (Art. 93, § 2º): para eles, a falta da moldura nova é aviso, e vale a conferência antiga (Ajustes na navegação). */
+const molduraNova = /KitFacil\.nav\.barra\(/.test(codigo) && /KitFacil\.nav\.trilho\(/.test(codigo);
+const segueConta = !/^0\./.test(versao);
 const navAj = (codigo.match(/KitFacil\.nav\.ajustes\(/g) || []).length;
-if (navAj >= 2 || (/KitFacil\.nav\.ajustes\(\s*['"]nav['"]/.test(codigo) && /KitFacil\.nav\.ajustes\(\s*['"]trilho['"]/.test(codigo))) ok('Ajustes na navegação: barra de baixo e trilho (KitFacil.nav.ajustes)');
-else falha('Ajustes precisa estar na barra de baixo e no trilho: use KitFacil.nav.ajustes("nav") e KitFacil.nav.ajustes("trilho")');
+if (molduraNova) ok('navegação do Kit 0.7.0: ação principal no centro, Mais e trilho com Ajustes no pé (KitFacil.nav.barra e .trilho)');
+else if (segueConta) falha('a versão 1.x segue o Conta Fácil: use KitFacil.nav.barra e KitFacil.nav.trilho (Código, Arts. 59, 60 e 93)');
+else {
+  aviso('navegação antiga: na vez deste app seguir o Conta Fácil, troque por KitFacil.nav.barra e KitFacil.nav.trilho (Código, Art. 93, § 2º)');
+  if (navAj >= 2 || (/KitFacil\.nav\.ajustes\(\s*['"]nav['"]/.test(codigo) && /KitFacil\.nav\.ajustes\(\s*['"]trilho['"]/.test(codigo))) ok('Ajustes na navegação: barra de baixo e trilho (KitFacil.nav.ajustes)');
+  else falha('Ajustes precisa estar na barra de baixo e no trilho: use KitFacil.nav.ajustes("nav") e KitFacil.nav.ajustes("trilho")');
+}
+// um relógio só (Art. 72, § 1º): o app não troca as durações do Kit por baixo
+if (/Element\.prototype\.animate\s*=/.test(codigo)) falha('o app troca Element.prototype.animate: as durações são as do Kit (KitFacil.movimento, --kf-ms)');
+else ok('um relógio só: o app não troca as durações do Kit');
 if (/novidades\s*:\s*\[/.test(codigo)) ok('novidades da versão informadas ao Kit'); else aviso('KitFacil.iniciar sem novidades: quem atualiza o app não vê o que mudou');
 if (/KitFacil\.ajustes\.html\(/.test(codigo) && /KitFacil\.ajustes\.ligar\(/.test(codigo)) ok('Ajustes em guias (KitFacil.ajustes)');
 else falha('a tela de Ajustes não usa KitFacil.ajustes.html e KitFacil.ajustes.ligar');

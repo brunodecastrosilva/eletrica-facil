@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '0.6.0';
+  const VERSAO = '0.7.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -87,6 +87,7 @@
     escudo: '<path d="M12 3 5 6v5.5c0 4.3 3 7.6 7 9.5 4-1.9 7-5.2 7-9.5V6z"/><path d="m9 12 2.2 2.2L15.5 10"/>',
     info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.1"/>',
     mais: '<circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/>',
+    presente: '<rect x="4.5" y="10.5" width="15" height="9.5" rx="1.5"/><path d="M3.5 7h17v3.5h-17zM12 7v13"/><path d="M12 7c-1.2-3.2-5-3-4.5-.8.3 1.3 2.5 1 4.5.8zm0 0c1.2-3.2 5-3 4.5-.8-.3 1.3-2.5 1-4.5.8z"/>',
     estrelaNova: '<path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3M6 6l2.1 2.1M15.9 15.9 18 18M18 6l-2.1 2.1M8.1 15.9 6 18"/><circle cx="12" cy="12" r="2.2"/>',
   };
   const IC = {
@@ -97,6 +98,10 @@
     play: svg('<path d="M8 5.5v13l10.5-6.5z"/>'),
     nuvem: svg(P.nuvem),
     balao: svg(P.balao),
+    presente: svg(P.presente),
+    mais: svg(P.mais),
+    menos: svg('<path d="M5 12h14"/>'),
+    soma: svg('<path d="M12 5v14M5 12h14"/>'),
     msg: svg(P.balao),
     ajustes: svg(P.ajustes),
     novidades: svg(P.estrelaNova),
@@ -227,8 +232,13 @@
   }
   /* abre uma janela: no celular sobe do pé da tela; em telas largas fica no centro */
   /* sub: linha de apoio abaixo do título (Kit 0.4.0); contexto: rótulo curto acima do título, quando houver;
-     classe 'kf-alto' (altura quase toda da tela) e 'kf-largo' (até 780 px) */
+     classe 'kf-alto' (altura quase toda da tela) e 'kf-largo' (até 780 px).
+     Kit 0.7.0: o movimento é o do mecanismo único das janelas (abaixo, "janelas: um mecanismo só"); nenhuma janela
+     abre com a caixa de texto selecionada (Código, Arts. 16, IX, e 68, § 5º): o foco vai para a janela ou para um
+     botão marcado com autofocus, e o teclado só sobe quando a pessoa toca no campo. */
+  const campoDeTexto = el => !!(el && el.matches && el.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=range]):not([type=file]):not([type=hidden]), textarea, select'));
   function abrirDialogo({ titulo, sub = '', contexto = '', corpo, pe = '', aoMontar, aoFechar, classe = '', nome = '' }) {
+    const troca = !!atual;
     const origem = atual ? atual.origem : document.activeElement;
     fecharDialogo(true, { trocando: true });
     const idT = 'kf-t-' + Math.random().toString(36).slice(2, 8);
@@ -250,29 +260,40 @@
       else if (e.key === 'Tab') prender(e, dlg);
     });
     atual = { el: wrap, dlg, origem, aoFechar, nome };
-    vigiarJanela(dlg);
     if (aoMontar) aoMontar(dlg);
-    const alvo = $('[autofocus]', dlg) || dlg;
-    try { alvo.focus({ preventScroll: true }); } catch { alvo.focus(); }
+    // campo de texto não abre selecionado, nem com autofocus, nem pelo aoMontar do app
+    $$('[autofocus]', dlg).forEach(x => { if (campoDeTexto(x)) x.removeAttribute('autofocus'); });
+    const f = document.activeElement; if (f && f !== dlg && dlg.contains(f) && campoDeTexto(f)) f.blur();
+    if (!dlg.contains(document.activeElement) || document.activeElement === document.body) {
+      const alvo = $('[autofocus]', dlg) || dlg;
+      try { alvo.focus({ preventScroll: true }); } catch { alvo.focus(); }
+    }
+    janelas.nascer(wrap, troca);
     return dlg;
   }
   function fecharDialogo(silencioso, { trocando = false } = {}) {
     if (!atual) return;
     const { el, origem, aoFechar } = atual;
     atual = null;
-    // a janela sai descendo (Kit 2.6); quando outra janela entra no lugar, a troca é direta
-    if (!trocando) sairDialogo(el);
+    // a janela sai descendo pelo pé, no relógio do Kit; quando outra janela entra no lugar, a nova assume (Art. 68, § 3º)
+    if (!trocando) janelas.sair(el);
     el.remove();
+    if (!trocando) janelas.fechou();
     destravar();
     if (origem && origem.focus && document.contains(origem)) { try { origem.focus({ preventScroll: true }); } catch {} }
     if (!silencioso && typeof aoFechar === 'function') aoFechar();
   }
   const dialogoAberto = () => !!atual;
-  function confirmar({ titulo, texto, ok = 'Confirmar', perigo = false, aoConfirmar }) {
-    abrirDialogo({ titulo, classe: 'kf-curto',
-      corpo: `<p class="kf-texto">${esc(texto)}</p>`,
-      pe: `<button type="button" class="kf-btn kf-sec" data-kf-fechar>Cancelar</button><button type="button" class="kf-btn ${perigo ? 'kf-perigo' : 'kf-pri'}" data-kf-ok autofocus>${esc(ok)}</button>`,
-      aoMontar: d => { $('[data-kf-ok]', d).onclick = () => { fecharDialogo(true); aoConfirmar && aoConfirmar(); }; } });
+  /* confirmação (Código, Art. 65, VIII): diz o que será apagado e se dá para desfazer; o botão nomeia a ação.
+     desfaz: texto curto sobre desfazer ("Dá para desfazer logo depois." ou "Não dá para desfazer."), em linha própria. */
+  function confirmar({ titulo, texto, ok = 'Confirmar', perigo = false, desfaz = '', aoConfirmar, aoCancelar }) {
+    abrirDialogo({ titulo, classe: 'kf-curto kf-confirmar', nome: 'confirmar', aoFechar: aoCancelar,
+      corpo: `<p class="kf-texto">${esc(texto)}</p>${desfaz ? `<p class="kf-ajuda">${esc(desfaz)}</p>` : ''}`,
+      pe: `<button type="button" class="kf-btn kf-sec" data-kf-cancelar>Cancelar</button><button type="button" class="kf-btn ${perigo ? 'kf-perigo' : 'kf-pri'}" data-kf-ok autofocus>${esc(ok)}</button>`,
+      aoMontar: d => {
+        $('[data-kf-cancelar]', d).onclick = () => fecharDialogo();
+        $('[data-kf-ok]', d).onclick = () => { fecharDialogo(true); aoConfirmar && aoConfirmar(); };
+      } });
   }
   async function copiar(texto, msg = 'Copiado.') {
     try { await navigator.clipboard.writeText(texto); avisar(msg); return true; } catch {}
@@ -557,7 +578,7 @@
       <dl class="kf-dados"><div><dt>Termos de uso</dt><dd>Ainda não publicados: o app está em fase de testes.</dd></div>
         <div><dt>Privacidade</dt><dd>O resumo de como o app trata os seus dados está em <b>Privacidade e segurança</b>.</dd></div></dl>
       ${novidadesDaVersao() ? `<h3 class="kf-sub">Novidades desta versão</h3>${listaNovidades(novidadesDaVersao())}` : ''}
-      ${apoioAtivo() ? `<h3 class="kf-sub">Apoie o criador</h3><div class="kf-apoio-sobre">${presenteHTML(40)}<p class="kf-ajuda">O ${esc(C.nome)} é gratuito. Gostando do app? Mande um presente para o criador!</p></div><button type="button" class="kf-btn kf-sec" data-kf="apoio">Mandar um presente</button>` : ''}
+      ${apoioAtivo() ? `<h3 class="kf-sub">Apoie o criador</h3><div class="kf-apoio-sobre">${presenteMini()}<p class="kf-ajuda">O ${esc(C.nome)} é gratuito. Gostando do app? Mande um presente para o criador!</p></div><button type="button" class="kf-btn kf-sec" data-kf="apoio">Mandar um presente</button>` : ''}
       <h3 class="kf-sub">Como reconhecer o app oficial</h3>
       <dl class="kf-dados"><div><dt>Endereço oficial</dt><dd>${esc(ENDERECO_OFICIAL + (C.app || '') + '/')}</dd></div>
         ${apoioAtivo() ? `<div><dt>Chave Pix do apoio</dt><dd>termina em ${esc(String(C.apoio.chave).slice(-4))}</dd></div>` : ''}</dl>
@@ -889,39 +910,8 @@
 
   /* ================= apoio ao criador: "Mande um presente para o criador!" (Código, Art. 13) ================= */
   const apoioAtivo = () => !!(C.apoio && String(C.apoio.chave || '').trim());
-  /* O presente do Kit, igual em todos os apps: colorido, em 3D e em vista isométrica, montado com CSS (sem imagem).
-     t = lado da caixa em px. Grande (t >= 30): papel de bolinhas, pontas da fita, brilho da tampa, verso do laço e
-     sombra. Pequeno (barra de cima): caixa, tampa, fita e laço, que é o que se lê em 24 px.
-     Dá uma volta ao aparecer (só na primeira vez que o app abre, na barra; sempre, na janela e em Sobre) e ao
-     tocar ou passar o ponteiro; depois fica parado. Com movimento reduzido, fica sempre parado (no CSS). */
-  let presenteJaGirou = false;
-  function presenteHTML(t = 14, o = {}) {
-    const g = t >= 30, gira = o.gira !== undefined ? o.gira : true, f = (c, d = '') => `<span class="kf-pr-f ${c}">${d}</span>`;
-    const alcas = (g ? ['f', 'v'] : ['f']).map(z => f(`kf-pr-a kf-pr-ae kf-pr-a${z}`) + f(`kf-pr-a kf-pr-ad kf-pr-a${z}`)).join('');
-    return `<span class="kf-presente${g ? ' kf-pr-g' : ''}" style="--s:${t}px" aria-hidden="true"><span class="kf-pr-cubo${gira ? ' kf-pr-gira' : ''}">`
-      + (g ? f('kf-pr-sb') : '')
-      + f('kf-pr-c kf-pr-c1') + f('kf-pr-c kf-pr-c2') + f('kf-pr-c kf-pr-c3') + f('kf-pr-c kf-pr-c4')
-      + f('kf-pr-t kf-pr-t1') + f('kf-pr-t kf-pr-t2') + f('kf-pr-t kf-pr-t3') + f('kf-pr-t kf-pr-t4')
-      + f('kf-pr-tt', g ? '<span class="kf-pr-p kf-pr-p1"></span><span class="kf-pr-p kf-pr-p2"></span>' : '')
-      + alcas
-      + f('kf-pr-n kf-pr-n1') + f('kf-pr-n kf-pr-n2') + f('kf-pr-n kf-pr-n3') + f('kf-pr-n kf-pr-n4') + f('kf-pr-n kf-pr-n5')
-      + '</span></span>';
-  }
-  function girarPresente(el) {
-    const c = el && el.querySelector('.kf-pr-cubo'); if (!c) return;
-    c.classList.remove('kf-pr-gira'); void c.offsetWidth; c.classList.add('kf-pr-gira');
-  }
-  const botaoApoio = () => {
-    const gira = !presenteJaGirou; presenteJaGirou = true;
-    return `<button type="button" class="kf-topo-btn kf-apoio-btn" data-kf="apoio" aria-label="Mande um presente para o criador" title="Mande um presente para o criador">${presenteHTML(14, { gira })}</button>`;
-  };
-  if (typeof document !== 'undefined') {
-    document.addEventListener('pointerover', e => {
-      const b = e.target.closest && e.target.closest('[data-kf="apoio"]');
-      if (b && !(e.relatedTarget && b.contains(e.relatedTarget))) girarPresente(b);
-    });
-    document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-kf="apoio"]'); if (b) girarPresente(b); }, true);
-  }
+  // Kit 0.7.0: na barra, o presente é um ícone de traço, da cor da nuvem e do balão (Código, Arts. 13, § 1º, e 58, II)
+  const botaoApoio = () => `<button type="button" class="kf-topo-btn kf-apoio-btn" data-kf="apoio" data-kf-presente aria-label="Mande um presente para o criador" title="Mande um presente para o criador">${IC.presente}</button>`;
   /* código Pix copia e cola (BR Code, padrão EMV do Banco Central), sem valor: quem paga escolhe quanto */
   const semAcento = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9 .\-]/g, '').trim();
   const campo = (id, v) => id + String(v.length).padStart(2, '0') + v;
@@ -930,9 +920,10 @@
     for (let i = 0; i < t.length; i++) { c ^= t.charCodeAt(i) << 8; for (let j = 0; j < 8; j++) c = c & 0x8000 ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF; }
     return c.toString(16).toUpperCase().padStart(4, '0');
   }
-  function codigoPix({ chave, nome, cidade, txid = '***' } = C.apoio) {
+  /* valor (Kit 0.7.0): em centavos, para o Pix de cobrança; sem valor, quem paga escolhe quanto (o do apoio) */
+  function codigoPix({ chave, nome, cidade, valor = 0, txid = '***' } = C.apoio) {
     const conta = campo('00', 'br.gov.bcb.pix') + campo('01', String(chave).trim());
-    const corpo = campo('00', '01') + campo('26', conta) + campo('52', '0000') + campo('53', '986') + campo('58', 'BR')
+    const corpo = campo('00', '01') + campo('26', conta) + campo('52', '0000') + campo('53', '986') + (valor > 0 ? campo('54', (valor / 100).toFixed(2)) : '') + campo('58', 'BR')
       + campo('59', (semAcento(nome).toUpperCase() || 'CRIADOR').slice(0, 25)) + campo('60', (semAcento(cidade).toUpperCase() || 'BRASIL').slice(0, 15))
       + campo('62', campo('05', txid)) + '6304';
     return corpo + crc16(corpo);
@@ -947,24 +938,21 @@
     });
     return qrPromessa;
   }
+  /* janela do apoio (Código, Art. 13, § 2º): o presente em 3D que gira com o dedo, o convite, o QR code e um só botão */
   function abrirApoio() {
     if (!apoioAtivo()) return;
     const codigo = codigoPix();
     abrirDialogo({ titulo: 'Mande um presente para o criador!', classe: 'kf-curto kf-apoio', nome: 'apoio',
-      corpo: `<div class="kf-apoio-presente">${presenteHTML(44)}</div>
-        <p class="kf-texto">Gostando do ${esc(C.nome)}? O app é gratuito e feito por uma pessoa só. Se ele ajuda você, mande um presente para o criador pelo Pix. Qualquer valor ajuda.</p>
+      corpo: `<div class="kf-ap">${presente3dHTML()}<p class="kf-ap-dica" aria-hidden="true">Deslize o dedo para girar</p>
+        <p class="kf-texto">Gostando do ${esc(C.nome)}? O app é gratuito e feito por uma pessoa só. Se ele ajuda você, mande um presente pelo Pix. Qualquer valor ajuda.</p>
         <div class="kf-qr" data-kf-qr role="img" aria-label="QR code do Pix do criador"><span class="kf-carregando">Preparando o QR code…</span></div>
-        <p class="kf-ajuda">Abra o app do seu banco, escolha <b>Pix</b> e leia o QR code, ou copie o código e cole em <b>Pix copia e cola</b>.</p>
-        <p class="kf-ajuda">É opcional: o ${esc(C.nome)} continua igual para todos, pagando ou não.</p>`,
+        <p class="kf-ajuda">Abra o app do seu banco, escolha <b>Pix</b> e leia o QR code, ou copie o código e cole em <b>Pix copia e cola</b>. É opcional: o ${esc(C.nome)} continua igual para todos, com presente ou sem.</p></div>`,
       pe: `<button type="button" class="kf-btn kf-pri" data-kf-pix-codigo autofocus>${IC.copiar}Copiar código Pix</button>`,
       aoMontar: d => {
         $('[data-kf-pix-codigo]', d).onclick = () => copiar(codigo, 'Código Pix copiado. Cole no app do seu banco.');
-        const caixa = $('[data-kf-qr]', d);
-        carregarQR().then(qrcode => {
-          if (!document.contains(caixa)) return;
-          const q = qrcode(0, 'M'); q.addData(codigo); q.make();
-          caixa.innerHTML = q.createSvgTag({ cellSize: 4, margin: 3, scalable: true });
-        }).catch(() => { if (document.contains(caixa)) caixa.innerHTML = '<span class="kf-ajuda">Sem internet para mostrar o QR code agora. Use o botão Copiar código Pix.</span>'; });
+        qrNaCaixa($('[data-kf-qr]', d), codigo, { semInternet: 'Sem internet para mostrar o QR code agora. Use o botão Copiar código Pix.' });
+        // o presente em 3D vem de comum/kit-jogo.js; sem ele (sem internet na primeira visita), fica o desenho parado
+        jogo.carregar().then(J => { const o = $('.kf-o3d', d); if (o && o.isConnected) J.girar(o); }).catch(() => {});
       } });
   }
 
@@ -2031,7 +2019,7 @@
   /* ================= Kit 2.5: movimento comum ================= */
   const semMovimento = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } };
   // uma curva só para tudo o que abre, fecha e rola: começa macio, desliza e pousa devagar (a mesma no CSS e no código)
-  const MOV = { ms: 560, bz: [.45, 0, .2, 1] };
+  const MOV = { ms: 600, bz: [.45, 0, .2, 1] };  // Kit 0.7.0: um relógio só (Código, Art. 72, § 1º)
   MOV.css = `cubic-bezier(${MOV.bz.join(',')})`;
   MOV.curva = (() => {
     const [x1, y1, x2, y2] = MOV.bz, B = (u, a, b) => 3 * (1 - u) * (1 - u) * u * a + 3 * (1 - u) * u * u * b + u * u * u;
@@ -2044,13 +2032,16 @@
   })();
 
   /* ================= Kit 2.6: movimento em tudo =================
-     Duas durações na mesma curva: MOV.ms (560 ms) para o que cresce ou rola (seções, rolagem) e MOV.curto (280 ms)
+     Kit 0.7.0: um relógio só. MOV.ms e MOV.curto valem 600 ms para tudo o que abre ou fecha; MOV.toque (280 ms) fica
+     para o que não abre nem fecha (carrossel, arrastar e soltar). Antes eram MOV.ms (560 ms) para o que cresce ou rola e MOV.curto (280 ms)
      para o que aparece ou some (telas, guias, menus, listas, calendário, janelas, avisos).
      entrar(el): o conteúdo chega subindo de leve e aparecendo; o app chama a cada troca de tela ou guia.
      Para o que some, o Kit desenha um "fantasma" (cópia sem ids, papéis nem dados) que sai sozinho: o elemento de
      verdade já saiu do lugar, então o código e os testes nunca esperam a animação. */
-  MOV.curto = 280;
-  const MOV_SAIDA = 200;
+  MOV.curto = 600;
+  const MOV_SAIDA = 600;
+  // o que não abre nem fecha (carrossel, arrastar e soltar) fica fora do relógio de 600 ms (Art. 72, § 2º)
+  MOV.toque = 280;
   function entrar(el, { de = 'baixo' } = {}) {
     if (!el || !el.animate || semMovimento()) return;
     // 'tela': só a opacidade (deslocar a tela inteira levaria junto os botões fixos, como o de criar)
@@ -2074,20 +2065,6 @@
     f.setAttribute('inert', ''); f.style.pointerEvents = 'none';
     return f;
   }
-  function sairDialogo(wrap) {
-    if (semMovimento() || !wrap.animate || !wrap.isConnected) return;
-    const f = fantasma(wrap, { 'kf-dlg': 'kf-dlg-x' });
-    const corpo = wrap.querySelector('.kf-dlg-corpo'), fc = f.querySelector('.kf-dlg-corpo');
-    if (corpo && fc) requestAnimationFrame(() => { fc.scrollTop = corpo.scrollTop; });
-    f.style.animation = 'none';
-    caixaSaidas().appendChild(f);
-    const d = f.firstElementChild; if (d) d.style.animation = 'none';
-    const o = { duration: MOV_SAIDA, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' };
-    const a = f.animate([{ opacity: 1 }, { opacity: 0 }], o);
-    if (d) d.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(24px)', opacity: .4 }], o);
-    a.onfinish = a.oncancel = () => f.remove();
-    setTimeout(() => f.remove(), MOV_SAIDA + 200);
-  }
   // listas e calendários que fecham: o fantasma some subindo de leve, no mesmo lugar
   function sairLista(el, trocaClasse) {
     if (semMovimento() || !el.animate || el.hidden) return;
@@ -2097,7 +2074,7 @@
     f.hidden = false;
     caixaSaidas().appendChild(f);
     f.scrollTop = el.scrollTop;
-    const a = f.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-6px)' }], { duration: MOV_SAIDA, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
+    const a = f.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-6px)' }], { duration: MOV_SAIDA, easing: MOV.css, fill: 'forwards' });
     a.onfinish = a.oncancel = () => f.remove();
     setTimeout(() => f.remove(), MOV_SAIDA + 200);
   }
@@ -2466,36 +2443,7 @@
   /* ================= Kit 0.4.0: teclado, janela que muda de lugar, item novo, linha de adicionar, fato,
      carrossel e arrastar e soltar (propostas do Laboratório do Conta Fácil, Código 0.3) ================= */
 
-  /* janela acima do teclado: no celular e no tablet, com um campo de janela em foco, a camada da janela ocupa só a
-     área visível acima do teclado (medida pelo navegador) e a janela fica colada nele */
-  (() => {
-    const html = document.documentElement, vv = global.visualViewport;
-    let toque = false; try { toque = matchMedia('(pointer: coarse)').matches; } catch {}
-    let t = 0;
-    const medir = () => { if (!vv) return; html.style.setProperty('--kf-vv-top', Math.round(vv.offsetTop) + 'px'); html.style.setProperty('--kf-vv-h', Math.round(vv.height) + 'px'); };
-    const campo = el => el && el.matches && el.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=range]),textarea') && el.closest('.kf-ov');
-    if (vv) { vv.addEventListener('resize', medir); vv.addEventListener('scroll', medir); }
-    document.addEventListener('focusin', e => { if (!toque || !campo(e.target)) return; clearTimeout(t); medir(); html.classList.add('kf-teclado'); });
-    document.addEventListener('focusout', () => { clearTimeout(t); t = setTimeout(() => { if (!campo(document.activeElement)) html.classList.remove('kf-teclado'); }, 150); });
-  })();
-
-  /* janela que muda de lugar (teclado abrindo ou fechando, conteúdo que cresce ou encolhe) desliza até o novo lugar,
-     no tempo da janela subir (240 ms), em vez de saltar; com movimento reduzido, a troca é direta */
-  const JANELA_MS = 240;
-  function vigiarJanela(dlg) {
-    let topo = null;
-    const ver = () => {
-      if (!dlg.isConnected) { obs && obs.disconnect(); return; }
-      const t = dlg.getBoundingClientRect().top, ant = topo; topo = t;
-      if (ant == null || semMovimento() || !dlg.animate) return;
-      const dy = ant - t; if (Math.abs(dy) < 2) return;
-      dlg.animate([{ transform: `translateY(${dy}px)` }, { transform: 'translateY(0)' }], { duration: JANELA_MS, easing: MOV.css, composite: 'add' });
-    };
-    const obs = global.ResizeObserver ? new ResizeObserver(() => requestAnimationFrame(ver)) : null;
-    if (obs) { obs.observe(dlg); obs.observe(dlg.parentElement); }
-    if (global.visualViewport) global.visualViewport.addEventListener('resize', () => requestAnimationFrame(ver));
-    requestAnimationFrame(ver);
-  }
+  /* (Kit 0.7.0: o teclado e a janela que muda de lugar ficam no mecanismo único das janelas, mais abaixo) */
 
   /* destacar(el): item recém-criado. Se estiver fora da tela, a tela rola até ele no movimento comum; depois ele
      pisca uma vez na cor clara de destaque do app */
@@ -2541,7 +2489,7 @@
     let i = Math.max(0, Math.min(n - 1, inicio));
     const largura = () => jan.clientWidth || 1;
     const pintar = (anim = true) => {
-      const dur = anim && !semMovimento() ? MOV.curto : 0;
+      const dur = anim && !semMovimento() ? MOV.toque : 0;
       tri.style.transition = dur ? `transform ${dur}ms ${MOV.css}` : 'none';
       jan.style.transition = dur ? `height ${dur}ms ${MOV.css}` : 'none';
       tri.style.transform = `translateX(${-i * 100}%)`;
@@ -2618,7 +2566,7 @@
         const r = sobre.getBoundingClientRect();
         f.classList.add('kf-arr-entra');
         f.style.transform = `translate(${r.left + r.width / 2 - casa.width / 2}px,${r.top + r.height / 2 - casa.height / 2}px)`;
-        setTimeout(fim, rapido ? 0 : MOV.curto);
+        setTimeout(fim, rapido ? 0 : MOV.toque);
         if (!rapido) { sobre.classList.remove('kf-arr-pisca'); void sobre.offsetWidth; sobre.classList.add('kf-arr-pisca'); setTimeout(() => sobre.classList.remove('kf-arr-pisca'), 700); }
         try { navigator.vibrate && navigator.vibrate(18); } catch {}
         limpar();
@@ -2626,7 +2574,7 @@
       } else {
         f.classList.remove('kf-arr-no-ar'); f.classList.add('kf-arr-volta');
         f.style.transform = `translate(${casa.left}px,${casa.top}px)`;
-        setTimeout(fim, rapido ? 0 : MOV.curto);
+        setTimeout(fim, rapido ? 0 : MOV.toque);
         limpar();
         try { aoFora && aoFora(el); } catch (e) { console.error(e); }
       }
@@ -2657,6 +2605,792 @@
     return () => { limpar(); area.removeEventListener('pointerdown', down); area.removeEventListener('pointermove', move); area.removeEventListener('pointerup', up); area.removeEventListener('pointercancel', cancel); area.removeEventListener('contextmenu', semMenu); area.removeEventListener('touchmove', semRolar); };
   }
 
+
+  /* ======================================================================================================
+     Kit 0.7.0 · peças do Conta Fácil levadas ao Kit (Código 0.7, Art. 93; Anexo II, "Peças a levar ao Kit")
+     ====================================================================================================== */
+
+  /* ================= janelas: um mecanismo só (Código, Arts. 16, IX, 68, § 3º, e 72-A) =================
+     A regra é sempre a mesma (FLIP): mede onde a janela está à vista, deixa o desenho mudar de uma vez, mede onde ela
+     ficou e anima só a diferença, com transform. Vale para nascer, para o teclado que abre ou fecha, para o conteúdo que
+     muda de altura e para uma janela que entra no lugar de outra. Como só existe um movimento, sempre medido na hora, a
+     janela não salta nem volta: se algo muda no meio do caminho, o movimento novo parte de onde ela está.
+     Relógio: nascer, sair, trocar e mudar de altura duram MOV.ms (600 ms), na curva do Kit, iguais em todas as janelas.
+     Só acompanhar o teclado tem relógio próprio, porque quem abre o teclado é o sistema, em cerca de 300 ms. */
+  const janelas = (() => {
+    const html = document.documentElement, vv = global.visualViewport, anima = Element.prototype.animate;
+    const TK_MS = 320, TK_CURVA = 'cubic-bezier(.32,.72,0,1)';  // acompanhar o teclado do sistema
+    const parado = () => semMovimento() || !anima;
+    const campo = el => campoDeTexto(el) && !el.matches('select') && !el.disabled && !el.readOnly;
+    const abertas = () => $$('.kf-ov').filter(o => !o.closest('#kf-saidas'));
+    const janela = () => { const o = abertas().pop(); return o ? o.querySelector('.kf-dlg') : null; };
+    const demonstrando = () => demo.ativo();
+    // traz o campo para dentro da parte visível da janela, rolando só o corpo dela (nunca a página)
+    const aVista = (el, suave) => {
+      const cx = el && el.closest && el.closest('.kf-dlg-corpo'); if (!cx || !el.isConnected) return;
+      const r = el.getBoundingClientRect(), c = cx.getBoundingClientRect(), folga = 14;
+      const d = r.bottom > c.bottom - folga ? r.bottom - (c.bottom - folga) : r.top < c.top + folga ? -(c.top + folga - r.top) : 0;
+      if (d) cx.scrollTo({ top: cx.scrollTop + d, behavior: suave && !parado() ? 'smooth' : 'instant' });
+    };
+    const sobe = y => `translateY(${Math.round(y * 10) / 10}px)`;
+    const parar = el => { if (el && el._kfFlip) { el._kfFlip.cancel(); el._kfFlip = null; } };
+    // anima um elemento do deslocamento dy até o lugar dele
+    const partir = (el, dy, dur = MOV.ms) => {
+      parar(el);
+      if (parado() || Math.abs(dy) < 1) return;
+      const a = el._kfFlip = anima.call(el, [{ transform: sobe(dy) }, { transform: sobe(0) }], { duration: dur, easing: MOV.css });
+      a.onfinish = a.oncancel = () => { if (el._kfFlip === a) el._kfFlip = null; };
+    };
+
+    /* 1. o teclado: a área visível que o navegador informa diz quanto do pé da tela ele cobre.
+       `tk` é o teclado de agora; `tkDesenho` é o teclado para o qual a janela está desenhada. */
+    let tk = 0, tkDesenho = 0, tkQuando = 0;
+    const celular = () => matchMedia('(max-width:719px)').matches;
+    const topoSeguro = () => { const b = $$('.kf-barra').find(x => x.getClientRects().length); return b ? parseFloat(getComputedStyle(b).paddingTop) || 0 : 0; };
+    const desenhar = v => {
+      tkDesenho = v; tkQuando = performance.now();
+      html.style.setProperty('--kf-tk', v + 'px'); html.classList.toggle('kf-tk', v > 0);
+      if (v && vv) html.style.setProperty('--kf-max', Math.max(220, Math.round(vv.height - topoSeguro() - 10)) + 'px'); else html.style.removeProperty('--kf-max');
+    };
+    // onde cada parte da janela está à vista: a janela, o conteúdo, o rodapé e a borda de baixo do conteúdo
+    const partes = dlg => { const corpo = dlg.querySelector(':scope > .kf-dlg-corpo'); return { corpo, pe: dlg.querySelector(':scope > .kf-dlg-pe'), itens: corpo ? [...corpo.children] : [] }; };
+    const foto = (dlg, P) => {
+      const r = el => el.getBoundingClientRect(), rp = P.pe ? r(P.pe) : null, comPe = !!rp && rp.height > 0, capa = dlg._kfTk && dlg._kfTk.capa;
+      return { d: r(dlg).top, c: P.itens[0] ? r(P.itens[0]).top : 0, p: comPe ? rp.top : null, op: comPe ? +getComputedStyle(P.pe).opacity : 0,
+        e: capa ? r(capa).top : P.corpo ? r(P.corpo).bottom : r(dlg).bottom };
+    };
+    const soltar = dlg => {
+      const t = dlg._kfTk; if (!t) return; dlg._kfTk = null; clearTimeout(t.relogio);
+      t.lista.forEach(a => { a.onfinish = null; a.cancel(); });
+      if (t.capa) t.capa.remove();
+      if (t.pe) { t.pe.style.position = t.pePos; t.pe.style.zIndex = t.peZ; }
+    };
+    /* a janela acompanha o teclado. O desenho final só pode entrar de uma vez; o que se vê no caminho é sempre o
+       desenho MAIS ALTO dos dois, com tudo movido por transform no mesmo relógio: a janela, o conteúdo (no lugar da
+       rolagem), o rodapé e uma capa da cor da janela, que esconde o que fica abaixo da borda de baixo. */
+    const acompanhar = (dlg, v) => {
+      const P = partes(dlg), f = document.activeElement, noCampo = campo(f) && dlg.contains(f) ? f : null;
+      const antes = foto(dlg, P), rolAntes = P.corpo ? P.corpo.scrollTop : 0, kAntes = tkDesenho, encolhe = v > kAntes;
+      soltar(dlg); parar(dlg);
+      // o que estiver abrindo ou recolhendo dentro da janela chega já ao fim: até o teclado assentar só há um movimento
+      dlg.getAnimations({ subtree: true }).forEach(a => { try { if (isFinite(a.effect.getComputedTiming().endTime)) a.finish(); } catch {} });
+      desenhar(v); if (v && noCampo) aVista(noCampo);
+      const fim = foto(dlg, P), rolFim = P.corpo ? P.corpo.scrollTop : 0;
+      let base = fim;
+      if (encolhe) { desenhar(kAntes); if (P.corpo) P.corpo.scrollTop = rolAntes; base = foto(dlg, P); }
+      const rel = X => { const d = X.d - base.d; return { d, c: X.c - base.c - d, e: X.e - base.e - d, p: X.p != null && base.p != null ? X.p - base.p - d : null }; };
+      const A = rel(antes), B = rel(fim); if (A.p == null) A.p = B.p || 0; if (B.p == null) B.p = A.p || 0;
+      const ops = { duration: TK_MS, easing: TK_CURVA, fill: 'forwards' }, lista = [];
+      const an = (el, q0, q1) => { const a = anima.call(el, [q0, q1], ops); lista.push(a); return a; };
+      const T = dlg._kfTk = { lista, capa: null, pe: null, relogio: 0 };
+      an(dlg, { transform: sobe(A.d) }, { transform: sobe(B.d) });
+      if (Math.abs(A.c) > .5 || Math.abs(B.c) > .5) P.itens.forEach(el => {
+        if (getComputedStyle(el).transform === 'none') an(el, { transform: sobe(A.c) }, { transform: sobe(B.c) });
+        else an(el, { translate: `0 ${A.c}px` }, { translate: `0 ${B.c}px` });
+      });
+      if (Math.abs(A.e) > .5 || Math.abs(B.e) > .5) {
+        const capa = T.capa = document.createElement('div'); capa.setAttribute('aria-hidden', 'true');
+        capa.style.cssText = `position:absolute;left:0;right:0;top:${base.e - base.d}px;height:200vh;z-index:5;pointer-events:none;background:${getComputedStyle(dlg).backgroundColor}`;
+        dlg.appendChild(capa); an(capa, { transform: sobe(A.e) }, { transform: sobe(B.e) });
+      }
+      if (P.pe && base.p != null) {
+        T.pe = P.pe; T.pePos = P.pe.style.position; T.peZ = P.pe.style.zIndex; P.pe.style.position = 'relative'; P.pe.style.zIndex = '6';
+        an(P.pe, { transform: sobe(A.p), opacity: antes.p != null ? antes.op : 0 }, { transform: sobe(B.p), opacity: fim.p != null ? 1 : 0 });
+      }
+      const concluir = () => {
+        if (dlg._kfTk !== T) return;
+        if (encolhe) { desenhar(v); if (P.corpo && P.corpo.isConnected) P.corpo.scrollTop = rolFim; }
+        soltar(dlg);
+        if (encolhe) { const g = document.activeElement; if (campo(g) && dlg.contains(g)) aVista(g); }
+      };
+      lista[0].onfinish = concluir; T.relogio = setTimeout(concluir, TK_MS + 80);
+    };
+    const medir = () => {
+      if (!vv) return;
+      let v = Math.max(0, Math.round(html.clientHeight - vv.height - vv.offsetTop)); if (v < 80) v = 0; // barras do navegador não contam
+      if (v === tk) return; tk = v;
+      const dlg = janela();
+      if (dlg && !demonstrando() && !parado() && celular()) return acompanhar(dlg, v);
+      if (dlg) soltar(dlg);
+      desenhar(v);
+      const f = document.activeElement; if (v && dlg && campo(f) && dlg.contains(f)) aVista(f);
+    };
+    if (vv) {
+      vv.addEventListener('resize', medir); vv.addEventListener('scroll', medir);
+      // se, mesmo assim, o Safari empurrar a tela com uma janela aberta, ela volta para o lugar quando o teclado assenta
+      let tPan = 0;
+      vv.addEventListener('scroll', () => { clearTimeout(tPan); tPan = setTimeout(() => { if (tk > 0 && vv.offsetTop > 1 && janela() && !demonstrando()) global.scrollTo(0, 0); }, 140); });
+    }
+    // com o teclado já aberto, o campo que recebe o foco vem para a parte visível da janela
+    document.addEventListener('focusin', e => { const el = e.target; if (tk > 0 && tkDesenho === tk && campo(el) && el.closest('.kf-dlg')) requestAnimationFrame(() => requestAnimationFrame(() => { if (el === document.activeElement && tkDesenho === tk) aVista(el, true); })); });
+
+    /* tablet: com um campo de janela em foco, a camada da janela ocupa só a área visível acima do teclado */
+    (() => {
+      let toque = false; try { toque = matchMedia('(pointer: coarse)').matches; } catch {}
+      let t = 0;
+      const medirVV = () => { if (!vv) return; html.style.setProperty('--kf-vv-top', Math.round(vv.offsetTop) + 'px'); html.style.setProperty('--kf-vv-h', Math.round(vv.height) + 'px'); };
+      if (vv) { vv.addEventListener('resize', medirVV); vv.addEventListener('scroll', medirVV); }
+      document.addEventListener('focusin', e => { if (!toque || !campo(e.target) || !e.target.closest('.kf-ov')) return; clearTimeout(t); medirVV(); html.classList.add('kf-teclado'); });
+      document.addEventListener('focusout', () => { clearTimeout(t); t = setTimeout(() => { if (!campo(document.activeElement)) html.classList.remove('kf-teclado'); }, 150); });
+      // campo que some da tela com o foco (janela redesenhada): o navegador não avisa; confere depois de cada toque
+      let tConf = 0;
+      const conferir = () => { if (!campo(document.activeElement)) html.classList.remove('kf-teclado'); };
+      ['pointerup', 'touchend', 'keyup', 'change', 'focusout'].forEach(ev => document.addEventListener(ev, () => { clearTimeout(tConf); tConf = setTimeout(conferir, 260); }, true));
+    })();
+
+    /* 2 e 3. nascer, trocar e mudar de altura */
+    let alturaAnterior = 0, ocupadaAte = 0;
+    // enquanto o app anima a altura de um trecho da janela, ninguém mais desliza a janela
+    const ocupada = t => { ocupadaAte = Math.max(ocupadaAte, performance.now() + (t || MOV.ms) + 140); };
+    const deslizar = (dlg, dy, dur = MOV.ms) => { let resto = 0; if (dlg._kfFlip) { try { resto = new DOMMatrix(getComputedStyle(dlg).transform).m42; } catch {} } partir(dlg, dy + resto, dur); };
+    function nascer(ov, troca) {
+      const dlg = ov.querySelector('.kf-dlg'); if (!dlg || dlg._kfJanela) return; dlg._kfJanela = true;
+      if (tkDesenho !== tk) desenhar(tk); // a janela anterior saiu no meio do caminho do teclado
+      const noCelular = celular();
+      if (troca) {
+        // uma janela no lugar de outra: sem escurecer de novo; a borda de cima vai da altura antiga para a nova
+        ov.classList.add('kf-troca');
+        if (noCelular && alturaAnterior) deslizar(dlg, dlg.offsetHeight - alturaAnterior);
+        if (!parado()) anima.call(dlg.querySelector('.kf-dlg-corpo') || dlg, [{ opacity: .4 }, { opacity: 1 }], { duration: MOV.ms, easing: MOV.css });
+      } else if (!parado()) {
+        // nasce abaixo da tela e sobe (no computador, 28 px abaixo e apagada)
+        if (noCelular) partir(dlg, Math.max(40, Math.round(innerHeight - dlg.getBoundingClientRect().top)));
+        else anima.call(dlg, [{ transform: 'translateY(28px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: MOV.ms, easing: MOV.css });
+      }
+      let h = dlg.offsetHeight, ultima = 0; alturaAnterior = h;
+      if (!global.ResizeObserver) return;
+      const obs = new ResizeObserver(() => {
+        if (!dlg.isConnected) { obs.disconnect(); return; }
+        const agora = performance.now(), nova = dlg.offsetHeight, d = nova - h; h = nova; alturaAnterior = nova;
+        const seguido = agora - ultima < 130; ultima = agora;
+        if (!noCelular || seguido || dlg._kfTk || agora < ocupadaAte || agora - tkQuando < 200) return;
+        deslizar(dlg, d);
+      });
+      obs.observe(dlg);
+    }
+    /* 4. a janela que fecha desce para fora da tela, no mesmo relógio e na mesma curva de quando nasceu, e o fundo
+       clareia junto. O que sai é uma cópia (o "fantasma"); a janela de verdade sai na hora. */
+    document.addEventListener('scroll', e => { const t = e.target; if (t && t.classList && t.classList.contains('kf-dlg-corpo')) t._kfRol = t.scrollTop; }, true);
+    function sair(wrap) {
+      if (parado() || !wrap.isConnected) return;
+      const copia = fantasma(wrap, { 'kf-dlg': 'kf-dlg-x' }), dlg = copia.querySelector('.kf-dlg-x'); if (!dlg) return;
+      caixaSaidas().appendChild(copia);
+      const de = wrap.querySelector('.kf-dlg-corpo'), para = dlg.querySelector('.kf-dlg-corpo'); if (de && para) para.scrollTop = de._kfRol || de.scrollTop;
+      const q = celular() ? [{ transform: sobe(0) }, { transform: sobe(Math.max(40, Math.round(innerHeight - dlg.getBoundingClientRect().top))) }] : [{ transform: 'none', opacity: 1 }, { transform: 'translateY(28px)', opacity: 0 }];
+      const a = anima.call(dlg, q, { duration: MOV.ms, easing: MOV.css, fill: 'forwards' }), fim = () => copia.remove();
+      a.onfinish = a.oncancel = fim; setTimeout(fim, MOV.ms + 150);
+    }
+    const fechou = () => { if (!abertas().length) alturaAnterior = 0; };
+
+    /* iPhone: tocar num campo de uma janela não empurra a tela. O próprio Kit dá o foco, com o campo deslocado para o
+       alto só naquele instante; o Safari acha que não há o que mostrar e não mexe na tela. */
+    const ios = () => global.KF_TESTE_IOS || /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const semEmpurrar = (el, focar) => {
+      const antes = el.style.transform; el.style.transform = 'translateY(-2000px)';
+      if (focar) { try { el.focus({ preventScroll: true }); } catch { el.focus(); } }
+      requestAnimationFrame(() => { el.style.transform = antes; });
+    };
+    let ini = null;
+    document.addEventListener('touchstart', e => { const t = e.touches[0]; ini = e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY, t: Date.now(), el: e.target } : null; }, { passive: true, capture: true });
+    document.addEventListener('touchend', e => {
+      const i = ini; ini = null; if (!i || !ios() || demonstrando()) return;
+      const el = e.target.closest && e.target.closest('input, textarea'); if (!campo(el) || !el.closest('.kf-ov') || el !== (i.el.closest && i.el.closest('input, textarea'))) return;
+      if (el === document.activeElement) return;
+      const t = e.changedTouches[0]; if (!t || Math.hypot(t.clientX - i.x, t.clientY - i.y) > 10 || Date.now() - i.t > 600) return;
+      e.preventDefault(); semEmpurrar(el, true);
+    }, { passive: false, capture: true });
+    document.addEventListener('focus', e => { const el = e.target; if (ios() && !demonstrando() && campo(el) && el.closest && el.closest('.kf-ov') && !/translateY\(-2000px\)/.test(el.style.transform)) semEmpurrar(el, false); }, true);
+
+    return {
+      nascer, sair, fechou, ocupada,
+      teclado: () => tk,
+      // o teclado já subiu e a janela já chegou ao lugar dela (a lista de sugestões espera por isso para abrir)
+      tecladoAssentado: () => { const d = janela(); return tk > 0 && tkDesenho === tk && !(d && d._kfTk); },
+    };
+  })();
+
+  /* ================= trecho redesenhado com movimento (Código, Art. 72) =================
+     redesenhar(raiz, fn): compara o antes e o depois de um redesenho e anima o que mudou, em 600 ms:
+       [data-kf-exp="chave"]  trecho que aparece ou some (abre crescendo, fecha encolhendo);
+       [data-kf-morf="chave"] caixa cujo conteúdo troca (a altura desliza de uma para a outra).
+     marca(el): como achar de novo o pai de um trecho depois do redesenho (padrão: id ou data-kf-marca). */
+  const marcaPadrao = el => el.id ? '#' + CSS.escape(el.id) : el.dataset && el.dataset.kfMarca ? `[data-kf-marca="${CSS.escape(el.dataset.kfMarca)}"]` : '';
+  function redesenhar(raiz, fn, { marca = marcaPadrao } = {}) {
+    if (!raiz || !raiz.animate || semMovimento()) { fn(); return; }
+    const o = { duration: MOV.ms, easing: MOV.css };
+    const caminho = el => { const seg = []; for (let p = el; p && p !== raiz; p = p.parentElement) { const m = marca(p); if (m) { seg.unshift(m); return seg.join(' > '); } seg.unshift(`:nth-child(${[...p.parentElement.children].indexOf(p) + 1})`); } return seg.length ? ':scope > ' + seg.join(' > ') : ''; };
+    if (raiz.closest && raiz.closest('.kf-dlg')) janelas.ocupada(o.duration);
+    const antes = new Map(), alturas = new Map();
+    raiz.querySelectorAll('[data-kf-exp]').forEach(e => { if (e.offsetHeight) antes.set(e.dataset.kfExp, { clone: e.cloneNode(true), pai: caminho(e.parentElement), i: [...e.parentElement.children].indexOf(e) }); });
+    raiz.querySelectorAll('[data-kf-morf]').forEach(e => alturas.set(e.dataset.kfMorf, e.offsetHeight));
+    fn();
+    const medidas = e => { const cs = getComputedStyle(e), pai = e.parentElement && getComputedStyle(e.parentElement), vao = pai && /flex|grid/.test(pai.display) ? parseFloat(pai.rowGap) || 0 : 0;
+      return [{ height: '0px', paddingTop: '0px', paddingBottom: '0px', marginTop: -vao + 'px', marginBottom: '0px', borderTopWidth: '0px', borderBottomWidth: '0px', opacity: 0 },
+        { height: e.getBoundingClientRect().height + 'px', paddingTop: cs.paddingTop, paddingBottom: cs.paddingBottom, marginTop: cs.marginTop, marginBottom: cs.marginBottom, borderTopWidth: cs.borderTopWidth, borderBottomWidth: cs.borderBottomWidth, opacity: 1 }]; };
+    const vistos = new Set();
+    raiz.querySelectorAll('[data-kf-exp]').forEach(e => {
+      vistos.add(e.dataset.kfExp); if (antes.has(e.dataset.kfExp)) return;
+      const q = medidas(e); e.style.overflow = 'hidden'; e.style.boxSizing = 'border-box';
+      const a = e.animate(q, o); a.onfinish = a.oncancel = () => { e.style.overflow = ''; e.style.boxSizing = ''; };
+    });
+    for (const [k, x] of antes) {
+      if (vistos.has(k)) continue;
+      const pai = x.pai ? raiz.querySelector(x.pai) : raiz; if (!pai) continue;
+      const f = x.clone; f.removeAttribute('data-kf-exp'); f.removeAttribute('id'); f.querySelectorAll('[id],[data-kf-exp],[data-kf-morf]').forEach(n => { n.removeAttribute('id'); n.removeAttribute('data-kf-exp'); n.removeAttribute('data-kf-morf'); });
+      f.classList.add('kf-exp-fantasma'); f.setAttribute('aria-hidden', 'true'); f.inert = true;
+      pai.insertBefore(f, pai.children[Math.min(x.i, pai.children.length)] || null);
+      const q = medidas(f); f.style.overflow = 'hidden'; f.style.boxSizing = 'border-box';
+      const a = f.animate([q[1], q[0]], { ...o, fill: 'forwards' }); a.onfinish = a.oncancel = () => f.remove();
+    }
+    raiz.querySelectorAll('[data-kf-morf]').forEach(e => {
+      const h0 = alturas.get(e.dataset.kfMorf), h1 = e.offsetHeight; if (h0 == null || Math.abs(h0 - h1) < 3) return;
+      e.style.overflow = 'hidden'; const a = e.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], o); a.onfinish = a.oncancel = () => { e.style.overflow = ''; };
+    });
+  }
+
+  /* ================= campos: dinheiro, porcentagem, quantidade, chave e escolha (Código, Art. 65, XIII) =================
+     Dinheiro: <input data-kf-dinheiro inputmode="numeric">: os dígitos entram como centavos, como nos apps de banco
+     (1 → R$ 0,01; 1234 → R$ 12,34). Porcentagem: <input data-kf-pct inputmode="numeric">: 1 → 0,01%; 1000 → 10,00%.
+     O primeiro número digitado depois de tocar no campo substitui o valor sugerido. */
+  const real = c => (c / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const pctTexto = h => (h / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+  const lerDinheiro = s => { s = String(s ?? '').replace(/[^\d,.]/g, ''); if (!s) return null; if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); const v = parseFloat(s); return isFinite(v) && v >= 0 ? Math.round(v * 100) : null; };
+  const lerPct = s => { const dg = String(s ?? '').replace(/\D/g, ''); return dg ? Math.min(10000, parseInt(dg, 10)) / 100 : null; };
+  const cursorNoFim = el => { try { const n = el.value.length - (el.matches('[data-kf-pct]') && el.value.endsWith('%') ? 1 : 0); el.setSelectionRange(n, n); } catch {} };
+  function mascarar(el) {
+    if (el.matches('[data-kf-pct]')) { const d = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 5); el.value = d ? pctTexto(Math.min(10000, parseInt(d, 10))) : ''; }
+    else { const d = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 9); el.value = d ? real(parseInt(d, 10)) : ''; }
+    cursorNoFim(el);
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('input', e => {
+      const el = e.target; if (!el.matches || !el.matches('[data-kf-dinheiro],[data-kf-pct]')) return;
+      if (el.dataset.kfNovo === '1' && e.inputType && e.inputType.startsWith('insert') && e.data && /\d/.test(e.data)) el.value = e.data;
+      el.dataset.kfNovo = '';
+      // apagar o % apaga o último número
+      if (el.matches('[data-kf-pct]') && e.inputType === 'deleteContentBackward' && el.value && !el.value.endsWith('%')) el.value = el.value.replace(/\d(?=\D*$)/, '');
+      mascarar(el);
+    }, true);
+    ['focusin', 'click'].forEach(ev => document.addEventListener(ev, e => {
+      const el = e.target; if (!el.matches || !el.matches('[data-kf-dinheiro],[data-kf-pct]')) return;
+      if (ev === 'focusin') el.dataset.kfNovo = '1';
+      setTimeout(() => cursorNoFim(el), 0);
+    }));
+    // passo a passo de quantidade: − e + mudam o número, dentro do mínimo e do máximo, e avisam o app (input e change)
+    document.addEventListener('click', e => {
+      const b = e.target.closest && e.target.closest('[data-kf-passo]'); if (!b) return;
+      const cx = b.closest('.kf-quantidade'), inp = cx && cx.querySelector('input'); if (!inp || inp.disabled) return;
+      const min = inp.min !== '' ? +inp.min : -Infinity, max = inp.max !== '' ? +inp.max : Infinity;
+      const v = Math.max(min, Math.min(max, (parseInt(inp.value, 10) || 0) + (+b.dataset.kfPasso || 0)));
+      if (String(v) === inp.value) return;
+      inp.value = String(v); inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
+      atualizarPassos(cx);
+    });
+    document.addEventListener('input', e => { const cx = e.target.closest && e.target.closest('.kf-quantidade'); if (cx) atualizarPassos(cx); }, true);
+  }
+  function atualizarPassos(cx) {
+    const inp = cx.querySelector('input'); if (!inp) return; const v = parseInt(inp.value, 10);
+    cx.querySelectorAll('[data-kf-passo]').forEach(b => { const d = +b.dataset.kfPasso; b.disabled = d < 0 ? inp.min !== '' && v <= +inp.min : inp.max !== '' && v >= +inp.max; });
+  }
+  function dinheiroHTML({ id, valor = null, attrs = '', placeholder = 'R$ 0,00' } = {}) {
+    return `<input ${id ? `id="${esc(id)}"` : ''} type="text" class="kf-entrada" data-kf-dinheiro inputmode="numeric" autocomplete="off" placeholder="${esc(placeholder)}" value="${valor == null ? '' : esc(real(valor))}" ${attrs}>`;
+  }
+  function porcentoHTML({ id, valor = null, attrs = '', placeholder = '0,00%' } = {}) {
+    return `<input ${id ? `id="${esc(id)}"` : ''} type="text" class="kf-entrada" data-kf-pct inputmode="numeric" autocomplete="off" placeholder="${esc(placeholder)}" value="${valor == null ? '' : esc(pctTexto(Math.round(valor * 100)))}" ${attrs}>`;
+  }
+  function quantidadeHTML({ id, valor = 1, min = 1, max = 999, rotulo = '', attrs = '' } = {}) {
+    const r = rotulo ? ` ${esc(rotulo)}` : '';
+    return `<div class="kf-quantidade"><button type="button" data-kf-passo="-1" aria-label="Menos${r}"${valor <= min ? ' disabled' : ''}>${IC.menos}</button><input ${id ? `id="${esc(id)}"` : ''} type="number" min="${min}" max="${max}" step="1" inputmode="numeric" value="${esc(String(valor))}" ${attrs}><button type="button" data-kf-passo="1" aria-label="Mais${r}"${valor >= max ? ' disabled' : ''}>${IC.soma}</button></div>`;
+  }
+  /* chave: liga e desliga ajustes que valem dali em diante (Art. 65, X e XIII). O rótulo visível fica fora, num <label>. */
+  function chaveHTML({ attrs = '', on = false, rotulo = '' } = {}) {
+    return `<span class="kf-chave"><input type="checkbox" role="switch" ${attrs} ${on ? 'checked' : ''}${rotulo ? ` aria-label="${esc(rotulo)}"` : ''}><span class="kf-chave-trilho" aria-hidden="true"></span></span>`;
+  }
+  /* botões de escolha: poucas opções em linha, a escolhida cheia na cor de destaque (aria-pressed) */
+  function escolhaHTML({ rotulo, on = false, attrs = '' } = {}) {
+    return `<button type="button" class="kf-escolha" aria-pressed="${!!on}" ${attrs}>${esc(rotulo)}</button>`;
+  }
+  /* comportamento comum dos campos (opcional, ligado pelo app com KitFacil.campo.ligar()):
+     tocar no fundo recolhe o teclado; Enter num campo solto confirma e fecha o teclado; o valor digitado é salvo ao
+     sair do campo, mesmo quando o iPhone não dispara o evento de mudança (campos formatados durante a digitação). */
+  let camposLigados = false;
+  function ligarCampos() {
+    if (camposLigados) return; camposLigados = true;
+    const ehCampo = el => el && el.matches && el.matches('input:not([type=checkbox]):not([type=radio]), textarea, select');
+    const INTERATIVO = 'input,textarea,select,label,button,a,summary,[role=button],[tabindex]:not([tabindex="-1"])';
+    let toque = null;
+    document.addEventListener('touchstart', e => { const t = e.touches[0]; toque = t ? { x: t.clientX, y: t.clientY, alvo: e.target } : null; }, { passive: true, capture: true });
+    document.addEventListener('touchend', e => {
+      const st = toque; toque = null;
+      if (!st || !ehCampo(document.activeElement)) return;
+      const t = e.changedTouches[0]; if (!t || Math.hypot(t.clientX - st.x, t.clientY - st.y) > 10) return;
+      if (st.alvo.closest && st.alvo.closest(INTERATIVO)) return;
+      e.preventDefault(); document.activeElement.blur();
+      setTimeout(() => { if (ehCampo(document.activeElement)) document.activeElement.blur(); }, 60);
+    }, { passive: false, capture: true });
+    document.addEventListener('mousedown', e => { const a = document.activeElement; if (ehCampo(a) && !(e.target.closest && e.target.closest(INTERATIVO))) a.blur(); }, true);
+    document.addEventListener('focusin', e => { const el = e.target; if (ehCampo(el) && el.tagName === 'INPUT') { el._kfIni = el.value; el._kfMudou = false; } });
+    document.addEventListener('change', e => { if (e.target && e.target.tagName === 'INPUT') e.target._kfMudou = true; }, true);
+    document.addEventListener('focusout', e => {
+      const el = e.target;
+      if (!ehCampo(el) || el.tagName !== 'INPUT' || el._kfMudou || el.form) return;
+      if (el._kfIni !== undefined && el.value !== el._kfIni) { el._kfMudou = true; el.dispatchEvent(new Event('change', { bubbles: true })); }
+    });
+    document.addEventListener('keydown', e => { if (e.key !== 'Enter' || !ehCampo(e.target) || e.target.form || e.defaultPrevented) return; e.preventDefault(); e.target.blur(); });
+  }
+  /* preparar(raiz): tecla de confirmar do teclado do celular e sem preenchimento automático de contato */
+  function prepararCampos(raiz = document) {
+    $$('input:not([type=checkbox]):not([type=radio])', raiz).forEach(i => {
+      if (!i.hasAttribute('enterkeyhint')) i.setAttribute('enterkeyhint', i.form ? 'go' : 'done');
+      // o nome com "search" faz o Safari do iPhone não oferecer o preenchimento automático de contato
+      if (!i.name && (i.type === 'text' || i.type === 'number')) i.name = 'search-' + (i.id || 'campo');
+      if (!i.hasAttribute('autocomplete')) i.setAttribute('autocomplete', 'off');
+    });
+  }
+
+  /* ================= campo com sugestões (Código, Art. 65, XII) =================
+     sugestoes(campo, itens, aoEscolher): itens() devolve [{ label, right?, dim? }]. A lista abre abaixo do campo;
+     quando o campo divide a linha com um botão (pai .kf-linha), abaixo da linha inteira. Abre e recolhe em 600 ms. */
+  const dobrar = s => String(s || '').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const ultimoToque = { alvo: null, em: 0 };
+  if (typeof document !== 'undefined') document.addEventListener('pointerdown', e => { ultimoToque.alvo = e.target; ultimoToque.em = Date.now(); }, true);
+  let toqueGrosso = false; try { toqueGrosso = matchMedia('(pointer: coarse)').matches; } catch {}
+  function sugestoes(input, itensDe, aoEscolher) {
+    if (!input || input._kfSg) return; input._kfSg = true;
+    const wrap = document.createElement('div'); wrap.className = 'kf-sg';
+    input.parentNode.insertBefore(wrap, input); wrap.appendChild(input);
+    const box = document.createElement('div'); box.className = 'kf-sg-lista'; box.hidden = true; box.setAttribute('role', 'listbox');
+    if (input.id) box.setAttribute('aria-label', 'Sugestões');
+    const linha = input.closest('.kf-linha'); if (linha) { box.classList.add('kf-sg-fora'); linha.after(box); } else wrap.appendChild(box);
+    let itens = [], ativo = -1, saindo = null;
+    const mover = abrir => {
+      if (semMovimento() || !box.animate || !box.isConnected) return null;
+      if (box.closest('.kf-dlg')) janelas.ocupada(MOV.ms);
+      const h = box.getBoundingClientRect().height + 'px', aberta = { height: h, opacity: 1 }, fechada = { height: '0px', opacity: 0, marginTop: '0px', borderTopWidth: '0px', borderBottomWidth: '0px' };
+      return box.animate(abrir ? [fechada, aberta] : [aberta, fechada], { duration: MOV.ms, easing: MOV.css });
+    };
+    const fechar = () => {
+      ativo = -1; if (box.hidden || saindo) return;
+      const fim = () => { saindo = null; box.hidden = true; box.innerHTML = ''; box.style.pointerEvents = ''; };
+      const a = mover(false); if (!a) return fim();
+      saindo = a; box.style.pointerEvents = 'none'; a.onfinish = fim; a.oncancel = () => { saindo = null; box.style.pointerEvents = ''; };
+    };
+    const mostrar = () => {
+      const q = dobrar(input.value);
+      itens = (itensDe() || []).filter(x => !q || dobrar(x.label).includes(q)).filter(x => dobrar(x.label) !== q).slice(0, 6);
+      if (!itens.length) return fechar();
+      const nova = box.hidden; if (saindo) saindo.cancel();
+      box.innerHTML = itens.map((x, i) => `<button type="button" class="kf-sg-item ${i === ativo ? 'kf-on' : ''}" data-i="${i}" role="option" aria-selected="${i === ativo}"><span>${esc(x.label)}</span>${x.right ? `<small class="${x.dim ? 'kf-sg-dim' : ''}">${esc(x.right)}</small>` : ''}</button>`).join('');
+      box.hidden = false;
+      if (nova) mover(true);
+    };
+    const escolher = i => { const x = itens[i]; if (!x) return; input.value = x.label; fechar(); aoEscolher && aoEscolher(x); };
+    input.addEventListener('input', () => { ativo = -1; mostrar(); });
+    // no celular, o toque no campo faz o teclado subir e a janela acompanhar; a lista abre em seguida
+    input.addEventListener('focus', () => {
+      const livre = () => !toqueGrosso || janelas.tecladoAssentado() || demo.ativo();
+      if (livre()) return mostrar();
+      const t0 = Date.now(), esperar = () => { if (document.activeElement !== input) return; if (livre() || Date.now() - t0 > 700) return mostrar(); setTimeout(esperar, 40); };
+      esperar();
+    });
+    // ao sair do campo a lista fecha na hora; só espera o toque terminar quando ele foi num botão
+    input.addEventListener('blur', () => {
+      const t = ultimoToque.alvo, emBotao = t && Date.now() - ultimoToque.em < 600 && t.closest && t.closest('button, a, [role=button]') && !box.contains(t);
+      if (!emBotao) return fechar();
+      let feito = false; const fin = () => { if (feito) return; feito = true; document.removeEventListener('click', fin, true); setTimeout(fechar, 0); };
+      document.addEventListener('click', fin, true);
+      setTimeout(fin, 450);
+    });
+    input.addEventListener('keydown', e => {
+      if (box.hidden) return;
+      if (e.key === 'ArrowDown') { ativo = Math.min(itens.length - 1, ativo + 1); mostrar(); e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { ativo = Math.max(0, ativo - 1); mostrar(); e.preventDefault(); }
+      else if (e.key === 'Enter' && ativo >= 0) { e.preventDefault(); e.stopPropagation(); escolher(ativo); }
+      else if (e.key === 'Escape') { e.stopPropagation(); fechar(); }
+    });
+    // pointerdown evita que o campo perca o foco antes da escolha
+    let press = null;
+    box.addEventListener('pointerdown', e => { e.preventDefault(); const b = e.target.closest('[data-i]'); press = b ? { i: +b.dataset.i, x: e.clientX, y: e.clientY, id: e.pointerId } : null; });
+    box.addEventListener('pointerup', e => {
+      const p = press; press = null; if (!p || p.id !== e.pointerId) return;
+      const b = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-i]');
+      if (b && +b.dataset.i === p.i && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 12) escolher(p.i);
+    });
+    box.addEventListener('pointercancel', () => { press = null; });
+    box.addEventListener('click', e => e.preventDefault());
+    return { fechar, mostrar };
+  }
+
+  /* ================= Pix: código copia e cola e QR code (do apoio e de cobrança) (Código, Art. 13) ================= */
+  function cpfValido(d) {
+    if (!/^\d{11}$/.test(d) || /^(\d)\1{10}$/.test(d)) return false;
+    const dv = n => { let s = 0; for (let i = 0; i < n; i++) s += +d[i] * (n + 1 - i); const r = (s * 10) % 11; return r === 10 ? 0 : r; };
+    return dv(9) === +d[9] && dv(10) === +d[10];
+  }
+  /* chave do jeito que o Banco Central espera: e-mail e aleatória em minúsculas, CNPJ e CPF só com números, telefone
+     com +55. Um número de 11 dígitos é CPF quando é válido e não parece telefone. */
+  function normalizarChave(k) {
+    k = String(k || '').trim();
+    if (k.includes('@')) return k.toLowerCase();
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(k)) return k.toLowerCase();
+    const dig = k.replace(/\D/g, '');
+    if (k.startsWith('+')) return '+' + dig;
+    if (dig.length === 14) return dig;
+    const telefone = /[()]/.test(k) || /^\d{2}\s*9\d{4}-\d{4}$/.test(k);
+    if (dig.length === 11 && !telefone && cpfValido(dig)) return dig;
+    if (dig.length === 10 || dig.length === 11) return '+55' + dig;
+    if (dig.length === 13 && dig.startsWith('55')) return '+' + dig;
+    return k;
+  }
+  async function matrizQR(texto) {
+    const q = await carregarQR(), qr = q(0, 'M'); qr.addData(texto); qr.make();
+    const n = qr.getModuleCount(); return { n, dark: (r, c) => qr.isDark(r, c) };
+  }
+  function desenharQR(ctx, m, x, y, tam, fundo = '#FFFFFF', tinta = '#000000') {
+    const quieta = 2, cel = tam / (m.n + quieta * 2);
+    ctx.fillStyle = fundo; ctx.fillRect(x, y, tam, tam); ctx.fillStyle = tinta;
+    for (let r = 0; r < m.n; r++) for (let c = 0; c < m.n; c++) if (m.dark(r, c)) ctx.fillRect(Math.floor(x + (c + quieta) * cel), Math.floor(y + (r + quieta) * cel), Math.ceil(cel), Math.ceil(cel));
+  }
+  /* põe o QR code de `codigo` dentro de `caixa` (um <canvas> de 480 px); sem internet, avisa e deixa o botão de copiar */
+  function qrNaCaixa(caixa, codigo, { semInternet = 'Sem internet para mostrar o QR code agora. Use o botão de copiar o código.' } = {}) {
+    return matrizQR(codigo).then(m => {
+      if (!caixa.isConnected) return;
+      const c = document.createElement('canvas'); c.width = c.height = 480; desenharQR(c.getContext('2d'), m, 0, 0, 480);
+      caixa.innerHTML = ''; caixa.appendChild(c);
+    }).catch(() => { if (caixa.isConnected) caixa.innerHTML = `<span class="kf-ajuda">${esc(semInternet)}</span>`; });
+  }
+  /* janela de cobrança: QR code e Pix copia e cola de um valor para alguém */
+  function janelaPix({ titulo, sub = '', codigo, aoFechar }) {
+    return abrirDialogo({ titulo, sub, aoFechar, nome: 'pix',
+      corpo: `<div class="kf-pix"><div class="kf-qr kf-qr-g" data-kf-qr role="img" aria-label="QR code do Pix"><span class="kf-carregando">Preparando o QR code…</span></div>
+        <div class="kf-campo"><span class="kf-rotulo" id="kf-pix-cc">Pix copia e cola</span><textarea class="kf-entrada kf-pix-codigo" readonly rows="4" aria-labelledby="kf-pix-cc">${esc(codigo)}</textarea></div></div>`,
+      pe: `<button type="button" class="kf-btn kf-pri" data-kf-pix-copiar>${IC.copiar}Copiar Pix copia e cola</button>`,
+      aoMontar: d => {
+        $('[data-kf-pix-copiar]', d).onclick = () => copiar(codigo, 'Pix copia e cola copiado.');
+        qrNaCaixa($('[data-kf-qr]', d), codigo, { semInternet: 'Não deu para gerar o QR code agora. Use o Pix copia e cola.' });
+      } });
+  }
+
+  /* ================= presente: ícone em traço na barra, pequeno em Sobre e em 3D na janela do apoio ================= */
+  /* pequeno, para Sobre o aplicativo: caixa isométrica nas cores do app (--kf-presente e --kf-presente-fita) */
+  const presenteMini = () => `<svg class="kf-presente-mini" viewBox="0 0 48 48" aria-hidden="true"><path class="kf-pm-l1" d="M24 20 6 14v22l18 8z"/><path class="kf-pm-l2" d="M24 20l18-6v22l-18 8z"/><path class="kf-pm-t1" d="M4 10l20 6 20-6-20-6z"/><path class="kf-pm-t2" d="M4 10v6l20 6v-6z"/><path class="kf-pm-t3" d="M44 10v6l-20 6v-6z"/>
+    <path class="kf-pm-f1" d="M13 12.7v25.8l4 1.4V14zM31 14v25.9l4-1.4V12.7z"/><path class="kf-pm-f2" d="M11.5 7.8 31 14l4-1.3L15.5 6.5zM36.5 7.8 17 14l-4-1.3 19.5-6.2z"/><path class="kf-pm-f1 kf-pm-laco" d="M24 9c-3-6-10-5-8-1 1.2 2.2 5 1.8 8 1zm0 0c3-6 10-5 8-1-1.2 2.2-5 1.8-8 1z"/></svg>`;
+  const presente3dHTML = (L = 112) => `<div class="kf-o3d" data-o3d="presente" data-d="${L}" tabindex="0" role="img" aria-label="Presente. Deslize o dedo ou use as setas para girar." style="width:${L * 2}px;height:${L * 2}px">${presenteMini()}<canvas aria-hidden="true" hidden></canvas></div>`;
+
+  /* ================= peça opcional: tampinhas, níveis e objetos em 3D (comum/kit-jogo.js) =================
+     O app que usa carrega comum/kit-jogo.js logo depois do kit; os outros só precisam do presente em 3D, que o Kit
+     busca quando a janela do apoio abre. O arquivo se pendura em KitFacil.jogo. */
+  const jogo = {};
+  let jogoPromessa = null;
+  jogo.carregar = () => {
+    if (jogo.girar) return Promise.resolve(jogo);
+    if (!jogoPromessa) jogoPromessa = new Promise((ok, falhou) => {
+      const base = ($$('script[src*="kit-facil.js"]')[0] || {}).src || 'comum/kit-facil.js';
+      const s = document.createElement('script'); s.src = base.replace(/kit-facil\.js(\?.*)?$/, 'kit-jogo.js$1');
+      s.onload = () => jogo.girar ? ok(jogo) : falhou(new Error('jogo')); s.onerror = () => { jogoPromessa = null; falhou(new Error('jogo')); };
+      document.head.appendChild(s);
+    });
+    return jogoPromessa;
+  };
+
+  /* ================= navegação: barra de baixo com a ação principal no centro e trilho (Arts. 59 a 61) =================
+     barra({ itens: [{ id, rotulo, icone, atual }], centro: { id, rotulo, icone, atual, selo, nome }, mais: { atual } })
+       até 5 posições: dois itens, a ação principal no centro, um item e "Mais" (que é uma tela, com os Ajustes por último).
+     trilho({ destaque: { id, rotulo, icone, atual, selo }, itens: [...], mais: { atual } }): a marca fica no app;
+       no pé, Mais e Ajustes.
+     Os botões levam data-kf-ir="<id>" (o app abre a tela) e id "kf-nav-<id>" ou "kf-trilho-<id>". */
+  const itNav = (pre, { id, rotulo, icone = '', atual = false, selo = '', nome = '' }, cls = '') => `<button type="button" class="${pre}-it ${cls}" data-kf-ir="${esc(id)}" id="${pre}-${esc(id)}"${atual ? ' aria-current="page"' : ''}${nome ? ` aria-label="${esc(nome)}"` : ''}>${icone}<span class="${pre}-l">${esc(rotulo)}</span>${selo}</button>`;
+  function barraHTML({ itens = [], centro = null, mais = {} } = {}) {
+    const meio = Math.ceil(itens.length / 2), it = x => itNav('kf-nav', x);
+    const c = centro ? `<button type="button" class="kf-nav-it kf-nav-centro" data-kf-ir="${esc(centro.id)}" id="kf-nav-${esc(centro.id)}"${centro.atual ? ' aria-current="page"' : ''} aria-label="${esc(centro.nome || centro.rotulo)}"><span class="kf-nav-bola">${centro.icone || IC.soma}</span>${centro.selo || ''}<span class="kf-nav-l kf-so-leitor">${esc(centro.rotulo)}</span></button>` : '';
+    return `<div class="kf-nav-in${centro ? ' kf-nav-com-centro' : ''}">${itens.slice(0, meio).map(it).join('')}${c}${itens.slice(meio).map(it).join('')}${it({ id: 'mais', rotulo: 'Mais', icone: IC.mais, atual: !!mais.atual || !!(C.emAjustes && C.emAjustes()) })}</div>`;
+  }
+  function trilhoHTML({ destaque = null, itens = [], mais = {} } = {}) {
+    const em = !!(C.emAjustes && C.emAjustes());
+    return `${destaque ? itNav('kf-trilho', destaque, 'kf-trilho-destaque') : ''}${itens.map(x => itNav('kf-trilho', x)).join('')}
+      <div class="kf-trilho-fim">${itNav('kf-trilho', { id: 'mais', rotulo: 'Mais', icone: IC.mais, atual: !!mais.atual && !em })}<button type="button" class="kf-trilho-it" data-kf="ajustes" id="kf-trilho-ajustes"${em ? ' aria-current="page"' : ''}>${IC.ajustes}<span class="kf-trilho-l">Ajustes</span></button></div>`;
+  }
+  /* a tela "Mais": linhas para o que não cabe na barra e, por último, os Ajustes (Art. 60, II).
+     linhas: [{ id, titulo, texto, icone }] (data-kf-ir) ou { kf: 'acao' } para ações do Kit. */
+  function maisHTML({ linhas = [] } = {}) {
+    const lin = ({ id, titulo, texto = '', icone = '', attrs = '' }) => `<button type="button" class="kf-mais-lin" ${id ? `data-kf-ir="${esc(id)}"` : ''} ${attrs}>${icone ? `<span class="kf-mais-ic">${icone}</span>` : ''}<span class="kf-mais-tx"><b>${esc(titulo)}</b>${texto ? `<small>${esc(texto)}</small>` : ''}</span>${IC.chev}</button>`;
+    return `<div class="kf-mais">${linhas.map(lin).join('')}${lin({ titulo: 'Ajustes', texto: 'Conta, sincronização, aparência e privacidade', icone: IC.ajustes, attrs: 'data-kf="ajustes"' })}</div>`;
+  }
+
+  /* ================= abertura de quatro telas (Código, Art. 75; Anexo VI) =================
+     abertura.abrir({ telas: [{ arte, titulo, texto, extra, falada }], rever, fim, extra: { rotulo, mostrar }, aoMontar, aoFechar })
+       arte: HTML ou função (redesenhada a cada vez que a tela aparece); falada: a arte é lida pelo leitor de tela;
+       fim: rótulo do último botão (texto ou função); extra: link abaixo do pé, só na última tela.
+       aoFechar({ como: 'fim' | 'pular' | 'extra', el }) roda antes de a abertura sair (o app lê o que foi digitado).
+     A abertura aparece uma vez (chave <prefixo>abertura); "Rever a apresentação" fica na guia própria dos Ajustes. */
+  let aberturaEl = null;
+  const chaveAbertura = () => (C.prefixo || `kitfacil.${C.app}.`) + 'abertura';
+  function aberturaAbrir({ telas = [], rever = false, fim = 'Começar', extra = null, aoMontar, aoFechar, rotulo } = {}) {
+    if (aberturaEl || !telas.length) return null;
+    const n = telas.length, ant = document.activeElement; let i = 0;
+    const el = document.createElement('div'); el.className = 'kf-abertura'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', rotulo || `Apresentação do ${C.nome || 'app'}`);
+    el.innerHTML = `<div class="kf-ab-in">
+        <div class="kf-ab-topo"><div class="kf-ab-pontos" aria-hidden="true">${telas.map(() => '<i></i>').join('')}</div><button type="button" class="kf-btn kf-link" id="kf-ab-pular">Pular</button></div>
+        <div class="kf-ab-palco" id="kf-ab-palco" aria-live="polite"></div>
+        <div class="kf-ab-pe"><button type="button" class="kf-btn kf-sec" id="kf-ab-volta">Voltar</button><button type="button" class="kf-btn kf-comecar" id="kf-ab-prox">Continuar</button></div>
+        <button type="button" class="kf-btn kf-link kf-ab-ex" id="kf-ab-ex" hidden>${extra ? esc(extra.rotulo) : ''}</button>
+      </div>`;
+    document.body.appendChild(el); aberturaEl = el; document.body.classList.add('kf-com-abertura');
+    const palco = $('#kf-ab-palco', el), pontos = $$('.kf-ab-pontos i', el);
+    const pintar = (dir = 1) => {
+      const t = telas[i], arte = typeof t.arte === 'function' ? t.arte() : (t.arte || '');
+      palco.innerHTML = `<div class="kf-ab-tela ${dir > 0 ? 'kf-vem-dir' : 'kf-vem-esq'}"><div class="kf-ab-arte"${t.falada ? '' : ' aria-hidden="true"'}>${arte}</div><h2 class="kf-ab-t" id="kf-ab-t" tabindex="-1">${esc(t.titulo)}</h2><p class="kf-ab-p">${esc(t.texto)}</p>${t.extra || ''}</div>`;
+      pontos.forEach((p, k) => p.classList.toggle('kf-on', k === i));
+      $('#kf-ab-volta', el).hidden = i === 0;
+      $('#kf-ab-prox', el).textContent = i === n - 1 ? (typeof fim === 'function' ? fim() : fim) : 'Continuar';
+      $('#kf-ab-ex', el).hidden = !(i === n - 1 && extra && (!extra.mostrar || extra.mostrar()));
+      $('#kf-ab-pular', el).hidden = i === n - 1;
+      $('#kf-ab-t', el).focus({ preventScroll: true });
+    };
+    const fechar = como => {
+      if (aberturaEl !== el) return;
+      gravar(chaveAbertura(), '1');
+      let depois = null;
+      try { depois = aoFechar && aoFechar({ como, i, ultima: i === n - 1, el }); } catch (e) { console.error(e); }
+      document.removeEventListener('keydown', tecla, true);
+      el.classList.add('kf-sai'); document.body.classList.remove('kf-com-abertura');
+      setTimeout(() => el.remove(), semMovimento() ? 0 : MOV.ms);
+      aberturaEl = null;
+      try { ant && ant.focus && ant.focus({ preventScroll: true }); } catch {}
+      if (typeof depois === 'function') depois();
+    };
+    const ir = k => { const dir = k > i ? 1 : -1; if (k < 0) return; if (k >= n) return fechar('fim'); i = k; pintar(dir); };
+    const tecla = e => {
+      if (aberturaEl !== el) return;
+      if (e.key === 'Escape') { e.preventDefault(); fechar('pular'); return; }
+      if (e.target.matches && e.target.matches('input')) { if (e.key === 'Enter') { e.preventDefault(); ir(i + 1); } return; }
+      if (e.key === 'ArrowRight') { e.preventDefault(); ir(Math.min(n - 1, i + 1)); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); ir(i - 1); }
+      if (e.key === 'Tab') { const f = $$('button:not([hidden]), input', el).filter(x => x.getClientRects().length); if (!f.length) return; const k = f.indexOf(document.activeElement); e.preventDefault(); f[(k + (e.shiftKey ? f.length - 1 : 1) + f.length) % f.length].focus(); }
+    };
+    document.addEventListener('keydown', tecla, true);
+    $('#kf-ab-prox', el).onclick = () => ir(i + 1);
+    $('#kf-ab-volta', el).onclick = () => ir(i - 1);
+    $('#kf-ab-pular', el).onclick = () => fechar('pular');
+    $('#kf-ab-ex', el).onclick = () => fechar('extra');
+    // deslizar para o lado troca de tela
+    let gx = null;
+    palco.addEventListener('touchstart', e => { gx = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null; }, { passive: true });
+    palco.addEventListener('touchend', e => { if (!gx) return; const t = e.changedTouches[0], dx = t.clientX - gx.x, dy = t.clientY - gx.y; gx = null; if (Math.abs(dx) > 56 && Math.abs(dx) > Math.abs(dy) * 1.6) ir(dx < 0 ? Math.min(n - 1, i + 1) : i - 1); }, { passive: true });
+    if (aoMontar) aoMontar(el, { redesenharArte: () => { const a = $('.kf-ab-arte', palco), t = telas[i]; if (a) a.innerHTML = typeof t.arte === 'function' ? t.arte() : (t.arte || ''); } });
+    pintar(1);
+    return el;
+  }
+
+  /* ================= guia único, numa demonstração que não grava nada (Código, Arts. 77 a 79; Anexo VI) =================
+     guia.demonstrar({ passos: [{ t, d, se?, acao: async m => {…} }], comecar(), terminar({ concluiu }), foto(), restaurar(f),
+       limpar(), maos(m, g) => ({ … mãos próprias }), cabecalhoFixo() => elemento, aoConcluir() })
+     A janela do guia tem um lugar só dela, acima da barra de baixo: não cobre nada e não sai do lugar. Antes de cada passo
+     ela pisca e a moldura se esvazia no sentido do relógio; só então o passo acontece, de verdade.
+     Mãos: acha, some, tocar, digitar, apontar, arrastar, rolar, fechar, espera. */
+  const GUIA_CANCELA = { cancelado: true };
+  const dorme = ms => new Promise(r => setTimeout(r, ms));
+  const quadro = () => new Promise(r => requestAnimationFrame(r));
+  const IG = {
+    pausa: svg('<path d="M9 5.5v13M15 5.5v13"/>'), tocar: svg('<path d="M8 5.5v13l10.5-6.5z"/>'),
+    anterior: svg('<path d="M18 6v12l-8.5-6zM6.5 6v12"/>'), seguinte: svg('<path d="M6 6v12l8.5-6zM17.5 6v12"/>'),
+  };
+  const demo = (() => {
+    let g = null, cfg = null;
+    const ativo = () => !!g;
+    const semAviso = () => $$('.kf-toast').forEach(e => { e.hidden = true; });
+    function limparTela() { fecharDialogo(true); semAviso(); $('#kf-gu-dedo')?.classList.remove('kf-ver'); $('#kf-gu-anel')?.classList.remove('kf-ver'); try { cfg.limpar && cfg.limpar(); } catch (e) { console.warn(e); } }
+    function iniciar(o) {
+      if (g || aberturaEl) return false;
+      cfg = o;
+      if (cfg.comecar && cfg.comecar() === false) { cfg = null; return false; }
+      fecharDialogo(true);
+      g = { i: 0, passos: (o.passos || []).filter(p => !p.se || p.se()), fotos: [], pausado: false, rapido: false, tk: null, fase: '' };
+      montar(); rodar();
+      return true;
+    }
+    function parar({ concluiu = false } = {}) {
+      const atualG = g; if (!atualG) return;
+      g = null;
+      limparTela();
+      ['#kf-gu-doca', '#kf-gu-escudo', '#kf-gu-dedo', '#kf-gu-anel'].forEach(q => $(q)?.remove());
+      document.body.classList.remove('kf-com-guia');
+      document.removeEventListener('keydown', tecla, true); removeEventListener('resize', moldura);
+      const c = cfg; cfg = null;
+      try { c.terminar && c.terminar({ concluiu }); } catch (e) { console.error(e); }
+    }
+    function tecla(e) { if (g && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); parar(); } }
+    function moldura() {
+      const cx = $('.kf-gu-cx'); if (!cx) return;
+      const w = cx.clientWidth, h = cx.clientHeight, r = 19, a = 1.5;
+      const d = `M${w / 2} ${a}H${w - r}A${r - a} ${r - a} 0 0 1 ${w - a} ${r}V${h - r}A${r - a} ${r - a} 0 0 1 ${w - r} ${h - a}H${r}A${r - a} ${r - a} 0 0 1 ${a} ${h - r}V${r}A${r - a} ${r - a} 0 0 1 ${r} ${a}Z`;
+      $$('.kf-gu-moldura path', cx).forEach(p => p.setAttribute('d', d));
+    }
+    function montar() {
+      document.body.classList.add('kf-com-guia');
+      const escudo = document.createElement('div'); escudo.id = 'kf-gu-escudo'; escudo.className = 'kf-gu-escudo'; escudo.setAttribute('aria-hidden', 'true');
+      const doca = document.createElement('section'); doca.id = 'kf-gu-doca'; doca.className = 'kf-gu-doca'; doca.setAttribute('aria-label', 'Guia do app');
+      doca.innerHTML = `<div class="kf-gu-cx"><svg class="kf-gu-moldura" aria-hidden="true"><path class="kf-gu-m-trilho"/><path class="kf-gu-m-tempo" pathLength="1" stroke-dasharray="1 1"/></svg>
+          <div class="kf-gu-tx" aria-live="polite"><p class="kf-gu-t" id="kf-gu-t"></p><p class="kf-gu-d" id="kf-gu-d"></p></div>
+          <div class="kf-gu-pe"><span class="kf-gu-n"><span id="kf-gu-n"></span><i aria-hidden="true"><b id="kf-gu-prog"></b></i></span>
+            <button type="button" class="kf-gu-b" id="kf-gu-volta" aria-label="Voltar um passo">${IG.anterior}</button>
+            <button type="button" class="kf-gu-b kf-pri" id="kf-gu-pausa" aria-label="Pausar o guia">${IG.pausa}</button>
+            <button type="button" class="kf-gu-b" id="kf-gu-pula" aria-label="Pular para o próximo passo">${IG.seguinte}</button>
+            <button type="button" class="kf-gu-b" id="kf-gu-sai" aria-label="Sair do guia">${IC.x}</button></div></div>`;
+      const dedo = document.createElement('div'); dedo.id = 'kf-gu-dedo'; dedo.className = 'kf-gu-dedo'; dedo.setAttribute('aria-hidden', 'true');
+      const anel = document.createElement('div'); anel.id = 'kf-gu-anel'; anel.className = 'kf-gu-anel'; anel.setAttribute('aria-hidden', 'true');
+      document.body.append(escudo, doca, anel, dedo);
+      $('#kf-gu-volta').onclick = () => { if (!g) return; g.i = g.fase === 'acao' ? g.i : Math.max(0, g.i - 1); g.rapido = false; g.pausado = false; g.tk = {}; limparTela(); try { cfg.restaurar && cfg.restaurar(g.fotos[g.i]); } catch (e) { console.warn(e); } };
+      $('#kf-gu-pausa').onclick = () => { if (!g) return; g.pausado = !g.pausado; pintar(); };
+      $('#kf-gu-pula').onclick = () => { if (!g) return; g.pausado = false; g.rapido = true; pintar(); };
+      $('#kf-gu-sai').onclick = () => parar();
+      document.addEventListener('keydown', tecla, true); addEventListener('resize', moldura);
+      moldura();
+    }
+    function pintar() {
+      if (!g) return;
+      const p = g.passos[g.i], n = g.passos.length;
+      if ($('#kf-gu-t').textContent !== p.t) { $('#kf-gu-t').textContent = p.t; $('#kf-gu-d').textContent = p.d; }
+      $('#kf-gu-n').textContent = `${g.i + 1} de ${n}`; $('#kf-gu-prog').style.width = Math.round((g.i + 1) / n * 100) + '%';
+      const b = $('#kf-gu-pausa'); b.innerHTML = g.pausado ? IG.tocar : IG.pausa; b.setAttribute('aria-label', g.pausado ? 'Continuar o guia' : 'Pausar o guia');
+      $('#kf-gu-volta').disabled = g.i === 0 && g.fase !== 'acao';
+    }
+    // a janela pisca para chamar a atenção; depois a moldura se esvazia como um relógio e o passo começa
+    async function contagem(G, tk, p) {
+      const vivo = () => { if (g !== G || G.tk !== tk) throw GUIA_CANCELA; };
+      const cx = $('.kf-gu-cx'), tempo = $('.kf-gu-m-tempo');
+      tempo.style.strokeDashoffset = '0'; tempo.style.opacity = '1';
+      cx.classList.remove('kf-pisca'); void cx.offsetWidth; cx.classList.add('kf-pisca');
+      const dur = Math.min(3800, 1900 + (p.t.length + p.d.length) * 17);
+      let t = -900, ult = performance.now();
+      while (t < dur && !G.rapido) {
+        await quadro(); vivo();
+        const agora = performance.now(); if (!G.pausado) t += Math.min(100, agora - ult); ult = agora;
+        if (t > 0) tempo.style.strokeDashoffset = String(-Math.min(1, t / dur));
+      }
+      cx.classList.remove('kf-pisca'); tempo.style.strokeDashoffset = '-1'; tempo.style.opacity = '0';
+    }
+    // as mãos do guia: acham o alvo, trazem para a área livre da tela, levam o dedo até ele e tocam, escrevem ou arrastam
+    function maos(G, tk) {
+      const dedo = $('#kf-gu-dedo');
+      const vivo = () => { if (g !== G || G.tk !== tk) throw GUIA_CANCELA; };
+      const espera = async ms => { let t = ms; for (;;) { vivo(); if (G.pausado) { await dorme(60); continue; } if (G.rapido || t <= 0) return; const d = Math.min(50, t); await dorme(d); t -= d; } };
+      const visivel = e => e.getClientRects().length && !e.closest('#kf-saidas');
+      const acha = async (q, { prazo = 3500, opcional = false } = {}) => {
+        const fim = Date.now() + prazo;
+        for (;;) {
+          vivo();
+          const el = typeof q === 'string' ? $$(q).find(visivel) : (q && q.isConnected ? q : null);
+          if (el) return el;
+          if (Date.now() > fim) { if (opcional) return null; throw new Error('guia: não achei ' + q); }
+          await dorme(40);
+        }
+      };
+      const some = async (q, prazo = 2500) => { const fim = Date.now() + prazo; while (Date.now() < fim) { vivo(); if (!$$(q).some(visivel)) return; await dorme(40); } };
+      const suave = () => (G.rapido || semMovimento() ? 'auto' : 'smooth');
+      const mostrar = async el => {
+        if (el.closest('.kf-nav, .kf-barra, .kf-trilho')) return;
+        const naJanela = el.closest('.kf-dlg, [data-kf-tela-cheia]');
+        const cab = naJanela ? null : (cfg.cabecalhoFixo && cfg.cabecalhoFixo());
+        const barra = $$('.kf-barra').find(x => x.getClientRects().length);
+        const r = el.getBoundingClientRect(), topo = Math.max(barra ? barra.getBoundingClientRect().bottom : 0, cab ? cab.getBoundingClientRect().bottom : 0) + 10, fundo = ($('#kf-gu-doca')?.getBoundingClientRect().top || innerHeight) - 12;
+        if (r.top >= topo && r.bottom <= fundo) return;
+        if (naJanela) el.scrollIntoView({ block: 'center', behavior: suave() });
+        else global.scrollBy({ top: r.top + Math.min(r.height, fundo - topo) / 2 - (topo + fundo) / 2, behavior: suave() });
+        await espera(480);
+      };
+      const por = (x, y) => { dedo.style.transform = `translate(${Math.round(x)}px,${Math.round(y)}px)`; };
+      const levar = async el => {
+        await mostrar(el); vivo();
+        const r = el.getBoundingClientRect();
+        dedo.classList.add('kf-ver'); por(Math.max(20, Math.min(innerWidth - 20, r.left + r.width / 2)), r.top + Math.min(r.height / 2, 80));
+        await espera(620);
+      };
+      const tocar = async (q, { clique = true, depois = 480, ...o } = {}) => {
+        const el = await acha(q, o); if (!el) return null;
+        await levar(el); vivo();
+        dedo.classList.add('kf-toca'); await espera(170); vivo();
+        if (clique && el.isConnected) el.click();
+        // no guia ninguém digita de verdade: o campo que ganhar o foco solta, para o teclado do celular não aparecer
+        const foco = document.activeElement; if (foco && foco.matches && foco.matches('input, textarea, select')) foco.blur();
+        await espera(210); dedo.classList.remove('kf-toca'); await espera(depois);
+        return el;
+      };
+      const valor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+      const digitar = async (q, texto, { ritmo = 55 } = {}) => {
+        const el = await acha(q); await levar(el); vivo();
+        dedo.classList.add('kf-toca'); await espera(150); dedo.classList.remove('kf-toca');
+        el.classList.add('kf-gu-escreve');
+        try {
+          valor.call(el, '');
+          for (const ch of texto) { vivo(); valor.call(el, el.value + ch); el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: ch })); await espera(ritmo); }
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        } finally { el.classList.remove('kf-gu-escreve'); }
+        await espera(280);
+      };
+      // destaque: um anel que acompanha o alvo, desenhado por cima de tudo
+      const anel = $('#kf-gu-anel');
+      const apontar = async (q, ms = 1400, o) => {
+        const el = await acha(q, o); if (!el) return null;
+        await levar(el);
+        const segue = () => { if (!el.isConnected) return; const r = el.getBoundingClientRect(), f = 5, x = Math.max(3, r.left - f), y = Math.max(3, r.top - f), w = Math.min(innerWidth - 3, r.right + f) - x, h = r.bottom + f - y;
+          anel.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`; anel.style.width = w.toFixed(1) + 'px'; anel.style.height = h.toFixed(1) + 'px'; anel.style.borderRadius = Math.min(18, (parseFloat(getComputedStyle(el).borderRadius) || 8) + f) + 'px'; };
+        let ligado = true; const laco = () => { if (!ligado) return; segue(); requestAnimationFrame(laco); };
+        segue(); anel.classList.add('kf-ver'); laco();
+        try { await espera(ms); } finally { ligado = false; anel.classList.remove('kf-ver'); }
+        return el;
+      };
+      // dentro de uma janela, traz um trecho para o alto da parte que rola
+      const rolar = async (q, folga = 8) => {
+        const el = await acha(q), cx = el.closest('.kf-dlg-corpo') || el.closest('.kf-dlg'); if (!cx) return;
+        const alvo = cx.scrollTop + el.getBoundingClientRect().top - cx.getBoundingClientRect().top - folga;
+        cx.scrollTo({ top: Math.max(0, alvo), behavior: suave() }); await espera(520);
+      };
+      // fecha a janela aberta pelo X, como a pessoa faria
+      const fechar = async () => { const x = await acha('.kf-dlg .kf-dlg-cab [data-kf-fechar], .kf-dlg [data-kf-fechar]', { opcional: true, prazo: 800 }); if (x) { await tocar(x, { depois: 200 }); await some('.kf-dlg'); } };
+      // arrasta o dedo de lado sobre um objeto (é assim que a tampinha e o presente giram)
+      const arrastar = async (q, dx, { dur = 1000 } = {}) => {
+        const el = await acha(q); await levar(el); vivo();
+        const r = el.getBoundingClientRect(), y = r.top + r.height / 2, x0 = r.left + r.width / 2 - dx / 2;
+        const ev = (tipo, x) => el.dispatchEvent(new PointerEvent(tipo, { bubbles: true, clientX: x, clientY: y, pointerId: 77, pointerType: 'touch', isPrimary: true, button: 0 }));
+        por(x0, y); await espera(380); vivo();
+        dedo.style.transition = 'opacity .2s'; dedo.classList.add('kf-toca'); ev('pointerdown', x0);
+        try {
+          const n = G.rapido || semMovimento() ? 3 : Math.max(8, Math.round(dur / 16));
+          for (let k = 1; k <= n; k++) { vivo(); const x = x0 + dx * (0.5 - Math.cos(Math.PI * k / n) / 2); ev('pointermove', x); por(x, y); await quadro(); }
+        } finally { ev('pointerup', x0 + dx); dedo.classList.remove('kf-toca'); dedo.style.transition = ''; }
+        await espera(900);
+      };
+      const m = { espera, acha, some, tocar, digitar, apontar, arrastar, rolar, fechar, vivo, levar, por, dedo, quadro, rapido: () => G.rapido, semAviso, sumir: () => dedo.classList.remove('kf-ver') };
+      if (cfg.maos) Object.assign(m, cfg.maos(m));
+      return m;
+    }
+    async function rodar() {
+      const G = g;
+      while (g === G && G.i < G.passos.length) {
+        const tk = G.tk = {}, p = G.passos[G.i], m = maos(G, tk);
+        try {
+          if (dialogoAberto()) limparTela(); // todo passo termina com as janelas fechadas; isto é só garantia
+          if (!G.fotos[G.i] && cfg.foto) G.fotos[G.i] = cfg.foto();
+          G.fase = 'conta'; pintar();
+          await contagem(G, tk, p);
+          G.fase = 'acao'; pintar();
+          await p.acao(m);
+          await m.espera(700); m.sumir();
+        } catch (e) {
+          if (g !== G) return;
+          if (e === GUIA_CANCELA) continue; // voltou um passo: o laço recomeça no passo escolhido
+          console.warn('guia', e);
+        }
+        if (g !== G) return;
+        G.rapido = false;
+        if (G.tk === tk) G.i++;
+      }
+      if (g === G) parar({ concluiu: true });
+    }
+    return { iniciar, parar, ativo, semAviso, estado: () => (g ? { i: g.i, fase: g.fase, rapido: g.rapido, pausado: g.pausado, n: g.passos.length } : null) };
+  })();
+
   global.KitFacil = Object.freeze({
     VERSAO, FAMILIA, IC, iniciar, avisar, esc, canon, novoId, haQuanto,
     dialogo: { abrir: abrirDialogo, fechar: fecharDialogo, aberto: dialogoAberto, confirmar },
@@ -2664,19 +3398,28 @@
     feedback: { abrir: abrirFeedback, escolha: abrirEscolhaFeedback, pendentes: () => fila.quantos(), reenviar: () => fila.tentar(), _enviar: enviarRegistro, _fila: fila, _campos: camposFS, CATEGORIAS, GRAVIDADES },
     sobre: { abrir: abrirSobre },
     topo: { html: topoHTML, atualizar: atualizarTopo, estado: estadoNuvem, ESTADOS },
-    nav: { ajustes: navAjustesHTML, organizar: organizarNav, MAX: NAV_MAX },
-    ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML, abas: abasHTML, faixa: faixaHTML, adicionar: adicionarHTML, fato: fatoHTML },
+    nav: { ajustes: navAjustesHTML, organizar: organizarNav, MAX: NAV_MAX, barra: barraHTML, trilho: trilhoHTML, mais: maisHTML },
+    ui: { cabecalho: cabecalhoHTML, criar: criarHTML, vazio: vazioHTML, abas: abasHTML, faixa: faixaHTML, adicionar: adicionarHTML, fato: fatoHTML, quantidade: quantidadeHTML, chave: chaveHTML, escolha: escolhaHTML },
     destacar, carrossel, arrastar,
     escolha: { ligar: escolhaLigar },
     data: { ligar: dataLigar },
     hora: { ligar: horaLigar },
     secao: { abrir: secaoAbrir, fechar: secaoFechar, alternar: secaoAlternar, aberta: secaoAberta },
-    movimento: { ms: MOV.ms, curto: MOV.curto, curva: MOV.curva, css: MOV.css, reduzido: semMovimento, entrar },
-    apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix, presente: presenteHTML, girar: girarPresente },
+    movimento: { ms: MOV.ms, curto: MOV.curto, curva: MOV.curva, css: MOV.css, reduzido: semMovimento, entrar, redesenhar },
+    apoio: { abrir: abrirApoio, ativo: apoioAtivo, codigo: codigoPix, presente: presente3dHTML, mini: presenteMini },
+    pix: { codigo: codigoPix, chave: normalizarChave, matriz: matrizQR, desenhar: desenharQR, qr: qrNaCaixa, janela: janelaPix },
+    janela: { ocupada: janelas.ocupada, teclado: janelas.teclado, tecladoAssentado: janelas.tecladoAssentado },
+    campo: { dinheiro: { formatar: real, ler: lerDinheiro, html: dinheiroHTML }, porcento: { formatar: pctTexto, ler: lerPct, html: porcentoHTML }, ligar: ligarCampos, preparar: prepararCampos },
+    sugestoes,
+    abertura: { abrir: aberturaAbrir, ativa: () => !!aberturaEl, vista: () => String(ler(chaveAbertura(), '')) === '1' },
+    jogo,
     novidades: { abrir: abrirNovidades, daVersao: novidadesDaVersao },
     boasVindas: { abrir: abrirBoasVindas },
     apresentacao: { abrir: abrirApresentacao, ligada: apresLigada, definir: apresDefinir },
-    guia: { escolher: escolherGuia, iniciar: n => guia.iniciar(n), parar: () => guia.parar(), ativo: () => guia.ativo(), posicionar: () => guia.posicionar(), passos: passosDoNivel, NIVEIS, alvoAtual: () => guia.ativo() ? guia.alvo(guia.lista[guia.i]) : null },
+    // guia: demonstrar/emDemonstracao/pararDemonstracao são o guia único (Kit 0.7.0); escolher/iniciar/parar/ativo são o guia em
+    // níveis do Kit 0.6.0, que vale nos apps até a vez de cada um seguir o Conta Fácil (Código, Art. 93, § 2º)
+    guia: { demonstrar: o => demo.iniciar(o), emDemonstracao: () => demo.ativo(), pararDemonstracao: o => demo.parar(o), estado: () => demo.estado(),
+      escolher: escolherGuia, iniciar: n => guia.iniciar(n), parar: () => guia.parar(), ativo: () => guia.ativo() || demo.ativo(), posicionar: () => guia.posicionar(), passos: passosDoNivel, NIVEIS, alvoAtual: () => guia.ativo() ? guia.alvo(guia.lista[guia.i]) : null },
     nuvem: { abrir: abrirDialogoNuvem, estado: estadoNuvem, detalhe: detalheNuvem },
     ajustes: { SECOES, html: ajustesHTML, ligar: ligarAjustes, abrir: abrirSecao, ir: irAjustes, resumo: resumoAjustes },
     tema,

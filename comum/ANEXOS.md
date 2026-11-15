@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **0.7 (rascunho)** · 15/11/2026 · Kit Fácil **0.6.0** (peças do Conta Fácil a levar ao Kit 0.7.0)
+Versão **0.7 (rascunho)** · 15/11/2026 · Kit Fácil **0.7.0** (com as peças do Conta Fácil)
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
@@ -54,9 +54,9 @@ e este Código), `tests/`, `package.json` (sem dependências de produção), `RE
 | Texto | `--kf-t-tela` 28 · `--kf-t-secao` 21 · `--kf-t-cartao` 17 · `--kf-t-corpo` 16 · `--kf-t-apoio` 14 · `--kf-t-legenda` 12,5 px |
 | Linhas de lista | nome e valor 16 em negrito (`kf-li-nome`, `kf-li-valor`) · coluna da esquerda, como número e quantidade, 14 (`kf-li-lado`) · linha de apoio 12,5 (`kf-li-apoio`) · linhas dentro de um item aberto 14 (`kf-li-dentro`); nenhum outro tamanho nas listas |
 | Espaços | `--kf-e-1` 4 · `-2` 8 · `-3` 12 · `-4` 16 · `-5` 24 · `-6` 32 px |
-| Cantos | `--kf-r-sm` 8 · `--kf-r-btn` 14 · `--kf-r-campo` 14 · `--kf-r-md` 18 · `--kf-r-lg` 28 · `--kf-r-cartao` 20 px (valores do Conta Fácil; o Kit 0.6.0 ainda tem 12 · 12 · 16 · 22 · 16) |
+| Cantos | `--kf-r-sm` 8 · `--kf-r-btn` 14 · `--kf-r-campo` 14 · `--kf-r-md` 18 · `--kf-r-lg` 28 · `--kf-r-cartao` 20 px (valores do Conta Fácil, no Kit desde o 0.7.0) |
 | Botões | `--kf-btn-h` 48 px · `--kf-btn-h-p` 40 px |
-| Moldura | `--kf-barra-h` 60 · `--kf-nav-h` 54 (o Kit 0.6.0 ainda tem 64), barra colada ao pé, com folga da área segura `max(4px, 55% de safe-area-inset-bottom)` · `--kf-trilho-w` 240 · `--kf-alvo` 44 px; computador a partir de 1024 px |
+| Moldura | `--kf-barra-h` 60 · `--kf-nav-h` 54, barra colada ao pé, com folga da área segura `max(4px, 55% de safe-area-inset-bottom)` · `--kf-trilho-w` 240 · `--kf-alvo` 44 px; computador a partir de 1024 px |
 | Estados | `--kf-ok`, `--kf-warn`, `--kf-bad` e os fundos `-soft`; `--kf-star`; segmento escolhido `--kf-seg-on`. Sobre o papel claro do Conta Fácil (Art. 56, V), usam o valor do tema claro, com contraste AA |
 | Camadas | 20 barra de cima e trilho · 25–30 navegação, barras fixas e botão de criar (29) · 85 janelas · 95 avisos |
 
@@ -97,40 +97,37 @@ Atkinson, com a Atkinson logo depois na lista, legível em 20 px, com acentos.
 | Texto só para leitor de tela | classe `kf-so-leitor` | ex.: "Falta pagar" ao lado de um valor tachado |
 | Ícones | um traço só: grade de 24 × 24, traço de 2 px, pontas e cantos redondos (`stroke-linecap` e `stroke-linejoin` `round`), cor do texto (`kf-i`); sem exceção, nem o presente da barra | |
 | Apoio | `KitFacil.apoio`; chave, nome e cidade em `APOIO_PADRAO` | BR Code sem valor; QR com `qrcode-generator` 1.4.4 do cdnjs; textos: "Mande um presente para o criador!" (janela) e "Mandar um presente" (botão em *Sobre o aplicativo*) |
-| Presente | hoje, `KitFacil.apoio.presente(t)` (HTML), `KitFacil.apoio.girar(el)`; classes `kf-presente`, `kf-pr-*`. No Kit 0.7.0: ícone de traço na barra e, na janela, o presente em 3D do Conta Fácil, que gira com o dedo (`jogo.js`, `estilo.css` seção 13) | caixa de lado `t` montada em CSS 3D, sem imagem, vista isométrica (`rotateX(-28deg) rotateY(-45deg)`); cores fixas nos dois temas: papel `#7F77DD`/`#534AB7`, tampa `#9A93E8`/`#6259C9`/`#CECBF6`, fita e laço `#EF9F27`/`#BA7517`/`#FAC775`; tamanhos: barra 14, *Sobre* 40, janela 44; grande (`t` ≥ 30) com bolinhas, pontas da fita, brilho da tampa, verso do laço e sombra; `aria-hidden`, o nome fica no botão |
+| Presente | na barra, `IC.presente` (traço, mesma cor da nuvem e do balão); na janela do apoio, `KitFacil.apoio.presente(L)`, o presente em 3D que gira com o dedo (motor em `comum/kit-jogo.js`, buscado pelo Kit); em *Sobre*, `KitFacil.apoio.mini()` | cores do app: `--kf-presente` (papel e tampa; padrão `--kf-accent`) e `--kf-presente-fita` (fita e laço; padrão `--kf-comecar`); sem o motor de 3D (sem internet na primeira visita), fica o desenho parado; movimento reduzido: parado, gira só com o dedo e com as setas |
 
-**Peças a levar ao Kit (Kit 0.7.0; Art. 93, § 1º)**
+**Peças do Conta Fácil no Kit 0.7.0 (Art. 93; D13, 15/11/2026)**
 
-Estão prontas no Conta Fácil 1.7.0. Ao entrar no Kit, viram funções `KitFacil.*` sem nada próprio do Conta, e o Conta
-passa a usá-las como os outros.
+Saíram do Conta Fácil 1.7.0 sem nada próprio do Conta; o Conta Fácil 1.8.0 usa as do Kit, como os outros.
 
-| Peça | Onde está no Conta Fácil | Artigos |
+| Peça | No Kit | Artigos |
 |---|---|---|
-| Módulo de janelas e teclado (nascer, acompanhar o teclado, mudar de altura, trocar; só `transform`, num relógio só, medindo antes e depois) | `casca.js`, bloco "janelas: um mecanismo só"; `estilo.css`, seções 16 e 17 | 16, IX; 68, § 3º; 72-A |
-| Barra de baixo com a ação principal no centro; tela "Mais" com os Ajustes por último; trilho com Ajustes no pé | `casca.js` (`irPara`, `pintarNav`), `telas.js` (Mais), `index.html`, `estilo.css` seção 3 | 59, 60, 64, II, a |
-| Barra de cima com nuvem, presente e balão em traço | `casca.js` (`topoHTML`) | 13, § 1º; 58 |
-| Ícones de traço | `app.js` (`I`), `index.html` | 57 |
-| Presente em 3D que gira com o dedo e janela do apoio | `jogo.js`, `casca.js` (`apoioSheet`), `estilo.css` seção 13 | 13, §§ 2º e 3º |
-| Abertura de quatro telas, com Pular e a primeira recompensa | `casca.js` (`aberturaAbrir`), `estilo.css` seção 11 | 75 |
-| Guia único de janela fixa | `casca.js` (`guiaIniciar` e seguintes), `estilo.css` seção 15 | 77 a 79 |
-| Seções de uma linha aberta por vez, título tocado à vista | `app.js` (pessoas e pedidos da comanda) | 70 |
-| `comMovimento` (anima todo trecho redesenhado) | `app.js` | 72 |
-| Carrossel e arrastar e soltar do Conta | `app.js` (cupons e juntar pessoas) | 65, IX e XI |
-| Tokens novos (cantos, navegação) e verificação do padrão da moldura nova | `estilo.css` seção 1; `comum/verificar.mjs` | Anexo II; Anexo VII |
-| Relógio único de 600 ms | `app.js` (`MOVE`, `MV`), `estilo.css` (`--cf-ms`, `--cf-curva`, seção 18); some o ajuste provisório de `Element.prototype.animate` | 72, § 1º; Anexo V |
-| Saída das janelas (desce pelo pé, fundo clareia junto) | `casca.js`, bloco "janelas", parte 4 (`sair`, `#cf-saidas`); o Kit deixa de usar `sairDialogo` | 68, § 3º |
-| Janela sem campo selecionado | `app.js` (`openSheet`); `dialogo.abrir` ignora `autofocus` em campo de texto | 16, IX; 68, § 5º |
-| Campo com sugestões: `KitFacil.sugestoes(campo, itens, aoEscolher)` | `app.js` (`attachSuggest`), `comanda.css` (`.sg-*`) | 65, XII |
-| Campo de dinheiro e de porcentagem: `KitFacil.campo.dinheiro` e `.porcento` | `app.js` (`maskMoney`, `maskPct`, `prepFields`) | 65, XIII |
-| Passo a passo de quantidade (− e +) | `app.js` (`.stepper`), `comanda.css` | 65, XIII |
-| Chave liga e desliga e botões de escolha | `comanda.css` (`.switch`), `estilo.css` (`.chip-b`) | 65, XIII |
-| Confirmação no desenho novo; o app deixa a sua (`confirmSheet`) e usa `KitFacil.dialogo.confirmar` | `app.js` | 65, VIII |
-| Aviso rápido: o app chama `KitFacil.avisar` direto, sem o repasse `toast` | `app.js` | 68 |
-| Pix copia e cola e QR code de cobrança: `KitFacil.pix`, junto com o do apoio | `app.js` | 13 |
-| Tampinhas, níveis e festa de fechamento: `KitFacil.jogo`, peça opcional | `jogo.js` | 68, § 4º; 72, § 4º |
-| Medição de movimento quadro a quadro (janelas, teclado, 600 ms) | `tests/app.test.mjs` | Anexo VII |
+| Janelas: um mecanismo só (nascer, acompanhar o teclado, mudar de altura, trocar, sair pelo pé com o fundo clareando junto; só `transform`, num relógio só) | `KitFacil.dialogo.abrir`, `KitFacil.janela.ocupada(ms)`, `.teclado()`, `.tecladoAssentado()`; variáveis `--kf-tk`, `--kf-max`, `--kf-pe`; classe `html.kf-tk` | 16, IX; 68, § 3º; 72-A |
+| Janela sem campo selecionado | `dialogo.abrir` tira o `autofocus` de campo de texto e solta o campo que o app focar ao montar | 16, IX; 68, § 5º |
+| Confirmação | `KitFacil.dialogo.confirmar({ titulo, texto, desfaz, ok, perigo, aoConfirmar, aoCancelar })`; botões `data-kf-cancelar` e `data-kf-ok` | 65, VIII |
+| Barra de baixo com a ação principal no centro e "Mais"; trilho com Mais e Ajustes no pé; tela Mais com os Ajustes por último | `KitFacil.nav.barra`, `.trilho`, `.mais`; botões `data-kf-ir="<id>"`, ids `kf-nav-<id>` e `kf-trilho-<id>`; variáveis `--kf-nav-bg`, `--kf-nav-ink`, `--kf-nav-on`, `--kf-nav-atual`, `--kf-nav-atual-bg` | 59, 60, 64, II, a |
+| Barra de cima com nuvem, presente e balão em traço, na mesma cor | `KitFacil.topo.html({ principal: true })` | 13, § 1º; 58 |
+| Presente em 3D e janela do apoio | `KitFacil.apoio.abrir`, `comum/kit-jogo.js` | 13, §§ 2º e 3º |
+| Abertura de quatro telas | `KitFacil.abertura.abrir({ telas, fim, extra, aoMontar, aoFechar })`, `.ativa()`, `.vista()`; chave `<prefixo>abertura` | 75 |
+| Guia único de janela fixa | `KitFacil.guia.demonstrar({ passos, comecar, terminar, foto, restaurar, limpar, maos, cabecalhoFixo })`, `.emDemonstracao()`, `.pararDemonstracao()`, `.estado()` | 77 a 79 |
+| Trecho redesenhado com movimento | `KitFacil.movimento.redesenhar(raiz, fn, { marca })`; `[data-kf-exp]` e `[data-kf-morf]` | 72 |
+| Relógio único de 600 ms | `KitFacil.movimento.ms`, `--kf-ms`, `--kf-curva` (Anexo V); saiu o ajuste provisório de `Element.prototype.animate` do Conta | 72, § 1º |
+| Campo com sugestões | `KitFacil.sugestoes(campo, itens, aoEscolher)`; abaixo da linha inteira quando o pai é `.kf-linha` | 65, XII |
+| Campos de dinheiro e porcentagem | `KitFacil.campo.dinheiro` e `.porcento` (`html`, `formatar`, `ler`); `<input data-kf-dinheiro>` e `<input data-kf-pct>`; `KitFacil.campo.ligar()` e `.preparar(raiz)` (opcionais) | 65, XIII |
+| Quantidade (− e +), chave e botões de escolha | `KitFacil.ui.quantidade`, `.chave`, `.escolha`; classes `kf-quantidade`, `kf-chave`, `kf-escolha` | 65, XIII |
+| Botão de começar | classe `kf-btn kf-comecar`; variáveis `--kf-comecar` e `--kf-comecar-ink` | 66, II |
+| Pix de cobrança e do apoio | `KitFacil.pix.codigo({ chave, nome, cidade, valor })`, `.chave(k)`, `.janela({ titulo, sub, codigo })`, `.qr(caixa, codigo)` | 13 |
+| Tampinhas, níveis e objetos em 3D (opcional) | `comum/kit-jogo.js`: `KitFacil.jogo.girar`, `.tampaHTML`, `.icones`, `.confete`, `.vibrar`, `.nivel` | 68, § 4º; 72, § 4º |
+| Tokens (cantos, barra de baixo) e verificação da moldura nova | `kit-facil.css`; `comum/verificar.mjs` | Anexo II; Anexo VII |
+| Medição de movimento quadro a quadro | `comum/testes/ambiente.mjs`: `filmarJanela`, `teclado`, `animacoes`, `assentar`, `semCampoEmFoco` | Anexo VII |
 
-Ficam só no Conta Fácil, por serem do assunto dele: contas da comanda, cupons, comanda ao vivo e sorteio.
+Ficam só no Conta Fácil, por serem do assunto dele: contas da comanda, cupons, comanda ao vivo, sorteio, a lista das
+tampinhas e a festa de fechamento. O carrossel dos cupons e o arrastar para juntar pessoas continuam os do Conta, presos
+às contas da comanda; o Kit já tinha os seus (`KitFacil.carrossel` e `KitFacil.arrastar`, Kit 0.4.0), e as seções de
+uma linha aberta por vez são as do Kit (`<details data-kf-secao="grupo">`).
 
 ## ANEXO III — Sincronização e cópia de segurança
 
@@ -178,23 +175,22 @@ Fila: até 30 tentativas ou 60 dias; identificador próprio por mensagem, sem du
 
 **Um relógio só (Art. 72, § 1º):** 600 ms na curva `cubic-bezier(.45,0,.2,1)` para tudo o que abre ou fecha. No Kit
 0.7.0: `KitFacil.movimento.ms` = 600 (`MOV.ms`, `MOV.curto` e `MOV_SAIDA` iguais), variáveis CSS `--kf-ms` e
-`--kf-curva`; as cópias que saem (janelas, listas, calendário) só são removidas no fim do movimento. No Kit 0.6.0 os
-valores ainda são os da coluna "Kit 0.6.0"; o Conta Fácil 1.7.0 já usa 600 ms (Art. 30-A).
+`--kf-curva`; as cópias que saem (janelas, listas, calendário) só são removidas no fim do movimento.
 
-| O quê | Como | Duração | Kit 0.6.0 |
-|---|---|---|---|
-| Seções e rolagem até um título | `KitFacil.secao` | 600 ms | 560 ms |
-| Troca de tela | `KitFacil.movimento.entrar(area, { de: 'tela' })` | 600 ms | 280 ms |
-| Guias dos Ajustes, mês do calendário | `de: 'lado'` | 600 ms | 280 ms |
-| Listas, calendário, menus | descem ao abrir, sobem ao fechar | 600 ms | 280 / 200 ms |
-| Janelas e fundo escuro | um mecanismo só (Art. 68, § 3º): o desenho muda de uma vez e só a diferença se anima, com `transform`, para a janela, o conteúdo, o rodapé e a borda de baixo; sem transição de CSS de posição ou de altura; nasce subindo e sai descendo pelo pé, com o fundo escurecendo e clareando junto; se o teclado muda no meio do caminho, o movimento parte de onde a janela está | 600 ms (com o teclado do sistema, o relógio dele, cerca de 300 ms) | 240 / 200 ms |
-| Trecho redesenhado (lista, cupom, linha que abre) | `comMovimento`: mede antes, redesenha, anima a diferença | 600 ms | — |
-| Avisos rápidos | sobem e aparecem | 600 ms | 280 ms |
-| Item novo (destaque, fora do § 1º) | a tela rola até ele; pisca uma vez | 600 ms · 1,2 s | 560 ms · 1,2 s |
-| Carrossel (fora do § 1º) | cartão desliza; altura acompanha | 280 ms | 280 ms |
-| Arrastar e soltar (fora do § 1º) | levanta inclinado; entra no alvo encolhendo, ou volta para o lugar | 220 · 280 ms | 220 · 280 ms |
-| Item atual da navegação (fora do § 1º) | a cor desliza | 280 ms | 280 ms |
-| Presente do apoio | na barra, parado (ícone de traço); na janela, gira com o dedo e para quando é solto; parado com movimento reduzido | — | — |
+| O quê | Como | Duração |
+|---|---|---|
+| Seções e rolagem até um título | `KitFacil.secao` | 600 ms |
+| Troca de tela | `KitFacil.movimento.entrar(area, { de: 'tela' })` | 600 ms |
+| Guias dos Ajustes, mês do calendário | `de: 'lado'` | 600 ms |
+| Listas, calendário, menus | descem ao abrir, sobem ao fechar | 600 ms |
+| Janelas e fundo escuro | um mecanismo só (Art. 68, § 3º): o desenho muda de uma vez e só a diferença se anima, com `transform`, para a janela, o conteúdo, o rodapé e a borda de baixo; sem transição de CSS de posição ou de altura; nasce subindo e sai descendo pelo pé, com o fundo escurecendo e clareando junto; se o teclado muda no meio do caminho, o movimento parte de onde a janela está | 600 ms (com o teclado do sistema, o relógio dele, cerca de 300 ms) |
+| Trecho redesenhado (lista, cupom, linha que abre) | `KitFacil.movimento.redesenhar`: mede antes, redesenha, anima a diferença | 600 ms |
+| Avisos rápidos | sobem e aparecem | 600 ms |
+| Item novo (destaque, fora do § 1º) | a tela rola até ele; pisca uma vez | 600 ms · 1,2 s |
+| Carrossel (fora do § 1º) | cartão desliza; altura acompanha | 280 ms |
+| Arrastar e soltar (fora do § 1º) | levanta inclinado; entra no alvo encolhendo, ou volta para o lugar | 220 · 280 ms |
+| Item atual da navegação (fora do § 1º) | a cor desliza | 280 ms |
+| Presente do apoio | na barra, parado (ícone de traço); na janela, gira com o dedo e para quando é solto; parado com movimento reduzido | — |
 
 O que sai é um "fantasma" desenhado pelo Kit; o elemento de verdade sai na hora, então o código e os testes não
 esperam a animação.
@@ -213,7 +209,9 @@ esperam a animação.
   `digitar`, `escolher`, `arrastar`, `esperar`, `destacar` e `voltar`. Movimento reduzido: o dedo não desliza e as
   esperas ficam curtas.
 
-**Kit 0.6.0 (enquanto os outros aplicativos não migram):**
+**No Kit 0.7.0:** `KitFacil.abertura.abrir` e `KitFacil.guia.demonstrar` (Anexo II). A janela do guia usa `--kf-gu-h` e as classes `kf-gu-*`.
+
+**Kit 0.6.0 (vale nos aplicativos até a vez de cada um seguir o Conta Fácil):**
 
 ```
 KitFacil.iniciar({
@@ -226,18 +224,19 @@ KitFacil.iniciar({
 ```
 
 Essa janela a cada abertura e o guia em níveis deixam de valer na vez de cada aplicativo (Art. 93, § 2º). O Kit 0.7.0
-troca `apresentacao` e `guia.niveis` pela abertura e pelo guia único acima.
+tem as duas coisas: a abertura e o guia único, para quem já segue o Conta Fácil, e `apresentacao` e `guia.niveis`, para
+quem ainda não chegou à sua vez.
 
 ## ANEXO VII — Comandos, verificação e testes
 
-Node 22 ou mais novo; testes com Playwright (Chromium).
+Node 22 ou mais novo; testes com Playwright (Chromium; sem ele, o Google Chrome instalado, ou o canal de `PLAYWRIGHT_CHANNEL`).
 
 | Comando | O que faz |
 |---|---|
 | `npm start` | sobe o app em `http://localhost:8080/<app>/` |
 | `npm test` | testes do Kit e do app, sem internet (GitHub e Firebase simulados), com a varredura de acessibilidade |
 | `node --test <arquivos>` | só os testes da parte alterada (Art. 23, I); o guia inteiro e a bateria completa ficam para quando a mudança mexe neles |
-| `npm run verificar` | pasta `comum/` igual, sem segredos, versão nos quatro lugares, arquivos do service worker, idioma, zoom, fonte, moldura, barra de cima, Ajustes em guias, componentes nas medidas do Kit, CSP e SRI. Até o Kit 0.7.0, acusa no Conta Fácil duas falhas esperadas (barra de cima e Ajustes dentro de Mais) |
+| `npm run verificar` | pasta `comum/` igual, sem segredos, versão nos quatro lugares, arquivos do service worker, idioma, zoom, fonte, moldura, barra de cima, Ajustes em guias, componentes nas medidas do Kit, CSP e SRI, navegação do Kit 0.7.0 (`KitFacil.nav.barra` e `.trilho`) e um relógio só (o app não troca `Element.prototype.animate`). App em `1.x` sem a navegação nova é falha; app em `0.x` recebe aviso até a sua vez (Art. 93, § 2º) |
 | `npm run testar-regras` | testa as regras do Firestore no projeto de verdade, sem deixar nada gravado (precisa de internet) |
 
 - Telas de referência: 320 × 568 (equivale ao zoom de 400%), 360 × 740, 390 × 844, 820 × 1180 e 1440 × 900; áreas
@@ -246,9 +245,9 @@ Node 22 ou mais novo; testes com Playwright (Chromium).
   abertura, na tela inicial e nos Ajustes (procurados em Mais, onde ficam agora; no Conta Fácil, por enquanto, em
   `tests/acessibilidade.test.mjs`), nos temas claro e escuro. Precisa do pacote de desenvolvimento
   `@axe-core/playwright` (`npm install`); sem ele, o teste é pulado com aviso e não conta como aprovado.
-- Testes comuns: `conferirTopo`, `conferirNavAjustes`, `guiasAjustes` e o teste de tela principal do Kit. No Kit 0.7.0,
-  também a medição de movimento quadro a quadro do Conta Fácil (janelas, teclado e 600 ms) e a conferência de que
-  nenhuma janela abre com campo de texto em foco.
+- Testes comuns: `conferirTopo`, `conferirNavAjustes` (a navegação antiga e a do Kit 0.7.0), `guiasAjustes` e o teste de
+  tela principal do Kit; a medição de movimento quadro a quadro (`filmarJanela`, `teclado`, `animacoes`, `assentar`) e
+  `semCampoEmFoco`, que confere que nenhuma janela abre com campo de texto em foco.
 - Mudar o Kit: alterar `comum/` num repositório, `node comum/verificar.mjs --gerar`, copiar `comum/` para os outros,
   `npm run verificar` e `npm test` em todos.
 - App novo: copiar `comum/`, o `package.json` (nome e versão), o modelo do `sw.js` e do README; incluir o app em
