@@ -4,7 +4,27 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { writeFile } from 'node:fs/promises';
-import { preparar, aparelho, githubFalso, firestoreFalso, semRolagemLateral, conferirTopo, conferirNavAjustes, abrirAjustesPelaNav, irPelaNav, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ, escolher as escolherKit } from '../comum/testes/ambiente.mjs';
+import { preparar, aparelho as aparelhoKit, githubFalso, firestoreFalso, semRolagemLateral, conferirTopo, conferirNavAjustes, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ, escolher as escolherKit } from '../comum/testes/ambiente.mjs';
+/* 1.0: os testes das contas e das janelas rodam com as conquistas desligadas, para a janela "Disjuntor ligado" não
+   entrar no meio de um toque (as conquistas têm o seu teste). A abertura não aparece em navegador de teste. */
+const SEM_CONQUISTAS = `try { if (!localStorage.getItem('eletricafacil.jogo')) localStorage.setItem('eletricafacil.jogo', JSON.stringify({ flags: {}, vistas: {}, off: true, pronto: true })); } catch {}`;
+const aparelho = (amb, o = {}) => aparelhoKit(amb, { ...o, antes: o.conquistas ? o.antes : (o.antes ? `${SEM_CONQUISTAS}; (${o.antes})();` : SEM_CONQUISTAS) });
+/* 1.0: navegação do Kit 0.7.0 (Início, Orçamentos, + no centro, Conquistas ou Preços, e Mais, que é uma tela) */
+const ROTULOS = { 'Início': 'inicio', 'Orçamentos': 'orcamentos', 'Preços': 'precos', 'Gestão': 'gestao', 'Conquistas': 'conquistas', 'Mais': 'mais' };
+async function irPelaNav(page, nome) {
+  const id = ROTULOS[nome];
+  const direto = page.locator(`#kf-nav-${id}, #kf-trilho-${id}`).locator('visible=true');
+  if (await direto.count()) return direto.first().click();
+  await page.locator('#kf-nav-mais').click();
+  await page.locator(`.kf-mais [data-kf-ir="${id}"]`).click();
+}
+async function abrirAjustesPelaNav(page) {
+  const trilho = page.locator('#kf-trilho-ajustes').locator('visible=true');
+  if (await trilho.count()) return trilho.first().click();
+  if (!(await page.locator('.kf-mais').count())) await page.locator('#kf-nav-mais').click();
+  await page.locator('.kf-mais [data-kf="ajustes"]').click();
+}
+
 
 let amb, versao;
 before(async () => { amb = await preparar(); versao = JSON.parse(await readFile(RAIZ + '/package.json', 'utf8')).version; });
@@ -31,7 +51,7 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral; topo 
   for (const [viewport, nome] of TELAS) {
     const a = await aparelho(amb, { viewport });
     const p = a.page;
-    await p.locator('.kf-vazio [data-example]').waitFor();
+    await p.locator('[data-example]').waitFor();
     assert.equal(await p.getAttribute('html', 'lang'), 'pt-BR');
     assert.ok(await semRolagemLateral(p), `rolagem lateral no ${nome}`);
     const topo = await conferirTopo(p);
@@ -66,24 +86,24 @@ test('zoom liberado para quem precisa ampliar a tela', async () => {
 test('Ajustes: guias comuns na ordem do padrão, guias do Elétrica Fácil, Voltar e navegação', async () => {
   const a = await aparelho(amb);
   const p = a.page;
-  await p.click('#nav-prices');
+  await irPelaNav(p, 'Preços');
   await abrirAjustesPelaNav(p);
-  assert.deepEqual(await guiasAjustes(p), { comuns: GUIAS_COMUNS, produto: ['Pix', 'Veículo e deslocamento', 'Adicionais', 'Orçamento novo', 'Textos dos documentos'] });
+  assert.deepEqual(await guiasAjustes(p), { comuns: GUIAS_COMUNS, produto: ['Pix', 'Veículo e deslocamento', 'Adicionais', 'Orçamento novo', 'Textos dos documentos', 'Conquistas e apresentação'] });
   assert.ok((await p.textContent('#app')).includes(`Elétrica Fácil ${versao}`), 'falta a versão');
-  assert.equal(await p.locator('.kf-nav [data-kf=\"ajustes\"]').getAttribute('aria-current'), 'page');
+  assert.equal(await p.locator('#kf-nav-mais').getAttribute('aria-current'), 'page');
   await guia(p, 'sobre');
   assert.equal(await p.locator('#kf-aj-sobre .kf-sobre, #kf-aj-sobre').count() > 0, true);
   await p.goBack();
   assert.ok(await esperar(async () => (await p.getAttribute('[data-kf-aj]', 'data-ativa')) === ''), 'o Voltar não voltou para a lista');
   await p.goBack();
-  assert.ok(await esperar(() => p.evaluate(() => route().name === 'prices')), 'o Voltar não saiu dos Ajustes');
+  assert.ok(await esperar(() => p.evaluate(() => route().name === 'mais')), 'o Voltar não saiu dos Ajustes'); // no celular, os Ajustes abrem pela tela Mais
   // trocar de tela pela barra de baixo estando numa guia: a guia sai do histórico
   await abrirAjustesPelaNav(p);
   await guia(p, 'pix');
-  await p.click('#nav-home');
+  await irPelaNav(p, 'Início');
   assert.ok(await esperar(() => p.evaluate(() => route().name === 'home')));
   await p.goBack();
-  assert.ok(await esperar(() => p.evaluate(() => route().name === 'prices')), 'o Voltar deveria levar para a tela de antes dos Ajustes');
+  assert.ok(await esperar(() => p.evaluate(() => route().name === 'mais')), 'o Voltar deveria levar para a tela de antes dos Ajustes');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
@@ -121,7 +141,7 @@ test('computador: Ajustes em duas colunas e barra inferior do orçamento depois 
   await p.locator('.bbar').waitFor();
   const bb = await p.evaluate(() => document.querySelector('.bbar').getBoundingClientRect().left);
   assert.ok(bb >= 239, `a barra do orçamento passa por baixo do trilho (${bb})`);
-  assert.equal(await p.getAttribute('#trilho-home', 'aria-current'), 'page');
+  assert.equal(await p.getAttribute('#kf-trilho-orcamentos', 'aria-current'), 'page');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
@@ -130,7 +150,7 @@ test('balão: avaliar o app e relatar um problema saem com o nome do app, a vers
   const fs = firestoreFalso();
   const a = await aparelho(amb, { firestore: fs });
   const p = a.page;
-  await p.click('#nav-prices');
+  await irPelaNav(p, 'Preços');
   await p.click('.kf-topo [data-kf="feedback"]');
   await p.click('.kf-dlg [data-kf="problema"]');
   await p.click('.kf-opcao:has-text("Erro ou travamento")');
@@ -257,6 +277,7 @@ test('tela inicial: filtros na ordem Todos, Em aberto, Concluídos e Recusados, 
   const a = await aparelho(amb);
   const p = a.page;
   await criarOrcamento(p, 'Cliente Filtro', 'Troca de tomada');
+  await irPelaNav(p, 'Orçamentos');
   const chips = await p.locator('[data-filter]').evaluateAll(L => L.map(b => [b.dataset.filter, b.getAttribute('aria-pressed')]));
   assert.deepEqual(chips.map(c => c[0]), ['todos', 'aberto', 'concluido', 'recusado']);
   assert.equal(chips[0][1], 'true');
@@ -405,7 +426,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   await p.fill('#lt-brand', 'WEG'); await p.fill('#lt-qty', '3'); await p.fill('#lt-cost', '200');
   await p.click('.kf-dlg [data-save]');
   await p.fill('#mt-min', '10'); await p.locator('#mt-min').dispatchEvent('change');
-  await p.click('.kf-dlg :is([data-ok],[data-kf-ok])');
+  await p.click('.kf-dlg [data-kf-fechar]');
   assert.deepEqual(await p.evaluate(id => { const x = prices.find(y => y.id === id); return [x.stock, x.lotes.map(l => l.brand + ':' + l.qty), x.cost, x.min]; }, ref.id), [8, ['Steck:5', 'WEG:3'], 138, 10]);
   await p.click('[data-mf="repor"]');
   assert.match(await p.textContent('#g-body'), new RegExp(ref.name.replace(/[()]/g, '.')));
@@ -429,7 +450,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   await p.click('.kf-dlg [data-novo-item]');
   await p.fill('#it-brand', 'Fluke'); await p.fill('#it-model', '117'); await p.click('.kf-dlg [data-save]');
   assert.equal(await p.evaluate(() => itensDe('ft-multimetro-digital').length), 2, 'duas unidades do mesmo tipo, de marcas diferentes');
-  await p.click('.kf-dlg :is([data-ok],[data-kf-ok])');
+  await p.click('.kf-dlg [data-kf-fechar]');
   // nova ferramenta: categoria, depois ferramenta, depois se é sua ou se quer comprar
   await p.click('[data-g-new]');
   await escolher(p, 'nt-cat', 'Furação e corte');
@@ -612,7 +633,7 @@ test('2.16: preços de fábrica em cinza (sem confirmar), outras formas na propo
   assert.ok(await p.locator('.kf-dlg .pk-row .ref-v').count() > 0);
   await abrirCat(p, '.kf-dlg .pk-row');
   await p.locator('.kf-dlg .pk-row').first().click();
-  await p.click('.kf-dlg [data-done]');
+  await p.click('.kf-dlg [data-kf-fechar]');
   assert.equal(await p.evaluate(id => getQ(id).items.filter(i => i.kind === 'mat').length, qa), 1, 'adicionou o material');
   // adicional sem percentual padrão: pede o valor no orçamento
   await p.evaluate(id => { const d = document.querySelector(`details[data-panel="q:${id}:val"]`); if (!d.open) KitFacil.secao.abrir(d); }, qa);
@@ -648,7 +669,7 @@ test('2.16: preços de fábrica em cinza (sem confirmar), outras formas na propo
 test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar rascunho para excluir e unidade fora do nome', async () => {
   const a = await aparelho(amb, { viewport: { width: 390, height: 844 } });
   const p = a.page;
-  await p.locator('.kf-vazio [data-example]').waitFor();
+  await p.locator('[data-example]').waitFor();
   // material de fábrica sem unidade entre parênteses no nome
   const parens = await p.evaluate(() => prices.filter(x => x.kind === 'mat' && /\((pacote|barra|saco|galão|kit)/i.test(x.name)).map(x => x.name));
   assert.deepEqual(parens, []);
@@ -661,7 +682,7 @@ test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar 
     localStorage.setItem('eletricafacil.prices', JSON.stringify(ps));
     const st = JSON.parse(localStorage.getItem('eletricafacil.settings')); st.seedV = 5; localStorage.setItem('eletricafacil.settings', JSON.stringify(st));
   });
-  await p.reload(); await p.locator('.kf-vazio [data-example]').waitFor();
+  await p.reload(); await p.locator('[data-example]').waitFor();
   assert.deepEqual(await p.evaluate(() => { const m = prices.find(x => x.id === 'velho'); return [m.name, m.unit, settings.seedV]; }), ['Massa corrida', 'galão', 8]);
   // nenhum botão lado a lado sobrou no app
   const id = await criarOrcamento(p, 'Cliente Linhas', 'Troca de tomada');
@@ -701,7 +722,7 @@ test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar 
   await p.keyboard.press('Escape');
   // tela inicial: arrastar o rascunho para a esquerda mostra Excluir; Desfazer devolve
   const rid = await criarOrcamento(p, 'Rascunho Arrastar', 'Troca de tomada');
-  await p.evaluate(() => { homeFilter = 'todos'; PANEL['home:rascunho'] = true; go('/'); });
+  await p.evaluate(() => { homeFilter = 'todos'; PANEL['home:rascunho'] = true; go('/orcamentos'); });
   const card = p.locator(`[data-swipe="${rid}"] .qcard`);
   await card.waitFor();
   const bx = await card.boundingBox();
@@ -725,7 +746,7 @@ test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar 
 test('2.19.1: nenhum parêntese nos nomes e rótulos, itens de fábrica editáveis, lista de escolha inteira à vista e Excluir sem emenda', async () => {
   const a = await aparelho(amb, { viewport: { width: 390, height: 844 } });
   const p = a.page;
-  await p.locator('.kf-vazio [data-example]').waitFor();
+  await p.locator('[data-example]').waitFor();
   // catálogo de fábrica sem parênteses: preços, ferramentas e categorias
   assert.deepEqual(await p.evaluate(() => [...prices.map(x => x.name + x.cat), ...tools.map(t => (t.name || '') + (t.cat || ''))].filter(n => /[()]/.test(n))), []);
   // migração: quem tinha o nome antigo recebe o novo
@@ -735,7 +756,7 @@ test('2.19.1: nenhum parêntese nos nomes e rótulos, itens de fábrica editáve
     localStorage.setItem('eletricafacil.prices', JSON.stringify(ps));
     const st = JSON.parse(localStorage.getItem('eletricafacil.settings')); st.seedV = 6; localStorage.setItem('eletricafacil.settings', JSON.stringify(st));
   });
-  await p.reload(); await p.locator('.kf-vazio [data-example]').waitFor();
+  await p.reload(); await p.locator('[data-example]').waitFor();
   assert.equal(await p.evaluate(() => prices.some(x => x.name === 'Módulo de interruptor simples') && !prices.some(x => /\(/.test(x.name))), true);
   // material de fábrica: nome, categoria e unidade editáveis na Gestão
   const id = await p.evaluate(() => { const m = prices.find(x => x.ref && x.kind === 'mat'); go('/gestao'); return m.id; });
@@ -748,7 +769,7 @@ test('2.19.1: nenhum parêntese nos nomes e rótulos, itens de fábrica editáve
   // a lista de unidades abre com o último item à vista, acima do rodapé da janela
   await p.click('#mt-unit-esc');
   await p.waitForTimeout(900);
-  const vis = await p.evaluate(() => { const ops = [...document.querySelectorAll('.kf-esc.kf-aberta .kf-esc-op')], l = ops.at(-1).closest('.kf-esc-lista'); l.scrollTop = l.scrollHeight; const r = l.getBoundingClientRect(), pe = document.querySelector('.kf-dlg-pe').getBoundingClientRect(); return r.bottom <= pe.top + 1; });
+  const vis = await p.evaluate(() => { const ops = [...document.querySelectorAll('.kf-esc.kf-aberta .kf-esc-op')], l = ops.at(-1).closest('.kf-esc-lista'); l.scrollTop = l.scrollHeight; const r = l.getBoundingClientRect(), peEl = document.querySelector('.kf-dlg-pe'), lim = peEl && peEl.getClientRects().length ? peEl.getBoundingClientRect().top : document.querySelector('.kf-dlg').getBoundingClientRect().bottom; return r.bottom <= lim + 1; });
   assert.equal(vis, true, 'a lista deveria terminar acima do rodapé da janela');
   await p.keyboard.press('Escape'); await p.keyboard.press('Escape');
   // ferramenta de fábrica: nome e categoria editáveis, e pode ser excluída
@@ -759,7 +780,7 @@ test('2.19.1: nenhum parêntese nos nomes e rótulos, itens de fábrica editáve
   assert.equal(await p.locator('.kf-dlg [data-del]').count(), 1);
   await p.keyboard.press('Escape');
   // Excluir do rascunho: o vermelho cobre o cartão inteiro (sem emenda nos cantos) e some quando o cartão volta
-  const rid = await p.evaluate(() => { const q = blankQuote(); q.num = ++settings.seq; q.client.name = 'R'; q.items = [{ id: uid(), kind: 'svc', name: 'x', unit: 'un', qty: 1, price: 100, room: '' }]; quotes.push(q); saveQuotes(); PANEL['home:rascunho'] = true; go('/'); return q.id; });
+  const rid = await p.evaluate(() => { const q = blankQuote(); q.num = ++settings.seq; q.client.name = 'R'; q.items = [{ id: uid(), kind: 'svc', name: 'x', unit: 'un', qty: 1, price: 100, room: '' }]; quotes.push(q); saveQuotes(); PANEL['home:rascunho'] = true; go('/orcamentos'); return q.id; });
   const card = p.locator(`[data-swipe="${rid}"] .qcard`); await card.waitFor();
   assert.equal(await p.locator(`[data-swipe="${rid}"] .qc-del`).evaluate(b => getComputedStyle(b).opacity), '0');
   await p.focus(`[data-del-draft="${rid}"]`); await p.waitForTimeout(400);

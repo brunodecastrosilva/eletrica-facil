@@ -1,14 +1,15 @@
 {
   "name": "eletrica-facil",
-  "version": "0.5.1",
-  "description": "Elétrica Fácil: orçamentos de elétrica prontos em minutos. App web instalável (PWA) do Projeto Integrador.",
+  "version": "1.0.0",
+  "description": "Elétrica Fácil: orçamentos de elétrica prontos em minutos. App web instalável (PWA) do Projeto Fácil.",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node comum/servidor.mjs",
-    "test": "node comum/testar.mjs",
+    "test": "node --test --test-concurrency=1 --test-force-exit comum/testes/kit.test.mjs tests/*.test.mjs",
     "verificar": "node comum/verificar.mjs",
-    "testar-regras": "node comum/testar-regras.mjs"
+    "testar-regras": "node comum/testar-regras.mjs",
+    "test:kit": "node comum/testar.mjs"
   },
   "devDependencies": {
     "playwright": "^1.49.0",

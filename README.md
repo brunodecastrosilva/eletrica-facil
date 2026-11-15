@@ -2,35 +2,37 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-**Fase de testes** · versão 0.5.1 · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **1.0.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
-[Código do Projeto Fácil](comum/CODIGO.md).
+[Código do Projeto Fácil](comum/CODIGO.md) 0.9.1. Na 1.0.0 o app foi refeito na sua vez de seguir o Conta Fácil, a
+referência da família (Código, Art. 93, § 2º): a estrutura é a comum, e a identidade é a dele, de ferramenta de obra.
 
 ## O que o app faz
 
-- Impostos ou nota fiscal por orçamento: por fora ou embutido, sobre a mão de obra (ISS) ou o total
-- Material sugerido ao adicionar um serviço (composição editável na tabela de preços)
-- Pagamentos recebidos e o quanto falta receber no resumo do mês; registro profissional nos documentos
-- Apresentação curta ao abrir (desligável em Ajustes) e guia em 3 níveis: essencial, exploração e completo
-- Monte o orçamento escolhendo serviços e materiais da sua tabela de preços
-- Separe por ambiente (sala, cozinha, quartos…) e confira o total de cada item, também em PDF
-- Defina o prazo (dias úteis, dias corridos, semanas ou meses; o padrão fica em Ajustes) e toque no início: o app marca os dias no calendário, pulando fins de semana e feriados, e confere se fecha; o orçamento não aceita datas passadas
-- Preços que vêm com o app em cinza claro; ao mudar o valor, ficam em preto
-- Pagamento à vista (com desconto à vista), com entrada, no cartão (sem juros, taxa da maquininha ou juros ao mês; sem juros até N×; débito) ou a combinar; outras formas que o cliente pode escolher aparecem na proposta
-- Calcule o deslocamento pela distância, consumo do veículo e preço do combustível
-- Aplique adicionais de urgência, período noturno e fim de semana sobre a mão de obra
-- Envie a proposta em PDF (folha A4) ou pelo WhatsApp, com QR code do Pix da entrada
-- Acompanhe o que está aguardando resposta, aprovado e concluído; gere relatório técnico e recibo no fim do serviço
-- **Gestão:** Materiais (Em estoque, Repor e Catálogo; várias marcas por material, com quantidade e custo; repasse, margem e mínimo), ferramentas em Minhas ferramentas (com marca, modelo e quantidade, várias do mesmo tipo), Quero comprar e Ferramentas cadastradas (mais de 50 já vêm no app), lista de compras para copiar ou mandar pelo WhatsApp, e checklist fixo para conferir na ida e na volta da obra. O material do estoque é o mesmo da tabela de Preços; ao concluir um serviço, o app oferece dar baixa no material usado, e o que chega ao mínimo entra em Para repor
-- **Use em vários aparelhos (opcional):** orçamentos, preços e ajustes sincronizados, criptografados, num gist secreto da sua conta GitHub
-- **Avalie o app e relate problemas** pelo balão no alto da tela (ou em Ajustes → Avaliação e feedback)
-- **Nuvem no alto da tela:** mostra se os dados estão sincronizados, sincronizando, pendentes, com erro ou sem internet
-- **Ajustes na barra de baixo** (no computador, no pé do menu lateral), com as mesmas guias nos três apps
-- **Mande um presente para o criador!** O app é gratuito; o presente no alto da tela, entre a nuvem e o balão, abre o Pix (QR code e copia e cola), se você quiser apoiar
-- **Novidades:** depois de cada atualização, o app mostra uma vez o que mudou
-- Listas de escolha desenhadas pelo próprio app e o mesmo caminho (categoria, depois item) para cadastrar preço, material e ferramenta
-- Tema claro, escuro ou automático; funciona sem internet depois da primeira visita
+- **Início com a prancheta:** diga para quem é o serviço e toque em Começar orçamento. O rascunho em andamento e o resumo
+  do mês (aprovado, aguardando resposta, a executar e a receber) ficam logo abaixo
+- **O orçamento é uma folha só, presa na prancheta:** cliente e serviço, itens, valores, pagamento, datas, garantia e
+  observações são as linhas da folha; cada uma abre com um toque. O total e Ver proposta ficam sempre no pé
+- **Itens da sua tabela de preços:** mão de obra e material, com material sugerido para cada serviço; separe por ambiente
+  (sala, cozinha, quartos…) quando quiser
+- **Valores:** deslocamento pela distância, consumo do veículo e combustível; adicionais de urgência, noite e fim de
+  semana; desconto; impostos ou nota fiscal por orçamento (sem, por fora ou embutido)
+- **Pagamento, prazo e garantia:** à vista, com entrada, no cartão (com ou sem juros) ou a combinar; o prazo marca os
+  dias no calendário, pulando fins de semana e feriados
+- **Proposta em PDF (folha A4) ou pelo WhatsApp,** com QR code do Pix; relatório de serviços executados e recibo no fim
+- **Orçamentos:** tudo o que você orçou, por situação (aguardando resposta, aprovados, rascunhos, concluídos e recusados)
+- **Preços:** a sua tabela; os preços que vêm com o app aparecem em cinza e ficam em preto quando você muda
+- **Gestão:** materiais em estoque (com marcas, custo, repasse e mínimo), ferramentas, lista de compras e checklist de
+  ida e volta da obra; ao concluir um serviço, o app oferece dar baixa no material usado
+- **Conquistas:** cada passo bem dado liga um disjuntor do seu quadro (18 ao todo) e conta para o nível, de Aprendiz a
+  Mestre. Nenhuma premia cobrar mais; dá para desligar em Ajustes → Conquistas e apresentação
+- **Apresentação na primeira abertura** (quatro telas, com uma demonstração para tocar) e **um guia só,** que faz cada
+  passo na tela, do começo ao fim, numa demonstração que não grava nada
+- **Use em vários aparelhos (opcional):** orçamentos, preços e ajustes sincronizados, criptografados, num gist secreto
+  da sua conta GitHub
+- **Avaliação e relato de problemas** pelo balão no alto da tela; **presente para o criador** (Pix, opcional)
+- Tema claro, escuro ou automático; instalável; funciona sem internet depois da primeira visita
 
 ## Como usar
 
@@ -48,11 +50,14 @@ Sem a sincronização, os dados ficam só no aparelho; toque na **nuvem** no alt
 |---|---|
 | Orçamentos, dados dos clientes, tabela de preços (com o estoque), ferramentas, checklist e ajustes | neste aparelho (armazenamento do navegador, chaves `eletricafacil.*`) |
 | Os mesmos dados, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
+| Conquistas (quando cada disjuntor foi ligado, guia visto) e apresentação vista | só neste aparelho (`eletricafacil.jogo` e `eletricafacil.abertura`); os disjuntores são calculados dos seus dados, então acompanham a sincronização |
 | Propostas, relatórios e recibos em PDF | gerados no aparelho; só saem quando o usuário compartilha |
 | Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback`; apagados depois de 2 anos |
 
 O app guarda dados pessoais dos clientes de quem usa (nome, telefone, endereço, CPF ou CNPJ).
 A guia **Ajustes → Privacidade e segurança** explica isso para quem usa o app.
+
+Quem já usava a versão 0.5.1 não perde nada: as chaves do armazenamento e os formatos são os mesmos.
 
 ## Para desenvolver
 
@@ -61,7 +66,7 @@ O Node (22 ou mais novo) só é usado para o servidor local, os testes e a verif
 
 ```bash
 npm start                         # abre em http://localhost:8080/eletrica-facil/
-npm install                       # primeira vez: instala o Playwright, usado nos testes
+npm install                       # primeira vez: instala o Playwright e o axe, usados nos testes
 npx playwright install chromium   # primeira vez: baixa o navegador dos testes
 npm test                          # testes do Kit Fácil e do app, sem internet
 npm run verificar                 # Código do Projeto Fácil, segredos e versão
@@ -72,25 +77,41 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 
 ## Interface
 
-- **Seções:** um só modelo de seção em todo o app (o cartão de `panel()`: título, resumo de uma linha, contador ou valor e seta), em qualquer nível e também nas janelas; cada uma abre e fecha sozinha (`KitFacil.secao`), todas começam fechadas e a busca abre as que têm resultado
-- **Escolhas em linhas:** nada de botões lado a lado; escolhas são linhas (`linha()` / `linhas()`): bolinha para uma, caixa de marcar para várias, seta para o que abre a próxima etapa, + para o que entra direto. Filtros curtos e a entrada em % usam segmentos (`.seg`). Rascunho no Início: arrastar para a esquerda mostra Excluir, com Desfazer
+Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)) e o Conta Fácil, a referência:
 
-Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
-
-- **Alto da tela, à direita:** nuvem da sincronização, presente para o criador e balão de avaliação, nessa ordem; Ajustes fica na barra de baixo (no computador, no pé do menu lateral). No orçamento e na
-  proposta, só a nuvem e o balão (o Voltar e o menu do orçamento ficam à esquerda deles)
-- **Navegação:** Orçamentos, Preços e Gestão na barra de baixo (celular e tablet) ou no menu lateral (computador, a partir de 1024 px), com Ajustes por último
+- **Identidade:** ferramenta de obra. Grafite, papel e amarelo de segurança; títulos em Barlow Semi Condensed (letra de
+  placa de obra), texto em Atkinson Hyperlegible Next. A prancheta segura a folha do orçamento; as conquistas são
+  disjuntores de um quadro de distribuição
+- **Duas cores de botão (Art. 66):** amarelo para a ação principal da tela (Ver proposta, Continuar, Salvar) e grafite
+  com letra amarela para a ação que começa o trabalho (Começar orçamento, o botão do centro). Vermelho só para excluir
+- **Alto da tela:** a marca à esquerda; nuvem, presente e balão à direita. Na folha e na proposta, voltar, título, nuvem
+  e balão
+- **Navegação (Kit 0.7.0):** Início, Orçamentos, o orçamento novo no centro, Conquistas e Mais (Preços, Gestão, guia,
+  exemplo e Ajustes). Com as conquistas desligadas, Preços ocupa o lugar delas. No computador, trilho lateral com Mais
+  e Ajustes no pé
+- **Um jeito de criar (Art. 64, II):** o orçamento nasce no Início e no botão do centro; Preços e Gestão têm a linha de
+  adicionar no fim de cada lista, sem botão flutuante
+- **Janelas:** nenhuma abre com caixa de texto selecionada, e nenhuma tem "Pronto" ou "Fechar" sozinho no pé: o X fecha
 - **Ajustes:** as oito guias comuns e as guias próprias **Pix**, **Veículo e deslocamento**, **Adicionais**,
-  **Orçamento novo** e **Textos dos documentos**. "Seus dados na proposta" (nome, contato, CPF ou CNPJ e logotipo) fica em Conta e perfil.
+  **Orçamento novo**, **Textos dos documentos** e **Conquistas e apresentação**. "Seus dados na proposta" fica em Conta
+  e perfil
 
 ## Estrutura
 
 | Arquivo | Conteúdo |
 |---|---|
-| `index.html` | o app inteiro: estrutura, estilo e código |
-| `comum/` | **Kit Fácil**: sistema de design comum, barra superior, Ajustes, avaliação, sincronização e o padrão do projeto. Igual nos três apps: não edite só aqui |
+| `index.html` | moldura da página e a política de segurança (CSP); nenhum script dentro da página |
+| `estilo.css` | estilo do app; a identidade da 1.0 (prancheta, folha, quadro de disjuntores, moldura) fica no fim |
+| `motor.js` | utilidades, tabela de preços inicial, dados, sincronização, contas, rotas e janelas |
+| `orcamento.js` | criar, a folha do orçamento, itens, ambientes, deslocamento, proposta, mensagens, Pix, PDF e recibo |
+| `telas.js` | Preços e Gestão (materiais, ferramentas e checklist) |
+| `jogo.js` | conquistas: os disjuntores, os níveis e a tela Conquistas |
+| `inicio.js` | Início (a prancheta), Orçamentos (a lista) e Mais |
+| `guia.js` | roteiro do guia, na ordem de uso |
+| `casca.js` | troca de tela, navegação, Ajustes, abertura (onboarding), guia e arranque |
+| `comum/` | **Kit Fácil**: sistema de design, barra de cima, navegação, Ajustes, avaliação, sincronização, janelas, abertura, guia e a verificação. Igual nos quatro apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
-| `tests/` | testes do app |
+| `tests/` | testes do app: `app.test.mjs` (contas, janelas e Ajustes), `novo.test.mjs` (Início, navegação, conquistas, abertura e guia) e `acessibilidade.test.mjs` |
 
 ## Serviços externos e configuração
 
@@ -99,6 +120,17 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
 | GitHub (gist) | sincronização entre aparelhos | gratuito | nada no projeto; cada pessoa usa a própria conta |
 | Firebase (projeto `conta-facil-2c1f9`, compartilhado pelo projeto) | receber as avaliações | plano gratuito | publicar a regra de [`comum/regras-firestore-feedback.txt`](comum/regras-firestore-feedback.txt) |
 | Google Fonts, cdnjs | fontes, QR code e PDF | gratuito | nada |
+
+## Peças do Kit passadas por cima (Art. 30-A)
+
+- **Testes comuns que ainda procuram a navegação antiga:** `abrirAjustesPelaNav` e `irPelaNav`
+  (`comum/testes/ambiente.mjs`) e a varredura `comum/testes/acessibilidade.test.mjs` procuram os Ajustes na barra de
+  baixo ou numa janela "Mais". Com a navegação do Kit 0.7.0, Mais é uma tela. O app usa as suas versões dessas duas
+  funções (`tests/app.test.mjs`) e a sua varredura (`tests/acessibilidade.test.mjs`), como o Conta Fácil; por isso
+  `npm test` lista os arquivos em vez de chamar `comum/testar.mjs`. Proposta para o Integrador: os testes comuns
+  passarem a conhecer a tela Mais.
+- **Marca que leva ao Início:** no Conta Fácil a marca do alto é um botão; o teste comum `conferirTopo` acusa qualquer
+  botão a mais em `.kf-barra-in`. Aqui a marca ficou sem toque. Proposta para o Integrador: o Kit dizer qual dos dois vale.
 
 ## Exceções ao padrão
 
@@ -111,7 +143,7 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
 
 - **Lista de escolha, calendário e relógio do Kit perto do pé da tela:** o Kit só rola quando a lista passa do fim da
   janela do navegador; dentro de uma janela do app, a lista pode ficar atrás do rodapé (e, na página, atrás das barras de
-  baixo). O app completa: depois de abrir, rola o que falta para o último item aparecer (correção em `index.html`, sem
+  baixo). O app completa: depois de abrir, rola o que falta para o último item aparecer (correção em `casca.js`, sem
   mexer no `comum/`). A levar ao Integrador como correção do Kit, para os quatro apps.
 
 - **Preços e Gestão sem linha de apoio (lei 6, telas principais com título e uma linha de apoio):** a pedido do Bruno
@@ -121,8 +153,11 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
 
 ## Publicação
 
-GitHub Pages a partir da branch `main`, pasta raiz. Antes de publicar: `npm run verificar` e `npm test`, e confira o app
-no celular e no computador. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
+GitHub Pages a partir da branch `main`, pasta raiz. Antes de publicar: `npm run verificar` e os testes da parte que mudou
+(Código, Art. 23, I); o guia inteiro só roda quando a mudança mexe no guia, e a bateria completa (`npm test`), quando
+mexe nas contas ou em `comum/`. Confira o app no celular e no computador, no claro e no escuro. Se o app abrir com erro
+no ar, desfaça o envio na hora (`git revert`) e só depois investigue.
+O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Uso do código
 

@@ -3,6 +3,28 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.0.0 · 2026-11-15
+
+Elétrica Fácil refeito, na vez dele de seguir o Conta Fácil (Código, Art. 93, § 2º). A estrutura é a comum da família; a
+identidade é a dele: ferramenta de obra. O motor (contas, prazos, impostos, deslocamento, Pix, PDF, relatório, recibo e
+sincronização) é o mesmo da 0.5.1, e os dados de quem já usa o app continuam valendo.
+
+- **Início novo, com a prancheta:** "Para quem é o serviço?". Escreva o nome e toque em Começar orçamento; cliente que já tem orçamento traz o telefone e o endereço. O rascunho em andamento aparece logo abaixo, com Continuar e Excluir (com Desfazer).
+- **O mês numa lista:** aprovado no mês, aguardando resposta, aprovados a executar, a receber e aprovação em 90 dias, um embaixo do outro (antes, quatro quadrinhos lado a lado).
+- **O orçamento é uma folha só, presa na prancheta:** as seções viraram as linhas da folha. "Excluir orçamento" fica logo abaixo dela, em vermelho; saiu do menu ⋯, que ficou com Alterar situação, Gerar recibo e Duplicar.
+- **Navegação nova:** Início, Orçamentos, o orçamento novo no centro, Conquistas e Mais. Preços, Gestão, o guia, o orçamento de exemplo e os Ajustes ficam em Mais. No computador, o trilho lateral tem tudo.
+- **Conquistas:** 18 disjuntores num quadro de distribuição. Cada passo bem dado (primeiro orçamento, proposta enviada, serviço concluído, chave Pix, seus preços, checklist…) liga um disjuntor e conta para o nível, de Aprendiz a Mestre. Nenhuma conquista premia cobrar mais. Dá para desligar em Ajustes → Conquistas e apresentação; com elas desligadas, Preços volta para a barra.
+- **Apresentação nova:** quatro telas na primeira abertura, com uma demonstração para tocar. Quem diz como assina os orçamentos já liga o primeiro disjuntor. Dá para rever nos Ajustes. Saiu a janela que aparecia a cada abertura.
+- **Guia refeito:** um só, com 21 passos na ordem de uso. O app faz cada passo na tela (cliente, itens, quantidade, ambientes, deslocamento, adicionais, pagamento, proposta, resposta do cliente, conclusão, recibo, preços, gestão, conquistas e ajustes), numa demonstração que não grava nada. Só o envio (PDF e WhatsApp) é mostrado sem tocar, porque abriria outro app. Saiu o guia em três níveis.
+- **Identidade:** grafite, papel e amarelo de segurança; títulos em Barlow Semi Condensed. Duas cores de botão: amarelo para a ação principal e grafite com letra amarela para começar. Todo botão que exclui é vermelho e cheio.
+- **Janelas:** nenhuma abre com a caixa de texto selecionada, e nenhuma tem mais "Pronto" ou "Fechar" sozinho no pé (escolher itens, material e ferramenta fecham no X).
+- **Preços e Gestão:** o botão flutuante de criar deu lugar à linha de adicionar no fim da lista.
+- **Ambientes:** as opções de cada ambiente saíram do título (um botão dentro de outro atrapalhava o leitor de tela) e ficam numa linha própria, dentro do ambiente.
+- **Acessibilidade:** contraste corrigido no "opcional" dos campos e nas notas do pé da proposta. A varredura automática (WCAG 2.2 AA) agora passa também pela abertura, pela folha com as seções abertas, pela proposta, por Conquistas, Preços e Gestão, nos temas claro e escuro.
+- **Por dentro:** o código saiu de um arquivo só para `motor.js`, `orcamento.js`, `telas.js`, `jogo.js`, `inicio.js`, `guia.js` e `casca.js`; o estilo saiu do `index.html` para `estilo.css`. 5 testes novos (Início, navegação, conquistas, abertura e guia) e os 24 antigos adaptados à navegação nova.
+- **Regras do app que mudaram (aprovadas pelo Bruno em 15/11/2026):** Art. 10 (seções recolhidas → folha única), Art. 15 (barra de baixo), Art. 16 (guia própria nova: Conquistas e apresentação) e Art. 17 (o app passa a ter abertura).
+- **Kit passado por cima (Art. 30-A):** os testes comuns ainda procuram a navegação antiga; o app usa os seus (veja o README).
+
 ## 0.5.1 · 2026-11-15
 
 - **Kit Fácil 0.9.0 (Código 0.9, Proposta 4 do Conta Fácil):** para quem usa este app, muda:

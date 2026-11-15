@@ -1,10 +1,10 @@
-// Elétrica Fácil · uso sem internet (modelo do Projeto Integrador).
+// Elétrica Fácil · uso sem internet (modelo do Projeto Fácil).
 // Arquivos do app: busca a versão nova primeiro e usa a guardada se estiver sem internet.
 // Bibliotecas (QR code, PDF, fontes) têm versão fixa: usa a guardada.
 // O cache leva a versão do app (package.json); cada app só apaga as próprias cópias antigas,
 // porque os apps do projeto dividem o mesmo endereço (github.io).
-const CACHE = 'eletrica-facil-0.5.1';
-const APP = ['./', './index.html', './app.js', './comum/kit-facil.js', './comum/kit-facil.css', './comum/kit-jogo.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png'];
+const CACHE = 'eletrica-facil-1.0.0';
+const APP = ['./', './index.html', './estilo.css', './motor.js', './orcamento.js', './telas.js', './jogo.js', './inicio.js', './guia.js', './casca.js', './comum/kit-facil.js', './comum/kit-facil.css', './comum/kit-jogo.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png'];
 const LIBS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', e => {
