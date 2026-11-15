@@ -777,7 +777,8 @@ próprias, e a verificação do padrão pode acusar nele as diferenças da naveg
 
 § 2º A revisão dos outros aplicativos é feita um por vez. Até a vez de cada um, pode ainda haver nele o que este
 Código trocou: dados lado a lado, o guia em dois ou três níveis, a janela a cada abertura, o presente colorido, a
-navegação antiga e uma só cor de botão. Na vez de cada aplicativo, ele passa a seguir o Conta Fácil e sobe para
+navegação antiga, uma só cor de botão, durações diferentes de 600 ms, janelas que abrem com campo selecionado e
+janelas com "Pronto" ou "Fechar" no pé. Na vez de cada aplicativo, ele passa a seguir o Conta Fácil e sobe para
 1.0.0 (Art. 22, § 2º).
 
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
