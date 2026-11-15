@@ -17,7 +17,7 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '0.7.0';
+  const VERSAO = '0.8.0';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
@@ -236,6 +236,9 @@
      Kit 0.7.0: o movimento é o do mecanismo único das janelas (abaixo, "janelas: um mecanismo só"); nenhuma janela
      abre com a caixa de texto selecionada (Código, Arts. 16, IX, e 68, § 5º): o foco vai para a janela ou para um
      botão marcado com autofocus, e o teclado só sobe quando a pessoa toca no campo. */
+  /* Kit 0.8.0 (Código, Arts. 16, IX, e 68, § 5º): nenhuma caixa de texto é selecionada sozinha. Campo que falta
+     preencher é apontado (contorno e aria-invalid), sem receber o foco; o contorno sai quando a pessoa digita. */
+  function apontar(el) { if (!el || !el.setAttribute) return; el.setAttribute('aria-invalid', 'true'); el.addEventListener('input', () => el.removeAttribute('aria-invalid'), { once: true }); }
   const campoDeTexto = el => !!(el && el.matches && el.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=range]):not([type=file]):not([type=hidden]), textarea, select'));
   function abrirDialogo({ titulo, sub = '', contexto = '', corpo, pe = '', aoMontar, aoFechar, classe = '', nome = '' }) {
     const troca = !!atual;
@@ -286,7 +289,10 @@
   const dialogoAberto = () => !!atual;
   /* confirmação (Código, Art. 65, VIII): diz o que será apagado e se dá para desfazer; o botão nomeia a ação.
      desfaz: texto curto sobre desfazer ("Dá para desfazer logo depois." ou "Não dá para desfazer."), em linha própria. */
+  // Kit 0.8.0 (Código, Art. 66, § 1º): a confirmação que exclui, remove ou apaga é vermelha, mesmo sem perigo: true
+  const EXCLUI = /^(Excluir|Remover|Apagar)/i;
   function confirmar({ titulo, texto, ok = 'Confirmar', perigo = false, desfaz = '', aoConfirmar, aoCancelar }) {
+    perigo = perigo || EXCLUI.test(String(ok).trim());
     abrirDialogo({ titulo, classe: 'kf-curto kf-confirmar', nome: 'confirmar', aoFechar: aoCancelar,
       corpo: `<p class="kf-texto">${esc(texto)}</p>${desfaz ? `<p class="kf-ajuda">${esc(desfaz)}</p>` : ''}`,
       pe: `<button type="button" class="kf-btn kf-sec" data-kf-cancelar>Cancelar</button><button type="button" class="kf-btn ${perigo ? 'kf-perigo' : 'kf-pri'}" data-kf-ok autofocus>${esc(ok)}</button>`,
@@ -519,7 +525,7 @@
           e.preventDefault();
           const n = nota(), texto = msg.value.trim(), contato = $('#kf-contato', d).value.trim();
           const falta = problema ? (!texto ? 'Conte o que aconteceu.' : '') : (!n ? 'Toque numa estrela para dar sua nota.' : '');
-          if (falta) { erro.textContent = falta; erro.hidden = false; (problema ? msg : $('input[name="kf-nota"]', d)).focus(); return; }
+          if (falta) { erro.textContent = falta; erro.hidden = false; if (problema) apontar(msg); else $('input[name="kf-nota"]', d).focus(); return; }
           const limite = envios.bloqueio();
           if (limite) { erro.textContent = limite; erro.hidden = false; return; }
           envios.marcar();
@@ -2055,11 +2061,15 @@
     else if (c.nextElementSibling) document.body.appendChild(c);
     return c;
   }
-  // cópia que só serve para ser vista saindo: sem ids, papéis, dados nem foco
+  /* cópia que só serve para ser vista saindo: sem ids, papéis, dados nem foco.
+     Kit 0.8.0 (Proposta 3 do Conta Fácil, item 1): ficam as marcas de campo já ligado (data-kf-esc, data-kf-data,
+     data-kf-hora e data-kf-nativa). Sem elas, a lista de escolha, a data e a hora tomavam o campo da cópia por um campo
+     novo e montavam outra lista; a cópia ganhava uma linha e a janela pulava para cima ao fechar. */
+  const MARCAS_FANTASMA = new Set(['data-kf-esc', 'data-kf-data', 'data-kf-hora', 'data-kf-nativa']);
   function fantasma(el, trocaClasse = {}) {
     const f = el.cloneNode(true);
     [f, ...f.querySelectorAll('*')].forEach(n => {
-      [...n.attributes].forEach(a => { if (a.name === 'id' || a.name === 'for' || a.name === 'role' || a.name === 'name' || a.name.startsWith('data-') || a.name.startsWith('aria-')) n.removeAttribute(a.name); });
+      [...n.attributes].forEach(a => { if (MARCAS_FANTASMA.has(a.name)) return; if (a.name === 'id' || a.name === 'for' || a.name === 'role' || a.name === 'name' || a.name.startsWith('data-') || a.name.startsWith('aria-')) n.removeAttribute(a.name); });
       Object.entries(trocaClasse).forEach(([de, para]) => { if (n.classList.contains(de)) { n.classList.remove(de); n.classList.add(para); } });
     });
     f.setAttribute('inert', ''); f.style.pointerEvents = 'none';
@@ -2091,6 +2101,7 @@
   const SETA = '<svg class="kf-i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
   function escolhaLigar(raiz) {
     $$('select:not([data-kf-esc]):not([data-kf-nativa]):not([multiple])', raiz || document).forEach(sel => {
+      if (sel.closest('#kf-saidas')) return;  // cópia de saída: nunca é ligada
       sel.setAttribute('data-kf-esc', ''); sel.hidden = true; sel.tabIndex = -1;
       const w = document.createElement('div'); w.className = 'kf-esc';
       const id = (sel.id || 'kf-esc-' + novoId()) + '-esc';
@@ -2187,6 +2198,7 @@
   const deIso = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3], 12) : null; };
   function dataLigar(raiz) {
     $$('input[type="date"]:not([data-kf-data]):not([data-kf-nativa])', raiz || document).forEach(inp => {
+      if (inp.closest('#kf-saidas')) return;
       inp.setAttribute('data-kf-data', ''); inp.hidden = true; inp.tabIndex = -1;
       const w = document.createElement('div'); w.className = 'kf-esc kf-data';
       const id = (inp.id || 'kf-data-' + novoId()) + '-data';
@@ -2287,6 +2299,7 @@
   const p2 = n => String(n).padStart(2, '0');
   function horaLigar(raiz) {
     $$('input[type="time"]:not([data-kf-hora]):not([data-kf-nativa])', raiz || document).forEach(inp => {
+      if (inp.closest('#kf-saidas')) return;
       inp.setAttribute('data-kf-hora', ''); inp.hidden = true; inp.tabIndex = -1;
       const w = document.createElement('div'); w.className = 'kf-esc kf-data kf-hora';
       const id = (inp.id || 'kf-hora-' + novoId()) + '-hora';
@@ -2800,6 +2813,79 @@
       e.preventDefault(); semEmpurrar(el, true);
     }, { passive: false, capture: true });
     document.addEventListener('focus', e => { const el = e.target; if (ios() && !demonstrando() && campo(el) && el.closest && el.closest('.kf-ov') && !/translateY\(-2000px\)/.test(el.style.transform)) semEmpurrar(el, false); }, true);
+
+    /* 5. puxar a janela para baixo (Kit 0.8.0; Código, Art. 68, § 6º; Proposta 3 do Conta Fácil, item 3).
+       Abaixo de 1024 px a janela tem uma barrinha no alto; quem puxa pelo cabeçalho leva a janela junto com o dedo, pela
+       propriedade `translate`, que soma com o `transform` deste mecanismo. Soltou depois de um terço da altura (no máximo
+       160 px) ou num puxão rápido, ela fecha, como no X, e a cópia que sai desce de onde o dedo deixou; soltou antes, volta.
+       Fora da barrinha o dedo não move a janela: só rola o conteúdo que for maior que ela, parando no começo e no fim
+       sem puxar a página. No computador, e para quem não arrasta, o X e o Esc continuam (Art. 16, X). Fora do guia. */
+    (() => {
+      const estreita = () => matchMedia('(max-width:1023px)').matches;
+      const real = el => el && !el.closest('#kf-saidas');
+      const noGuia = () => demonstrando() || guia.ativo();
+      let p = null;   // { dlg, y0, dy, t, v, id }
+      const largar = fechar => {
+        if (!p) return; const { dlg, dy } = p; p = null;
+        document.body.classList.remove('kf-puxando');
+        if (!dlg.isConnected) return;
+        if (fechar) { fecharDialogo(); return; }   // a cópia leva o `translate` e desce dali
+        dlg.style.translate = '';
+        if (dy > 1 && !parado()) anima.call(dlg, [{ translate: `0 ${dy}px` }, { translate: '0 0' }], { duration: MOV.ms / 2, easing: MOV.css });
+      };
+      document.addEventListener('pointerdown', e => {
+        if (p || !estreita() || e.button > 0 || noGuia()) return;
+        const cab = e.target.closest && e.target.closest('.kf-dlg-cab'); if (!cab || !real(cab) || e.target.closest('button, a, input')) return;
+        const dlg = cab.closest('.kf-dlg'); if (!dlg || dlg.getAnimations().some(a => a.playState === 'running')) return;
+        p = { dlg, y0: e.clientY, dy: 0, t: e.timeStamp, v: 0, id: e.pointerId };
+        document.body.classList.add('kf-puxando');
+      }, true);
+      document.addEventListener('pointermove', e => {
+        if (!p || e.pointerId !== p.id) return;
+        const dy = Math.max(0, e.clientY - p.y0), dt = Math.max(1, e.timeStamp - p.t);
+        p.v = .6 * p.v + .4 * ((dy - p.dy) / dt); p.dy = dy; p.t = e.timeStamp;
+        p.dlg.style.translate = dy ? `0 ${Math.round(dy)}px` : '';
+      }, true);
+      const fim = e => { if (!p || e.pointerId !== p.id) return; largar(e.type === 'pointerup' && (p.dy > Math.min(160, p.dlg.offsetHeight / 3) || (p.dy > 24 && p.v > .5))); };
+      document.addEventListener('pointerup', fim, true); document.addEventListener('pointercancel', fim, true);
+      let ty = 0;
+      const rolavel = (t, dlg) => { for (let el = t; el && el !== dlg; el = el.parentElement) { if (el.scrollHeight > el.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(el).overflowY)) return el; } return null; };
+      document.addEventListener('touchstart', e => { ty = e.touches[0] ? e.touches[0].clientY : 0; }, { passive: true, capture: true });
+      document.addEventListener('touchmove', e => {
+        if (p) return e.preventDefault();
+        const t = e.target, dlg = t.closest && real(t) && t.closest('.kf-dlg'); if (!dlg || noGuia() || (e.touches && e.touches.length > 1)) return;
+        const r = rolavel(t, dlg); if (!r) return e.preventDefault();
+        const y = e.touches && e.touches[0] ? e.touches[0].clientY : ty, desce = y > ty, sobe = y < ty;
+        if ((desce && r.scrollTop <= 0) || (sobe && r.scrollTop + r.clientHeight >= r.scrollHeight - 1)) e.preventDefault();
+      }, { passive: false, capture: true });
+    })();
+
+    /* 6. o cursor só aparece com a janela parada (Kit 0.8.0; Proposta 3 do Conta Fácil, item 4). No iPhone, o cursor
+       do campo é desenhado pelo sistema e não acompanha a janela que se move por `transform`: ficava para trás, fora da
+       caixa. Enquanto a janela do campo em foco está a caminho (o teclado vai subir, ela sobe com ele ou algo dentro
+       dela se move), o campo recebe a classe kf-sem-cursor; com a janela parada, o cursor volta. */
+    (() => {
+      let toque = false; try { toque = matchMedia('(pointer: coarse)').matches; } catch {}
+      let alvo = null, raf = 0, t0 = 0;
+      const aCaminho = el => {
+        const dlg = el.closest('.kf-dlg'); if (!dlg) return false;
+        const dt = performance.now() - t0;
+        if (toque && tk === 0 && dt < 450) return true;                                         // o teclado ainda vai subir
+        if (tk > 0 && (tkDesenho !== tk || dlg._kfTk) && dt < 1500) return true;               // a janela sobe com ele
+        return dlg.closest('.kf-ov').getAnimations({ subtree: true }).some(a => a.playState === 'running' && a.effect && !a.effect.pseudoElement && a.effect.target && a.effect.target.contains(el));
+      };
+      const parar = () => { cancelAnimationFrame(raf); raf = 0; if (alvo) alvo.classList.remove('kf-sem-cursor'); alvo = null; };
+      const olhar = () => {
+        raf = 0; const el = alvo; if (!el || !el.isConnected || document.activeElement !== el) return parar();
+        el.classList.toggle('kf-sem-cursor', aCaminho(el));
+        raf = requestAnimationFrame(olhar);
+      };
+      document.addEventListener('focusin', e => {
+        const el = e.target; if (!campo(el) || !el.closest('.kf-ov') || el.closest('#kf-saidas')) return;
+        parar(); alvo = el; t0 = performance.now(); olhar();
+      }, true);
+      document.addEventListener('focusout', e => { if (e.target === alvo) parar(); }, true);
+    })();
 
     return {
       nascer, sair, fechou, ocupada,
@@ -3394,6 +3480,7 @@
   global.KitFacil = Object.freeze({
     VERSAO, FAMILIA, IC, iniciar, avisar, esc, canon, novoId, haQuanto,
     dialogo: { abrir: abrirDialogo, fechar: fecharDialogo, aberto: dialogoAberto, confirmar },
+    apontar,
     copiar,
     feedback: { abrir: abrirFeedback, escolha: abrirEscolhaFeedback, pendentes: () => fila.quantos(), reenviar: () => fila.tentar(), _enviar: enviarRegistro, _fila: fila, _campos: camposFS, CATEGORIAS, GRAVIDADES },
     sobre: { abrir: abrirSobre },

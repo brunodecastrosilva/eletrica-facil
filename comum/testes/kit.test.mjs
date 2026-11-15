@@ -1221,3 +1221,74 @@ test('Kit 0.7.0 · guia único: janela fixa acima da barra, cada passo de verdad
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
+
+/* ---------------- Kit 0.8.0 · Proposta 3 do Conta Fácil ---------------- */
+test('Kit 0.8.0 · janela que fecha com lista de escolha, data e hora: a cópia tem a altura da janela e uma lista por campo', async () => {
+  const a = await aparelho(amb, { caminho: pagina(), toque: true });
+  const p = a.page;
+  await p.evaluate(() => KitFacil.dialogo.abrir({ titulo: 'Campos', corpo: '<label for="s1">Turma</label><select id="s1"><option>A</option><option>B</option></select><label for="d1">Dia</label><input id="d1" type="date"><label for="h1">Hora</label><input id="h1" type="time">' }));
+  await assentar(p);
+  const r = await p.evaluate(() => new Promise(fim => {
+    const d = document.querySelector('.kf-dlg'), alt = d.offsetHeight, q = [];
+    d.querySelector('[data-kf-fechar]').click();
+    const olhar = () => { const g = document.querySelector('#kf-saidas .kf-dlg-x'); if (!g) return fim({ alt, q }); q.push([g.offsetHeight, g.querySelectorAll('.kf-esc').length]); requestAnimationFrame(olhar); };
+    Promise.resolve().then(() => requestAnimationFrame(olhar));
+  }));
+  assert.ok(r.q.length > 3, 'a saída foi filmada');
+  assert.ok(r.q.every(x => Math.abs(x[0] - r.alt) < 1), `a cópia mantém a altura (${r.alt} → ${[...new Set(r.q.map(x => x[0]))]})`);
+  assert.ok(r.q.every(x => x[1] === 3), `uma lista por campo na cópia (${[...new Set(r.q.map(x => x[1]))]})`);
+  assert.deepEqual(a.erros, []); await a.fechar();
+});
+
+test('Kit 0.8.0 · botão que exclui: cheio, vermelho e com texto branco nos três temas; a confirmação que exclui também', async () => {
+  const VERM = 'rgb(179, 54, 43)';
+  for (const tema of ['light', 'dark']) {
+    const a = await aparelho(amb, { caminho: pagina() });
+    const p = a.page; await p.emulateMedia({ colorScheme: tema });
+    await p.evaluate(() => KitFacil.dialogo.confirmar({ titulo: 'Excluir?', texto: 'Some daqui.', ok: 'Excluir item' }));
+    await assentar(p);
+    assert.deepEqual(await p.evaluate(() => { const c = getComputedStyle(document.querySelector('[data-kf-ok]')); return [c.backgroundColor, c.color]; }), [VERM, 'rgb(255, 255, 255)'], `confirmação de excluir (${tema})`);
+    await p.click('[data-kf-cancelar]');
+    await p.evaluate(() => { const b = document.createElement('button'); b.className = 'kf-btn kf-perigo-sec'; b.id = 'x-sec'; b.textContent = 'Restaurar padrões de fábrica'; document.body.appendChild(b); });
+    assert.deepEqual(await p.evaluate(() => { const c = getComputedStyle(document.querySelector('#x-sec')); return [c.backgroundColor, c.color]; }), [VERM, 'rgb(255, 255, 255)'], `kf-perigo-sec cheio (${tema})`);
+    assert.deepEqual(a.erros, []); await a.fechar();
+  }
+});
+
+test('Kit 0.8.0 · relatar um problema sem descrição aponta o campo sem selecioná-lo', async () => {
+  const a = await aparelho(amb, { caminho: pagina(), firestore: firestoreFalso() });
+  const p = a.page;
+  await p.evaluate(() => KitFacil.feedback.abrir({ tipo: 'problema' }));
+  await assentar(p);
+  await p.locator('.kf-dlg [data-kf-enviar]').click();
+  assert.equal(await p.evaluate(() => { const f = document.activeElement; return !!(f && f.matches('input:not([type=radio]):not([type=checkbox]), textarea')); }), false, 'nenhuma caixa de texto ganhou o foco');
+  assert.equal(await p.locator('.kf-dlg textarea[aria-invalid="true"]').count(), 1, 'o campo da mensagem fica apontado');
+  assert.deepEqual(a.erros, []); await a.fechar();
+});
+
+test('Kit 0.8.0 · janela no celular: barrinha, puxar pelo cabeçalho fecha ou volta, e o pé se recolhe com o teclado', async () => {
+  const a = await aparelho(amb, { caminho: pagina(), toque: true });
+  const p = a.page;
+  const abrir = async () => { await p.evaluate(() => KitFacil.dialogo.abrir({ titulo: 'Puxar', corpo: '<label for="c1">Nome</label><input id="c1">', pe: '<button type="button" class="kf-btn kf-pri">Salvar</button>' })); await assentar(p); await p.waitForTimeout(100); };
+  await abrir();
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.kf-dlg-cab'), '::before').content !== 'none'), true, 'a barrinha aparece');
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.kf-dlg-cab')).touchAction), 'none');
+  const puxar = (dy, passos, ms) => p.evaluate(async ([dy, passos, ms]) => {
+    const h = document.querySelector('.kf-dlg-cab h2'), r = h.getBoundingClientRect(), x = r.left + 20, y = r.top + 5;
+    const ev = (t, yy) => h.dispatchEvent(new PointerEvent(t, { bubbles: true, cancelable: true, pointerId: 3, pointerType: 'touch', isPrimary: true, clientX: x, clientY: yy }));
+    ev('pointerdown', y); for (let i = 1; i <= passos; i++) { await new Promise(f => setTimeout(f, ms)); ev('pointermove', y + dy * i / passos); }
+    ev('pointerup', y + dy);
+  }, [dy, passos, ms]);
+  const abertas = () => p.evaluate(() => document.querySelectorAll('.kf-ov').length - document.querySelectorAll('#kf-saidas .kf-ov').length);
+  await puxar(40, 8, 60); await p.waitForTimeout(450);
+  assert.equal(await abertas(), 1, 'puxão curto e lento: a janela volta');
+  await puxar(300, 10, 30); await p.waitForTimeout(100);
+  assert.equal(await abertas(), 0, 'puxão longo: a janela fecha');
+  await p.waitForTimeout(700); await abrir();
+  await p.locator('#c1').tap(); await teclado(p, true); await p.waitForTimeout(700);
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.kf-dlg > .kf-dlg-pe')).display), 'none', 'com o teclado o pé se recolhe');
+  await p.evaluate(() => document.activeElement.blur()); await teclado(p, false); await p.waitForTimeout(700);
+  assert.notEqual(await p.evaluate(() => getComputedStyle(document.querySelector('.kf-dlg > .kf-dlg-pe')).display), 'none', 'sem teclado o pé volta');
+  assert.equal(await p.evaluate(() => document.querySelectorAll('.kf-sem-cursor').length), 0, 'sem foco não sobra marca de cursor');
+  assert.deepEqual(a.erros, []); await a.fechar();
+});

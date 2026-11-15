@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **0.7 (rascunho)** · 15/11/2026 · Kit Fácil **0.7.0** (com as peças do Conta Fácil)
+Versão **0.8 (rascunho)** · 15/11/2026 · Kit Fácil **0.8.0** (com as peças do Conta Fácil)
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
@@ -80,7 +80,7 @@ Atkinson, com a Atkinson logo depois na lista, legível em 20 px, com acentos.
 | Guias | `KitFacil.ui.abas({ itens: [[id, nome, n]], atual, rotulo, dado })` | `role="tablist"` só no Kit; contagem "Nome · n" |
 | Segmento | `kf-seg` | escolhido com `--kf-seg-on` |
 | Faixa | `KitFacil.ui.faixa({ tipo, html, acao })` | tipos dica, info, alerta, erro, ok |
-| Botões | `kf-btn` + `kf-pri`, `kf-sec`, `kf-perigo`, `kf-perigo-sec`, `kf-link` | |
+| Botões | `kf-btn` + `kf-pri`, `kf-sec`, `kf-perigo`, `kf-perigo-sec`, `kf-link` | `kf-perigo` e `kf-perigo-sec` são cheios, fundo `--kf-perigo-fundo` (#B3362B nos três temas) e texto branco, 5,9:1 (Kit 0.8.0; Art. 66, § 1º) |
 | Campos | `kf-entrada`, `kf-rotulo`, `kf-ajuda`, `kf-opcional`, `kf-check` | |
 | Cartão | `kf-cartao`, `kf-bloco`, `kf-dados` | |
 | Lista de escolha | `<select>` comum, trocada pelo Kit (`KitFacil.escolha`) | opção vazia `<option value="" hidden>`; exceção com `data-kf-nativa` |
@@ -107,7 +107,7 @@ Saíram do Conta Fácil 1.7.0 sem nada próprio do Conta; o Conta Fácil 1.8.0 u
 |---|---|---|
 | Janelas: um mecanismo só (nascer, acompanhar o teclado, mudar de altura, trocar, sair pelo pé com o fundo clareando junto; só `transform`, num relógio só) | `KitFacil.dialogo.abrir`, `KitFacil.janela.ocupada(ms)`, `.teclado()`, `.tecladoAssentado()`; variáveis `--kf-tk`, `--kf-max`, `--kf-pe`; classe `html.kf-tk` | 16, IX; 68, § 3º; 72-A |
 | Janela sem campo selecionado | `dialogo.abrir` tira o `autofocus` de campo de texto e solta o campo que o app focar ao montar | 16, IX; 68, § 5º |
-| Confirmação | `KitFacil.dialogo.confirmar({ titulo, texto, desfaz, ok, perigo, aoConfirmar, aoCancelar })`; botões `data-kf-cancelar` e `data-kf-ok` | 65, VIII |
+| Confirmação | `KitFacil.dialogo.confirmar({ titulo, texto, desfaz, ok, perigo, aoConfirmar, aoCancelar })`; botões `data-kf-cancelar` e `data-kf-ok`; rótulo que começa com Excluir, Remover ou Apagar fica vermelho sozinho (Kit 0.8.0) | 65, VIII; 66, § 1º |
 | Barra de baixo com a ação principal no centro e "Mais"; trilho com Mais e Ajustes no pé; tela Mais com os Ajustes por último | `KitFacil.nav.barra`, `.trilho`, `.mais`; botões `data-kf-ir="<id>"`, ids `kf-nav-<id>` e `kf-trilho-<id>`; variáveis `--kf-nav-bg`, `--kf-nav-ink`, `--kf-nav-on`, `--kf-nav-atual`, `--kf-nav-atual-bg` | 59, 60, 64, II, a |
 | Barra de cima com nuvem, presente e balão em traço, na mesma cor | `KitFacil.topo.html({ principal: true })` | 13, § 1º; 58 |
 | Presente em 3D e janela do apoio | `KitFacil.apoio.abrir`, `comum/kit-jogo.js` | 13, §§ 2º e 3º |
@@ -123,6 +123,19 @@ Saíram do Conta Fácil 1.7.0 sem nada próprio do Conta; o Conta Fácil 1.8.0 u
 | Tampinhas, níveis e objetos em 3D (opcional) | `comum/kit-jogo.js`: `KitFacil.jogo.girar`, `.tampaHTML`, `.icones`, `.confete`, `.vibrar`, `.nivel` | 68, § 4º; 72, § 4º |
 | Tokens (cantos, barra de baixo) e verificação da moldura nova | `kit-facil.css`; `comum/verificar.mjs` | Anexo II; Anexo VII |
 | Medição de movimento quadro a quadro | `comum/testes/ambiente.mjs`: `filmarJanela`, `teclado`, `animacoes`, `assentar`, `semCampoEmFoco` | Anexo VII |
+
+**Peças da Proposta 3 do Conta Fácil no Kit 0.8.0 (Código 0.8, 15/11/2026)**
+
+Saíram do Conta Fácil 1.8.2 a 1.8.7; o Conta Fácil 1.9.0 usa as do Kit.
+
+| Peça | No Kit | Artigos |
+|---|---|---|
+| Cópia da janela que fecha com a altura da janela | `fantasma()` mantém `data-kf-esc`, `data-kf-data`, `data-kf-hora` e `data-kf-nativa`; lista de escolha, data e hora não ligam nada dentro de `#kf-saidas` | 68, § 3º; 72-A |
+| Campo apontado sem foco | `KitFacil.apontar(campo)`: `aria-invalid="true"` e contorno `--kf-bad`, que saem quando a pessoa digita | 16, IX; 68, § 5º |
+| Puxar a janela pela barrinha | abaixo de 1024 px: barrinha (`.kf-dlg-cab::before`), cabeçalho e pé com `touch-action:none`; o dedo move pela propriedade `translate`; fecha depois de um terço da altura (no máximo 160 px) ou num puxão rápido; classe `body.kf-puxando`; fora do guia | 16, X; 68, § 6º |
+| Cursor só com a janela parada | classe `kf-sem-cursor` (`caret-color:transparent`) enquanto a janela do campo está a caminho | 68, § 3º; 72-A |
+| Pé recolhido com o teclado | `html.kf-tk body:not(.kf-com-guia) .kf-dlg > .kf-dlg-pe{display:none}` | 16, IX; 68, § 3º |
+| Vermelho de excluir | `--kf-perigo-fundo` | 16, V; 66, § 1º |
 
 Ficam só no Conta Fácil, por serem do assunto dele: contas da comanda, cupons, comanda ao vivo, sorteio, a lista das
 tampinhas e a festa de fechamento. O carrossel dos cupons e o arrastar para juntar pessoas continuam os do Conta, presos

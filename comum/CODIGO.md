@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.7 (rascunho)** · 15/11/2026 · Kit Fácil **0.6.0** (as peças do Conta Fácil entram no Kit 0.7.0: Art. 93)
+Versão **0.8 (rascunho)** · 15/11/2026 · Kit Fácil **0.8.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -164,11 +164,12 @@ VII – movimento reduzido respeitado;
 
 VIII – modo escuro em todas as telas;
 
-IX – janelas com o foco preso dentro, Esc fecha e o foco volta para quem abriu; nenhuma janela abre com a caixa de
-texto selecionada (Art. 68, § 5º); com o teclado aberto, a janela fica acima dele e o campo em foco fica à vista
-(Art. 68, § 3º);
+IX – janelas com o foco preso dentro, Esc fecha e o foco volta para quem abriu; nenhuma caixa de texto é selecionada
+sozinha, e o campo que falta preencher é apontado, sem receber o foco (Art. 68, § 5º); com o teclado aberto, a janela
+fica acima dele, o campo em foco fica à vista e nenhum botão sobe para cima do teclado (Art. 68, § 3º);
 
-X – toda ação de arrastar tem também um jeito sem arrastar, com botão e lista de marcar;
+X – toda ação de arrastar tem também um jeito sem arrastar, com botão e lista de marcar; a janela que se puxa pela
+barrinha também fecha pelo X e pelo Esc (Art. 68, § 6º);
 
 XI – o elemento com foco nunca fica escondido atrás da barra de cima, da navegação de baixo, do botão de criar ou de
 outra barra fixa;
@@ -577,7 +578,8 @@ I – a de destaque (no Conta Fácil, verde), para a ação principal da tela;
 
 II – a de começar (no Conta Fácil, âmbar), para a ação que começa o trabalho (abrir, sortear).
 
-§ 1º Vermelho é só para excluir. Os demais botões são contornados.
+§ 1º Vermelho é só para excluir, e todo botão que exclui, remove ou apaga é vermelho e cheio, inclusive o da
+confirmação; botão só com ícone tem o ícone vermelho. Os demais botões são contornados.
 
 § 2º Cada aplicativo define o seu par de cores (Anexo I). Botões, segmentos e cartões seguem as medidas comuns do Kit
 (Anexo II).
@@ -603,14 +605,21 @@ para ações (Salvar, Adicionar, Fechar comanda).
 § 3º Um mecanismo só cuida das janelas: nascer, acompanhar o teclado, mudar de altura e trocar uma janela por outra. O
 movimento é feito só com `transform`, num relógio só, sem transições de CSS de posição ou de altura; nada salta, some
 ou volta no caminho. Com o teclado aberto, o campo em foco fica à vista. A janela que fecha desce pelo pé da tela, no
-mesmo relógio e na mesma curva de quando nasceu, e o fundo clareia junto. O comportamento é um só para todas as
-janelas, as do Kit e as do aplicativo.
+mesmo relógio e na mesma curva de quando nasceu, e o fundo clareia junto. Com o teclado aberto, o pé da janela se
+recolhe: nenhum botão sobe para cima do teclado. O comportamento é um só para todas as janelas, as do Kit e as do
+aplicativo.
 
 § 4º Momentos de marca (no Conta Fácil, a abertura e a festa de fechamento) podem ser telas cheias, com o foco preso,
 Esc e o leitor de tela tratados.
 
-§ 5º Nenhuma janela abre com a caixa de texto selecionada, no celular e no computador: ao abrir, o foco vai para a
-janela (ou para um botão marcado), e o teclado só sobe quando a pessoa toca no campo.
+§ 5º Nenhuma caixa de texto é selecionada sozinha, em janela ou fora dela, no celular e no computador: quem seleciona é
+o toque da pessoa. Ao abrir, o foco vai para a janela (ou para um botão marcado). O aplicativo só devolve o foco ao
+campo em que ela já estava digitando. Campo que falta preencher é apontado (contorno e `aria-invalid`), sem receber o
+foco.
+
+§ 6º No celular e no tablet, a janela tem uma barrinha no alto e pode ser puxada para baixo pelo cabeçalho: acompanha o
+dedo e fecha, ou volta ao lugar. Fora da barrinha, o dedo não move a janela; só rola o conteúdo que for maior que ela.
+O X e o Esc continuam (Art. 16, X).
 
 **Art. 69.** Nenhum aplicativo mostra a lista de escolha, o calendário nem o relógio do sistema: usa os do Kit, iguais
 em todo aparelho.
@@ -777,12 +786,12 @@ próprias, e a verificação do padrão pode acusar nele as diferenças da naveg
 
 § 2º A revisão dos outros aplicativos é feita um por vez. Até a vez de cada um, pode ainda haver nele o que este
 Código trocou: dados lado a lado, o guia em dois ou três níveis, a janela a cada abertura, o presente colorido, a
-navegação antiga, uma só cor de botão, durações diferentes de 600 ms, janelas que abrem com campo selecionado e
-janelas com "Pronto" ou "Fechar" no pé. Na vez de cada aplicativo, ele passa a seguir o Conta Fácil e sobe para
+navegação antiga, uma só cor de botão, durações diferentes de 600 ms, caixas de texto selecionadas sozinhas, botões
+próprios de excluir que não são vermelhos e janelas com "Pronto" ou "Fechar" no pé. Na vez de cada aplicativo, ele passa a seguir o Conta Fácil e sobe para
 1.0.0 (Art. 22, § 2º).
 
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 15/11/2026 como rascunho (versão 0.7). Regras e textos anteriores (Leis Globais,
-Padrão, Código 3.x, Códigos 0.4 a 0.6) são histórico.
+**Art. 95.** Este Código vale desde 15/11/2026 como rascunho (versão 0.8). Regras e textos anteriores (Leis Globais,
+Padrão, Código 3.x, Códigos 0.4 a 0.7) são histórico.

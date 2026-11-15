@@ -153,6 +153,15 @@ pelo app em `aplicar`.
 
 ## Mudanças do kit
 
+- **0.8.0 · 15/11/2026** (Código 0.8, Proposta 3 do Conta Fácil; copiado aos quatro apps): a cópia da janela que
+  fecha mantém as marcas de campo ligado, e a lista de escolha, a data e a hora não ligam nada dentro de `#kf-saidas`
+  (fim do pulo ao fechar); `KitFacil.apontar(campo)` aponta o campo que falta preencher (contorno e `aria-invalid`), sem
+  dar o foco, e a avaliação passou a usá-lo; barrinha no alto da janela abaixo de 1024 px e puxar pelo cabeçalho fecha
+  ou volta (classe `kf-puxando` enquanto puxa); fora da barrinha o dedo só rola o conteúdo maior que a janela; cursor
+  invisível (`kf-sem-cursor`) enquanto a janela do campo está a caminho; com o teclado aberto o pé da janela se
+  recolhe; botão que exclui é cheio e vermelho nos três temas (`--kf-perigo-fundo`, `kf-perigo-sec` também cheio), e a
+  confirmação cujo rótulo começa com Excluir, Remover ou Apagar fica vermelha sozinha.
+
 - **0.5.0 · 11/11/2026** (Código 0.4; copiado aos quatro apps): o aviso rápido não some enquanto tem o foco ou o
   ponteiro em cima, e a contagem recomeça ao sair; varredura de acessibilidade com axe-core
   (`comum/testes/acessibilidade.test.mjs`, precisa de `npm install`); tela de 320 px nos testes do topo; variável
