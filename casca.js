@@ -292,6 +292,9 @@ VIEWS.settings = {
 const aberturaAtiva = () => KitFacil.abertura.ativa();
 function aberturaAbrir({ rever = false } = {}) {
   if (aberturaAtiva()) return;
+  // quem ainda vai ver a apresentação não recebe, por cima dela, a janela de Novidades do Kit (que espera só 30 s):
+  // as novidades ficam para a versão seguinte, como no Conta Fácil
+  if (!rever) { try { localStorage.setItem('kitfacil.eletrica-facil.visto', JSON.stringify(VERSAO)); } catch {} }
   const veterano = quotes.some(q => !q.example), j = jogoEstado();
   // uma lâmpada de verdade (a mesma do varal), apagada e acesa uma sobre a outra: a cena troca de uma para a outra
   const abLamp = (ic, i = 0) => { const c = { ic }; return `<span class="ab-lp" style="--i:${i}">${lampPendHTML(c)}<span class="ab-on">${lampPendHTML(c, { acesa: true })}</span></span>`; };
