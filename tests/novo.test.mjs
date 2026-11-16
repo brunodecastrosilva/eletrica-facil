@@ -187,6 +187,21 @@ test('abertura: quatro telas com a cara do app (interruptor, planta, caminho e a
   await a.fechar();
 });
 
+test('abertura para quem vem de outra versão: a janela de Novidades não abre por cima dela', async () => {
+  const a = await aparelho(amb, { antes: () => { window.EF_TESTE_ABERTURA = 1; window.KF_TESTE_ABERTURA = 1; try { if (!localStorage.getItem('kitfacil.eletrica-facil.visto')) localStorage.setItem('kitfacil.eletrica-facil.visto', JSON.stringify('1.0.0')); } catch {} } });
+  const p = a.page;
+  await p.locator('.kf-abertura').waitFor();
+  assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('kitfacil.eletrica-facil.visto'))), await p.evaluate(() => VERSAO), 'a apresentação já conta como a novidade desta versão');
+  // o Kit espera a apresentação por 30 s e depois segue: mesmo assim, nada de janela por cima
+  await p.waitForTimeout(33000);
+  assert.deepEqual(await p.evaluate(() => [!!document.querySelector('.kf-abertura'), !!document.querySelector('.kf-dlg')]), [true, false]);
+  await p.click('#kf-ab-pular');
+  await p.locator('.prancheta').waitFor(); await p.waitForTimeout(2500);
+  assert.equal(await p.locator('.kf-dlg').count(), 0, 'nem depois de sair dela');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
 test('raio de surpresa: cai e some sem tocar em nada, respeita o movimento reduzido e dá para desligar', async () => {
   const a = await aparelho(amb);
   const p = a.page;
