@@ -92,7 +92,8 @@ const I = {
   copy: ic('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>'),
   check: ic('<path d="m5 12 5 5 9-10"/>'),
   list: ic('<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>'),
-  pix: ic('<path d="m12 3 9 9-9 9-9-9z"/><path d="m8.5 12 3.5-3.5 3.5 3.5-3.5 3.5z"/>'),
+  // Pix: um QR code (o símbolo do Pix é marca do Banco Central; o app mostra o que entrega, o código para pagar)
+  pix: ic('<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M13.5 13.5h3.2v3.2h-3.2z"/><path d="M20.5 17.2v3.3h-3.3"/>'),
   receipt: ic('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>'),
   dup: ic('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/>'),
   flag: ic('<path d="M5 21V4h11l-2 4 2 4H5"/>'),

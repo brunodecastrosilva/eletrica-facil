@@ -19,6 +19,7 @@ sincronização) é o mesmo da 0.5.1, e os dados de quem já usa o app continuam
 - **Guia refeito:** um só, com 21 passos na ordem de uso. O app faz cada passo na tela (cliente, itens, quantidade, ambientes, deslocamento, adicionais, pagamento, proposta, resposta do cliente, conclusão, recibo, preços, gestão, conquistas e ajustes), numa demonstração que não grava nada. Só o envio (PDF e WhatsApp) é mostrado sem tocar, porque abriria outro app. Saiu o guia em três níveis.
 - **Identidade:** grafite, papel e amarelo de segurança; títulos em Barlow Semi Condensed. Duas cores de botão: amarelo para a ação principal e grafite com letra amarela para começar. Todo botão que exclui é vermelho e cheio.
 - **Janelas:** nenhuma abre com a caixa de texto selecionada, e nenhuma tem mais "Pronto" ou "Fechar" sozinho no pé (escolher itens, material e ferramenta fecham no X).
+- **Ícone do Pix:** os botões de Pix e a guia Pix dos Ajustes mostram um QR code no lugar do losango.
 - **Preços e Gestão:** o botão flutuante de criar deu lugar à linha de adicionar no fim da lista.
 - **Ambientes:** as opções de cada ambiente saíram do título (um botão dentro de outro atrapalhava o leitor de tela) e ficam numa linha própria, dentro do ambiente.
 - **Acessibilidade:** contraste corrigido no "opcional" dos campos e nas notas do pé da proposta. A varredura automática (WCAG 2.2 AA) agora passa também pela abertura, pela folha com as seções abertas, pela proposta, por Conquistas, Preços e Gestão, nos temas claro e escuro.

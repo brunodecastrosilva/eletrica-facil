@@ -164,7 +164,7 @@ function cartaoAjHTML(s) {
     <div class="field"><label for="st-cardMes">Juros ao mês, em %</label><input id="st-cardMes" data-set="cardMes" data-dec type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${s.cardMes ? fmtQty(s.cardMes) : ''}"></div>`;
 }
 const ICONES_AJ = {
-  pix: '<path d="m12 3 9 9-9 9-9-9z"/><path d="m8.5 12 3.5-3.5 3.5 3.5-3.5 3.5z"/>',
+  pix: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M13.5 13.5h3.2v3.2h-3.2z"/><path d="M20.5 17.2v3.3h-3.3"/>',
   deslocamento: '<path d="M3 16V9l2.5-4h9L17 9h2a2 2 0 0 1 2 2v5"/><path d="M3 16h18"/><circle cx="7.5" cy="17.5" r="2"/><circle cx="16.5" cy="17.5" r="2"/>',
   adicionais: '<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
   padrao: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v7M8.5 14.5h7"/>',
