@@ -1,6 +1,6 @@
 /* Elétrica Fácil · motor: utilidades, tabela de preços, dados, sincronização, contas e janelas. */
 'use strict';
-const VERSAO = '1.1.0';
+const VERSAO = '1.1.1';
 // a marca do alto é o ícone do app, o mesmo da tela de início do celular (um ícone só, como no Conta Fácil)
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
@@ -458,12 +458,13 @@ let checks = LS.get('checks', []);
 const PRIMEIRO_USO = quotes === null && !LS.get('catalog', null);
 // sincronização entre aparelhos: motor comum do Kit Fácil (a regra de junção dos dados fica mais abaixo)
 // o que mudou em cada versão, para quem usa (as mesmas linhas do CHANGELOG: Código, Art. 25, I)
-const NOVIDADES = [{ versao: '1.1.0', itens: [
+const NOVIDADES = [{ versao: '1.1.1', itens: [
   'Apresentação nova, com a cara do app: acenda a luz no interruptor, conte os pontos na planta da casa e assine embaixo.',
   'Um raio de surpresa: de vez em quando, um raio rasga a tela; mais raro, cai uma tempestade. Dá para desligar em Ajustes, em Conquistas e apresentação.',
   'Lâmpadas: toque na lâmpada (ou no fundo) e ela pisca mais forte.',
   'O varal balança: passe o dedo por ele, incline ou chacoalhe o celular. No iPhone, toque em Balançar com o celular.',
   'Ícone novo do app, com o mesmo raio.',
+  'Correção: a janela de Novidades não abre mais por cima da apresentação.',
 ] }, { versao: '1.0.0', itens: [
   'Elétrica Fácil refeito: o orçamento agora é uma folha só, presa na prancheta, com o total sempre à vista.',
   'Início novo: diga para quem é o serviço e comece. O mês aparece logo abaixo: aprovado, aguardando resposta e a receber.',

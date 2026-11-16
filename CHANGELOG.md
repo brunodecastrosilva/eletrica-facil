@@ -3,6 +3,10 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.1.1 · 2026-11-15
+
+- **Correção:** quem vinha de uma versão anterior e ainda não tinha visto a apresentação recebia, depois de 30 segundos, a janela de Novidades por cima dela. Agora, quem vê a apresentação não recebe as Novidades naquela abertura (como no Conta Fácil). O defeito já existia na 1.0.0.
+
 ## 1.1.0 · 2026-11-15
 
 Mais personalidade: a apresentação, o ícone e as brincadeiras agora são do Elétrica Fácil, e de mais nenhum app.
