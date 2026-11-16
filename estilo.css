@@ -831,42 +831,69 @@ button.lp-btn:focus-visible{outline:2.5px solid var(--volt);outline-offset:-2px}
 .lin-tx b{font-weight:700;font-size:16px}.lin-tx small{color:var(--muted);font-size:13.5px}
 
 /* ---------- abertura: as figuras de cada tela ---------- */
-.ab-pr{width:min(250px,74vw);padding:26px 8px 8px}
-.ab-folha{display:flex;flex-direction:column;gap:5px;padding:20px 16px 14px;text-align:left;font-size:13px}
-.ab-f-num{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.ab-f-cli{font-family:var(--f-display);font-weight:800;font-size:21px}
-.ab-f-linha{display:block;border-top:1.5px dashed var(--line-2);margin:4px 0}
-.ab-l,.ab-f-tot{display:flex;justify-content:space-between;gap:10px}
-.ab-f-tot{margin-top:6px;padding-top:8px;border-top:2px solid var(--ink);font-weight:700;font-size:14.5px}
-.ab-demo{width:min(330px,88vw);padding:14px 14px 12px;text-align:left;box-shadow:0 0 0 1px var(--line),var(--shadow)}
-.ab-demo-cab{display:flex;justify-content:space-between;margin:0 0 4px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.ab-demo-l{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1.5px dashed var(--line-2)}
-.ab-demo-n{flex:1;min-width:0;display:flex;flex-direction:column;font-weight:600;font-size:15px;line-height:1.2}
-.ab-demo-n small{font-weight:400;color:var(--muted);font-size:12.5px}
-.ab-demo-q{display:flex;align-items:center;gap:4px}.ab-demo-q b{min-width:22px;text-align:center;font-size:17px}
-.ab-q{width:44px;height:44px;border-radius:12px;border:0;background:var(--surface-2);box-shadow:inset 0 0 0 1.5px var(--line-2);display:grid;place-items:center;color:var(--ink);cursor:pointer}
-.ab-q:disabled{opacity:.35}
-.ab-demo-t{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 0;padding-top:10px;border-top:2px solid var(--ink);font-weight:700}
-.ab-demo-t b{font-family:var(--f-display);font-weight:800;font-size:26px}
-.ab-leque{position:relative;width:min(280px,78vw);height:240px}
-.ab-doc{position:absolute;width:170px;display:flex;flex-direction:column;gap:5px;padding:14px 13px;font-size:12.5px;text-align:left;box-shadow:0 0 0 1px var(--line),var(--shadow)}
-.ab-doc.d1{left:0;top:26px;transform:rotate(-7deg)}.ab-doc.d2{right:0;top:0;transform:rotate(4deg)}
-.ab-pixfig{display:block;width:74px;height:74px;margin:6px auto 2px;border-radius:6px;background:
-  linear-gradient(var(--ink),var(--ink)) 0 0/22px 22px no-repeat,linear-gradient(var(--ink),var(--ink)) 100% 0/22px 22px no-repeat,linear-gradient(var(--ink),var(--ink)) 0 100%/22px 22px no-repeat,
-  repeating-conic-gradient(var(--ink) 0 25%,transparent 0 50%) 50%/12px 12px;box-shadow:inset 0 0 0 4px var(--surface)}
-.ab-pix{text-align:center;font-size:11px;color:var(--muted)}
-.ab-carimbo{position:absolute;right:8px;top:44px;transform:rotate(-12deg);border:2.5px solid var(--kf-ok);color:var(--kf-ok);font:800 13px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;padding:4px 7px;border-radius:5px;background:var(--surface)}
-.ab-varal{width:min(340px,90vw);padding:18px 6px 10px}
-.ab-varal .varal-fio{grid-template-columns:repeat(5,1fr);gap:0}
-.ab-varal .lp-pend{width:62px;height:76px}
-.ab-varal .lp{width:54px;height:74px}
+.ab-cena{position:relative;width:min(340px,90vw);min-height:250px;border-radius:24px;display:grid;place-items:center;overflow:hidden}
+/* as cenas de noite: grafite, e a luz que o app acende */
+.ab-noite{background:radial-gradient(130% 80% at 50% 0%,#37332B 0%,#24221C 58%,#161511 100%);box-shadow:inset 0 0 0 1.5px var(--tabua-2),var(--shadow);color:#F3F0E7}
+.ab-noite::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s ease;background:radial-gradient(60% 55% at 50% 42%,rgba(255,200,70,.34),rgba(255,190,40,.1) 55%,rgba(255,190,40,0))}
+.ab-noite.acesa::after{opacity:1}
+/* uma lâmpada apagada e, por cima, a mesma acesa: a cena troca de uma para a outra */
+.ab-lp{position:relative;display:inline-grid;z-index:1}
+.ab-lp .lp-pend{animation:none;width:112px;height:132px}
+.ab-lp .lp{width:84px;height:118px}
+.ab-on{position:absolute;inset:0;opacity:0;transition:opacity .28s ease}
+.ab-on .lp-pend::before{opacity:1}
+.acesa > .ab-lp .ab-on,.acesa .ab-lp .ab-on{opacity:1}
+.ab-sala{grid-template-rows:auto auto auto;align-content:start;justify-items:center;padding:0 0 14px;gap:2px}
+.ab-interruptor{position:relative;z-index:1;width:62px;height:84px;border-radius:14px;border:0;cursor:pointer;background:#EDEAE0;box-shadow:inset 0 0 0 1.5px #BDB8A8,0 6px 14px rgba(0,0,0,.4);display:grid;place-items:center}
+.ab-tecla{width:30px;height:50px;border-radius:8px;background:linear-gradient(#F9F7F0 0 50%,#CFCABB 50% 100%);box-shadow:inset 0 0 0 1.5px #A8A392,0 2px 0 rgba(0,0,0,.18);transition:background .12s}
+.ab-interruptor[aria-pressed="true"] .ab-tecla{background:linear-gradient(#CFCABB 0 50%,#FFD23A 50% 100%)}
+.ab-interruptor:focus-visible{outline:3px solid var(--volt);outline-offset:3px}
+.ab-dica{position:relative;z-index:1;font-size:13.5px;font-weight:600;color:#D9D4C4;min-height:20px}
+/* a planta da casa: três cômodos de toque; cada ponto é uma tomada */
+.ab-planta{background:var(--surface);box-shadow:0 0 0 1.5px var(--line),var(--shadow);padding:14px;display:flex;flex-direction:column;gap:10px;place-items:stretch;min-height:0}
+.ab-casa{display:grid;grid-template-columns:1.25fr 1fr;grid-template-rows:auto auto;gap:0;border:3px solid var(--ink);border-radius:10px;overflow:hidden;background:
+  linear-gradient(var(--line) 1px,transparent 1px) 0 0/100% 18px,linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/18px 100%,var(--surface-2)}
+.ab-comodo{position:relative;border:0;background:none;color:var(--ink);font:inherit;text-align:left;min-height:74px;padding:8px 10px 26px;cursor:pointer;display:flex;flex-direction:column;gap:6px;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.ab-comodo.c0{grid-column:1 / -1}
+.ab-comodo b{font-family:var(--f-display);font-weight:800;font-size:17px;line-height:1}
+.ab-comodo:active{background:var(--volt-soft)}
+.ab-comodo:focus-visible{outline:3px solid var(--volt-text);outline-offset:-4px}
+.ab-comodo:disabled{cursor:default}
+.ab-pts{display:flex;flex-wrap:wrap;gap:5px;min-height:14px}
+.ab-pts i{width:14px;height:14px;border-radius:4px;background:var(--volt);box-shadow:inset 0 0 0 1.5px var(--ink);position:relative}
+.ab-pts i::before,.ab-pts i::after{content:"";position:absolute;top:4.5px;width:2px;height:5px;border-radius:1px;background:var(--ink)}
+.ab-pts i::before{left:3.5px}.ab-pts i::after{right:3.5px}
+.ab-mais{position:absolute;right:6px;bottom:5px;width:22px;height:22px;border-radius:50%;background:var(--graphite);color:var(--graphite-ink);display:grid;place-items:center}
+.ab-mais svg{width:14px;height:14px}
+.ab-comodo:disabled .ab-mais{opacity:.3}
+.ab-soma{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0;font-weight:600;font-size:14.5px}
+.ab-soma b{font-family:var(--f-display);font-weight:800;font-size:28px}
+.ab-zerar{align-self:center;min-height:44px;font-size:14px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;background:none;border:0;padding:0 10px;margin:-8px 0 -8px}
+.ab-zerar:disabled{opacity:.4;text-decoration:none}
+/* do zap ao recibo: quatro lâmpadas num fio, acendendo uma depois da outra */
+.ab-caminho{min-height:230px;padding:0 4px 14px}
+.ab-fio{position:relative;display:grid;grid-template-columns:repeat(4,1fr);width:100%;align-items:start}
+.ab-fio::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:#6E6A5D}
+.ab-passo{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ab-passo b{font:700 12.5px/1.15 var(--kf-font);color:#D9D4C4}
+.ab-caminho .ab-lp .lp-pend{width:78px;height:96px}
+.ab-caminho .ab-lp .lp{width:62px;height:87px}
+@keyframes ab-acende{0%{opacity:0}30%{opacity:.8}45%{opacity:.25}100%{opacity:1}}
+.ab-caminho .ab-on{animation:ab-acende .7s ease both;animation-delay:calc(.5s + var(--i,0) * .75s)}
+/* assine embaixo: o nome aparece no cartão enquanto a pessoa escreve */
+.ab-assina{grid-template-rows:auto auto;align-content:start;justify-items:center;padding:0 14px 16px;gap:4px}
+.ab-cartao{position:relative;z-index:1;display:flex;align-items:center;gap:12px;width:100%;background:#FFFDF7;color:#17150F;border-radius:12px;padding:12px 14px;text-align:left;box-shadow:0 8px 18px rgba(0,0,0,.4)}
+.ab-cartao img{border-radius:11px;flex:none}
+.ab-cartao span{display:flex;flex-direction:column;min-width:0}
+.ab-cartao b{font-family:var(--f-display);font-weight:800;font-size:21px;line-height:1.1;overflow-wrap:anywhere}
+.ab-cartao small{font-size:12.5px;color:#666253}
 .ab-nome{margin-top:14px;text-align:left}
 
 @media (min-width:1024px){
   .kf-trilho{background:var(--surface)}
   .inicio{max-width:620px}
 }
-@media (prefers-reduced-motion:reduce){.lp-pend,.lp-btn.on .lp-pend::before{animation:none}}
+@media (prefers-reduced-motion:reduce){.lp-pend,.lp-btn.on .lp-pend::before{animation:none}.ab-caminho .ab-on{animation:none;opacity:1}.ab-on,.ab-noite::after{transition:none}}
 /* todo botão que exclui, remove ou apaga é vermelho e cheio (Código, Art. 66, § 1º) */
 .btn.danger-text,.btn.danger{background:var(--kf-perigo-fundo,#B3362B);color:#fff;box-shadow:none}
 .btn.danger-text svg,.btn.danger svg{color:#fff}
@@ -875,3 +902,56 @@ button.lp-btn:focus-visible{outline:2.5px solid var(--volt);outline-offset:-2px}
 @media (max-width:359px){.kf-nav-com-centro .kf-nav-it{padding-left:0;padding-right:0;letter-spacing:-.02em}.kf-nav-in.kf-nav-com-centro{grid-template-columns:1fr 1.25fr 60px 1.25fr .8fr}}
 .add-btn.room-ops{color:var(--muted);margin-top:6px}
 @media (max-width:359px){.kf-marca-nome{font-size:19px}}
+
+/* ---------- 1.1 · a marca é o ícone do app; o varal vivo; o piscar forte; o raio ---------- */
+.marca-img{background:none;border-radius:10px;box-shadow:0 1px 2px rgba(23,21,15,.25)}
+.marca-img img{display:block;width:100%;height:100%}
+/* com o varal vivo, quem balança as lâmpadas é o app (pêndulos), não a animação de enfeite */
+.varal-vivo .lp-pend{animation:none;will-change:transform}
+.varal-mexer{align-self:center}
+.aj-raio-bts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+/* o piscar forte: o halo cresce e o palco inteiro clareia por um instante */
+.ef-o3d-halo{transform:translate(-50%,-50%) scale(calc(1 + var(--forca,0) * .55))}
+.lp-palco::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:calc(var(--pulso,0) * .5);background:radial-gradient(70% 70% at 50% 62%,rgba(255,214,110,.9),rgba(255,196,0,.25) 60%,rgba(255,196,0,0))}
+.lp-palco{cursor:pointer}
+/* o raio: por cima de tudo, sem receber toque. Dois clarões por raio, no máximo (WCAG 2.3.1) */
+#raio-cena{position:fixed;inset:0;z-index:96;pointer-events:none;overflow:hidden}
+.raio-svg{position:absolute;inset:0;width:100%;height:100%;animation:raio-some .95s linear both}
+.raio-svg path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.raio-clarao{stroke:rgba(255,214,90,.5);stroke-width:44;filter:blur(13px)}
+.raio-borda{stroke:#FFD23A;stroke-width:11}
+.raio-miolo{stroke:#FFFDF2;stroke-width:5}
+.raio-clarao.raio-fino{stroke-width:20}.raio-borda.raio-fino{stroke-width:5}.raio-miolo.raio-fino{stroke-width:2.2}
+.raio-luz{position:absolute;inset:0;background:radial-gradient(120% 90% at var(--rx,50%) 0%,rgba(255,253,240,1),rgba(255,240,185,.85) 45%,rgba(255,230,150,.62));animation:raio-luz .95s linear both}
+@keyframes raio-luz{0%{opacity:.86}9%{opacity:.6}16%{opacity:.1}22%{opacity:.4}48%{opacity:.05}100%{opacity:0}}
+@keyframes raio-some{0%,14%{opacity:1}16%{opacity:.35}22%{opacity:1}55%{opacity:.55}100%{opacity:0}}
+@keyframes raio-treme{0%,100%{transform:none}12%{transform:translate(-7px,3px)}26%{transform:translate(6px,-4px)}40%{transform:translate(-5px,-2px)}55%{transform:translate(4px,3px)}72%{transform:translate(-2px,1px)}}
+body.raio-treme #app{animation:raio-treme .42s cubic-bezier(.3,.6,.4,1) both}
+/* a tempestade: o céu fecha, chove, e os raios caem */
+.raio-ceu{position:absolute;inset:0;background:linear-gradient(rgba(12,14,22,.62),rgba(12,14,22,.38));animation:raio-fecha .6s ease both}
+.raio-ceu.raio-vai{animation:raio-abre .9s ease both}
+.raio-ceu i{position:absolute;inset:-20% 0 0 -20%;width:140%;height:140%;opacity:.5;background:repeating-linear-gradient(105deg,rgba(210,225,255,0) 0 9px,rgba(210,225,255,.5) 9px 10px,rgba(210,225,255,0) 10px 23px);animation:raio-chuva .38s linear infinite}
+.raio-ceu i + i{opacity:.3;background-size:auto;animation-duration:.55s;transform:scale(1.4)}
+@keyframes raio-chuva{from{background-position:0 0}to{background-position:-34px 128px}}
+@keyframes raio-fecha{from{opacity:0}to{opacity:1}}
+@keyframes raio-abre{from{opacity:1}to{opacity:0}}
+@media (prefers-reduced-motion:reduce){#raio-cena{display:none}}
+/* apresentação em tela baixa (celular pequeno, ou teclado aberto): as cenas encolhem, e o que não couber rola
+   em vez de ficar por baixo dos botões (no Kit, o palco encolhia e o texto passava por cima do pé) */
+.kf-abertura .kf-ab-palco{min-height:min-content}
+@media (max-height:700px){
+  .kf-abertura .kf-ab-arte{min-height:0}
+  .ab-cena{min-height:0}
+  .ab-sala{padding-bottom:10px}
+  .ab-sala .ab-lp .lp-pend{width:88px;height:102px}.ab-sala .ab-lp .lp{width:66px;height:92px}
+  .ab-interruptor{width:50px;height:64px;border-radius:12px}.ab-tecla{width:24px;height:38px}
+  .ab-comodo{min-height:60px;padding-bottom:22px}
+  .ab-planta{gap:6px;padding:12px}
+  .ab-soma b{font-size:24px}
+  .ab-caminho{min-height:0;padding-bottom:12px}
+  .ab-assina{padding-bottom:12px}
+  .ab-assina .ab-lp .lp-pend{width:76px;height:88px}.ab-assina .ab-lp .lp{width:57px;height:80px}
+  .ab-cartao{padding:9px 12px}.ab-cartao b{font-size:19px}
+  .kf-abertura .kf-ab-t{font-size:clamp(26px,7.6vw,32px)}
+}
+@media (max-width:350px){.ab-caminho .ab-lp .lp-pend{width:66px;height:84px}.ab-caminho .ab-lp .lp{width:54px;height:76px}.ab-passo b{font-size:11.5px}}

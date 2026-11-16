@@ -3,8 +3,9 @@
    dedo, com inércia; parada, volta a girar sozinha, devagar. Sem WebGL, vale o desenho num <canvas> comum.
    O que é próprio da lâmpada: o vidro é transparente (desenhado depois do resto, primeiro o lado de trás), o filamento
    tem a forma do ícone da conquista e, acesa, ele brilha e enche o vidro de luz.
-   Quem pede movimento reduzido vê a lâmpada parada: ela só gira com o dedo ou com as setas.
-   Tudo fica em Lampada: html({ icone, nome, acesa, D }), girar(raiz, { auto, inicio, apagada }) -> { peteleco, acender, angulo }
+   Tocar sem arrastar (na lâmpada ou no fundo) faz a lâmpada piscar mais forte: um clarão só por toque.
+   Quem pede movimento reduzido vê a lâmpada parada: ela só gira com o dedo ou com as setas, e não pisca.
+   Tudo fica em Lampada: html({ icone, nome, acesa, D }), girar(raiz, { auto, inicio, apagada }) -> { peteleco, acender, piscar, angulo }
    e miniatura(canvas, { icone, acesa }), que desenha a mesma lâmpada, parada, para o varal.
    Peça própria do app (o motor 3D do Kit só conhece a tampinha e o presente): Proposta para o Integrador (Art. 30-A). */
 'use strict';
@@ -115,17 +116,17 @@ const Lampada = (() => {
   vec3 H=normalize(L1+V);float sp=pow(max(dot(N,H),0.),vM.y)*vM.x;
   vec3 R=reflect(-V,N);float ceu=smoothstep(-.3,.9,R.y);float faixa=smoothstep(.35,.62,R.y)*(1.-smoothstep(.7,.98,R.y));
   float fr=pow(1.-max(dot(N,V),0.),3.);
-  vec3 LUZ=vec3(1.,.8,.24);
-  if(uVidro>1.5){float a=pow(max(dot(N,V),0.),2.6)*.2*uAceso;gl_FragColor=vec4(vec3(1.,.68,.2),a);return;}
+  vec3 LUZ=vec3(1.,.8,.24);float ac=min(uAceso,1.),ex=max(uAceso-1.,0.);
+  if(uVidro>1.5){float a=pow(max(dot(N,V),0.),2.6-ex*.9)*(.2*ac+.5*ex);gl_FragColor=vec4(mix(vec3(1.,.68,.2),vec3(1.,.9,.6),min(ex,1.)),a);return;}
   if(uVidro>.5){
-    vec3 tinta=mix(vec3(.84,.89,.92),vec3(1.,.87,.56),uAceso);
-    vec3 cor=tinta*(.74+.26*d1)+vec3(sp)+faixa*.3+uAceso*vec3(.3,.2,.04)*fr;
-    float alfa=clamp(.05+.52*fr+uAceso*(.05+.2*fr)+sp*.9+faixa*.26,0.,.95);
+    vec3 tinta=mix(vec3(.84,.89,.92),vec3(1.,.87,.56),ac);
+    vec3 cor=tinta*(.74+.26*d1)+vec3(sp)+faixa*.3+ac*vec3(.3,.2,.04)*fr+ex*vec3(.5,.36,.1);
+    float alfa=clamp(.05+.52*fr+ac*(.05+.2*fr)+ex*.22+sp*.9+faixa*.26,0.,.95);
     gl_FragColor=vec4(clamp(cor,0.,1.),alfa);return;}
   vec3 amb=mix(vec3(.34,.35,.36),vec3(.58,.6,.62),N.y*.5+.5);
   vec3 cor=vC*(amb+d1*.72+d2*.2+d3*.12)+vec3(sp)+vM.z*mix(vC,vec3(1.),.55)*(ceu*.42+faixa*.7-.22)+fr*.07;
-  cor=mix(cor,mix(vec3(1.,.8,.36),vec3(1.,.97,.8),pow(max(dot(N,V),0.),1.5)),vM.w*uAceso);
-  cor+=(1.-vM.w)*uAceso*LUZ*.24*(1.-smoothstep(.05,.8,vPo.y));
+  cor=mix(cor,mix(vec3(1.,.8,.36),vec3(1.,.97,.8),min(1.,pow(max(dot(N,V),0.),1.5)+ex)),vM.w*ac);
+  cor+=(1.-vM.w)*(ac+ex*1.4)*LUZ*.24*(1.-smoothstep(.05,.8,vPo.y));
   gl_FragColor=vec4(clamp(cor,0.,1.),1.);}`;
   // dois desenhistas: um para a lâmpada que gira (GL) e outro para as miniaturas do varal (GLM); false quando não há WebGL
   let GL = null, GLM = null;
@@ -211,12 +212,13 @@ const Lampada = (() => {
     else { cena = cena2d(o); o.dataset.motor = 'canvas'; }
     const medir = () => { const dpr = Math.min(3, window.devicePixelRatio || 1), w = o.clientWidth, h = o.clientHeight; cv._dpr = dpr; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); };
     medir();
-    const ATRITO = 0.9955; // quanto do giro sobra a cada milissegundo
+    const ATRITO = 0.9955, PULSO = 460; // quanto do giro sobra a cada milissegundo; quanto dura um piscar forte
     let ang = inicio, vel = 0, arr = null, raf = 0, sozinho = auto && !quieto, t0 = 0;
     let mexeu = false, ocioso = 0, rampa = 1, sentido = 1; // depois que a pessoa solta e a lâmpada para, ela volta a girar sozinha, devagar
     // apagada: a lâmpada conquistada começa escura e acende depois (acender); acende: { t, dur } enquanto está acendendo
     let luz = o.dataset.acesa && !apagada ? 1 : 0, acende = null; if (apagada) o.classList.remove('acesa');
-    const pintar = () => { o.dataset.ang = ang.toFixed(3); o.style.setProperty('--luz', luz.toFixed(3)); if (!G) return pintar2d(cv, cena, ang, luz); if (GL !== G || !cv.isConnected) return; glPintar(G, cena, ang, luz); };
+    let pulso = null, forca = 0; // pulso: { t } enquanto a lâmpada pisca mais forte; forca: quanto a luz passa do normal
+    const pintar = () => { o.dataset.ang = ang.toFixed(3); o.style.setProperty('--luz', Math.min(1, luz + forca).toFixed(3)); o.style.setProperty('--forca', forca.toFixed(3)); if (o.parentElement) o.parentElement.style.setProperty('--pulso', forca.toFixed(3)); if (!G) return pintar2d(cv, cena, ang, Math.min(1, luz + forca)); if (GL !== G || !cv.isConnected) return; glPintar(G, cena, ang, luz + forca); };
     const quadro = t => {
       raf = 0; const dt = Math.min(48, t - (t0 || t)); t0 = t;
       if (acende) { // acende piscando: duas falhas curtas e firma
@@ -224,17 +226,23 @@ const Lampada = (() => {
         luz = u >= 1 ? 1 : (u < 0.18 ? u / 0.18 * 0.7 : u < 0.3 ? 0.12 : u < 0.5 ? 0.85 : u < 0.6 ? 0.3 : 0.3 + (u - 0.6) / 0.4 * 0.7);
         if (u >= 1) { acende = null; o.classList.add('acesa'); }
       }
-      if (arr) { if (acende) { pintar(); raf = requestAnimationFrame(quadro); } return; }
+      if (pulso) { // um clarão só: sobe depressa e volta devagar (apagada, é uma faísca fraca que não pega)
+        pulso.t += dt; const u = Math.min(1, pulso.t / PULSO), sobe = u < 0.16 ? u / 0.16 : Math.pow(1 - (u - 0.16) / 0.84, 1.7);
+        forca = sobe * (luz > 0.5 ? 0.95 : 0.42); if (u >= 1) { pulso = null; forca = 0; }
+      }
+      if (arr) { if (acende || pulso) { pintar(); raf = requestAnimationFrame(quadro); } return; }
       if (Math.abs(vel) > 0.0004) { const f = Math.pow(ATRITO, dt); ang += vel * (1 - f) / -Math.log(ATRITO); vel *= f; if (mexeu) sentido = vel < 0 ? -1 : 1; ocioso = 0; }
       else if (sozinho) { rampa = Math.min(1, rampa + dt / 900); ang += sentido * 0.0007 * dt * rampa * (2 - rampa); }
       else if (mexeu && !quieto) { vel = 0; ocioso += dt; if (ocioso > 900) { sozinho = true; rampa = 0; } }
-      else if (!acende) { vel = 0; pintar(); return; }
+      else if (!acende && !pulso) { vel = 0; pintar(); return; }
       pintar(); if (o.isConnected) raf = requestAnimationFrame(quadro);
     };
     const andar = () => { if (!raf && o.isConnected) { t0 = 0; raf = requestAnimationFrame(quadro); } };
-    o.addEventListener('pointerdown', e => { if (e.button > 0) return; sozinho = false; mexeu = true; ocioso = 0; arr = { x: e.clientX, t: performance.now(), v: 0 }; vel = 0; o.classList.add('ef-pegou'); try { o.setPointerCapture(e.pointerId); } catch {} });
+    o.addEventListener('pointerdown', e => { if (e.button > 0) return; sozinho = false; mexeu = true; ocioso = 0; arr = { x: e.clientX, t: performance.now(), v: 0, x0: e.clientX, t0: performance.now() }; vel = 0; o.classList.add('ef-pegou'); try { o.setPointerCapture(e.pointerId); } catch {} });
     o.addEventListener('pointermove', e => { if (!arr) return; const agora = performance.now(), dx = e.clientX - arr.x, dt = Math.max(1, agora - arr.t); ang += dx * 0.0115; arr.v = arr.v * 0.6 + (dx * 0.0115 / dt) * 0.4; arr.x = e.clientX; arr.t = agora; pintar(); });
-    const soltar = () => { if (!arr) return; vel = quieto ? 0 : Math.max(-0.02, Math.min(0.02, arr.v)); arr = null; o.classList.remove('ef-pegou'); andar(); };
+    // toque sem arrastar (no fundo ou na lâmpada): ela pisca mais forte
+    const piscar = () => { if (pulso || acende) return false; pulso = { t: 0 }; if (quieto) { pulso = null; return false; } try { if (navigator.vibrate) navigator.vibrate(10); } catch {} andar(); return true; };
+    const soltar = () => { if (!arr) return; const toque = Math.abs(arr.x - arr.x0) < 6 && performance.now() - arr.t0 < 400; vel = quieto || toque ? 0 : Math.max(-0.02, Math.min(0.02, arr.v)); arr = null; o.classList.remove('ef-pegou'); if (toque) { mexeu = false; sozinho = auto && !quieto; piscar(); } andar(); };
     o.addEventListener('pointerup', soltar); o.addEventListener('pointercancel', soltar);
     o.addEventListener('keydown', e => { if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return; e.preventDefault(); sozinho = false; mexeu = true; ocioso = 0; sentido = e.key === 'ArrowRight' ? 1 : -1; vel = 0; ang += 0.3 * sentido; pintar(); andar(); });
     pintar(); andar();
@@ -242,7 +250,7 @@ const Lampada = (() => {
     const peteleco = (voltas = 2, fim = -0.4) => { sozinho = false; const total = voltas * 2 * Math.PI + fim - ang; vel = (total + 0.0004 / -Math.log(ATRITO)) * -Math.log(ATRITO); andar(); };
     // acende a lâmpada (quem pede movimento reduzido vê a lâmpada já acesa)
     const acender = (dur = 1100) => { if (quieto) { luz = 1; o.classList.add('acesa'); pintar(); return; } acende = { t: 0, dur }; andar(); };
-    return { girar: v => { sozinho = false; vel = v; andar(); }, peteleco, acender, angulo: () => ang, luz: () => luz };
+    return { girar: v => { sozinho = false; vel = v; andar(); }, peteleco, acender, piscar, angulo: () => ang, luz: () => luz, forca: () => forca };
   }
   /* miniatura: a mesma lâmpada 3D, desenhada uma vez num canvas pequeno (o varal mostra as 18). Guardadas por ícone,
      estado e tamanho; devolve false sem WebGL, e o varal fica com o desenho de traço. */

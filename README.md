@@ -2,7 +2,7 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-Versão **1.0.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **1.1.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md) 0.9.1. Na 1.0.0 o app foi refeito na sua vez de seguir o Conta Fácil, a
@@ -27,9 +27,14 @@ referência da família (Código, Art. 93, § 2º): a estrutura é a comum, e a 
   ida e volta da obra; ao concluir um serviço, o app oferece dar baixa no material usado
 - **Conquistas:** cada passo bem dado acende uma lâmpada do seu varal (18 ao todo) e conta para o nível, de Aprendiz a
   Mestre. Cada lâmpada é um objeto 3D (WebGL) que gira com o dedo, com o filamento na forma do ícone da conquista.
-  Nenhuma premia cobrar mais; dá para desligar em Ajustes → Conquistas e apresentação
-- **Apresentação na primeira abertura** (quatro telas, com uma demonstração para tocar) e **um guia só,** que faz cada
-  passo na tela, do começo ao fim, numa demonstração que não grava nada
+  Tocar na lâmpada (ou no fundo) faz ela piscar mais forte. O varal balança: com o dedo, e com o celular inclinado ou
+  chacoalhado (no iPhone, depois do toque em "Balançar com o celular"). Nenhuma premia cobrar mais; dá para desligar em
+  Ajustes → Conquistas e apresentação
+- **Apresentação na primeira abertura,** em quatro telas do próprio app: o interruptor que acende a luz, a planta da
+  casa em que cada toque soma uma tomada, o caminho da proposta ao recibo em quatro lâmpadas e o cartão com o seu nome.
+  E **um guia só,** que faz cada passo na tela, do começo ao fim, numa demonstração que não grava nada
+- **Um raio de surpresa:** de vez em quando um raio rasga a tela; mais raro, cai uma tempestade. É enfeite: não recebe
+  toque, some em um segundo, respeita o movimento reduzido e dá para desligar em Ajustes → Conquistas e apresentação
 - **Use em vários aparelhos (opcional):** orçamentos, preços e ajustes sincronizados, criptografados, num gist secreto
   da sua conta GitHub
 - **Avaliação e relato de problemas** pelo balão no alto da tela; **presente para o criador** (Pix, opcional)
@@ -51,7 +56,7 @@ Sem a sincronização, os dados ficam só no aparelho; toque na **nuvem** no alt
 |---|---|
 | Orçamentos, dados dos clientes, tabela de preços (com o estoque), ferramentas, checklist e ajustes | neste aparelho (armazenamento do navegador, chaves `eletricafacil.*`) |
 | Os mesmos dados, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
-| Conquistas (quando cada lâmpada acendeu, guia visto) e apresentação vista | só neste aparelho (`eletricafacil.jogo` e `eletricafacil.abertura`); as lâmpadas são calculadas dos seus dados, então acompanham a sincronização |
+| Conquistas (quando cada lâmpada acendeu, guia visto, raios de surpresa ligados ou não) e apresentação vista | só neste aparelho (`eletricafacil.jogo` e `eletricafacil.abertura`); as lâmpadas são calculadas dos seus dados, então acompanham a sincronização |
 | Propostas, relatórios e recibos em PDF | gerados no aparelho; só saem quando o usuário compartilha |
 | Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback`; apagados depois de 2 anos |
 
@@ -107,13 +112,14 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)) e 
 | `orcamento.js` | criar, a folha do orçamento, itens, ambientes, deslocamento, proposta, mensagens, Pix, PDF e recibo |
 | `telas.js` | Preços e Gestão (materiais, ferramentas e checklist) |
 | `lampada.js` | a lâmpada em 3D das conquistas: malha gerada no código, WebGL com vidro transparente e giro com o dedo; sem WebGL, desenho em canvas comum |
-| `jogo.js` | conquistas: as lâmpadas, os níveis e a tela Conquistas (o varal) |
+| `raio.js` | o raio de surpresa e a tempestade: desenho do raio, quando pode cair e o liga-desliga |
+| `jogo.js` | conquistas: as lâmpadas, os níveis, a tela Conquistas e o varal que balança (pêndulos, dedo e movimento do aparelho) |
 | `inicio.js` | Início (a prancheta), Orçamentos (a lista) e Mais |
 | `guia.js` | roteiro do guia, na ordem de uso |
 | `casca.js` | troca de tela, navegação, Ajustes, abertura (onboarding), guia e arranque |
 | `comum/` | **Kit Fácil**: sistema de design, barra de cima, navegação, Ajustes, avaliação, sincronização, janelas, abertura, guia e a verificação. Igual nos quatro apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
-| `tests/` | testes do app: `app.test.mjs` (contas, janelas e Ajustes), `novo.test.mjs` (Início, navegação, conquistas e lâmpada 3D, abertura e guia) e `acessibilidade.test.mjs` |
+| `tests/` | testes do app: `app.test.mjs` (contas, janelas e Ajustes), `novo.test.mjs` (Início, navegação, conquistas e lâmpada 3D, abertura, raio de surpresa, piscar e varal, e guia) e `acessibilidade.test.mjs` |
 
 ## Serviços externos e configuração
 
@@ -136,6 +142,9 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)) e 
   funções (`tests/app.test.mjs`) e a sua varredura (`tests/acessibilidade.test.mjs`), como o Conta Fácil; por isso
   `npm test` lista os arquivos em vez de chamar `comum/testar.mjs`. Proposta para o Integrador: os testes comuns
   passarem a conhecer a tela Mais.
+- **Apresentação em tela baixa:** no Kit, o palco da abertura encolhe (`min-height:0`) e, em celular pequeno ou com o
+  teclado aberto, o texto passa por baixo dos botões. Aqui o palco não encolhe além do conteúdo e a abertura rola
+  (`estilo.css`, fim do arquivo). Proposta para o Integrador: o Kit fazer o mesmo.
 - **Marca que leva ao Início:** no Conta Fácil a marca do alto é um botão; o teste comum `conferirTopo` acusa qualquer
   botão a mais em `.kf-barra-in`. Aqui a marca ficou sem toque. Proposta para o Integrador: o Kit dizer qual dos dois vale.
 

@@ -34,7 +34,7 @@ function render(opts = {}) {
   V.bind($('#app'), r);
   $$('textarea', $('#app')).forEach(autoGrow);
   if (!opts.keep) window.scrollTo(0, navMode === 'pop' && top ? (scrollMem[r.key] || 0) : 0);
-  if (r.key !== curKey) { KitFacil.movimento.entrar(app, { de: 'tela' }); document.title = TITULOS[r.name] ? `${TITULOS[r.name]} · Elétrica Fácil` : 'Elétrica Fácil'; }
+  if (r.key !== curKey) { KitFacil.movimento.entrar(app, { de: 'tela' }); document.title = TITULOS[r.name] ? `${TITULOS[r.name]} · Elétrica Fácil` : 'Elétrica Fácil'; if (curKey && top) Raio.sortear(); }
   curKey = r.key;
   onScroll();
   clearTimeout(render.t); render.t = setTimeout(() => { if (!guiaAtivo() && !aberturaAtiva()) jogoConferir(); lpFilaMostrar(); }, 700);
@@ -230,6 +230,9 @@ VIEWS.settings = {
               <div class="field"><label for="st-warrantyTerms">Condições da garantia</label><textarea id="st-warrantyTerms" data-set="warrantyTerms">${esc(s.warrantyTerms)}</textarea>
                 ${s.warrantyTerms !== WARRANTY_DEFAULT ? '<button class="linkish" data-reset="warrantyTerms">Voltar ao texto sugerido</button>' : ''}</div>`) },
           { id: 'conquistas', titulo: 'Conquistas e apresentação', icone: ICONES_AJ.conquistas, resumo: S.conquistas, html: bloco('Conquistas e níveis', `<label class="aj-chave"><span class="lin-tx"><b>Mostrar conquistas e níveis</b><small>Desligado, o app fica só com os orçamentos. Nada é apagado.</small></span><span class="kf-chave"><input type="checkbox" id="aj-jogo" ${jogoLigado() ? 'checked' : ''}><span class="kf-chave-trilho"></span></span></label>`)
+              + bloco('Raios de surpresa', `<label class="aj-chave"><span class="lin-tx"><b>Um raio de vez em quando</b><small>Às vezes um raio rasga a tela; mais raro, cai uma tempestade. É só enfeite e some em um segundo.</small></span><span class="kf-chave"><input type="checkbox" id="aj-raio" ${Raio.ligado() ? 'checked' : ''}><span class="kf-chave-trilho"></span></span></label>
+                <div class="aj-raio-bts"><button type="button" class="kf-btn kf-sec" id="aj-raio-ver">Soltar um raio</button><button type="button" class="kf-btn kf-sec" id="aj-raio-temp">Soltar uma tempestade</button></div>
+                ${semMovimento() ? '<p class="kf-ajuda">Seu aparelho pede menos movimento, então os raios ficam desligados.</p>' : ''}`)
               + bloco('Apresentação', `<p class="kf-ajuda">As telas que aparecem na primeira vez que o app abre. O guia e o orçamento de exemplo ficam em Mais.</p><button type="button" class="kf-btn kf-sec" id="aj-abertura">Rever a apresentação</button>`) },
         ],
       })}
@@ -239,6 +242,9 @@ VIEWS.settings = {
     KitFacil.ajustes.ligar(v);
     $('#aj-jogo', v)?.addEventListener('change', e => { jogo.off = !e.target.checked; jogoSalvar(); pintarNav(); pintarResumos(); toast(jogoLigado() ? 'Conquistas e níveis ligados.' : 'Conquistas e níveis desligados.'); if (jogoLigado()) jogoConferir({ silencioso: true }); });
     $('#aj-abertura', v)?.addEventListener('click', () => aberturaAbrir({ rever: true }));
+    $('#aj-raio', v)?.addEventListener('change', e => { Raio.ligar(e.target.checked); toast(Raio.ligado() ? 'Raios de surpresa ligados.' : 'Raios de surpresa desligados.'); });
+    $('#aj-raio-ver', v)?.addEventListener('click', () => { if (semMovimento()) return toast('Com movimento reduzido no aparelho, o raio não cai.'); Raio.cair({ forcar: true }); });
+    $('#aj-raio-temp', v)?.addEventListener('click', () => { if (semMovimento()) return toast('Com movimento reduzido no aparelho, a tempestade não vem.'); Raio.tempestade({ forcar: true }); });
     v.addEventListener('input', () => setTimeout(pintarResumos, 300));
     // as guias com texto longo crescem conforme o conteúdo quando são abertas
     v.addEventListener('click', e => { if (e.target.closest('[data-kf-aj-ir]')) requestAnimationFrame(() => $$('textarea', v).forEach(autoGrow)); });
@@ -286,51 +292,64 @@ VIEWS.settings = {
 const aberturaAtiva = () => KitFacil.abertura.ativa();
 function aberturaAbrir({ rever = false } = {}) {
   if (aberturaAtiva()) return;
-  const veterano = quotes.some(q => !q.example);
-  // a segunda tela é uma demonstração em que se toca: três itens de um orçamento, e o total muda na hora
-  const DEMO = [['Ponto novo de tomada', 9000, 2], ['Instalação de luminária', 6000, 1], ['Troca de disjuntor', 4000, 0]];
-  const qtd = DEMO.map(d => d[2]); let tocouDemo = false;
-  const demoHTML = () => `<div class="folha ab-demo"><p class="mono ab-demo-cab"><span>Sala</span><span>mão de obra</span></p>
-    ${DEMO.map(([n, p], k) => `<div class="ab-demo-l"><span class="ab-demo-n">${n}<small class="mono">${BRL(p)} cada</small></span>
-      <span class="ab-demo-q"><button type="button" class="ab-q" data-ab-q="${k}" data-d="-1" aria-label="Menos um: ${n}" ${qtd[k] ? '' : 'disabled'}>${I.minus}</button><b class="num" aria-label="${qtd[k]} de ${n}">${qtd[k]}</b><button type="button" class="ab-q" data-ab-q="${k}" data-d="1" aria-label="Mais um: ${n}" ${qtd[k] >= 9 ? 'disabled' : ''}>${I.plus}</button></span></div>`).join('')}
-    <p class="ab-demo-t" role="status"><span>Total</span><b class="num">${BRL(sum(DEMO.map((d, k) => d[1] * qtd[k])))}</b></p></div>`;
-  const j = jogoEstado();
-  const mini = ['luz', 'primeiro', 'aprovado', 'concluido', 'pix'].map(id => CONQUISTAS.find(c => c.id === id));
+  const veterano = quotes.some(q => !q.example), j = jogoEstado();
+  // uma lâmpada de verdade (a mesma do varal), apagada e acesa uma sobre a outra: a cena troca de uma para a outra
+  const abLamp = (ic, i = 0) => { const c = { ic }; return `<span class="ab-lp" style="--i:${i}">${lampPendHTML(c)}<span class="ab-on">${lampPendHTML(c, { acesa: true })}</span></span>`; };
+  // tela 1: o interruptor acende a luz
+  let luz = false;
+  // tela 2: a planta da casa; cada toque num cômodo soma um ponto de tomada
+  const COMODOS = ['Sala', 'Cozinha', 'Quarto'], PONTO = 9000, pts = [2, 1, 0]; let tocou = false;
+  const plantaHTML = () => { const n = sum(pts);
+    return `<div class="ab-cena ab-planta"><div class="ab-casa">${COMODOS.map((c, k) => `<button type="button" class="ab-comodo c${k}" data-ab-comodo="${k}" aria-label="${c}: ${plural(pts[k], 'ponto de tomada', 'pontos de tomada')}. Tocar soma um" ${pts[k] >= 8 ? 'disabled' : ''}><b>${c}</b><span class="ab-pts" aria-hidden="true">${'<i></i>'.repeat(pts[k])}</span><span class="ab-mais" aria-hidden="true">${I.plus}</span></button>`).join('')}</div>
+      <p class="ab-soma" role="status"><span>${plural(n, 'ponto de tomada', 'pontos de tomada')}</span><b class="num">${BRL(n * PONTO)}</b></p>
+      <button type="button" class="linkish ab-zerar" data-ab-zerar ${n ? '' : 'disabled'}>Zerar a planta</button></div>`; };
+  // tela 3: o caminho de um serviço, aceso lâmpada por lâmpada
+  const PASSOS = [['enviar', 'Enviada'], ['visto', 'Aprovada'], ['raio', 'Concluído'], ['moeda', 'Recibo']];
+  const nomeAtual = () => settings.name || '';
   const telas = [
-    { arte: `<div class="prancheta ab-pr"><span class="pr-clipe"><i></i></span><div class="folha ab-folha"><span class="mono ab-f-num">Orçamento nº 0001</span><b class="ab-f-cli">Mariana Souza</b><span class="ab-f-linha"></span>
-        <span class="mono ab-l"><span>Mão de obra</span><span>1.260,00</span></span><span class="mono ab-l"><span>Material</span><span>640,00</span></span><span class="mono ab-l"><span>Deslocamento</span><span>48,91</span></span>
-        <span class="mono ab-f-tot"><span>Total</span><span>R$ 1.948,91</span></span></div></div>`,
-      titulo: veterano && !rever ? 'O Elétrica Fácil está de cara nova' : 'O orçamento pronto antes do café esfriar',
-      texto: veterano && !rever ? 'Seus orçamentos, preços e ajustes continuam aqui. O orçamento agora é uma folha só, presa na prancheta.' : 'Escolha os serviços e o material da sua tabela. O app soma tudo, com deslocamento, adicionais e impostos.' },
-    { arte: () => demoHTML(), falada: true, titulo: 'Toque e o total muda', texto: 'Experimente: toque em + e em − para mudar as quantidades. É assim que o orçamento se monta.' },
-    { arte: `<div class="ab-leque"><div class="folha ab-doc d1"><span class="mono">Recibo</span><span class="ab-f-linha"></span><span class="mono ab-l"><span>Recebido</span><span>1.948,91</span></span></div>
-        <div class="folha ab-doc d2"><span class="mono">Proposta</span><span class="ab-f-linha"></span><span class="mono ab-l"><span>Total</span><span>1.948,91</span></span><span class="ab-pixfig" aria-hidden="true"></span><span class="mono ab-pix">Pix copia e cola</span><span class="ab-carimbo">Aprovado</span></div></div>`,
-      titulo: 'Da proposta ao recibo', texto: 'Envie a proposta em PDF ou pelo WhatsApp, com Pix, prazo e garantia. Marque a resposta do cliente e, no fim, gere o relatório e o recibo.' },
-    { arte: `<div class="varal ab-varal"><div class="varal-fio">${mini.map((c, k) => `<span class="lp-btn ${k < 3 ? 'on' : 'off'}" style="--i:${k}">${lampPendHTML(c, { acesa: k < 3 })}</span>`).join('')}</div></div>`,
-      titulo: veterano && j.ganhas.length ? `Você já chega com ${plural(j.ganhas.length, 'lâmpada acesa', 'lâmpadas acesas')}` : 'Acenda as lâmpadas do seu varal',
-      texto: 'Cada passo bem dado no app acende uma lâmpada e conta para o seu nível. É só uma brincadeira, e dá para desligar nos Ajustes.',
+    { arte: () => `<div class="ab-cena ab-noite ab-sala ${luz ? 'acesa' : ''}">${abLamp('raio')}
+        <button type="button" class="ab-interruptor" data-ab-luz aria-pressed="${luz}" aria-label="Interruptor da luz"><span class="ab-tecla" aria-hidden="true"></span></button>
+        <span class="ab-dica" role="status">${luz ? 'Luz acesa.' : 'Toque no interruptor'}</span></div>`, falada: true,
+      titulo: veterano && !rever ? 'O Elétrica Fácil está de cara nova' : 'Orçamento de elétrica, sem gambiarra',
+      texto: veterano && !rever ? 'Seus orçamentos, preços e ajustes continuam aqui. Acenda a luz e venha ver.' : 'Acenda a luz: toque no interruptor. Daqui a pouco é o seu orçamento que sai pronto, com tudo somado.' },
+    { arte: () => plantaHTML(), falada: true, titulo: 'Conte os pontos, cômodo por cômodo', texto: 'Experimente: toque num cômodo para somar uma tomada. No app é assim, cada toque soma uma unidade.' },
+    { arte: () => `<div class="ab-cena ab-noite ab-caminho"><div class="ab-fio">${PASSOS.map(([ic, nome], k) => `<span class="ab-passo">${abLamp(ic, k)}<b>${nome}</b></span>`).join('')}</div></div>`,
+      titulo: 'Do zap ao recibo', texto: 'Mande a proposta em PDF ou pelo WhatsApp, com Pix. Marque a resposta do cliente, conclua o serviço e gere o recibo.' },
+    { arte: () => `<div class="ab-cena ab-noite ab-assina ${nomeAtual() ? 'acesa' : ''}">${abLamp('pessoa')}
+        <div class="ab-cartao"><img src="icons/icon-192.png" alt="" width="44" height="44"><span><b id="ab-cartao-nome">${esc(nomeAtual() || 'Seu nome aqui')}</b><small>Eletricista · proposta nº 0001</small></span></div></div>`,
+      titulo: veterano && j.ganhas.length ? `Você já chega com ${plural(j.ganhas.length, 'lâmpada acesa', 'lâmpadas acesas')}` : 'Assine embaixo',
+      texto: 'Seu nome sai no alto das propostas e dos recibos. E cada passo bem dado acende uma lâmpada do seu varal.',
       extra: settings.name ? '' : `<div class="field ab-nome"><label for="ab-eu">Como você assina os orçamentos? (opcional)</label><input id="ab-eu" class="kf-entrada" type="text" autocapitalize="words" autocomplete="off" maxlength="60" placeholder="Seu nome"></div>` },
   ];
   KitFacil.abertura.abrir({ telas, rever, rotulo: 'Apresentação do Elétrica Fácil',
     fim: () => rever ? 'Concluir' : 'Começar um orçamento',
     extra: { rotulo: 'Ver um orçamento de exemplo', mostrar: () => !rever },
     aoMontar: (el, { redesenharArte }) => {
-      // as lâmpadas da última tela são as mesmas do varal, em 3D: desenha quando a tela entra
+      // as lâmpadas das cenas são as mesmas do varal, em 3D: desenha quando a tela entra
       const palco = $('#kf-ab-palco', el); if (palco) { new MutationObserver(() => lpPintarMinis(palco)).observe(palco, { childList: true, subtree: true }); lpPintarMinis(palco); }
-      el.addEventListener('click', e => { const b = e.target.closest('[data-ab-q]'); if (!b) return; const k = +b.dataset.abQ, d = +b.dataset.d; qtd[k] = Math.max(0, Math.min(9, qtd[k] + d)); tocouDemo = true; redesenharArte();
-        ($(`[data-ab-q="${k}"][data-d="${d}"]:not([disabled])`, el) || $(`[data-ab-q="${k}"]:not([disabled])`, el))?.focus({ preventScroll: true }); });
+      el.addEventListener('click', e => {
+        const b = e.target.closest('[data-ab-luz]');
+        if (b) { luz = !luz; tocou = true; b.setAttribute('aria-pressed', luz); b.closest('.ab-cena').classList.toggle('acesa', luz); $('.ab-dica', el).textContent = luz ? 'Luz acesa.' : 'Toque no interruptor'; try { navigator.vibrate && navigator.vibrate(12); } catch {} return; }
+        const c = e.target.closest('[data-ab-comodo]');
+        if (c) { const k = +c.dataset.abComodo; pts[k] = Math.min(8, pts[k] + 1); tocou = true; redesenharArte(); ($(`[data-ab-comodo="${k}"]:not([disabled])`, el) || $('[data-ab-zerar]', el))?.focus({ preventScroll: true }); return; }
+        if (e.target.closest('[data-ab-zerar]')) { pts.fill(0); redesenharArte(); $('[data-ab-comodo]', el)?.focus({ preventScroll: true }); }
+      });
+      // o nome aparece no cartão enquanto a pessoa escreve, e a primeira lâmpada acende
+      el.addEventListener('input', e => { if (e.target.id !== 'ab-eu') return; const n = e.target.value.trim(); const t = $('#ab-cartao-nome', el); if (t) t.textContent = n || 'Seu nome aqui'; $('.ab-assina', el)?.classList.toggle('acesa', n.length >= 2); });
+      // a marca chega como deve: um raio rasga a tela (só na primeira vez; quem pede movimento reduzido não vê)
+      if (!rever && Raio.ligado()) setTimeout(() => { if (aberturaAtiva()) Raio.cair({ forcar: true }); }, 650);
     },
     aoFechar: ({ como, el }) => {
       const inp = $('#ab-eu', el), nome = inp ? inp.value.trim().replace(/\s+/g, ' ') : '';
       const disse = !!nome && !settings.name;
       if (disse) { settings.name = nome; saveSettings(); }
-      if (tocouDemo) jogo.flags.abertura = jogo.flags.abertura || Date.now();
+      if (tocou) jogo.flags.abertura = jogo.flags.abertura || Date.now();
       // quem já usava chega com as lâmpadas que os dados dele acendem; "Primeira luz" aparece para quem acabou de dizer o nome
       const antes = { ...jogo.vistas }; jogoSalvar(); jogoConferir({ silencioso: true });
       rerender();
       const depois = como === 'extra' ? () => createExample() : como === 'fim' && !rever ? () => { const c = $('#novo-nome'); if (c) KitFacil.destacar(c.closest('.prancheta')); } : null;
-      const luz = disse && jogoLigado() && !antes.luz && CONQUISTAS.find(c => c.id === 'luz');
-      return () => { if (luz) setTimeout(() => lpNova([luz], () => { depois && depois(); }), semMovimento() ? 0 : 320); else depois && depois(); };
+      const luzNova = disse && jogoLigado() && !antes.luz && CONQUISTAS.find(c => c.id === 'luz');
+      return () => { if (luzNova) setTimeout(() => lpNova([luzNova], () => { depois && depois(); }), semMovimento() ? 0 : 320); else depois && depois(); };
     } });
 }
 
@@ -384,6 +403,8 @@ SY.iniciar({ token: linkToken, silencioso: false, textoConfirmar: 'Os orçamento
 // a abertura aparece uma vez (Código, Art. 75); quem chega por um link de sincronização vai direto para os Ajustes
 if (!KitFacil.abertura.vista() && !linkToken && !(navigator.webdriver && !window.EF_TESTE_ABERTURA)) aberturaAbrir();
 else jogoConferir({ silencioso: !jogo.pronto });
+// a gracinha: de vez em quando um raio rasga a tela (também com o app parado numa tela principal)
+setInterval(() => { if (PRINCIPAIS.includes(route().name)) Raio.sortear(); }, 75000);
 // atalho "Novo orçamento" do ícone do app (manifesto)
 if (/[?&]novo=1/.test(location.search)) { try { history.replaceState(history.state, '', location.pathname + location.hash); } catch {} if (!aberturaAtiva()) setTimeout(() => createQuote(), 300); }
 try { if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(e => console.warn('sw', e)); } catch (e) { console.warn('sw', e); }

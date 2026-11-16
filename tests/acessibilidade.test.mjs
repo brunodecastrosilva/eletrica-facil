@@ -26,7 +26,7 @@ for (const tema of ['light', 'dark']) {
     const p = a.page, nome = tema === 'light' ? 'claro' : 'escuro';
     await p.emulateMedia({ colorScheme: tema, reducedMotion: 'reduce' });
     await p.locator('.kf-abertura').waitFor();
-    for (let k = 0; k < 4; k++) { await varrer(p, `abertura, tela ${k + 1} (${nome})`); if (k < 3) await p.click('#kf-ab-prox'); }
+    for (let k = 0; k < 4; k++) { await p.waitForTimeout(250); await varrer(p, `abertura, tela ${k + 1} (${nome})`); if (k === 0) { await p.click('[data-ab-luz]'); await p.waitForTimeout(350); await varrer(p, `abertura, luz acesa (${nome})`); } if (k < 3) await p.click('#kf-ab-prox'); }
     await p.click('#kf-ab-ex'); await p.locator('.fo-orc').waitFor(); await p.waitForTimeout(400);
     await varrer(p, `Folha do orçamento (${nome})`);
     for (const painel of ['cli', 'items', 'val', 'cond', 'notes']) { await p.click(`details[data-panel$=":${painel}"] > summary`); await p.waitForTimeout(250); }

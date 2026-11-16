@@ -139,21 +139,39 @@ test('lâmpada 3D: a malha é uma só para todas, com o vidro por último, e cab
   await a.fechar();
 });
 
-test('abertura: quatro telas uma vez só, a demonstração soma e o nome acende a primeira lâmpada', async () => {
-  const a = await aparelho(amb, { antes: () => { window.EF_TESTE_ABERTURA = 1; } });
+test('abertura: quatro telas com a cara do app (interruptor, planta, caminho e assinatura), uma vez só', async () => {
+  // conta os raios desde o começo: o da chegada cai e some antes de o teste olhar
+  const a = await aparelho(amb, { antes: () => { window.EF_TESTE_ABERTURA = 1; window.EF_RAIOS = 0; document.addEventListener('DOMContentLoaded', () => new MutationObserver(L => { for (const m of L) for (const n of m.addedNodes) if (n.nodeType === 1 && n.matches('.raio-svg')) window.EF_RAIOS++; }).observe(document.body, { childList: true, subtree: true })); } });
   const p = a.page;
   await p.locator('.kf-abertura').waitFor();
   assert.equal(await p.locator('.kf-ab-pontos i').count(), 4);
-  await p.click('#kf-ab-prox');
-  await p.locator('.ab-demo').waitFor();
-  const total = () => p.textContent('.ab-demo-t b');
+  // a marca chega com um raio (um só), que some sozinho e não recebe toque
+  assert.ok(await esperar(() => p.evaluate(() => window.EF_RAIOS === 1), 3000), 'a apresentação começa com um raio');
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('#raio-cena')).pointerEvents), 'none');
+  assert.ok(await esperar(() => p.evaluate(() => !document.querySelector('#raio-cena .raio-svg')), 3000), 'o raio some sozinho');
+  // tela 1: o interruptor acende a luz
+  assert.equal(await p.getAttribute('[data-ab-luz]', 'aria-pressed'), 'false');
+  await p.click('[data-ab-luz]');
+  assert.deepEqual(await p.evaluate(() => [document.querySelector('[data-ab-luz]').getAttribute('aria-pressed'), document.querySelector('.ab-sala').classList.contains('acesa'), document.querySelector('.ab-dica').textContent]), ['true', true, 'Luz acesa.']);
+  // tela 2: a planta soma um ponto de tomada a cada toque
+  await p.click('#kf-ab-prox'); await p.locator('.ab-planta').waitFor();
+  const total = () => p.textContent('.ab-soma b');
   const antes = await total();
-  await p.click('[data-ab-q="2"][data-d="1"]');
-  assert.notEqual(await total(), antes, 'tocar em + muda o total');
-  await p.click('#kf-ab-prox'); await p.click('#kf-ab-prox');
-  await p.locator('#ab-eu').waitFor();
+  await p.click('[data-ab-comodo="2"]');
+  assert.notEqual(await total(), antes, 'tocar num cômodo muda o total');
+  assert.equal(await p.locator('[data-ab-comodo="2"] .ab-pts i').count(), 1);
+  await p.click('[data-ab-zerar]');
+  assert.ok((await p.textContent('.ab-soma')).includes('0 pontos de tomada'));
+  // tela 3: o caminho do serviço, em quatro lâmpadas
+  await p.click('#kf-ab-prox'); await p.locator('.ab-caminho').waitFor();
+  assert.deepEqual(await p.locator('.ab-passo b').allTextContents(), ['Enviada', 'Aprovada', 'Concluído', 'Recibo']);
+  // tela 4: o nome aparece no cartão enquanto a pessoa escreve, e a primeira lâmpada acende
+  await p.click('#kf-ab-prox'); await p.locator('#ab-eu').waitFor();
   assert.equal(await p.locator('#kf-ab-pular').isHidden(), true, 'a última tela não tem Pular');
-  await p.fill('#ab-eu', 'Carlos Pereira'); await p.click('#kf-ab-prox');
+  assert.equal(await p.evaluate(() => document.activeElement && document.activeElement.id), 'kf-ab-t', 'a caixa do nome não começa selecionada');
+  await p.fill('#ab-eu', 'Carlos Pereira');
+  assert.deepEqual(await p.evaluate(() => [document.querySelector('#ab-cartao-nome').textContent, document.querySelector('.ab-assina').classList.contains('acesa')]), ['Carlos Pereira', true]);
+  await p.click('#kf-ab-prox');
   await p.locator('.kf-dlg .lp-nova').waitFor({ timeout: 6000 });
   assert.equal(await p.textContent('.kf-dlg .lp-nome'), 'Primeira luz');
   assert.deepEqual(await p.evaluate(() => [settings.name, KitFacil.abertura.vista(), JSON.parse(localStorage.getItem('eletricafacil.settings')).name]), ['Carlos Pereira', true, 'Carlos Pereira']);
@@ -165,6 +183,74 @@ test('abertura: quatro telas uma vez só, a demonstração soma e o nome acende 
   await p.evaluate(() => KitFacil.ajustes.ir('conquistas')); await p.locator('#aj-abertura').waitFor({ state: 'attached' });
   await p.evaluate(() => document.querySelector('#aj-abertura').click());
   await p.locator('.kf-abertura').waitFor();
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('raio de surpresa: cai e some sem tocar em nada, respeita o movimento reduzido e dá para desligar', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  await p.locator('.prancheta').waitFor();
+  // um raio: tronco e galhos, dois clarões no máximo, e some em um segundo
+  await p.evaluate(() => { Raio.cair({ forcar: true }); });
+  await p.locator('#raio-cena .raio-svg').waitFor();
+  assert.ok(await p.locator('#raio-cena .raio-miolo').count() >= 3, 'o raio tem tronco e galhos');
+  assert.equal(await p.evaluate(() => document.body.classList.contains('raio-treme')), true, 'a tela treme com o raio');
+  assert.equal(await p.evaluate(() => { const e = document.elementFromPoint(innerWidth / 2, innerHeight / 2); return !e.closest('#raio-cena'); }), true, 'o raio não recebe toque');
+  const picos = await p.evaluate(() => { const k = [...document.styleSheets].flatMap(s => { try { return [...s.cssRules]; } catch { return []; } }).find(r => r.name === 'raio-luz'); const v = [...k.cssRules].map(r => +r.style.opacity); let n = 0; for (let i = 0; i < v.length; i++) if (v[i] > 0.2 && (i === 0 || v[i] > v[i - 1]) && (i === v.length - 1 || v[i] >= v[i + 1])) n++; return n; });
+  assert.ok(picos <= 2, `cada raio dá no máximo dois clarões (${picos})`);
+  assert.ok(await esperar(() => p.evaluate(() => !document.querySelector('#raio-cena').children.length && !document.body.classList.contains('raio-treme')), 3000), 'o raio some e a tela para');
+  // não cai com alguém digitando nem logo depois de abrir; desligado, não cai nunca
+  assert.equal(await p.evaluate(() => { const r = Math.random; Math.random = () => 0.05; try { Raio.sortear(); } finally { Math.random = r; } return document.querySelector('#raio-cena').children.length; }), 0, 'nada de raio nos primeiros segundos');
+  await p.evaluate(() => KitFacil.ajustes.ir('conquistas')); await p.locator('#aj-raio').waitFor({ state: 'attached' });
+  assert.equal(await p.evaluate(() => document.querySelector('#aj-raio').checked), true);
+  await p.evaluate(() => document.querySelector('#aj-raio').click());
+  assert.deepEqual(await p.evaluate(() => [Raio.ligado(), JSON.parse(localStorage.getItem('eletricafacil.jogo')).semRaio]), [false, true]);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+  // movimento reduzido: nem raio, nem tempestade
+  const b = await aparelho(amb); const q = b.page;
+  await q.emulateMedia({ reducedMotion: 'reduce' }); await q.locator('.prancheta').waitFor();
+  assert.deepEqual(await q.evaluate(async () => [await Raio.cair({ forcar: true }), await Raio.tempestade({ forcar: true }), document.querySelectorAll('#raio-cena > *').length]), [false, false, 0]);
+  await b.fechar();
+});
+
+test('lâmpada pisca mais forte com um toque no fundo, e o varal balança com o dedo e com o celular', async () => {
+  const a = await aparelho(amb);
+  const p = a.page;
+  await p.locator('.prancheta').waitFor();
+  await p.evaluate(() => { settings.pix = 'a@b.co'; saveSettings(); jogoConferir({ silencioso: true }); go('/conquistas', true); });
+  await p.locator('.varal.varal-vivo').waitFor();
+  // passar o dedo pelo varal empurra as lâmpadas
+  const giro = () => p.evaluate(() => Math.max(...[...document.querySelectorAll('.varal .lp-pend')].map(e => Math.abs(parseFloat((e.style.transform.match(/rotate\(([-\d.]+)rad/) || [0, 0])[1])))));
+  const cx = await p.locator('.varal-fio').boundingBox();
+  await p.mouse.move(cx.x + 20, cx.y + 60); await p.mouse.move(cx.x + cx.width - 20, cx.y + 60, { steps: 5 });
+  assert.ok(await esperar(async () => (await giro()) > 0.12, 2000), 'as lâmpadas balançam quando o dedo passa');
+  // o celular inclinado: as lâmpadas pendem para o lado de baixo (aqui, sinais do Android: sem pedir licença)
+  await p.evaluate(() => { const e = new Event('devicemotion'); e.accelerationIncludingGravity = { x: -6.9, y: 6.9, z: 0 }; let n = 0; const t = setInterval(() => { dispatchEvent(e); if (++n > 130) clearInterval(t); }, 30); });
+  assert.ok(await esperar(() => p.evaluate(() => { const L = [...document.querySelectorAll('.varal .lp-pend')].map(e => parseFloat((e.style.transform.match(/rotate\(([-\d.]+)rad/) || [0, 0])[1])); return L.every(v => v < -0.45 && v > -1.1); }), 4000), 'com a borda direita para baixo, as lâmpadas pendem para a direita');
+  // chacoalhar: a aceleração vai de um lado para o outro e o varal acompanha
+  await p.waitForTimeout(700);
+  await p.evaluate(() => { let n = 0; const t = setInterval(() => { const e = new Event('devicemotion'); e.accelerationIncludingGravity = { x: 14 * Math.sin(n * 0.55), y: 9.8, z: 0 }; dispatchEvent(e); if (++n > 60) clearInterval(t); }, 30); });
+  let maior = 0; for (let k = 0; k < 14; k++) { maior = Math.max(maior, await giro()); await p.waitForTimeout(100); }
+  assert.ok(maior > 0.3, `chacoalhar balança o varal (${maior.toFixed(2)})`);
+  // ficha: tocar no fundo faz a lâmpada piscar mais forte, um clarão por toque
+  await p.click('[data-lp="pix"]'); await p.locator('.kf-dlg .ef-o3d[data-ligado]').waitFor();
+  // o clarão dura menos de meio segundo: a página guarda o maior valor, quadro a quadro, para o teste não perder o pico
+  await p.evaluate(() => { window.PICO = 0; const o = document.querySelector('.kf-dlg .ef-o3d'); (function f() { if (!o.isConnected) return; window.FORCA = parseFloat(o.style.getPropertyValue('--forca')) || 0; window.PICO = Math.max(window.PICO, window.FORCA); requestAnimationFrame(f); })(); });
+  const pico = async () => { await p.waitForTimeout(700); return p.evaluate(() => { const v = [window.PICO, window.FORCA]; window.PICO = 0; return v; }); };
+  assert.deepEqual(await pico(), [0, 0], 'parada, a lâmpada não pisca sozinha');
+  const pal = await p.locator('.kf-dlg .lp-palco').boundingBox();
+  await p.mouse.click(pal.x + 14, pal.y + 14);
+  let [alto, fim] = await pico();
+  assert.ok(alto > 0.6 && fim === 0, `o toque no fundo acende mais forte e volta ao normal (${alto}, ${fim})`);
+  // tocar na própria lâmpada, sem arrastar, também pisca
+  await p.mouse.click(pal.x + pal.width / 2, pal.y + pal.height / 2);
+  [alto, fim] = await pico();
+  assert.ok(alto > 0.6 && fim === 0, `o toque na lâmpada também pisca (${alto}, ${fim})`);
+  // arrastar gira e não pisca
+  await p.mouse.move(pal.x + pal.width / 2 - 40, pal.y + pal.height / 2); await p.mouse.down(); await p.mouse.move(pal.x + pal.width / 2 + 40, pal.y + pal.height / 2, { steps: 6 }); await p.mouse.up();
+  assert.equal((await pico())[0], 0, 'arrastar só gira');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });

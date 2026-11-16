@@ -112,6 +112,65 @@ function lpPintarMinis(raiz) {
   };
   if (fila.length) requestAnimationFrame(passo);
 }
+// tocar no fundo do palco faz a lâmpada piscar mais forte (tocar na própria lâmpada, sem arrastar, também: lampada.js)
+function lpPalco(d, g) { const palco = $('.lp-palco', d); if (palco && g) palco.addEventListener('click', e => { if (!e.target.closest('.ef-o3d')) g.piscar(); }); }
+
+/* ---------- o varal balança: cada lâmpada é um pêndulo ----------
+   Sem sensor, uma brisa leve. Passar o dedo pelo varal empurra as lâmpadas. No celular, o varal segue o aparelho:
+   inclinar faz as lâmpadas penderem para o lado de baixo, e chacoalhar faz o varal balançar. O iPhone só entrega o
+   movimento depois que a pessoa deixa (o botão "Balançar com o celular" pede). Movimento reduzido: tudo parado. */
+const lpSensor = { g: null, t: 0, ligado: false }; // g: para onde fica "embaixo" na tela, medido pelo aparelho
+// alguns navegadores só entregam o movimento depois que a pessoa deixa (o iPhone sempre; outros, às vezes)
+const lpPrecisaPedir = () => typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function';
+// o iPhone e o iPad dão os sinais da aceleração ao contrário do Android (é do aparelho, não do pedido de licença)
+const lpIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+// o botão de pedir só aparece em aparelho de toque que ainda não mandou movimento nenhum
+const lpMostrarPedido = () => lpPrecisaPedir() && !lpSensor.t && !semMovimento() && matchMedia('(pointer:coarse)').matches;
+function lpAoMover(e) {
+  const a = e.accelerationIncludingGravity; if (!a || a.x == null) return;
+  // a tela deitada troca os eixos
+  const s = lpIOS ? 1 : -1, giro = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * Math.PI / 180;
+  const dx = s * a.x, dy = -s * a.y, c = Math.cos(giro), n = Math.sin(giro);
+  if (!lpSensor.t) $$('[data-mexer]').forEach(b => { b.hidden = true; }); // o movimento chegou: o botão de pedir não faz mais falta
+  lpSensor.g = [dx * c - dy * n, dx * n + dy * c]; lpSensor.t = Date.now();
+}
+function lpLigarSensor() { if (typeof DeviceMotionEvent === 'undefined') return; removeEventListener('devicemotion', lpAoMover); addEventListener('devicemotion', lpAoMover, { passive: true }); lpSensor.ligado = true; }
+async function lpPedirSensor() {
+  try { if (!lpPrecisaPedir()) { lpLigarSensor(); return true; } const r = await DeviceMotionEvent.requestPermission(); if (r === 'granted') { lpLigarSensor(); return true; } } catch (e) { console.warn('varal: movimento', e); }
+  return false;
+}
+function lpVaral(v) {
+  const P = $$('.varal .lp-pend', v); if (!P.length || semMovimento()) return;
+  const N = P.length, th = new Float32Array(N), om = new Float32Array(N), comp = P.map((_, i) => 0.8 + 0.4 * ((i * 37) % 11) / 10);
+  $('.varal', v).classList.add('varal-vivo');
+  lpLigarSensor(); // onde o movimento vem sem pedir, já vale; onde precisa pedir, começa a valer depois do "sim"
+  let t0 = 0, tempo = 0, dedo = null;
+  // passar o dedo (ou o mouse) pelo varal empurra as lâmpadas por onde passa
+  const area = $('.varal-fio', v);
+  area.addEventListener('pointermove', e => { const agora = performance.now(); if (dedo) { const dt = Math.max(8, agora - dedo.t), vx = (e.clientX - dedo.x) / dt; if (Math.abs(vx) > 0.15) P.forEach((el, i) => { const r = el.getBoundingClientRect(); if (Math.abs(e.clientX - (r.left + r.width / 2)) < 46 && e.clientY > r.top - 20 && e.clientY < r.bottom + 20) om[i] += Math.max(-1.6, Math.min(1.6, vx * 0.9)) / comp[i] * 0.35; }); } dedo = { x: e.clientX, t: agora }; });
+  area.addEventListener('pointerleave', () => { dedo = null; });
+  const quadro = t => {
+    if (!area.isConnected) return;
+    const dt = Math.min(0.04, (t - (t0 || t)) / 1000); t0 = t; tempo += dt;
+    // "embaixo" visto pelo aparelho: o ângulo de descanso de todas as lâmpadas e a força que as puxa
+    let alvo = 0, forca = 1;
+    if (lpSensor.g && Date.now() - lpSensor.t < 600) { const [gx, gy] = lpSensor.g, m = Math.hypot(gx, gy); if (m > 1.2) { alvo = Math.max(-0.95, Math.min(0.95, Math.atan2(-gx, gy))); forca = Math.max(0.35, Math.min(2.6, m / 9.8)); } }
+    for (let i = 0; i < N; i++) {
+      const brisa = 0.018 * Math.sin(tempo * (0.7 + 0.11 * (i % 5)) + i * 1.7) + 0.01 * Math.sin(tempo * 1.9 + i);
+      const acel = -(34 / comp[i]) * forca * Math.sin(th[i] - alvo - brisa) - 1.5 * om[i];
+      om[i] += acel * dt; th[i] += om[i] * dt;
+      if (th[i] > 1.25) { th[i] = 1.25; om[i] *= -0.4; } else if (th[i] < -1.25) { th[i] = -1.25; om[i] *= -0.4; }
+      P[i].style.transform = `rotate(${th[i].toFixed(4)}rad)`;
+    }
+    requestAnimationFrame(quadro);
+  };
+  requestAnimationFrame(quadro);
+  // o iPhone pede licença para ler o movimento; quem já deixou uma vez só precisa de um toque na tela
+  const b = $('[data-mexer]', v);
+  if (b) b.onclick = async () => { const ok = await lpPedirSensor(); if (ok) { jogo.flags.mexer = jogo.flags.mexer || Date.now(); jogoSalvar(); b.hidden = true; toast('Pronto: incline ou chacoalhe o celular.'); } else toast('O aparelho não liberou o movimento. O varal continua na brisa.'); };
+  if (lpPrecisaPedir() && jogo.flags.mexer && !lpSensor.t) v.addEventListener('pointerup', () => { if (!lpSensor.t) lpPedirSensor(); }, { once: true });
+}
+
 // a lâmpada em 3D (ficha e lâmpada nova): gira com o dedo; o motor fica em lampada.js
 const lamp3dHTML = (c, { acesa = false, D = 200 } = {}) => Lampada.html({ icone: c.ic, nome: c.nome, acesa, D });
 
@@ -144,16 +203,17 @@ function lpNova(lista, aoFechar) {
       // a lâmpada chega apagada, dá uma volta e acende piscando; com movimento reduzido, já aparece acesa
       const g = Lampada.girar(d, { auto: false, inicio: semMovimento() ? -0.4 : 0, apagada: !semMovimento() });
       if (g) { if (semMovimento()) g.acender(); else { g.peteleco(1); setTimeout(() => { g.acender(); try { KitFacil.jogo && KitFacil.jogo.confete && KitFacil.jogo.confete($('#lp-palco', d), 24, ['#FFC400', '#FFE27A', '#FFFFFF', '#E8A800', '#17150F']); } catch {} }, 650); } }
+      lpPalco(d, g);
       $('#lp-ok', d).onclick = () => closeSheet(); $('#lp-ver', d).onclick = () => { closeSheet(true); go('/conquistas', true); };
     } });
 }
 function lpSheet(c) {
   const s = jogoEstado(), tem = s.ganhas.includes(c.id), p = c.prog && !tem ? c.prog(s) : null, quando = jogo.vistas[c.id];
   openSheet({ title: c.nome, sub: tem ? `Acesa${quando ? ' desde ' + fmtDate(quando) : ''}` : 'Ainda apagada',
-    body: `<div class="lp-nova"><div class="lp-palco">${lamp3dHTML(c, { acesa: tem })}</div><p class="lp-dica" aria-hidden="true">Deslize o dedo para girar</p>
+    body: `<div class="lp-nova"><div class="lp-palco">${lamp3dHTML(c, { acesa: tem })}</div><p class="lp-dica" aria-hidden="true">Deslize o dedo para girar · toque para piscar</p>
       <p class="lp-como">${esc(c.como)}</p>
       ${p ? `<div class="barra-xp" role="img" aria-label="${p[0]} de ${p[1]}"><i style="width:${Math.round(p[0] / p[1] * 100)}%"></i></div><p class="hint">${p[0]} de ${p[1]}</p>` : ''}</div>`,
-    onMount: d => { Lampada.girar(d); } });
+    onMount: d => { lpPalco(d, Lampada.girar(d)); } });
 }
 
 /* ---------- medidor do nível: um anel que enche até o próximo nível ---------- */
@@ -175,8 +235,9 @@ VIEWS.conquistas = {
         <div class="varal-fio">${CONQUISTAS.map((c, k) => { const tem = s.ganhas.includes(c.id);
           return `<button type="button" class="lp-btn ${tem ? 'on' : 'off'}" data-lp="${c.id}" aria-label="${esc(c.nome)}: ${tem ? 'acesa' : 'apagada'}. Ver como acender" style="--i:${k % 7}">${lampPendHTML(c, { acesa: tem })}<span class="lp-etq">${esc(c.etq)}</span></button>`; }).join('')}</div>
       </section>
+      ${lpMostrarPedido() ? `<button type="button" class="kf-btn kf-sec varal-mexer" data-mexer>Balançar com o celular</button>` : ''}
       <p class="hint conq-nota">As conquistas são uma brincadeira e não mudam nada nos seus orçamentos. Dá para desligar em Ajustes, em Conquistas e apresentação.</p>
     </main>`;
   },
-  bind(v) { $$('[data-lp]', v).forEach(b => b.onclick = () => lpSheet(CONQUISTAS.find(c => c.id === b.dataset.lp))); lpPintarMinis(v); },
+  bind(v) { $$('[data-lp]', v).forEach(b => b.onclick = () => lpSheet(CONQUISTAS.find(c => c.id === b.dataset.lp))); lpPintarMinis(v); lpVaral(v); },
 };

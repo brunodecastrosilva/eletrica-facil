@@ -3,6 +3,20 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.1.0 · 2026-11-15
+
+Mais personalidade: a apresentação, o ícone e as brincadeiras agora são do Elétrica Fácil, e de mais nenhum app.
+
+- **Apresentação nova, com a cara do app:** as quatro telas foram refeitas. Na primeira, um interruptor de parede acende a lâmpada. Na segunda, a planta de uma casa: cada toque num cômodo soma um ponto de tomada, e o total sobe. Na terceira, quatro lâmpadas num fio acendem uma depois da outra: Enviada, Aprovada, Concluído, Recibo. Na última, o seu nome aparece no cartão da proposta enquanto você escreve, e a lâmpada acende. A apresentação começa com um raio.
+- **Um raio de surpresa:** de vez em quando, ao trocar de tela, um raio rasga a tela de cima a baixo, com clarão, galhos e um tremor; mais raro, cai uma tempestade, com céu fechado, chuva e três raios. É só enfeite: não recebe toque, não interrompe nada e some em um segundo. Não cai com janela aberta, com alguém digitando, no guia nem nos primeiros segundos, e vem no máximo uma vez a cada cinco minutos. Dá para desligar (e para soltar um raio ou uma tempestade na hora) em Ajustes → Conquistas e apresentação.
+- **A lâmpada pisca mais forte:** na ficha de uma lâmpada, toque nela ou no fundo e ela dá um clarão, um por toque. Deslizar o dedo continua girando.
+- **O varal balança:** cada lâmpada do varal é um pêndulo. Passe o dedo pelo varal e elas balançam. No celular, o varal acompanha o aparelho: inclinado, as lâmpadas pendem para o lado de baixo; chacoalhado, balançam. No iPhone, o movimento só chega depois do toque em "Balançar com o celular", porque o aparelho pede licença.
+- **Ícone novo:** o mesmo raio, agora grafite sobre uma placa amarela com luz e cantos arredondados. A marca no alto da tela e o cartão da proposta usam o mesmo ícone.
+- **Guia:** o passo das Conquistas mostra o piscar da lâmpada, e há um passo novo no fim, com o raio (22 passos).
+- **Cuidados (Código, Art. 16):** quem pede movimento reduzido no aparelho não vê raio, tempestade, piscar nem varal balançando. Cada raio dá no máximo dois clarões, e os raios da tempestade caem com mais de um segundo entre eles (WCAG 2.3.1: nunca mais de três clarões por segundo).
+- **Por dentro:** arquivo novo `raio.js`; 2 testes novos (raio de surpresa; piscar e varal) e o da apresentação refeito.
+- **Ainda não testado num celular de verdade:** o varal com o movimento do aparelho. Os sinais da aceleração mudam entre iPhone e Android; se as lâmpadas penderem para o lado errado, é um ajuste de uma linha.
+
 ## 1.0.0 · 2026-11-15
 
 Elétrica Fácil refeito, na vez dele de seguir o Conta Fácil (Código, Art. 93, § 2º). A estrutura é a comum da família; a
