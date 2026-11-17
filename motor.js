@@ -1,6 +1,6 @@
 /* Elétrica Fácil · motor: utilidades, tabela de preços, dados, sincronização, contas e janelas. */
 'use strict';
-const VERSAO = '2.0.0';
+const VERSAO = '2.0.1';
 // a marca do alto é o ícone do app, o mesmo da tela de início do celular (um ícone só, como no Conta Fácil)
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
@@ -516,7 +516,9 @@ let checks = LS.get('checks', []);
 const PRIMEIRO_USO = quotes === null && !LS.get('catalog', null);
 // sincronização entre aparelhos: motor comum do Kit Fácil (a regra de junção dos dados fica mais abaixo)
 // o que mudou em cada versão, para quem usa (as mesmas linhas do CHANGELOG: Código, Art. 25, I)
-const NOVIDADES = [{ versao: '2.0.0', itens: [
+const NOVIDADES = [{ versao: '2.0.1', itens: [
+  'Correção: a janela de Novidades não aparece mais junto com a apresentação, mesmo com a internet lenta.',
+] }, { versao: '2.0.0', itens: [
   'Elétrica Fácil refeito para o eletricista: o orçamento agora nasce na sua tabela de preços. Cada toque soma um serviço, e o total sobe no pé da tela.',
   'O nome do cliente só é pedido na hora de gerar a proposta. Até lá, o orçamento aparece pelo serviço.',
   'Início novo: Novo orçamento em um toque, o que pede a sua atenção (cobrar resposta, executar, receber) e o mês num visor.',
@@ -540,6 +542,9 @@ const NOVIDADES = [{ versao: '2.0.0', itens: [
   'Apresentação em quatro telas na primeira abertura e um guia só, que faz cada passo na tela sem gravar nada.',
   'Seus orçamentos, preços, materiais, ferramentas e ajustes continuam os mesmos.',
 ] }];
+// quem ainda vai ver a apresentação não recebe a janela de Novidades do Kit: nem por cima dela, nem antes (o Kit olha 0,7 s
+// depois de começar, e numa internet lenta o resto do app ainda está chegando). É o que o Conta Fácil faz.
+if (String(LS.get('abertura', '')) !== '1' && !(navigator.webdriver && !window.EF_TESTE_ABERTURA)) { try { localStorage.setItem('kitfacil.eletrica-facil.visto', JSON.stringify(VERSAO)); } catch {} }
 KitFacil.iniciar({
   app: 'eletrica-facil', nome: 'Elétrica Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
   resumo: 'Orçamentos de elétrica prontos em minutos: serviços e materiais da sua tabela, deslocamento, adicionais, proposta em PDF ou WhatsApp com Pix, relatório e recibo.',

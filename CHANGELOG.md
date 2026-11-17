@@ -3,6 +3,10 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 2.0.1 · 2026-11-17
+
+- **Correção:** com a internet lenta, a janela de Novidades ainda podia abrir junto com a apresentação: o Kit confere as novidades 0,7 s depois de começar, antes de o resto do app chegar. Achado na conferência da 2.0.0 no ar. Agora, quem ainda vai ver a apresentação tem as novidades marcadas como vistas antes de o Kit começar, como no Conta Fácil. A correção da 1.1.1 cobria só a espera de 30 segundos.
+
 ## 2.0.0 · 2026-11-17
 
 O Elétrica Fácil foi refeito com o Código novo (0.10.0, "cada app com personalidade própria"; publicado já com o 0.11.0): o fluxo e o desenho das telas agora são pensados para o eletricista, não copiados da comanda de bar. Decisões do Bruno: o orçamento nasce na tabela de preços ("Tabela na mão") e a Tabela fica na barra de baixo.

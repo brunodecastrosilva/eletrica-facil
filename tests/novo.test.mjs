@@ -281,6 +281,20 @@ test('abertura para quem vem de outra versão: a janela de Novidades não abre p
   await a.fechar();
 });
 
+test('abertura com a internet lenta: as Novidades não aparecem junto com ela', async () => {
+  const a = await aparelho(amb, { antes: () => { window.EF_TESTE_ABERTURA = 1; window.KF_TESTE_ABERTURA = 1; } });
+  const p = a.page;
+  await p.locator('.kf-abertura').waitFor();
+  // o Kit confere as novidades 0,7 s depois de começar; aqui o resto do app (casca.js) só chega 1,6 s depois
+  await p.route('**/casca.js', async r => { await new Promise(x => setTimeout(x, 1600)); await r.continue(); });
+  await p.evaluate(() => localStorage.setItem('kitfacil.eletrica-facil.visto', JSON.stringify('1.1.0')));
+  await p.reload(); await p.locator('.kf-abertura').waitFor(); await p.waitForTimeout(2500);
+  assert.equal(await p.locator('.kf-dlg').count(), 0, 'nada de janela junto com a apresentação');
+  assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('kitfacil.eletrica-facil.visto'))), await p.evaluate(() => VERSAO));
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
 test('raio de surpresa: cai e some sem tocar em nada, respeita o movimento reduzido e dá para desligar', async () => {
   const a = await aparelho(amb);
   const p = a.page;
