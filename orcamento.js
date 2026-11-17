@@ -16,7 +16,7 @@ function startQuote(client, report) {
   if (report) { setStatus(q, 'concluido'); q.prevStatus = 'rascunho'; }
   saveQuotes();
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
-  go('/q/' + q.id);
+  if (report) go('/q/' + q.id); else abrirTabela(q, 'svc', '');
 }
 function createExample() {
   const ex = quotes.find(q => q.example);
@@ -591,24 +591,15 @@ VIEWS.quote = {
     const q = getQ(r.id), c = compute(q), S = quoteSums(q, c);
     return `<header class="kf-barra appbar"><div class="kf-barra-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
-      <div class="ab-title"><span class="ab-row"><span class="ab-eyebrow">${q.example ? 'Exemplo' : `<span class="ab-tipo">${isReport(q) ? 'Relatório' : 'Orçamento'} </span>` + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-saved" id="ab-saved" role="status" aria-label="Alterações salvas neste aparelho">${I.check}<span>Salvo</span></span></span><span class="ab-main" id="ab-name">${esc(q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'))}</span></div>
+      <div class="ab-title"><span class="ab-row"><span class="ab-eyebrow">${q.example ? 'Exemplo' : `<span class="ab-tipo">${isReport(q) ? 'Relatório' : 'Orçamento'} </span>` + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-saved" id="ab-saved" role="status" aria-label="Alterações salvas neste aparelho">${I.check}<span>Salvo</span></span></span><span class="ab-main" id="ab-name">${esc(quoteNome(q))}</span></div>
       ${KitFacil.topo.html({ principal: false })}
     </div></header>
-    <main class="page bar">
+    <main class="page bar resumo">
+      <h1 class="sr-only">${isReport(q) ? 'Relatório' : 'Orçamento'} ${esc(numLabel(q))}</h1>
       ${q.example ? `<div class="banner b-tip"><p><b>Este é um orçamento de exemplo.</b> Mexa à vontade para conhecer o app e exclua quando quiser pelo botão ⋯, ao lado de Ver proposta.</p></div>` : ''}
       ${statusBanner(q, c)}
-      <section class="prancheta pr-orc" aria-label="${isReport(q) ? 'Folha do relatório' : 'Folha do orçamento'}"><span class="pr-clipe" aria-hidden="true"><i></i></span><div class="folha fo-orc">
-      <p class="mono fo-cab"><span>${isReport(q) ? 'Relatório' : 'Orçamento'} ${esc(numLabel(q).toLowerCase())}</span><span>${fmtDate(q.createdAt)}</span></p>
-      ${panelOpen(`q:${q.id}:cli`, 'cli', 'Cliente e serviço', S.cli)}
-        <div class="field"><label for="q-name">Nome</label><input id="q-name" type="text" autocapitalize="words" autocomplete="off" placeholder="Nome do cliente" value="${esc(q.client.name)}"></div>
-        <div class="grid2 stack">
-          <div class="field"><label for="q-phone">WhatsApp</label><input id="q-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="(11) 90000-0000" value="${esc(fmtPhone(q.client.phone))}"></div>
-          <div class="field"><label for="q-doc">CPF ou CNPJ <span class="lab-opt">opcional</span></label><input id="q-doc" type="text" inputmode="numeric" autocomplete="off" placeholder="Sai no orçamento e no recibo" value="${esc(fmtDoc(q.client.doc))}"></div>
-        </div>
-        <div class="field"><label for="q-addr">Endereço da obra</label><input id="q-addr" type="text" autocomplete="off" placeholder="Rua, número, bairro" value="${esc(q.client.address)}"></div>
-        <div class="field"><label for="q-title">Serviço</label><input id="q-title" type="text" autocomplete="off" placeholder="Ex.: Troca do quadro e instalação de chuveiro" value="${esc(q.title)}"></div>
-      ${panelClose}
-
+      <button type="button" class="cli-lin" data-cli><span class="cli-ic" aria-hidden="true">${IN.pessoa}</span><span class="cli-tx"><b>Cliente e serviço</b><small>${q.client.name ? esc([q.client.name, q.title].filter(Boolean).join(' · ')) : `Você preenche ao gerar ${isReport(q) ? 'o relatório' : 'a proposta'}`}</small></span><span class="lc" aria-hidden="true">${I.chev}</span></button>
+      <div class="blocos">
       ${techCardHTML(q)}
       ${panel(`q:${q.id}:items`, 'items', q.useRooms ? 'Ambientes e itens' : 'Serviços e material', S.items, roomToggleHTML(q) + (q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)), { right: S.itemsR })}
       ${panel(`q:${q.id}:val`, 'val', 'Valores', S.val, valuesHTML(q, c), { right: S.valR })}
@@ -629,11 +620,11 @@ VIEWS.quote = {
           </div>
         <div class="field"><span class="lab" id="q-nt-l">Textos prontos</span>${linhas(NOTE_CHIPS.map(([l, t], k) => linha(`data-note="${k}"`, l, { tipo: 'mais', dis: q.notes.includes(t) })), ' role="group" aria-labelledby="q-nt-l"')}</div>
       ${panelClose}
-      </div></section>
+      </div>
       <button type="button" class="kf-btn kf-perigo block fo-excluir" data-excluir>${q.example ? 'Excluir o exemplo' : isReport(q) ? 'Excluir relatório' : 'Excluir orçamento'}</button>
     </main>
     <aside class="q-vivo" aria-label="Prévia ${isReport(q) ? 'do relatório' : 'da proposta'}"><div class="q-vivo-in"><div class="q-vivo-cab"><b>Prévia ao vivo</b><span class="hint">Muda enquanto você edita</span></div>${paperHTML(q, c, docMode(q))}</div></aside>
-    <div class="bbar"><div class="bbar-in">
+    <div class="bbar"><div class="bbar-in visor-pe">
       <div class="bb-total"><small data-t="paylab">${payLabel(q, c)}</small><b data-t="paytotal">${BRL(c.payTotal)}</b></div>
       <button class="icon-btn boxed" data-menu aria-label="Mais opções do orçamento">${I.more}</button>
       <button class="btn primary" data-preview>${isReport(q) ? 'Ver relatório' : 'Ver proposta'}${I.arrow}</button>
@@ -656,36 +647,14 @@ VIEWS.quote = {
     $('[data-back]', v).onclick = () => back('/');
     $('[data-menu]', v).onclick = () => quoteMenu(q);
     $('[data-excluir]', v).onclick = () => deleteQuote(q);
-    $('[data-preview]', v).onclick = () => go('/q/' + q.id + '/proposta');
+    $('[data-preview]', v).onclick = () => verProposta(q);
 
-    // cliente
-    const nm = $('#q-name', v);
-    nm.addEventListener('input', () => { q.client.name = nm.value.replace(/\s+/g, ' ').trimStart(); $('#ab-name').textContent = q.client.name || (isReport(q) ? 'Novo relatório' : 'Novo orçamento'); touch(q); });
-    nm.addEventListener('change', () => { q.client.name = nm.value.trim().replace(/\s+/g, ' '); touch(q); });
-    attachSuggest(nm, () => clientList().map(k => ({ label: k.name, right: k.phone ? fmtPhone(k.phone) : k.address, k })), x => {
-      q.client.name = x.k.name;
-      if (!q.client.phone) q.client.phone = x.k.phone; if (!q.client.address) q.client.address = x.k.address; if (!q.client.doc) q.client.doc = x.k.doc || '';
-      touch(q); rerender();
-    });
-    $('#q-phone', v).addEventListener('input', e => { q.client.phone = e.target.value.trim(); touch(q); });
-    $('#q-phone', v).addEventListener('change', e => { e.target.value = fmtPhone(e.target.value); });
-    $('#q-addr', v).addEventListener('input', e => { q.client.address = e.target.value; touch(q); });
-    $('#q-doc', v).addEventListener('input', e => { q.client.doc = e.target.value.trim(); touch(q); });
-    $('#q-doc', v).addEventListener('change', e => {
-      const d = phoneDigits(e.target.value);
-      e.target.value = fmtDoc(e.target.value);
-      if (!d) return;
-      if (d.length === 11 && !cpfValid(d)) toast('Esse CPF parece ter um número errado. Confira.');
-      else if (d.length === 14 && !cnpjValid(d)) toast('Esse CNPJ parece ter um número errado. Confira.');
-      else if (d.length !== 11 && d.length !== 14) toast('O CPF tem 11 números e o CNPJ tem 14.');
-    });
-    $('#q-title', v).addEventListener('input', e => { q.title = e.target.value; touch(q); });
-    $('#q-title', v).addEventListener('change', e => { q.title = e.target.value.trim(); touch(q); });
+    $('[data-cli]', v).onclick = () => clienteSheet(q);
 
     // itens e ambientes
     $('#q-rooms', v).addEventListener('change', e => { q.useRooms = e.target.checked; touch(q); rerender(); if (q.useRooms && !q.rooms.length) roomAddSheet(q); });
-    $$('[data-add]', v).forEach(b => b.onclick = () => pickerSheet(q, b.dataset.add));
-    $$('[data-add-room]', v).forEach(b => b.onclick = () => pickerSheet(q, 'svc', b.dataset.addRoom));
+    $$('[data-add]', v).forEach(b => b.onclick = () => abrirTabela(q, b.dataset.add, ''));
+    $$('[data-add-room]', v).forEach(b => b.onclick = () => abrirTabela(q, 'svc', b.dataset.addRoom));
     $$('[data-room-menu]', v).forEach(b => b.onclick = () => roomMenu(q, b.dataset.roomMenu));
     $('[data-new-room]', v)?.addEventListener('click', () => roomAddSheet(q));
     $('[data-conf-pdf]', v)?.addEventListener('click', e => shareConference(q, e.currentTarget));
@@ -898,7 +867,6 @@ function groupByCat(list) {
   return cats.map(cat => [cat, list.filter(p => (p.cat || 'Outros') === cat).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true }))]);
 }
 const hl = (s, qf) => { if (!qf) return esc(s); const i = fold(s).indexOf(qf); return i < 0 ? esc(s) : esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i, i + qf.length)) + '</mark>' + esc(s.slice(i + qf.length)); };
-let lastRoomKind = null;
 /* F5: depois de adicionar serviços com composição, o app sugere o material (quantidades editáveis, marque o que vai) */
 function sugerirMaterial(q, svcAdd, room = '') {
   const tot = new Map();
@@ -909,7 +877,7 @@ function sugerirMaterial(q, svcAdd, room = '') {
   openSheet({ title: 'Material sugerido', body: `<p class="hint">Para ${esc(joinPt(nomes.map(n => n.charAt(0).toLowerCase() + n.slice(1))))}. Desmarque o que o cliente já tem e ajuste as quantidades.</p>
       <div class="sug-list">${L.map((x, k) => `<label class="sug-row"><input type="checkbox" class="sw-check" data-sk="${k}" checked><span class="sug-n">${esc(x.m.name)}<small>${BRL(x.m.price)} por ${unitName(x.m.unit)}</small></span>
         <input type="text" inputmode="decimal" class="sug-q" data-sq="${k}" value="${fmtQty(x.qtd)}" aria-label="Quantidade de ${esc(x.m.name)}"><span class="sug-u">${unitTxt(x.qtd, x.m.unit)}</span></label>`).join('')}</div>
-      <p class="hint">A sugestão vem da tabela de preços: em Preços, toque no serviço para mudar o material que costuma ir.</p>`,
+      <p class="hint">A sugestão vem da sua tabela: em Tabela, toque no serviço para mudar o material que costuma ir.</p>`,
     foot: `<button class="btn ghost" data-cancel>Agora não</button><button class="btn primary" data-ok>${I.plus}Adicionar material</button>`,
     onMount: s2 => {
       $('[data-cancel]', s2).onclick = () => closeSheet();
@@ -922,47 +890,6 @@ function sugerirMaterial(q, svcAdd, room = '') {
         touch(q); closeSheet(true); rerender();
         if (n) toast(`${plural(n, 'material adicionado', 'materiais adicionados')}.`);
       };
-    } });
-}
-function pickerSheet(q, kind, room) {
-  const inRoom = q.useRooms;
-  room = inRoom ? (room || '') : '';
-  let k = inRoom && lastRoomKind ? lastRoomKind : kind, query = '';
-  const svcAdd = {}; // serviços adicionados nesta janela: nome → quantidade (para sugerir o material)
-  const listHTML = () => {
-    const qf = fold(query);
-    const list = prices.filter(p => p.kind === k && (!qf || fold(p.name).includes(qf) || fold(p.cat).includes(qf)));
-    const inQuote = p => sum(q.items.filter(i => i.kind === p.kind && norm(i.name) === norm(p.name) && (!inRoom || roomOf(q, i) === room)).map(i => i.qty));
-    // com busca: lista única, primeiro a palavra inteira ("DR" acha Instalação de DR antes de "driver" e "quadro") (U10)
-    if (qf) {
-      const rx = new RegExp('(^|[^a-z0-9])' + qf.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z0-9])');
-      const nota = p => { const n = fold(p.name); return rx.test(n) ? 4 : n.startsWith(qf) ? 3 : n.split(/[^a-z0-9]+/).some(w => w.startsWith(qf)) ? 2 : n.includes(qf) ? 1 : 0.5; };
-      const achados = list.map(p => [nota(p), p]).sort((x, y) => y[0] - x[0] || x[1].name.localeCompare(y[1].name, 'pt-BR')).map(x => x[1]);
-      if (achados.length) return `<div class="pk-list">${achados.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}<small class="pk-cat">${esc(p.cat)}</small>${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}</span><span class="pk-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}</div>`
-        + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}Adicionar “${esc(query)}”</button>`;
-    }
-    const rows = groupByCat(list).map(([cat, L]) => { const n0 = sum(L.map(inQuote)); return panel(`pk:${k}:${cat}`, '', esc(cat), qf ? null : resumoDe(L, p => p.name), `<div class="pk-list">${L.map(p => { const n = inQuote(p); return `<button class="pk-row${n ? ' on' : ''}" data-pid="${p.id}"><span class="pk-name">${hl(p.name, qf)}${inStock(p) ? `<small class="pk-st${stockLow(p) ? ' low' : ''}">${stockTxt(p)}</small>` : ''}</span><span class="pk-price">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}/${unitTxt(1, p.unit)}</span>${n ? `<span class="pk-n">${fmtQty(n)}</span>` : `<span class="pk-plus">${I.plus}</span>`}</button>`; }).join('')}</div>`, { right: n0 ? `<span class="pk-n">${fmtQty(n0)}</span>` : conta(L.length), force: qf ? true : undefined }); }).join('');
-    return (rows || KitFacil.ui.vazio({ titulo: `Nada com “${esc(query)}”`, texto: `na tabela de ${k === 'svc' ? 'mão de obra' : 'material'}. Adicione como item fora da tabela.` }))
-      + `<button class="add-btn" data-custom style="margin-top:8px">${I.plus}${query ? `Adicionar “${esc(query)}”` : `${k === 'svc' ? 'Serviço' : 'Material'} fora da tabela`}</button>`;
-  };
-  openSheet({ title: inRoom ? `Adicionar em ${roomName(q, room)}` : 'Adicionar ao orçamento', tall: true,
-    body: `<div class="pk-list" id="pk-list">${listHTML()}</div>`,
-    onClose: () => { rerender(); if (Object.keys(svcAdd).length) setTimeout(() => sugerirMaterial(q, svcAdd, room), 120); },
-    onMount: s => {
-      const body = $('.kf-dlg-corpo', s);
-      body.insertAdjacentHTML('beforebegin', `<div class="pk-tools">
-        ${KitFacil.ui.abas({ itens: [['svc', 'Mão de obra'], ['mat', 'Material']], atual: k, rotulo: 'Tipo', dado: 'k' })}
-        <label class="search">${I.search}<input type="search" id="pk-q" placeholder="Buscar na sua tabela de preços" aria-label="Buscar"></label>
-        ${inRoom ? '<p class="hint">Cada toque soma uma unidade. Toque 3 vezes para 3 tomadas.</p>' : ''}</div>`);
-      const paintList = () => { const st = body.scrollTop; $('#pk-list', s).innerHTML = listHTML(); body.scrollTop = st; };
-      const qi = $('#pk-q', s);
-      qi.addEventListener('input', () => { query = qi.value.trim(); paintList(); body.scrollTop = 0; });
-      $$('[data-k]', s).forEach(b => b.onclick = () => { k = b.dataset.k; if (inRoom) lastRoomKind = k; $$('[data-k]', s).forEach(x => { x.setAttribute('aria-selected', String(x === b)); x.tabIndex = x === b ? 0 : -1; }); paintList(); body.scrollTop = 0; });
-      body.addEventListener('click', e => {
-        const row = e.target.closest('[data-pid]');
-        if (row) { const p = prices.find(x => x.id === row.dataset.pid); if (!p) return; addFromPrice(q, p, room); if (p.kind === 'svc' && (p.comp || []).length) svcAdd[p.id] = (svcAdd[p.id] || 0) + 1; paintList(); return; }
-        if (e.target.closest('[data-custom]')) customItemSheet(q, k, query, room);
-      });
     } });
 }
 function itemFields(i, withKind, q) {
@@ -1041,7 +968,7 @@ function roomAddSheet(q) {
         q.rooms.push(r); q.useRooms = true; touch(q); closeSheet(true); rerender();
         $(`[data-room-card="${r.id}"]`)?.scrollIntoView({ block: 'start' });
         window.scrollBy(0, -70);
-        pickerSheet(q, 'svc', r.id);
+        abrirTabela(q, 'svc', r.id);
       };
       $$('[data-rn]', s).forEach(b => b.onclick = () => create(b.dataset.rn));
       $('[data-create]', s).onclick = () => create($('#rm-name', s).value);
@@ -1229,15 +1156,16 @@ VIEWS.preview = {
     const q = getQ(r.id), c = compute(q), mode = docMode(q);
     const warn = [];
     if (!settings.name && !settings.company) warn.push('Seu nome e telefone ainda não aparecem no cabeçalho.');
-    if (!q.client.name) warn.push('Falta o nome do cliente.');
+    if (!q.client.name) warn.push('Falta o nome do cliente: ele é pedido quando você envia.');
     if (!q.items.length) warn.push('Nenhum item lançado.');
     if (!daysOk(q)) warn.push(prazoProblema(q) === 'retro' ? 'Há datas que já passaram: escolha um novo início.' : 'Os dias marcados não conferem com o prazo.');
     return `<header class="kf-barra appbar"><div class="kf-barra-in">
       <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
-      <div class="ab-title"><span class="ab-eyebrow">${mode === 'report' ? 'Relatório' : 'Proposta'} · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Cliente sem nome')}</span></div>
+      <div class="ab-title"><span class="ab-eyebrow">${mode === 'report' ? 'Relatório' : 'Proposta'} · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Falta o cliente')}</span></div>
       ${KitFacil.topo.html({ principal: false })}
     </div></header>
-    <main class="page bar">
+    <main class="page bar proposta">
+      <h1 class="sr-only">${mode === 'report' ? 'Relatório' : 'Proposta'} ${esc(numLabel(q))}</h1>
       ${warn.length ? `<div class="banner b-tip"><p><b>Antes de enviar:</b> ${esc(warn.join(' '))}</p>${!settings.name && !settings.company ? '<div class="banner-act"><button class="btn sm ghost" data-me>Preencher meus dados</button></div>' : ''}</div>` : ''}
       ${isReport(q) ? KitFacil.ui.abas({ itens: [['report', 'Relatório de serviços'], ['quote', 'Orçamento original']], atual: mode, rotulo: 'Documento', dado: 'doc' }) : ''}
       ${paperHTML(q, c, mode)}
@@ -1267,9 +1195,11 @@ VIEWS.preview = {
     const cv = $('canvas[data-qr]', v);
     $$('[data-doc]', v).forEach(b => b.onclick = () => { previewDoc[q.id] = b.dataset.doc; rerender(); });
     if (cv) { const px = pixOf(q, compute(q)); qrMatrix(pixPayload(px)).then(m => drawQR(cv.getContext('2d'), m, 0, 0, 200)).catch(() => cv.replaceWith(Object.assign(document.createElement('span'), { textContent: '' }))); }
-    $('[data-pdf]', v).onclick = e => sharePDF(q, e.currentTarget);
-    $('[data-wa]', v).addEventListener('click', () => setTimeout(() => markSent(q), 400));
-    $('[data-more]', v).onclick = () => shareMore(q);
+    // sem o nome do cliente nada sai: ele é pedido aqui, na hora de enviar (Código, Art. 64-D)
+    const semNome = e => { if (q.client.name) return false; e.preventDefault(); clienteSheet(q, () => rerender()); return true; };
+    $('[data-pdf]', v).onclick = e => { if (!semNome(e)) sharePDF(q, e.currentTarget); };
+    $('[data-wa]', v).addEventListener('click', e => { if (!semNome(e)) setTimeout(() => markSent(q), 400); });
+    $('[data-more]', v).onclick = e => { if (!semNome(e)) shareMore(q); };
   },
 };
 async function sharePDF(q, btn) {

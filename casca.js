@@ -3,7 +3,7 @@
 
 /* ---------- desenhar a tela ---------- */
 const PRINCIPAIS = ['home', 'lista', 'prices', 'gestao', 'conquistas', 'mais', 'settings'];
-const TITULOS = { home: '', lista: 'Orçamentos', prices: 'Preços', gestao: 'Gestão', conquistas: 'Conquistas', mais: 'Mais', settings: 'Ajustes' };
+const TITULOS = { home: '', lista: 'Orçamentos', prices: 'Tabela', gestao: 'Gestão', conquistas: 'Conquistas', mais: 'Mais', settings: 'Ajustes' };
 function render(opts = {}) {
   let r = route();
   // orçamento novo que ficou vazio some ao sair dele
@@ -11,7 +11,7 @@ function render(opts = {}) {
     const q = getQ(openQuoteId);
     if (q && isEmptyQuote(q)) { quotes = quotes.filter(x => x !== q); saveQuotes(); }
   }
-  if ((r.name === 'quote' || r.name === 'preview') && !getQ(r.id)) { history.replaceState({ d: 0 }, '', '#/'); return render(); }
+  if ((r.name === 'quote' || r.name === 'preview' || r.name === 'montar') && !getQ(r.id)) { history.replaceState({ d: 0 }, '', '#/'); return render(); }
   if (r.name === 'conquistas' && !jogoLigado()) { history.replaceState({ d: 0 }, '', '#/mais'); r = route(); }
   openQuoteId = r.id || null;
   const V = VIEWS[r.name];
@@ -49,19 +49,18 @@ function onScroll() { const ab = $('.appbar'); if (ab) ab.classList.toggle('scro
 window.addEventListener('scroll', onScroll, { passive: true });
 
 /* ---------- navegação: a barra de baixo e o trilho são os do Kit (KitFacil.nav.barra e .trilho) ----------
-   Início, Orçamentos, o orçamento novo no centro, Conquistas (ou Preços, com as conquistas desligadas) e Mais. */
+   Início, Orçamentos, o orçamento novo no centro, Tabela e Mais (Gestão e Conquistas ficam em Mais). */
 const ROTAS = { inicio: '/', orcamentos: '/orcamentos', precos: '/precos', gestao: '/gestao', conquistas: '/conquistas', mais: '/mais' };
 function pintarNav(r = route()) {
-  const n = r.name, noOrc = n === 'lista' || n === 'quote' || n === 'preview';
+  const n = r.name, noOrc = n === 'lista' || n === 'quote' || n === 'preview' || n === 'montar';
   const it = (id, rotulo, icone, atual) => ({ id, rotulo, icone, atual });
-  const quarto = jogoLigado() ? it('conquistas', 'Conquistas', IN.lampada, n === 'conquistas') : it('precos', 'Preços', I.tag, n === 'prices');
-  const naMais = n === 'mais' || n === 'gestao' || (n === 'prices' && quarto.id !== 'precos');
-  const html = KitFacil.nav.barra({ itens: [it('inicio', 'Início', IN.casa, n === 'home'), it('orcamentos', 'Orçamentos', IN.folhas, noOrc), quarto],
+  // a tabela de preços é ferramenta de todo dia: fica na barra; Gestão e Conquistas ficam em Mais (Regras do app)
+  const html = KitFacil.nav.barra({ itens: [it('inicio', 'Início', IN.casa, n === 'home'), it('orcamentos', 'Orçamentos', IN.folhas, noOrc), it('precos', 'Tabela', I.tag, n === 'prices')],
     centro: { id: 'novo', rotulo: 'Novo', nome: 'Novo orçamento', icone: I.plus },
-    mais: { atual: naMais } });
+    mais: { atual: n === 'mais' || n === 'gestao' || n === 'conquistas' } });
   const nav = $('#nav'); if (nav.dataset.h !== html) { nav.innerHTML = html; nav.dataset.h = html; }
   const lado = KitFacil.nav.trilho({ destaque: { id: 'novo', rotulo: 'Novo orçamento', icone: I.plus },
-    itens: [it('inicio', 'Início', IN.casa, n === 'home'), it('orcamentos', 'Orçamentos', IN.folhas, noOrc), it('precos', 'Preços', I.tag, n === 'prices'), it('gestao', 'Gestão', I.box, n === 'gestao'),
+    itens: [it('inicio', 'Início', IN.casa, n === 'home'), it('orcamentos', 'Orçamentos', IN.folhas, noOrc), it('precos', 'Tabela', I.tag, n === 'prices'), it('gestao', 'Gestão', I.box, n === 'gestao'),
       ...(jogoLigado() ? [it('conquistas', 'Conquistas', IN.lampada, n === 'conquistas')] : [])],
     mais: { atual: n === 'mais' } });
   const t = $('#trilho-lista'); if (t.dataset.h !== lado) { t.innerHTML = lado; t.dataset.h = lado; }
@@ -350,7 +349,7 @@ function aberturaAbrir({ rever = false } = {}) {
       // quem já usava chega com as lâmpadas que os dados dele acendem; "Primeira luz" aparece para quem acabou de dizer o nome
       const antes = { ...jogo.vistas }; jogoSalvar(); jogoConferir({ silencioso: true });
       rerender();
-      const depois = como === 'extra' ? () => createExample() : como === 'fim' && !rever ? () => { const c = $('#novo-nome'); if (c) KitFacil.destacar(c.closest('.prancheta')); } : null;
+      const depois = como === 'extra' ? () => createExample() : como === 'fim' && !rever ? () => { const c = $('.arranque'); if (c) KitFacil.destacar(c); } : null;
       const luzNova = disse && jogoLigado() && !antes.luz && CONQUISTAS.find(c => c.id === 'luz');
       return () => { if (luzNova) setTimeout(() => lpNova([luzNova], () => { depois && depois(); }), semMovimento() ? 0 : 320); else depois && depois(); };
     } });

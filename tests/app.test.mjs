@@ -309,11 +309,11 @@ test('seções: começam fechadas, cada uma abre e fecha sozinha, com animação
     assert.equal(await p.locator('[data-next]').count(), 0, 'o botão Próximo saiu do app');
     assert.equal(await p.locator('details.fold[open]').count(), 0, 'todas as seções começam fechadas');
     assert.equal(await p.locator('details.fold.sub').count(), 0, 'seção de dentro usa o mesmo cartão');
-    await abrirPainel(p, `q:${id}:cli`);
+    await abrirPainel(p, `q:${id}:notes`);
     await p.waitForTimeout(700);
     await p.click(`details[data-panel="q:${id}:val"] > summary`);
     assert.equal(await p.evaluate(id => document.querySelector(`details[data-panel="q:${id}:val"]`).classList.contains('kf-secao-anim'), id), true, 'a seção deveria abrir com animação');
-    assert.ok(await esperar(() => p.evaluate(id => { const n = document.querySelector(`details[data-panel="q:${id}:val"]`), c = document.querySelector(`details[data-panel="q:${id}:cli"]`); return n.open && c.open && !n.classList.contains('kf-secao-anim'); }, id)), 'abrir uma seção não fecha a outra');
+    assert.ok(await esperar(() => p.evaluate(id => { const n = document.querySelector(`details[data-panel="q:${id}:val"]`), c = document.querySelector(`details[data-panel="q:${id}:notes"]`); return n.open && c.open && !n.classList.contains('kf-secao-anim'); }, id)), 'abrir uma seção não fecha a outra');
     await p.waitForTimeout(150);
     // a rolagem termina onde a página permite: nada de tranco depois da animação
     const pos = await p.evaluate(() => [scrollY, document.documentElement.scrollHeight - innerHeight]);
@@ -418,7 +418,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   await p.click('.kf-dlg [data-save]');
   assert.deepEqual(await p.evaluate(id => { const x = prices.find(y => y.id === id); return [x.stock, x.cost, x.brand]; }, ref.id), [5, 100, 'Steck']);
   // materiais: Em estoque · Repor · Catálogo; a caixa do material aceita outra marca e o mínimo
-  assert.deepEqual(await p.locator('[data-mf]').evaluateAll(L => L.map(b => b.querySelector('span').textContent.trim())), ['em estoque', 'para repor', 'no catálogo']);
+  assert.deepEqual(await p.locator('[data-mf]').evaluateAll(L => L.map(b => b.querySelector('span').textContent.trim())), ['Em estoque', 'Repor', 'Catálogo']);
   await abrirCat(p, `[data-mat="${ref.id}"]`);
   await p.click(`[data-mat="${ref.id}"]`);
   await abrirCat(p, '.kf-dlg [data-novo-lote]');
@@ -439,7 +439,7 @@ test('gestão: estoque pela categoria e material de Preços, ferramentas pré-ca
   // ferramentas: já vêm cadastradas; cada linha abre a caixa da ferramenta, onde se diz se é sua
   await p.click('[data-aba="ferramentas"]');
   assert.ok(await p.evaluate(() => tiposTool().filter(t => t.seed).length) >= 40, 'faltam ferramentas pré-cadastradas');
-  assert.deepEqual(await p.locator('[data-tf]').evaluateAll(L => L.map(b => b.querySelector('span').textContent.trim())), ['minhas', 'a comprar', 'no catálogo']);
+  assert.deepEqual(await p.locator('[data-tf]').evaluateAll(L => L.map(b => b.querySelector('span').textContent.trim())), ['Minhas', 'Comprar', 'Catálogo']);
   assert.equal(await p.locator('[data-tst], .tst').count(), 0, 'sem botões de estado na lista');
   await abrirCat(p, '[data-tipo="ft-multimetro-digital"]');
   await p.click('[data-tipo="ft-multimetro-digital"]');
@@ -623,17 +623,19 @@ test('2.16: preços de fábrica em cinza (sem confirmar), outras formas na propo
   assert.equal(await p.evaluate(id => prices.find(x => x.id === id).ref, r.ids[0]), false, 'preço mudado fica preto');
   await p.click('[data-adjust]'); await p.click('.kf-dlg [data-go]');
   assert.equal(await p.evaluate(id => prices.find(x => x.id === id).ref, r.ids[1]), false, 'reajuste também deixa preto');
-  // janela de adicionar itens ao orçamento abre e lista a tabela (com os preços de fábrica em cinza)
+  // somar itens ao orçamento abre a tabela na mão, já em Material (com os preços de fábrica em cinza)
   const qa = await criarOrcamento(p, 'Cliente Adicionar', 'Troca de tomada');
   await p.evaluate(id => { go('/q/' + id); const d = document.querySelector(`details[data-panel="q:${id}:items"]`); if (!d.open) KitFacil.secao.abrir(d); }, qa);
   await p.waitForTimeout(700);
   await abrirCat(p, '[data-add="mat"]');
   await p.click('[data-add="mat"]');
-  assert.ok(await p.locator('.kf-dlg .pk-row').count() > 10, 'a lista de materiais abriu');
-  assert.ok(await p.locator('.kf-dlg .pk-row .ref-v').count() > 0);
-  await abrirCat(p, '.kf-dlg .pk-row');
-  await p.locator('.kf-dlg .pk-row').first().click();
-  await p.click('.kf-dlg [data-kf-fechar]');
+  await p.locator('#mt-lista .mt-row').first().waitFor();
+  assert.equal(await p.getAttribute('[data-kind="mat"]', 'aria-pressed'), 'true', 'a tabela abre em Material');
+  assert.ok(await p.locator('#mt-lista .mt-row').count() > 3, 'a lista de materiais abriu');
+  assert.ok(await p.locator('#mt-lista .mt-row .ref-v').count() > 0);
+  await p.locator('#mt-lista .mt-mais').first().click();
+  await p.click('[data-ver]');
+  await p.locator('.blocos').waitFor();
   assert.equal(await p.evaluate(id => getQ(id).items.filter(i => i.kind === 'mat').length, qa), 1, 'adicionou o material');
   // adicional sem percentual padrão: pede o valor no orçamento
   await p.evaluate(id => { const d = document.querySelector(`details[data-panel="q:${id}:val"]`); if (!d.open) KitFacil.secao.abrir(d); }, qa);

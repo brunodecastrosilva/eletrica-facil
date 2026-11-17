@@ -3,6 +3,22 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 2.0.0 · 2026-11-17
+
+O Elétrica Fácil foi refeito com o Código 0.10.0 ("cada app com personalidade própria"): o fluxo e o desenho das telas agora são pensados para o eletricista, não copiados da comanda de bar. Decisões do Bruno: o orçamento nasce na tabela de preços ("Tabela na mão") e a Tabela fica na barra de baixo.
+
+- **Tabela na mão:** Novo orçamento abre direto na sua tabela de preços. Cada toque no + soma um serviço; − tira; tocar no número abre o item para digitar a quantidade ou mudar o preço. O total fica no pé, num visor. Uma tira de categorias (com "Mais usados", quando você já tem histórico) e a busca, que acha mão de obra e material juntos, levam ao item. Fora da tabela, dá para somar um item só daquele orçamento.
+- **O nome do cliente só é pedido na proposta (Código, Art. 64-D):** nada de nome antes de começar. Ao tocar em Ver proposta, o app pergunta para quem é: só o nome é obrigatório; WhatsApp, endereço, CPF ou CNPJ e o serviço em uma linha são opcionais. Quem quiser dizer antes toca em "Cliente e serviço", no orçamento. Enquanto não há cliente, o orçamento aparece pelo serviço em todas as listas.
+- **Início refeito:** um bloco amarelo com a fita zebrada e o botão Novo orçamento; "Pede a sua atenção", com o que cobrar, executar e receber; e o mês num visor grafite, com números amarelos. O rascunho em andamento continua à mão.
+- **Orçamento refeito:** saiu a prancheta. A tela mostra a linha do cliente e os blocos (serviços e material, valores, pagamento e datas, observações); os itens chegam abertos quando você volta da tabela. Somar mão de obra ou material leva à tabela, e não mais a uma janela.
+- **Barra de baixo:** Início, Orçamentos, Novo (no centro), Tabela e Mais. Gestão e Conquistas ficam em Mais (no computador, continuam no trilho).
+- **Tabela (antes Preços):** a mesma lista do orçamento, aqui para mudar o preço: tira de categorias, linhas com o preço à direita e um medidor de quantos preços já são seus.
+- **Gestão:** o alto de Materiais, Ferramentas e Checklist deixou de ter quadrinhos de dados lado a lado (Código, Art. 67): agora é um filtro com as contagens e a linha da lista de compras.
+- **Guia:** refeito no começo para o fluxo novo (22 passos): começa pela tabela, e o nome do cliente aparece no passo da proposta.
+- **Não mudou:** as contas, os documentos em PDF, o Pix, o recibo, o relatório técnico, as conquistas, o raio, a apresentação e os dados guardados (mesmas chaves e formatos: nada se perde).
+- **Por dentro:** arquivo novo `montar.js` (tabela na mão e a janela do cliente); a janela de escolher itens (`pickerSheet`) saiu. Testes: 3 refeitos (Início, navegação, acessibilidade) e 1 novo (tabela na mão e cliente na proposta). A varredura de acessibilidade agora passa por todas as telas novas e deixa de fora só o cinza dos preços de fábrica, que é exceção aprovada.
+- **Ainda não testado num celular de verdade:** a tela nova com o teclado do iPhone (busca da tabela e janela do cliente).
+
 ## 1.1.1 · 2026-11-15
 
 - **Correção:** quem vinha de uma versão anterior e ainda não tinha visto a apresentação recebia, depois de 30 segundos, a janela de Novidades por cima dela. Agora, quem vê a apresentação não recebe as Novidades naquela abertura (como no Conta Fácil). O defeito já existia na 1.0.0.
