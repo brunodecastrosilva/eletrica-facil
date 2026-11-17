@@ -314,7 +314,9 @@ function quoteSums(q, c) {
     diag: firstLine(q.diag, 'Toque para preencher'), work: firstLine(q.work, 'Toque para preencher'), recs: firstLine(q.recs, 'Toque para preencher'), tests: testsSum(q),
     val: val.length ? capFirst(val.join(' · ')) : 'Adicionais, deslocamento e desconto',
     valR: BRL(c.total),
-    cond: [payShort(q.payment), !rep && prazoTxt(q.prazo), (!rep && q.dateTbd) ? 'datas a combinar' : q.dates.length ? (q.dates.length > 1 ? `de ${ds(q.dates[0])} a ${ds(q.dates[q.dates.length - 1])}` : `dia ${ds(q.dates[0])}`) + (daysOk(q) ? '' : ' · confira as datas') : '', q.warranty ? `garantia ${q.warranty} dias` : 'sem garantia'].filter(Boolean).join(' · '),
+    pag: payShort(q.payment) || 'Escolha a forma de pagamento',
+    gar: [q.warranty ? `garantia de ${q.warranty} dias` : 'sem garantia', !rep && q.validity ? `proposta vale ${q.validity} dias` : ''].filter(Boolean).join(' · '),
+    cond: [!rep && prazoTxt(q.prazo), (!rep && q.dateTbd) ? 'datas a combinar' : q.dates.length ? (q.dates.length > 1 ? `de ${ds(q.dates[0])} a ${ds(q.dates[q.dates.length - 1])}` : `dia ${ds(q.dates[0])}`) + (daysOk(q) ? '' : ' · confira as datas') : ''].filter(Boolean).join(' · ') || 'Datas a marcar',
     notes: firstLine(q.notes, 'Nada anotado'),
   };
 }
@@ -461,11 +463,19 @@ function conferenceHTML(q) {
 }
 function valuesHTML(q, c) {
   const d = q.discount, rt = q.trip ? tripCalc(q.trip) : null;
+  const cl = (rot, val, attrs = '', oculto = false) => `<div class="conta-lin"${oculto ? ' hidden' : ''}><span>${rot}</span><b class="num"${attrs}>${val}</b></div>`;
   return `<div class="vrows">
-      <div class="vrow"><span>Mão de obra</span><b data-t="labor">${BRL(c.labor)}</b></div>
+      <div class="conta" aria-label="Como o total se forma">
+        ${cl('Mão de obra', BRL(c.labor), ' data-t="labor"')}
+        ${c.extra ? cl(`Adicionais, +${c.surPct}%`, '+ ' + BRL(c.extra)) : ''}
+        ${c.matIn ? cl('Material', '+ ' + BRL(c.matTotal)) : cl('Material', 'por conta do cliente')}
+        ${c.travel ? cl('Deslocamento', '+ ' + BRL(c.travel)) : ''}
+        ${cl('Desconto', '− ' + BRL(c.discount), ' data-t="disc"', !c.discount)}
+        ${c.taxFora ? cl(esc(taxLabel(c)), '+ ' + BRL(c.taxFora)) : ''}
+        <div class="conta-lin conta-total"><span>Total</span><b class="num" data-t="total">${BRL(c.total)}</b></div>
+      </div>
+      <p class="conta-aj" id="q-aj-l">O que muda o total</p>
       <div class="xlins"><span class="lab" id="q-x-l">Adicional sobre a mão de obra</span>${linhas(EXTRAS.map(([k, l, sk]) => { const on = q.extras[k] > 0; return linha(`data-x="${k}"`, l, { tipo: 'varios', on, dir: on ? `+${q.extras[k]}%` : settings[sk] ? `+${settings[sk]}%` : '' }); }), ' role="group" aria-labelledby="q-x-l"')}</div>
-      ${c.extra ? `<div class="vrow"><span>Adicionais (+${c.surPct}%)</span><b>${BRL(c.extra)}</b></div>` : ''}
-      <div class="vrow"><span>Material</span><b class="${c.matIn ? '' : 'dim'}">${c.matIn ? BRL(c.matTotal) : 'por conta do cliente'}</b></div>
       ${q.useRooms ? `<div class="vrow-free">${matSwitchHTML(q)}</div>` : ''}
       <button class="vrow vbtn" data-trip><span>Deslocamento<small>${rt ? esc(tripShort(q.trip, rt)) : q.travel ? 'valor fixo' : 'pela distância e o combustível'}</small></span><span class="vb-r">${q.travel ? `<b>${BRL(q.travel)}</b>` : '<b class="cta">Calcular</b>'}${I.chev}</span></button>
       <div class="vrow"><label for="q-disc">Desconto</label><div class="disc"><div class="seg" role="group" aria-label="Tipo de desconto"><button data-dm="value" aria-pressed="${d.mode === 'value'}">R$</button><button data-dm="pct" aria-pressed="${d.mode === 'pct'}">%</button></div>${d.mode === 'value'
@@ -476,7 +486,6 @@ function valuesHTML(q, c) {
       ${c.tax.mode !== 'sem' ? `<div class="tax-cfg"><div class="field"><label for="q-txp">Alíquota (%)</label><input id="q-txp" type="text" inputmode="decimal" value="${fmtQty(c.tax.pct)}" placeholder="5"></div>
         <div class="seg" role="group" aria-label="Base do imposto"><button data-txb="servico" aria-pressed="${c.tax.base === 'servico'}">Só mão de obra (ISS)</button><button data-txb="total" aria-pressed="${c.tax.base === 'total'}">Total (Simples)</button></div>
         <p class="hint">${c.tax.mode === 'fora' ? `O cliente vê a linha ${esc(taxLabel(c))}: <b>${BRL(c.taxFora)}</b>.` : `Os preços da proposta já incluem <b>${BRL(c.taxDentro)}</b> de imposto; o cliente não vê a linha. MEI com DAS fixo: use Sem.`}</p></div>` : ''}
-      <div class="vrow total"><span>Total</span><b data-t="total">${BRL(c.total)}</b></div>
     </div>`;
 }
 /* prazo de execução e dias do serviço, num bloco só: o prazo marca os dias no calendário e o usuário ajusta */
@@ -604,12 +613,16 @@ VIEWS.quote = {
       ${panel(`q:${q.id}:items`, 'items', q.useRooms ? 'Ambientes e itens' : 'Serviços e material', S.items, roomToggleHTML(q) + (q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)), { right: S.itemsR })}
       ${panel(`q:${q.id}:val`, 'val', 'Valores', S.val, valuesHTML(q, c), { right: S.valR })}
 
-      ${panelOpen(`q:${q.id}:cond`, 'cond', isReport(q) ? 'Datas, pagamento e garantia' : 'Pagamento, datas e garantia', S.cond, { attrs: ' id="h-cond"' })}
+      ${panelOpen(`q:${q.id}:pag`, 'pag', 'Pagamento', S.pag)}
         <div class="field"><span class="lab">Pagamento</span>
           <div class="seg" role="group" aria-label="Forma de pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${q.payment.mode === k}">${l}</button>`).join('')}</div>
         </div>
         ${payBlockHTML(q, c)}
+      ${panelClose}
+      ${panelOpen(`q:${q.id}:cond`, 'cond', isReport(q) ? 'Datas do serviço' : 'Prazo e datas', S.cond, { attrs: ' id="h-cond"' })}
         ${daysBlockHTML(q)}
+      ${panelClose}
+      ${panelOpen(`q:${q.id}:gar`, 'gar', isReport(q) ? 'Garantia' : 'Garantia e validade', S.gar)}
         <div class="grid2">
           <div class="field"><label for="q-war">Garantia, em dias</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
           ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade, em dias</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
@@ -637,6 +650,7 @@ VIEWS.quote = {
       $$('[data-t="labor"]', v).forEach(e => e.textContent = BRL(c.labor));
       $$('[data-t="mat"]', v).forEach(e => e.textContent = BRL(c.matTotal));
       $$('[data-t="total"]', v).forEach(e => e.textContent = BRL(c.total));
+      $$('[data-t="disc"]', v).forEach(e => { e.textContent = '− ' + BRL(c.discount); e.closest('.conta-lin').hidden = !c.discount; });
       $$('[data-t="paytotal"]', v).forEach(e => e.textContent = BRL(c.payTotal));
       $$('[data-t="paylab"]', v).forEach(e => e.textContent = payLabel(q, c));
       const ps = $('#pay-sum', v); if (ps) ps.innerHTML = paySumHTML(q, c);

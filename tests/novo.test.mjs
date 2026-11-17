@@ -80,7 +80,7 @@ test('tabela na mão: cada toque soma um, a busca acha serviço e material, e o 
   await p.click('[data-ver]');
   await p.locator('.blocos').waitFor();
   assert.equal(await p.evaluate(() => route().name), 'quote');
-  if (await p.locator('.kf-dlg').count()) await p.click('.kf-dlg [data-cancel]');
+  await p.waitForTimeout(900); if (await p.locator('.kf-dlg [data-cancel]').count()) { await p.click('.kf-dlg [data-cancel]'); await p.waitForTimeout(800); } // o material sugerido chega logo depois
   assert.match(await p.textContent('[data-cli]'), /Você preenche ao gerar a proposta/);
   assert.equal(await p.evaluate(() => document.querySelector(`details[data-panel$=":items"]`).open), true);
   assert.equal(await p.locator('.resumo #q-name').count(), 0, 'a tela do orçamento não tem campo de cliente');
@@ -131,7 +131,7 @@ test('navegação: cinco posições com o orçamento novo no centro e a Tabela n
     assert.ok(await semRolagemLateral(p), `rolagem lateral na tabela (${viewport.width})`);
     assert.equal(await p.locator('#nav').isHidden(), true, 'no orçamento, a barra de baixo dá lugar ao total');
     await p.locator('.mt-row .mt-mais').first().click(); await p.click('[data-ver]'); await p.locator('.blocos').waitFor();
-    if (await p.locator('.kf-dlg').count()) await p.click('.kf-dlg [data-cancel]');
+    await p.waitForTimeout(900); if (await p.locator('.kf-dlg [data-cancel]').count()) { await p.click('.kf-dlg [data-cancel]'); await p.waitForTimeout(800); } // o material sugerido chega logo depois
     assert.ok(await semRolagemLateral(p), `rolagem lateral no orçamento (${viewport.width})`);
     assert.equal(await vermelho(p, '[data-excluir]'), 'rgb(179, 54, 43)');
     await p.click('[data-excluir]'); await p.click('.kf-dlg [data-kf-ok]');

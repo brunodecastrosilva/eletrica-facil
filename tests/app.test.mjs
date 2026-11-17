@@ -330,7 +330,7 @@ test('prazo de execução integrado ao calendário: marca os dias, aceita ajuste
   const p = a.page;
   const id = await criarOrcamento(p, 'Cliente Prazo', 'Reforma');
   await p.evaluate(id => go('/q/' + id), id);
-  await abrirPainel(p, `q:${id}:cond`);
+  await abrirPainel(p, `q:${id}:pag`); await abrirPainel(p, `q:${id}:gar`); await abrirPainel(p, `q:${id}:cond`);
   await p.click('[data-days="1"]'); await p.click('[data-days="1"]');
   await escolher(p, 'q-prazo-u', 'uteis');
   assert.equal(await p.inputValue('#q-days'), '3');
@@ -591,7 +591,7 @@ test('pagamento: juros do cartão (taxa da maquininha, juros ao mês, sem juros 
   // na tela: Cartão com taxa repassada mostra quanto você recebe
   const id = await criarOrcamento(p, 'Cliente Cartão', 'Troca de tomada');
   await p.evaluate(id => go('/q/' + id), id);
-  await abrirPainel(p, `q:${id}:cond`);
+  await abrirPainel(p, `q:${id}:pag`); await abrirPainel(p, `q:${id}:gar`); await abrirPainel(p, `q:${id}:cond`);
   await p.click('[data-pm="parcelado"]');
   await p.click('[data-jur="taxa"]');
   for (let k = 0; k < 3; k++) await p.click('[data-in="1"]');
@@ -645,7 +645,7 @@ test('2.16: preços de fábrica em cinza (sem confirmar), outras formas na propo
   // outras formas na proposta
   const id = await criarOrcamento(p, 'Cliente Formas', 'Troca de tomada');
   await p.evaluate(id => { const q = getQ(id); q.payment.mode = 'avista'; q.payment.avista = { mode: 'pct', pct: 5, value: 0 }; touch(q); go('/q/' + id); }, id);
-  await abrirPainel(p, `q:${id}:cond`);
+  await abrirPainel(p, `q:${id}:pag`); await abrirPainel(p, `q:${id}:gar`); await abrirPainel(p, `q:${id}:cond`);
   await p.click('[data-outra="parcelado"]');
   assert.equal(await p.locator('#pay-sum-parcelado').count(), 1);
   assert.match(await p.evaluate(id => outrasTxt(getQ(id)), id), /cartão/i);
@@ -685,7 +685,7 @@ test('2.19: linhas no lugar dos botões lado a lado, Geral excluível, arrastar 
     const st = JSON.parse(localStorage.getItem('eletricafacil.settings')); st.seedV = 5; localStorage.setItem('eletricafacil.settings', JSON.stringify(st));
   });
   await p.reload(); await p.locator('[data-example]').waitFor();
-  assert.deepEqual(await p.evaluate(() => { const m = prices.find(x => x.id === 'velho'); return [m.name, m.unit, settings.seedV]; }), ['Massa corrida', 'galão', 8]);
+  assert.deepEqual(await p.evaluate(() => { const m = prices.find(x => x.id === 'velho'); return [m.name, m.unit, settings.seedV]; }), ['Massa corrida', 'galão', 9]);
   // nenhum botão lado a lado sobrou no app
   const id = await criarOrcamento(p, 'Cliente Linhas', 'Troca de tomada');
   await p.evaluate(id => go('/q/' + id), id);

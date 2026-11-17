@@ -30,7 +30,7 @@ for (const tema of ['light', 'dark']) {
     for (let k = 0; k < 4; k++) { await p.waitForTimeout(250); await varrer(p, `abertura, tela ${k + 1} (${nome})`); if (k === 0) { await p.click('[data-ab-luz]'); await p.waitForTimeout(350); await varrer(p, `abertura, luz acesa (${nome})`); } if (k < 3) await p.click('#kf-ab-prox'); }
     await p.click('#kf-ab-ex'); await p.locator('.blocos').waitFor(); await p.waitForTimeout(400);
     await varrer(p, `Orçamento (${nome})`);
-    for (const painel of ['items', 'val', 'cond', 'notes']) { await p.click(`details[data-panel$=":${painel}"] > summary`); await p.waitForTimeout(250); }
+    for (const painel of ['items', 'val', 'pag', 'cond', 'gar', 'notes']) { await p.click(`details[data-panel$=":${painel}"] > summary`); await p.waitForTimeout(250); }
     await varrer(p, `Orçamento, seções abertas (${nome})`);
     await p.click('[data-cli]'); await p.locator('.kf-dlg #q-name').waitFor(); await p.waitForTimeout(250);
     await varrer(p, `Cliente e serviço (${nome})`); await p.click('.kf-dlg [data-kf-fechar]');

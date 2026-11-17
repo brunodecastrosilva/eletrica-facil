@@ -68,17 +68,29 @@ function priceSheet(p) {
   // mesmo padrão do estoque e das ferramentas: 1. categoria, 2. o item
   const cats = k => { const o = catOrder(k); return [...new Set(prices.filter(x => x.kind === k).map(x => x.cat || 'Outros'))].sort((a, b) => { const ia = o.indexOf(a), ib = o.indexOf(b); return (ia < 0 ? 98 : ia) - (ib < 0 ? 98 : ib) || a.localeCompare(b, 'pt-BR'); }); };
   const catOpts = k => `${isNew ? '<option value="" hidden>Escolha a categoria</option>' : ''}${cats(k).map(c => `<option ${c === it.cat ? 'selected' : ''}>${esc(c)}</option>`).join('')}<option value="__nova">Nova categoria…</option>`;
-  openSheet({ title: isNew ? 'Novo preço' : 'Alterar preço', body: `
-      <div class="seg" role="group" aria-label="Tipo"><button data-ik="svc" aria-pressed="${it.kind === 'svc'}">Mão de obra</button><button data-ik="mat" aria-pressed="${it.kind === 'mat'}">Material</button></div>
-      <div class="field"><label for="pp-cat-sel">${isNew ? '1. Categoria' : 'Categoria'}</label><select id="pp-cat-sel">${catOpts(it.kind)}</select>
-        <input id="pp-cat" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>
-      <div class="st-resto" id="pp-resto" ${isNew ? 'hidden' : ''}>
-      <div class="field"><label for="pp-name">${isNew ? '2. Descrição' : 'Descrição'}</label><input id="pp-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Instalação de chuveiro elétrico"></div>
-      <div class="grid2">
+  // preço novo: 1. categoria, 2. item (Código, Art. 71). Preço que já existe: abre no que mais se muda, o valor
+  const pTipo = `      <div class="seg" role="group" aria-label="Tipo"><button data-ik="svc" aria-pressed="${it.kind === 'svc'}">Mão de obra</button><button data-ik="mat" aria-pressed="${it.kind === 'mat'}">Material</button></div>`;
+  const pCat = `      <div class="field"><label for="pp-cat-sel">${isNew ? '1. Categoria' : 'Categoria'}</label><select id="pp-cat-sel">${catOpts(it.kind)}</select>
+        <input id="pp-cat" type="text" placeholder="Nome da nova categoria" aria-label="Nome da nova categoria" autocomplete="off" hidden></div>`;
+  const pNome = `      <div class="field"><label for="pp-name">${isNew ? '2. Descrição' : 'Descrição'}</label><input id="pp-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Instalação de chuveiro elétrico"></div>`;
+  const pValor = `      <div class="grid2 pp-valor">
         <div class="field"><label for="pp-price">Preço</label><input id="pp-price" type="text" inputmode="numeric" data-money placeholder="R$ 0,00" value="${it.price ? BRL(it.price) : ''}"></div>
         <div class="field"><label for="pp-unit">Cobrado por</label><select id="pp-unit">${UNITS.map(([u, l]) => `<option value="${esc(u)}" ${u === it.unit ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      </div>`;
+  openSheet({ title: isNew ? 'Novo preço' : 'Alterar preço', body: isNew ? `
+${pTipo}
+${pCat}
+      <div class="st-resto" id="pp-resto" hidden>
+${pNome}
+${pValor}
+      </div>` + `
+` : `
+      <div class="st-resto" id="pp-resto">
+${pValor}
+${pNome}
       </div>
-      </div>
+${pCat}
+${pTipo}` + `
       <div id="pp-comp" ${it.kind === 'svc' ? '' : 'hidden'}>${compEditorHTML(it)}</div>
       ${p && inStock(p) ? `<p class="hint">No estoque: ${fmtQty(p.stock)} ${unitTxt(p.stock, p.unit)}${p.cost ? `, custo ${BRL(p.cost)}` : ''}. O preço daqui é o repasse ao cliente. Altere a quantidade e o custo em Gestão.</p>` : ''}`,
     foot: isNew ? `<button class="btn ghost" data-cancel>Cancelar</button><button class="btn primary" data-save>${I.plus}Adicionar</button>` : `<button class="btn danger-text" data-del>${I.trash}Excluir</button><button class="btn primary" data-save>Salvar</button>`,

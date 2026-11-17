@@ -38,6 +38,12 @@ const GUIA = [
       await m.tocar(await mais(), { depois: 380 }); await m.tocar(await mais(), { depois: 380 }); await m.tocar(await mais(), { depois: 500 });
       await m.apontar('#mt-pe', 1400);
     } },
+  { t: 'Busque na tabela', d: 'A busca acha serviço e material juntos. Escreva um pedaço do nome e toque no +.',
+    acao: async m => {
+      await gNaTabela(m); await m.digitar('#mt-q', 'chuveiro'); await m.apontar('#mt-lista', 1300);
+      await m.tocar($('.mt-mais', await gTexto(m, '.mt-row', 'Instalação de chuveiro elétrico')), { depois: 600 });
+      const b = $('#mt-q'); if (b) { b.value = ''; b.dispatchEvent(new Event('input', { bubbles: true })); } await m.espera(300);
+    } },
   { t: 'Veja o orçamento', d: 'O total fica no pé. Toque em Ver orçamento: o nome do cliente fica para a proposta.',
     acao: async m => { await gNaTabela(m); await m.tocar('[data-ver]', { depois: 900 }); } },
   { t: 'Material sugerido', d: 'O app sugere o material de cada serviço. Aceite, mude a quantidade ou deixe para depois.', se: () => true,
@@ -55,8 +61,10 @@ const GUIA = [
   { t: 'Adicionais, desconto e impostos', d: 'Urgência, noite e fim de semana somam na mão de obra. Desconto e impostos, você escolhe em cada orçamento.',
     acao: async m => { await gNaFolha(m); await gAbrir(m, 'val'); await m.tocar('[data-x="urgent"]', { depois: 700 }); await m.apontar('[data-x="urgent"]', 1200); await m.tocar('[data-x="urgent"]', { depois: 500 });
       await m.digitar('#q-disc', '2000'); await m.tocar('[data-tx="fora"]', { depois: 800 }); await m.apontar('[data-tx="fora"]', 1200); await m.tocar('[data-tx="sem"]', { depois: 500 }); await gRecolher(m, 'val'); } },
-  { t: 'Pagamento, prazo e garantia', d: 'Escolha a forma de pagamento e toque no dia de início. O app marca os dias do prazo.',
-    acao: async m => { await gNaFolha(m); await gAbrir(m, 'cond'); await m.tocar('[data-pm="avista"]', { depois: 700 }); await m.tocar('[data-pm="entrada"]', { depois: 700 });
+  { t: 'Pagamento', d: 'À vista, com entrada, no cartão ou a combinar. O resumo mostra quanto e quando o cliente paga.',
+    acao: async m => { await gNaFolha(m); await gAbrir(m, 'pag'); await m.tocar('[data-pm="avista"]', { depois: 700 }); await m.tocar('[data-pm="entrada"]', { depois: 700 }); await m.apontar('#pay-sum', 1300, { opcional: true }); await gRecolher(m, 'pag'); } },
+  { t: 'Prazo e datas', d: 'Toque no dia de início. O app marca os dias do prazo, pulando fins de semana e feriados.',
+    acao: async m => { await gNaFolha(m); await gAbrir(m, 'cond');
       const dia = $$('[data-cal]:not([disabled])').filter(gVisivel)[3]; if (dia) { await m.tocar(dia, { depois: 700 }); await m.apontar('#cal', 1400, { opcional: true }); } await gRecolher(m, 'cond'); } },
   { t: 'Observações', d: 'Diga o que fica fora do orçamento. Os textos prontos entram com um toque.',
     acao: async m => { await gNaFolha(m); await gAbrir(m, 'notes'); await m.tocar('[data-note="0"]', { depois: 700 }); await m.apontar('#q-notes', 1300); await gRecolher(m, 'notes'); } },
@@ -69,6 +77,13 @@ const GUIA = [
     acao: async m => { await gNaFolha(m); await m.apontar('.banner [data-st="aprovado"]', 1200); await m.tocar('.banner [data-st="aprovado"]', { depois: 800 }); const ok = await m.acha('.kf-dlg [data-ok]', { opcional: true, prazo: 1500 }); if (ok) { await m.tocar(ok, { depois: 800 }); await m.some('.kf-dlg'); } await m.apontar('.banner', 1500, { opcional: true }); } },
   { t: 'Conclua o serviço', d: 'Terminou? Marque como concluído. O orçamento vira relatório, com o que foi feito e os testes.',
     acao: async m => { await gNaFolha(m); await m.tocar('.banner [data-st="concluido"]', { depois: 900 }); const no = await m.acha('.kf-dlg [data-no], .kf-dlg [data-ok]', { opcional: true, prazo: 1500 }); if (no) { await m.tocar(no, { depois: 800 }); await m.some('.kf-dlg'); } await m.apontar('.blocos', 1600); } },
+  { t: 'O relatório técnico', d: 'No relatório, conte o que encontrou e o que fez. Um toque preenche com os serviços lançados.',
+    acao: async m => { await gNaFolha(m); const t = await m.acha(gPainel('tech'), { opcional: true, prazo: 1500 }); if (!t) return;
+      await gAbrir(m, 'tech'); await gAbrir(m, 'work'); const b = await m.acha('[data-work-items]', { opcional: true, prazo: 1200 }); if (b) { await m.tocar(b, { depois: 700 }); await m.apontar('#q-work', 1400, { opcional: true }); }
+      await gRecolher(m, 'tech'); } },
+  { t: 'Registre o que recebeu', d: 'Recebeu a entrada ou o total? Registre o valor: o app mostra o que falta receber.',
+    acao: async m => { await gNaFolha(m); const b = await m.acha('[data-pago]', { opcional: true, prazo: 1500 }); if (!b) return;
+      await m.tocar(b, { depois: 800 }); await m.apontar('.kf-dlg #pg-v', 1300, { opcional: true }); await m.tocar('.kf-dlg [data-ok]', { depois: 800 }); await m.some('.kf-dlg'); await m.apontar('#q-pagos', 1400, { opcional: true }); } },
   { t: 'Recibo', d: 'No menu do orçamento, gere o recibo do que recebeu, em PDF.',
     acao: async m => { await gNaFolha(m); await m.tocar('[data-menu]', { depois: 700 }); await m.tocar('.kf-dlg [data-o="receipt"]', { depois: 900 }); await m.apontar('.kf-dlg .kf-dlg-corpo', 1600); await m.fechar(); } },
   { t: 'Seus orçamentos', d: 'Em Orçamentos, tudo fica separado por situação. Filtre ou busque pelo cliente ou pelo serviço.',
