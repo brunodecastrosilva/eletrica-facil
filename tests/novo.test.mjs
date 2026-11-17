@@ -1,4 +1,4 @@
-/* Elétrica Fácil 1.0 · testes da parte nova: Início (prancheta), navegação, folha do orçamento, conquistas (lâmpadas em 3D), abertura e guia.
+/* Elétrica Fácil 2.0 · testes das telas: Início, tabela na mão, navegação, conquistas (lâmpadas em 3D), abertura, raio e guia.
    Rodam num Chromium, sem internet (comum/testes/ambiente.mjs). */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -11,66 +11,144 @@ const esperar = async (cond, ms = 8000) => { const fim = Date.now() + ms; while 
 const SEM_CONQUISTAS = `try { localStorage.setItem('eletricafacil.jogo', JSON.stringify({ flags: {}, vistas: {}, off: true, pronto: true })); } catch {}`;
 const vermelho = (p, sel) => p.locator(sel).evaluate(b => getComputedStyle(b).backgroundColor);
 
-test('Início: a prancheta começa o orçamento, lembra o cliente e mostra o rascunho em andamento', async () => {
+test('Início: Novo orçamento abre na tabela, sem pedir o cliente, e o rascunho em andamento fica à mão', async () => {
   const a = await aparelho(amb, { antes: SEM_CONQUISTAS });
   const p = a.page;
-  await p.locator('.prancheta #novo-nome').waitFor();
-  assert.equal(await p.evaluate(() => document.activeElement && document.activeElement.id), '', 'nenhuma caixa de texto começa selecionada');
-  assert.equal(await p.textContent('.pr-num'), 'Orçamento nº 0001');
-  await p.fill('#novo-nome', 'Mariana Souza'); await p.click('.pr-btn');
-  await p.locator('.fo-orc').waitFor();
-  assert.deepEqual(await p.evaluate(() => [route().name, quotes[0].client.name, quotes[0].num, quotes[0].status]), ['quote', 'Mariana Souza', 1, 'rascunho']);
-  assert.equal(await p.evaluate(() => document.activeElement && document.activeElement.matches('input, textarea')), false, 'a folha abre sem campo em foco');
-  await p.evaluate(() => { const q = quotes[0]; q.client.phone = '11912345678'; q.items.push({ id: uid(), kind: 'svc', name: 'Troca de tomada', unit: 'un', qty: 2, price: 5000, room: '' }); touch(q); go('/', true); });
-  // o rascunho em andamento aparece no Início, com Continuar e Excluir (vermelho, com Desfazer)
+  await p.locator('.arranque [data-novo]').waitFor();
+  assert.equal(await p.locator('.inicio input').count(), 0, 'o Início não pede nada antes de começar (Código, Art. 64-D)');
+  await p.click('[data-novo]');
+  await p.locator('#mt-lista .mt-row').first().waitFor();
+  assert.deepEqual(await p.evaluate(() => [route().name, quotes[0].client.name, quotes[0].num, quotes[0].status]), ['montar', '', 1, 'rascunho']);
+  assert.equal(await p.evaluate(() => document.activeElement && document.activeElement.matches('input, textarea')), false, 'a tabela abre sem campo em foco');
+  // orçamento que ficou vazio some ao sair
+  await p.click('[data-back]');
+  assert.ok(await esperar(() => p.evaluate(() => route().name === 'home' && quotes.length === 0)), 'o orçamento vazio é descartado');
+  // o rascunho em andamento aparece no Início, pelo serviço (ainda sem cliente), com Continuar e Excluir (vermelho, com Desfazer)
+  await p.evaluate(() => { startQuote(null, false); const q = quotes[0]; q.items.push({ id: uid(), kind: 'svc', name: 'Troca de tomada', unit: 'un', qty: 2, price: 5000, room: '' }); touch(q); go('/', true); });
   await p.locator('.andamento').waitFor();
-  assert.ok((await p.textContent('.andamento')).includes('Mariana Souza'));
+  assert.ok((await p.textContent('.andamento .and-nome')).includes('Troca de tomada'));
   assert.equal(await vermelho(p, '.andamento [data-del-draft]'), 'rgb(179, 54, 43)', 'Excluir é vermelho e cheio');
   await p.click('.andamento [data-del-draft]');
   assert.ok(await esperar(() => p.evaluate(() => quotes.length === 0)));
   await p.click('.kf-toast button');
   assert.ok(await esperar(() => p.evaluate(() => quotes.length === 1)), 'Desfazer devolve o rascunho');
-  // cliente conhecido: o nome digitado traz o telefone do orçamento anterior
-  await p.fill('#novo-nome', 'mariana souza'); await p.click('.pr-btn');
-  await p.locator('.fo-orc').waitFor();
-  assert.deepEqual(await p.evaluate(() => { const q = getQ(route().id); return [q.client.name, q.client.phone, q.num]; }), ['Mariana Souza', '11912345678', 2]);
-  // serviço já feito: nasce como relatório
-  await p.evaluate(() => go('/', true)); await p.locator('[data-relatorio]').click();
+  // serviço já feito: nasce como relatório, na tela do documento (o bloco técnico vem antes dos itens)
+  await p.locator('[data-relatorio]').click();
   assert.ok(await esperar(() => p.evaluate(() => route().name === 'quote' && getQ(route().id).status === 'concluido')));
-  // o mês é uma lista vertical, rótulo à esquerda e valor à direita (Código, Arts. 65, V, e 67)
-  await p.evaluate(() => go('/', true)); await p.locator('.mes').waitFor();
-  const xs = await p.locator('.mes-lin').evaluateAll(L => L.map(e => Math.round(e.getBoundingClientRect().left)));
-  assert.equal(new Set(xs).size, 1, 'as linhas do mês ficam uma embaixo da outra');
+  // o que pede atenção: o enviado há dias aparece com o serviço e o valor
+  await p.evaluate(() => { const q = quotes.find(x => x.status === 'rascunho'); setStatus(q, 'enviado'); q.sentAt = Date.now() - 4 * 864e5; saveQuotes(); go('/', true); });
+  await p.locator('.pend-lin').first().waitFor();
+  assert.match(await p.textContent('.pend-lin'), /Vale cobrar a resposta[\s\S]*Troca de tomada[\s\S]*100,00/);
+  // o mês é um visor com lista vertical, rótulo à esquerda e valor à direita (Código, Arts. 65, V, e 67)
+  const xs = await p.locator('.vs-lin').evaluateAll(L => L.map(e => Math.round(e.getBoundingClientRect().left)));
+  assert.equal(xs.length, 4); assert.equal(new Set(xs).size, 1, 'as linhas do mês ficam uma embaixo da outra');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
 
-test('navegação: cinco posições com o orçamento novo no centro, Mais é uma tela e a folha tem Excluir em vermelho', async () => {
+test('tabela na mão: cada toque soma um, a busca acha serviço e material, e o cliente só é pedido na proposta', async () => {
+  const a = await aparelho(amb, { antes: SEM_CONQUISTAS });
+  const p = a.page;
+  await p.locator('[data-novo]').click();
+  await p.locator('#mt-lista .mt-row').first().waitFor();
+  // sem itens, Ver orçamento explica o que fazer e não sai da tela
+  await p.click('[data-ver]');
+  assert.equal(await p.evaluate(() => route().name), 'montar');
+  // três toques, três unidades; o total do pé acompanha
+  const nome = await p.locator('.mt-row .mt-nome').first().textContent();
+  const preco = await p.evaluate(n => prices.find(x => x.name === n).price, nome);
+  for (let k = 0; k < 3; k++) await p.locator('.mt-row .mt-mais').first().click();
+  assert.deepEqual(await p.evaluate(() => { const q = getQ(route().id); return [q.items.length, q.items[0].qty]; }), [1, 3]);
+  assert.equal((await p.textContent('#mt-pe b')).replace(/\s/g, ' '), (await p.evaluate(v => BRL(v), preco * 3)).replace(/\s/g, ' '));
+  assert.equal(await p.locator('.mt-row.on').count(), 1, 'a linha somada fica marcada');
+  // − tira um; no zero, o item sai do orçamento
+  for (let k = 0; k < 3; k++) await p.locator('.mt-row [data-menos]').first().click();
+  assert.equal(await p.evaluate(() => getQ(route().id).items.length), 0);
+  await p.locator('.mt-row .mt-mais').first().click();
+  // a busca acha mão de obra e material juntos, e esconde os filtros
+  await p.fill('#mt-q', 'tomada');
+  assert.equal(await p.locator('#mt-filtros').isHidden(), true);
+  const tipos = await p.evaluate(() => [...document.querySelectorAll('#mt-lista .mt-row')].map(r => prices.find(x => x.id === r.dataset.pid).kind));
+  assert.ok(tipos.includes('svc') && tipos.includes('mat'), 'a busca traz serviço e material');
+  await p.fill('#mt-q', '');
+  // material: o segmento troca a tabela
+  await p.click('[data-kind="mat"]');
+  assert.ok(await p.evaluate(() => [...document.querySelectorAll('#mt-lista .mt-row')].every(r => prices.find(x => x.id === r.dataset.pid).kind === 'mat')));
+  await p.click('[data-kind="svc"]');
+  assert.ok(await semRolagemLateral(p), 'a tira de categorias rola dentro dela, não a página');
+  // Ver orçamento: os itens chegam abertos; o cliente aparece como linha, sem ser pedido
+  await p.click('[data-ver]');
+  await p.locator('.blocos').waitFor();
+  assert.equal(await p.evaluate(() => route().name), 'quote');
+  if (await p.locator('.kf-dlg').count()) await p.click('.kf-dlg [data-cancel]');
+  assert.match(await p.textContent('[data-cli]'), /Você preenche ao gerar a proposta/);
+  assert.equal(await p.evaluate(() => document.querySelector(`details[data-panel$=":items"]`).open), true);
+  assert.equal(await p.locator('.resumo #q-name').count(), 0, 'a tela do orçamento não tem campo de cliente');
+  // a proposta pede o nome; sem ele, aponta o campo (sem dar o foco) e não sai
+  await p.click('[data-preview]');
+  await p.locator('.kf-dlg #q-name').waitFor();
+  assert.equal(await p.evaluate(() => document.activeElement && document.activeElement.matches('input, textarea')), false, 'nenhuma caixa de texto começa selecionada');
+  await p.click('.kf-dlg [data-ok]');
+  assert.deepEqual(await p.evaluate(() => [route().name, document.querySelector('#q-name').getAttribute('aria-invalid'), document.activeElement.id === 'q-name']), ['quote', 'true', false]);
+  await p.fill('#q-name', 'Mariana Souza'); await p.fill('#q-phone', '11912345678');
+  await p.click('.kf-dlg [data-ok]');
+  await p.locator('.paper').waitFor();
+  assert.deepEqual(await p.evaluate(() => { const q = getQ(route().id); return [route().name, q.client.name, q.client.phone.replace(/\D/g, '')]; }), ['preview', 'Mariana Souza', '11912345678']);
+  assert.ok((await p.textContent('.paper')).includes('Mariana Souza'));
+  // com o nome dito, Ver proposta vai direto; a linha do cliente mostra o nome e abre a mesma janela para mudar
+  await p.click('[data-back]'); await p.locator('.blocos').waitFor();
+  assert.match(await p.textContent('[data-cli]'), /Mariana Souza/);
+  await p.click('[data-cli]'); await p.locator('.kf-dlg #q-title').waitFor();
+  await p.fill('#q-title', 'Tomadas da sala'); await p.click('.kf-dlg [data-ok]');
+  assert.ok(await esperar(() => p.evaluate(() => getQ(route().id).title === 'Tomadas da sala' && !document.querySelector('.kf-dlg'))));
+  // cliente conhecido: no orçamento seguinte, o nome traz o telefone
+  await p.evaluate(() => { startQuote(null, false); const q = quotes[0]; q.items.push({ id: uid(), kind: 'svc', name: 'Troca de tomada', unit: 'un', qty: 1, price: 5000, room: '' }); touch(q); go('/q/' + q.id, true); });
+  await p.locator('.blocos').waitFor(); await p.click('[data-preview]'); await p.locator('.kf-dlg #q-name').waitFor();
+  await p.click('#q-name'); await p.keyboard.type('mari'); await p.locator('.kf-sug-item, [role="option"]').first().click();
+  assert.deepEqual(await p.evaluate(() => { const q = getQ(route().id); return [q.client.name, q.client.phone.replace(/\D/g, '')]; }), ['Mariana Souza', '11912345678']);
+  // abrir a proposta pelo endereço, sem cliente: enviar pede o nome
+  await p.evaluate(() => { const q = getQ(route().id); q.client.name = ''; touch(q); KitFacil.dialogo.fechar(true); go('/q/' + q.id + '/proposta', true); });
+  await p.locator('[data-pdf]').click();
+  await p.locator('.kf-dlg #q-name').waitFor();
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('navegação: cinco posições com o orçamento novo no centro e a Tabela na barra; Mais é uma tela', async () => {
   for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 1440, height: 900 }]) {
     const a = await aparelho(amb, { viewport });
     const p = a.page, largo = viewport.width >= 1024, pre = largo ? '#kf-trilho-' : '#kf-nav-';
-    await p.locator('.prancheta').waitFor();
-    if (!largo) assert.deepEqual(await p.locator('#nav .kf-nav-it').evaluateAll(L => L.map(b => b.dataset.kfIr)), ['inicio', 'orcamentos', 'novo', 'conquistas', 'mais']);
+    await p.locator('.arranque').waitFor();
+    if (!largo) assert.deepEqual(await p.locator('#nav .kf-nav-it').evaluateAll(L => L.map(b => b.dataset.kfIr)), ['inicio', 'orcamentos', 'novo', 'precos', 'mais']);
+    assert.ok(await semRolagemLateral(p), `rolagem lateral no Início (${viewport.width})`);
     await p.click(pre + 'orcamentos'); await p.locator('.kf-vazio').waitFor();
     assert.equal(await p.textContent('.kf-titulo'), 'Orçamentos');
+    // o botão do centro pergunta se é antes ou depois do serviço (Regras do app, Art. 5º)
     await p.click(pre + 'novo');
     await p.locator('.kf-dlg [data-kind="quote"]').waitFor();
     assert.equal(await p.evaluate(() => document.activeElement && document.activeElement.matches('input, textarea')), false);
-    await p.click('.kf-dlg [data-kind="quote"]'); await p.locator('.fo-orc').waitFor();
-    assert.ok(await semRolagemLateral(p), `rolagem lateral na folha (${viewport.width})`);
+    await p.click('.kf-dlg [data-kind="quote"]'); await p.locator('#mt-lista .mt-row').first().waitFor();
+    assert.ok(await semRolagemLateral(p), `rolagem lateral na tabela (${viewport.width})`);
+    assert.equal(await p.locator('#nav').isHidden(), true, 'no orçamento, a barra de baixo dá lugar ao total');
+    await p.locator('.mt-row .mt-mais').first().click(); await p.click('[data-ver]'); await p.locator('.blocos').waitFor();
+    if (await p.locator('.kf-dlg').count()) await p.click('.kf-dlg [data-cancel]');
+    assert.ok(await semRolagemLateral(p), `rolagem lateral no orçamento (${viewport.width})`);
     assert.equal(await vermelho(p, '[data-excluir]'), 'rgb(179, 54, 43)');
-    assert.equal(await p.locator('#nav').isHidden(), true, 'na folha, a barra de baixo dá lugar ao total e a Ver proposta');
-    await p.evaluate(() => { const q = getQ(route().id); q.client.name = 'Cliente Nav'; touch(q); }); await p.click('[data-excluir]'); await p.click('.kf-dlg [data-kf-ok]');
+    await p.click('[data-excluir]'); await p.click('.kf-dlg [data-kf-ok]');
     assert.ok(await esperar(() => p.evaluate(() => route().name === 'lista' && quotes.length === 0)), 'excluir volta para a lista');
+    await p.click(pre + 'precos'); await p.locator('#pr-list .tb-row').first().waitFor();
+    assert.equal(await p.textContent('.kf-titulo'), 'Tabela');
+    assert.ok(await semRolagemLateral(p), `rolagem lateral na Tabela (${viewport.width})`);
     await p.click(pre + 'mais'); await p.locator('.kf-mais').waitFor();
-    assert.deepEqual(await p.locator('.kf-mais .kf-mais-tx b').allTextContents(), ['Preços', 'Gestão', 'Ver o guia', 'Abrir o orçamento de exemplo', 'Ajustes']);
+    assert.deepEqual(await p.locator('.kf-mais .kf-mais-tx b').allTextContents(), ['Gestão', 'Conquistas', 'Ver o guia', 'Abrir o orçamento de exemplo', 'Ajustes']);
     await p.click('.kf-mais [data-kf-ir="gestao"]'); await p.locator('#g-body').waitFor();
     assert.equal(await p.locator('.kf-criar').count(), 0, 'sem botão flutuante: cada lista tem a sua linha de adicionar');
     assert.equal(await p.locator('.kf-adicionar[data-g-new]').count(), 1);
+    // o alto da Gestão é um filtro com as contagens, não quadrinhos de dados lado a lado (Código, Art. 67)
+    assert.equal(await p.locator('.g-topo .seg [data-mf]').count(), 3);
     assert.ok(await semRolagemLateral(p));
-    // com as conquistas desligadas, Preços ocupa o lugar delas na barra e sai da tela Mais
+    // com as conquistas desligadas, elas saem da tela Mais e não abrem
     await p.evaluate(() => { jogo.off = true; jogoSalvar(); go('/mais', true); });
-    if (!largo) assert.deepEqual(await p.locator('#nav .kf-nav-it').evaluateAll(L => L.map(b => b.dataset.kfIr)), ['inicio', 'orcamentos', 'novo', 'precos', 'mais']);
     assert.deepEqual(await p.locator('.kf-mais .kf-mais-tx b').allTextContents(), ['Gestão', 'Ver o guia', 'Abrir o orçamento de exemplo', 'Ajustes']);
     await p.evaluate(() => go('/conquistas', true));
     assert.equal(await p.evaluate(() => route().name), 'mais', 'Conquistas desligadas não abrem');
@@ -120,7 +198,8 @@ test('conquistas: o primeiro orçamento acende uma lâmpada em 3D, o varal mostr
   // desligar: sai da barra e do Início; nada é apagado
   await p.evaluate(() => KitFacil.ajustes.ir('conquistas')); await p.locator('#aj-jogo').waitFor({ state: 'attached' });
   await p.evaluate(() => document.querySelector('#aj-jogo').click());
-  assert.deepEqual(await p.evaluate(() => [jogoLigado(), !!jogo.vistas.primeiro, !!document.querySelector('#kf-nav-conquistas')]), [false, true, false]);
+  await p.evaluate(() => go('/mais', true)); await p.locator('.kf-mais').waitFor();
+  assert.deepEqual(await p.evaluate(() => [jogoLigado(), !!jogo.vistas.primeiro, !!document.querySelector('.kf-mais [data-kf-ir="conquistas"]')]), [false, true, false]);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
@@ -128,7 +207,7 @@ test('conquistas: o primeiro orçamento acende uma lâmpada em 3D, o varal mostr
 test('lâmpada 3D: a malha é uma só para todas, com o vidro por último, e cabe num índice de 16 bits', async () => {
   const a = await aparelho(amb);
   const p = a.page;
-  await p.locator('.prancheta').waitFor();
+  await p.locator('.arranque').waitFor();
   const r = await p.evaluate(() => CONQUISTAS.map(c => { const o = document.createElement('div'); o.dataset.acesa = '1'; o._icone = LP_IC[c.ic]; const { M } = Lampada._malha(o); return [c.id, M.p.length / 3, M.i.length, M.vidro, M.p.some(v => !isFinite(v)), M.n.some(v => !isFinite(v))]; }));
   for (const [id, verts, idx, vidro, pRuim, nRuim] of r) {
     assert.ok(verts > 3000 && verts < 65536, `${id}: ${verts} pontos`);
@@ -176,9 +255,9 @@ test('abertura: quatro telas com a cara do app (interruptor, planta, caminho e a
   assert.equal(await p.textContent('.kf-dlg .lp-nome'), 'Primeira luz');
   assert.deepEqual(await p.evaluate(() => [settings.name, KitFacil.abertura.vista(), JSON.parse(localStorage.getItem('eletricafacil.settings')).name]), ['Carlos Pereira', true, 'Carlos Pereira']);
   await p.click('#lp-ok');
-  await p.reload(); await p.locator('.prancheta').waitFor(); await p.waitForTimeout(600);
+  await p.reload(); await p.locator('.arranque').waitFor(); await p.waitForTimeout(600);
   assert.equal(await p.locator('.kf-abertura').count(), 0, 'a abertura não volta sozinha');
-  assert.ok((await p.textContent('.saud')).includes('Carlos'));
+  assert.ok((await p.textContent('.arranque .saud')).includes('Carlos'));
   // rever, pelos Ajustes
   await p.evaluate(() => KitFacil.ajustes.ir('conquistas')); await p.locator('#aj-abertura').waitFor({ state: 'attached' });
   await p.evaluate(() => document.querySelector('#aj-abertura').click());
@@ -196,7 +275,7 @@ test('abertura para quem vem de outra versão: a janela de Novidades não abre p
   await p.waitForTimeout(33000);
   assert.deepEqual(await p.evaluate(() => [!!document.querySelector('.kf-abertura'), !!document.querySelector('.kf-dlg')]), [true, false]);
   await p.click('#kf-ab-pular');
-  await p.locator('.prancheta').waitFor(); await p.waitForTimeout(2500);
+  await p.locator('.arranque').waitFor(); await p.waitForTimeout(2500);
   assert.equal(await p.locator('.kf-dlg').count(), 0, 'nem depois de sair dela');
   assert.deepEqual(a.erros, []);
   await a.fechar();
@@ -205,7 +284,7 @@ test('abertura para quem vem de outra versão: a janela de Novidades não abre p
 test('raio de surpresa: cai e some sem tocar em nada, respeita o movimento reduzido e dá para desligar', async () => {
   const a = await aparelho(amb);
   const p = a.page;
-  await p.locator('.prancheta').waitFor();
+  await p.locator('.arranque').waitFor();
   // um raio: tronco e galhos, dois clarões no máximo, e some em um segundo
   await p.evaluate(() => { Raio.cair({ forcar: true }); });
   await p.locator('#raio-cena .raio-svg').waitFor();
@@ -225,7 +304,7 @@ test('raio de surpresa: cai e some sem tocar em nada, respeita o movimento reduz
   await a.fechar();
   // movimento reduzido: nem raio, nem tempestade
   const b = await aparelho(amb); const q = b.page;
-  await q.emulateMedia({ reducedMotion: 'reduce' }); await q.locator('.prancheta').waitFor();
+  await q.emulateMedia({ reducedMotion: 'reduce' }); await q.locator('.arranque').waitFor();
   assert.deepEqual(await q.evaluate(async () => [await Raio.cair({ forcar: true }), await Raio.tempestade({ forcar: true }), document.querySelectorAll('#raio-cena > *').length]), [false, false, 0]);
   await b.fechar();
 });
@@ -233,7 +312,7 @@ test('raio de surpresa: cai e some sem tocar em nada, respeita o movimento reduz
 test('lâmpada pisca mais forte com um toque no fundo, e o varal balança com o dedo e com o celular', async () => {
   const a = await aparelho(amb);
   const p = a.page;
-  await p.locator('.prancheta').waitFor();
+  await p.locator('.arranque').waitFor();
   await p.evaluate(() => { settings.pix = 'a@b.co'; saveSettings(); jogoConferir({ silencioso: true }); go('/conquistas', true); });
   await p.locator('.varal.varal-vivo').waitFor();
   // passar o dedo pelo varal empurra as lâmpadas
@@ -273,7 +352,7 @@ test('lâmpada pisca mais forte com um toque no fundo, e o varal balança com o 
 test('guia: um só, do começo ao fim, sem avisos e sem gravar nada', async () => {
   const a = await aparelho(amb, { antes: () => { window.__avisos = []; const w = console.warn; console.warn = (...x) => { window.__avisos.push(x.map(String).join(' ')); w.apply(console, x); }; } });
   const p = a.page;
-  await p.locator('.prancheta').waitFor();
+  await p.locator('.arranque').waitFor();
   await p.evaluate(() => { const q = blankQuote(); q.num = ++settings.seq; q.client.name = 'Cliente Real'; q.items = [{ id: uid(), kind: 'svc', name: 'x', unit: 'un', qty: 1, price: 100, room: '' }]; quotes.push(q); settings.name = 'Eu Mesmo'; saveSettings(); saveQuotes(); jogoConferir({ silencioso: true }); render(); });
   const foto = () => p.evaluate(() => JSON.stringify([localStorage.getItem('eletricafacil.quotes'), localStorage.getItem('eletricafacil.settings'), localStorage.getItem('eletricafacil.prices'), localStorage.getItem('eletricafacil.tools')]));
   const antes = await foto();

@@ -3,8 +3,8 @@
 // Bibliotecas (QR code, PDF, fontes) têm versão fixa: usa a guardada.
 // O cache leva a versão do app (package.json); cada app só apaga as próprias cópias antigas,
 // porque os apps do projeto dividem o mesmo endereço (github.io).
-const CACHE = 'eletrica-facil-1.1.1';
-const APP = ['./', './index.html', './estilo.css', './motor.js', './orcamento.js', './telas.js', './raio.js', './lampada.js', './jogo.js', './inicio.js', './guia.js', './casca.js', './comum/kit-facil.js', './comum/kit-facil.css', './comum/kit-jogo.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png'];
+const CACHE = 'eletrica-facil-2.0.0';
+const APP = ['./', './index.html', './estilo.css', './motor.js', './orcamento.js', './montar.js', './telas.js', './raio.js', './lampada.js', './jogo.js', './inicio.js', './guia.js', './casca.js', './comum/kit-facil.js', './comum/kit-facil.css', './comum/kit-jogo.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png'];
 const LIBS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', e => {

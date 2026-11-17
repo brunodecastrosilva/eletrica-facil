@@ -1,6 +1,6 @@
 /* Elétrica Fácil · motor: utilidades, tabela de preços, dados, sincronização, contas e janelas. */
 'use strict';
-const VERSAO = '1.1.1';
+const VERSAO = '2.0.0';
 // a marca do alto é o ícone do app, o mesmo da tela de início do celular (um ícone só, como no Conta Fácil)
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
@@ -458,7 +458,14 @@ let checks = LS.get('checks', []);
 const PRIMEIRO_USO = quotes === null && !LS.get('catalog', null);
 // sincronização entre aparelhos: motor comum do Kit Fácil (a regra de junção dos dados fica mais abaixo)
 // o que mudou em cada versão, para quem usa (as mesmas linhas do CHANGELOG: Código, Art. 25, I)
-const NOVIDADES = [{ versao: '1.1.1', itens: [
+const NOVIDADES = [{ versao: '2.0.0', itens: [
+  'Elétrica Fácil refeito para o eletricista: o orçamento agora nasce na sua tabela de preços. Cada toque soma um serviço, e o total sobe no pé da tela.',
+  'O nome do cliente só é pedido na hora de gerar a proposta. Até lá, o orçamento aparece pelo serviço.',
+  'Início novo: Novo orçamento em um toque, o que pede a sua atenção (cobrar resposta, executar, receber) e o mês num visor.',
+  'A Tabela (seus preços) foi para a barra de baixo. Gestão e Conquistas ficam em Mais.',
+  'Tabela e Gestão redesenhadas: categorias numa tira, preços em lista e os filtros da Gestão com as contagens.',
+  'Seus orçamentos, preços, materiais, ferramentas e ajustes continuam os mesmos.',
+] }, { versao: '1.1.1', itens: [
   'Apresentação nova, com a cara do app: acenda a luz no interruptor, conte os pontos na planta da casa e assine embaixo.',
   'Um raio de surpresa: de vez em quando, um raio rasga a tela; mais raro, cai uma tempestade. Dá para desligar em Ajustes, em Conquistas e apresentação.',
   'Lâmpadas: toque na lâmpada (ou no fundo) e ela pisca mais forte.',
@@ -1349,6 +1356,7 @@ function route() {
   const h = decodeURIComponent(location.hash.replace(/^#/, '')) || '/';
   let m;
   if ((m = h.match(/^\/q\/([\w-]+)\/proposta$/))) return { name: 'preview', id: m[1], key: h };
+  if ((m = h.match(/^\/q\/([\w-]+)\/itens$/))) return { name: 'montar', id: m[1], key: h };
   if ((m = h.match(/^\/q\/([\w-]+)$/))) return { name: 'quote', id: m[1], key: h };
   if (h === '/orcamentos') return { name: 'lista', key: h };
   if (h === '/conquistas') return { name: 'conquistas', key: h };

@@ -1,4 +1,4 @@
-/* Elétrica Fácil · telas novas: Início (a prancheta), Orçamentos (a lista) e Mais. */
+/* Elétrica Fácil 2.0 · Início (o arranque do dia), Orçamentos (a lista) e Mais. */
 'use strict';
 /* ---------- cartões e lista de orçamentos ---------- */
 let homeFilter = 'todos', homeQuery = '';
@@ -8,9 +8,9 @@ function quoteCard(q) {
   const when = { rascunho: 'editado ' + rel(q.updatedAt), enviado: 'enviado ' + rel(q.sentAt), aprovado: 'aprovado ' + rel(q.approvedAt), concluido: 'concluído em ' + (q.doneAt ? fmtShort(q.doneAt) : ''), recusado: 'recusado em ' + (q.refusedAt ? fmtShort(q.refusedAt) : '') }[q.status];
   const nudge = q.status === 'enviado' && daysSince(q.sentAt) >= 3 ? ' · <span class="nudge">vale cobrar resposta</span>' : '';
   return `<button class="qcard" data-open="${q.id}">
-    <span class="qc-name">${esc(q.client.name || 'Cliente sem nome')}</span>
-    <span class="qc-total">${BRL(c.total)}</span>
-    <span class="qc-title">${esc(q.title || plural(q.items.length, 'item', 'itens'))}</span>
+    <span class="qc-name">${esc(quoteNome(q))}</span>
+    <span class="qc-total num">${BRL(c.total)}</span>
+    <span class="qc-title">${esc(quoteSub(q))}</span>
     <span class="qc-pill">${pill(q.status)}</span>
     <span class="qc-meta">${q.example ? '<span class="tag-ex">Exemplo</span> · ' : esc(numLabel(q)) + ' · '}${esc(when)}${nudge}</span>
   </button>`;
@@ -18,7 +18,7 @@ function quoteCard(q) {
 // rascunho: arrastar o cartão para a esquerda mostra Excluir (o botão também recebe o foco pelo teclado e pelo leitor de tela)
 const QC_DEL = 104;
 function draftCard(q) {
-  return `<div class="qswipe" data-swipe="${q.id}">${quoteCard(q)}<button class="qc-del" data-del-draft="${q.id}">${I.trash}<span>Excluir</span><span class="sr-only"> rascunho ${esc(q.client.name || q.title || numLabel(q))}</span></button></div>`;
+  return `<div class="qswipe" data-swipe="${q.id}">${quoteCard(q)}<button class="qc-del" data-del-draft="${q.id}">${I.trash}<span>Excluir</span><span class="sr-only"> rascunho ${esc(quoteNome(q))}</span></button></div>`;
 }
 function excluiRascunho(id) {
   const q = getQ(id); if (!q) return;
@@ -73,7 +73,7 @@ function bindSwipe(v) {
 const HOME_G = [['enviado', 'Aguardando resposta'], ['aprovado', 'Aprovados · a executar'], ['rascunho', 'Rascunhos'], ['concluido', 'Concluídos'], ['recusado', 'Recusados']];
 function homeListHTML() {
   const qf = fold(homeQuery);
-  const match = q => !qf || fold([q.client.name, q.title, numLabel(q), q.client.address].join(' ')).includes(qf);
+  const match = q => !qf || fold([q.client.name, q.title, numLabel(q), q.client.address, ...q.items.map(i => i.name)].join(' ')).includes(qf);
   const byDate = (a, b) => (b.updatedAt || 0) - (a.updatedAt || 0);
   if (!quotes.length) return KitFacil.ui.vazio({ titulo: 'Nenhum orçamento ainda', texto: 'Os orçamentos que você fizer aparecem aqui, separados por situação.', acao: '<button type="button" class="kf-btn kf-comecar" data-new>Novo orçamento</button>' });
   const L = quotes.filter(q => (homeFilter === 'todos' || (homeFilter === 'aberto' ? ['rascunho', 'enviado', 'aprovado'].includes(q.status) : q.status === homeFilter)) && match(q)).sort(byDate);
@@ -86,7 +86,7 @@ function homeListHTML() {
     L.forEach(q => { const d = new Date(quando(q)), k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; if (!meses.has(k)) meses.set(k, []); meses.get(k).push(q); });
     grupos = [...meses].sort((a, b) => b[0].localeCompare(a[0])).map(([k, M]) => [`home:${homeFilter}:${k}`, capFirst(new Date(k + '-15T12:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })), M, '']);
   } else grupos = HOME_G.map(([st, l]) => [`home:${st}`, l, L.filter(q => q.status === st), st]).filter(g => g[2].length);
-  return grupos.map(([key, l, M, st]) => panel(key, '', esc(l), qf ? null : resumoDe(M, q => q.client.name || q.title || numLabel(q)), `<div class="qlist">${M.map(q => q.status === 'rascunho' ? draftCard(q) : quoteCard(q)).join('')}</div>`,
+  return grupos.map(([key, l, M, st]) => panel(key, '', esc(l), qf ? null : resumoDe(M, quoteNome), `<div class="qlist">${M.map(q => q.status === 'rascunho' ? draftCard(q) : quoteCard(q)).join('')}</div>`,
     { right: conta(M.length), force: qf ? true : undefined, attrs: st ? ` id="grp-${st}"` : '' })).join('');
 }
 
@@ -97,50 +97,53 @@ const IN = {
   lampada: ic('<path d="M9 17.500h6M10 20.500h4"/><path d="M12 3.500a6 6 0 0 0-3.500 10.900c.600.500 1 1.200 1 2v1.100h5v-1.100c0-.800.400-1.500 1-2A6 6 0 0 0 12 3.500z"/>'),
   livro: ic('<path d="M4 5.500c2.500-1 5-1 8 .500 3-1.500 5.500-1.500 8-.500v13c-2.500-1-5-1-8 .500-3-1.500-5.500-1.500-8-.500z"/><path d="M12 6v13"/>'),
   exemplo: ic('<rect x="5" y="4.500" width="14" height="16" rx="2"/><path d="M9 4.500V3.500h6v1"/><path d="m10.500 10 4 2.500-4 2.500z"/>'),
+  pessoa: ic('<circle cx="12" cy="8" r="3.500"/><path d="M5 20c.600-3.600 3.300-5.500 7-5.500s6.400 1.900 7 5.500"/>'),
 };
 
-/* ---------- começar um orçamento pelo Início ---------- */
-function comecarDoInicio(nome, relatorio) {
-  nome = String(nome || '').trim();
-  const c = nome ? (clientList().find(x => norm(x.name) === norm(nome)) || { name: nome }) : null;
-  startQuote(c, !!relatorio);
-}
+/* ---------- Início: começar, o que pede atenção e o mês ---------- */
 const rascunhoAtual = () => quotes.filter(q => q.status === 'rascunho' && !q.example && !isEmptyQuote(q)).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0] || null;
 const saudacao = () => { const h = new Date().getHours(), s = h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite', n = firstName(settings.name); return n ? `${s}, ${n}.` : `${s}.`; };
-
-/* ---------- Início: a prancheta, o que está em andamento e o mês ---------- */
+// o que pede a atenção de quem abre o app: cobrar resposta, executar o que foi aprovado e receber o que falta
+function pendencias() {
+  const L = [];
+  quotes.filter(q => !q.example).forEach(q => {
+    const c = compute(q);
+    if (q.status === 'enviado') { const d = daysSince(q.sentAt); L.push({ q, peso: d >= 3 ? 3 : 1, rot: d >= 3 ? 'Vale cobrar a resposta' : 'Aguardando resposta', sub: 'enviado ' + rel(q.sentAt), val: BRL(c.total) }); }
+    else if (q.status === 'aprovado') L.push({ q, peso: 2, rot: 'Aprovado, a executar', sub: 'aprovado ' + rel(q.approvedAt), val: BRL(c.total) });
+    else if (q.status === 'concluido' && falta(q, c) > 0) L.push({ q, peso: 2.5, rot: 'Falta receber', sub: 'concluído em ' + (q.doneAt ? fmtShort(q.doneAt) : ''), val: BRL(falta(q, c)) });
+  });
+  return L.sort((a, b) => b.peso - a.peso || (a.q.updatedAt || 0) - (b.q.updatedAt || 0));
+}
 VIEWS.home = {
   html() {
     const s = stats(), r = rascunhoAtual(), reais = quotes.filter(q => !q.example), j = jogoLigado() ? jogoEstado() : null;
-    const needMe = !settings.name && !settings.company;
-    const prox = String((settings.seq || 0) + 1).padStart(4, '0');
-    const lin = (rot, val, attrs = '') => `<${attrs ? 'button type="button"' : 'div'} class="mes-lin" ${attrs}><span>${rot}</span><b class="num">${val}</b>${attrs ? `<span class="lc" aria-hidden="true">${I.chev}</span>` : ''}</${attrs ? 'button' : 'div'}>`;
+    const needMe = !settings.name && !settings.company, P = pendencias();
+    const lin = (rot, val, attrs = '') => `<${attrs ? 'button type="button"' : 'div'} class="vs-lin" ${attrs}><span>${rot}</span><b class="num">${val}</b>${attrs ? `<span class="lc" aria-hidden="true">${I.chev}</span>` : ''}</${attrs ? 'button' : 'div'}>`;
     return `${barraTopo()}<main class="page inicio">
       <h1 class="sr-only">Início</h1>
-      <p class="saud">${esc(saudacao())}</p>
-      <section class="prancheta" aria-labelledby="pr-t">
-        <span class="pr-clipe" aria-hidden="true"><i></i></span>
-        <form class="folha pr-folha" id="novo-f" autocomplete="off">
-          <span class="mono pr-num">Orçamento nº ${prox}</span>
-          <h2 class="pr-t" id="pr-t">Para quem é o serviço?</h2>
-          <label class="sr-only" for="novo-nome">Nome do cliente</label>
-          <input id="novo-nome" class="kf-entrada pr-campo" type="text" autocapitalize="words" maxlength="80" placeholder="Nome do cliente" enterkeyhint="go">
-          <button type="submit" class="kf-btn kf-comecar pr-btn">Começar orçamento</button>
-          <button type="button" class="linkish pr-rel" data-relatorio>O serviço já foi feito? Registrar relatório</button>
-        </form>
+      <section class="arranque" aria-labelledby="ar-t">
+        <span class="ar-fita" aria-hidden="true"></span>
+        <p class="saud">${esc(saudacao())}</p>
+        <h2 class="ar-t" id="ar-t">O que vai orçar hoje?</h2>
+        <p class="ar-sub">Some os serviços na sua tabela. O nome do cliente fica para a proposta.</p>
+        <button type="button" class="kf-btn kf-comecar ar-btn" data-novo>${I.plus}Novo orçamento</button>
+        <button type="button" class="linkish ar-rel" data-relatorio>O serviço já foi feito? Registrar relatório</button>
       </section>
-      ${r ? `<section class="card andamento" aria-label="Orçamento em andamento">
+      ${r ? `<section class="card andamento" aria-label="Rascunho em andamento">
         <span class="and-rot">Rascunho · ${esc(numLabel(r))} · editado ${esc(rel(r.updatedAt))}</span>
-        <b class="and-nome">${esc(r.client.name || r.title || 'Cliente sem nome')}</b>
-        <span class="and-sub">${esc(r.title || plural(r.items.length, 'item', 'itens'))} · ${BRL(compute(r).total)}</span>
+        <b class="and-nome">${esc(quoteNome(r))}</b>
+        <span class="and-sub">${plural(r.items.length, 'item', 'itens')} · <span class="num">${BRL(compute(r).total)}</span></span>
         <button type="button" class="btn primary block" data-open="${r.id}">Continuar o orçamento</button>
         <button type="button" class="kf-btn kf-perigo block" data-del-draft="${r.id}">Excluir este rascunho</button>
       </section>` : ''}
       ${needMe && reais.length ? KitFacil.ui.faixa({ tipo: 'dica', html: '<b>Seu nome ainda não sai na proposta.</b> Preencha seus dados e a chave Pix.', acao: '<button type="button" class="kf-btn kf-sec" data-aj="conta">Preencher meus dados</button>' }) : ''}
-      <section class="card mes" aria-labelledby="mes-t">
-        <div class="mes-topo"><h2 id="mes-t">${esc(s.month)}</h2><span>${s.wonN ? plural(s.wonN, 'orçamento aprovado', 'orçamentos aprovados') : 'aprovado no mês'}</span></div>
-        <div class="mes-num num">${BRL(s.won)}</div>
-        <div class="mes-lins">
+      ${P.length ? `<section class="pend" aria-labelledby="pend-t"><h2 class="sec-t" id="pend-t">Pede a sua atenção</h2>
+        <div class="pend-lista">${P.slice(0, 4).map(x => `<button type="button" class="pend-lin st-${x.q.status}" data-open="${x.q.id}"><span class="pend-tx"><small>${esc(x.rot)} · ${esc(x.sub)}</small><b>${esc(quoteNome(x.q))}</b></span><span class="pend-val num">${x.val}</span><span class="lc" aria-hidden="true">${I.chev}</span></button>`).join('')}</div>
+        ${P.length > 4 ? `<button type="button" class="linkish pend-mais" data-jump="enviado">Ver os ${P.length} em aberto</button>` : ''}</section>` : ''}
+      <section class="visor mes" aria-labelledby="mes-t">
+        <div class="vs-topo"><h2 id="mes-t">${esc(s.month)}</h2><span>${s.wonN ? plural(s.wonN, 'orçamento aprovado', 'orçamentos aprovados') : 'aprovado no mês'}</span></div>
+        <div class="vs-num num">${BRL(s.won)}</div>
+        <div class="vs-lins">
           ${lin('Aguardando resposta', s.waitN, 'data-jump="enviado"')}
           ${lin('Aprovados a executar', s.todoN, 'data-jump="aprovado"')}
           ${lin('A receber', BRL(s.receber))}
@@ -159,10 +162,8 @@ VIEWS.home = {
     </main>`;
   },
   bind(v) {
-    const campo = $('#novo-nome', v);
-    $('#novo-f', v).addEventListener('submit', e => { e.preventDefault(); comecarDoInicio(campo.value, false); });
-    $('[data-relatorio]', v).onclick = () => comecarDoInicio(campo.value, true);
-    attachSuggest(campo, () => { const qf = fold(campo.value); return clientList().filter(c => !qf || fold(c.name).includes(qf)).slice(0, 6).map(c => ({ label: c.name, right: fmtPhone(c.phone) })); }, it => { campo.value = it.label; });
+    $('[data-novo]', v).onclick = () => startQuote(null, false);
+    $('[data-relatorio]', v).onclick = () => startQuote(null, true);
     $$('[data-open]', v).forEach(b => b.onclick = () => go('/q/' + b.dataset.open));
     $$('[data-del-draft]', v).forEach(b => b.onclick = () => excluiRascunho(b.dataset.delDraft));
     $$('[data-aj]', v).forEach(b => b.onclick = () => KitFacil.ajustes.ir(b.dataset.aj));
@@ -180,7 +181,7 @@ VIEWS.lista = {
     return `${barraTopo()}<main class="page">
       ${KitFacil.ui.cabecalho({ titulo: 'Orçamentos', sub: 'Tudo o que você orçou, por situação.' })}
       ${quotes.length ? `<div class="toolbar">
-        ${quotes.length > 4 ? `<label class="search">${I.search}<input type="search" id="h-q" placeholder="Buscar cliente, serviço ou número" value="${esc(homeQuery)}" aria-label="Buscar orçamento"></label>` : ''}
+        ${quotes.length > 4 ? `<label class="search">${I.search}<input type="search" id="h-q" placeholder="Buscar cliente, serviço, item ou número" value="${esc(homeQuery)}" aria-label="Buscar orçamento"></label>` : ''}
         ${filtroSeg('data-filter', [['todos', 'Todos'], ['aberto', 'Em aberto'], ['concluido', 'Concluídos'], ['recusado', 'Recusados']], homeFilter, cnt, 'Filtrar')}
       </div>` : ''}
       <div class="qlist" id="q-list">${homeListHTML()}</div>
@@ -201,15 +202,15 @@ VIEWS.lista = {
 /* ---------- Mais: o que não cabe na barra e, por último, os Ajustes (Código, Art. 60, II) ---------- */
 VIEWS.mais = {
   html() {
-    const mats = (prices || []).filter(p => p.kind === 'mat' && p.stock > 0).length, minhas = tools.filter(t => t.k === 'item').length;
+    const mats = (prices || []).filter(p => p.kind === 'mat' && p.stock > 0).length, minhas = tools.filter(t => t.k === 'item').length, j = jogoLigado() ? jogoEstado() : null;
     const linhas = [
-      ...(jogoLigado() ? [{ id: 'precos', titulo: 'Preços', texto: 'Sua tabela de mão de obra e de material', icone: I.tag }] : []),
       { id: 'gestao', titulo: 'Gestão', texto: `${plural(mats, 'material em estoque', 'materiais em estoque')}, ${plural(minhas, 'ferramenta', 'ferramentas')} e checklist`, icone: I.box },
+      ...(j ? [{ id: 'conquistas', titulo: 'Conquistas', texto: `${plural(j.ganhas.length, 'lâmpada acesa', 'lâmpadas acesas')} de ${CONQUISTAS.length} no seu varal`, icone: IN.lampada }] : []),
       { id: 'guia', titulo: 'Ver o guia', texto: 'O app faz cada passo na tela e explica', icone: IN.livro },
       { id: 'exemplo', titulo: 'Abrir o orçamento de exemplo', texto: 'Um orçamento pronto para mexer à vontade', icone: IN.exemplo },
     ];
     return `${barraTopo()}<main class="page">
-      ${KitFacil.ui.cabecalho({ titulo: 'Mais', sub: 'Preços, gestão, guia e ajustes.' })}
+      ${KitFacil.ui.cabecalho({ titulo: 'Mais', sub: 'Gestão, conquistas, guia e ajustes.' })}
       ${KitFacil.nav.mais({ linhas })}
     </main>`;
   },

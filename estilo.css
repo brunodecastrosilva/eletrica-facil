@@ -955,3 +955,128 @@ body.raio-treme #app{animation:raio-treme .42s cubic-bezier(.3,.6,.4,1) both}
   .kf-abertura .kf-ab-t{font-size:clamp(26px,7.6vw,32px)}
 }
 @media (max-width:350px){.ab-caminho .ab-lp .lp-pend{width:66px;height:84px}.ab-caminho .ab-lp .lp{width:54px;height:76px}.ab-passo b{font-size:11.5px}}
+
+/* ================= 2.0 · TABELA NA MÃO =================
+   Tudo refeito para o eletricista (Código 0.10.0, Arts. 3º, 56 e 64-D): o orçamento nasce na tabela de preços,
+   os totais aparecem num visor (grafite com números amarelos, como o de um multímetro) e a fita zebrada marca o começo. */
+:root{--visor-bg:#1D1B15;--visor-ink:#F3F0E7;--visor-mut:#C4BFAF;--visor-num:#FFD23A;--visor-line:rgba(255,255,255,.16);--visor-borda:transparent}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--visor-bg:#060605;--visor-borda:#45423A}}
+:root[data-theme="dark"]{--visor-bg:#060605;--visor-borda:#45423A}
+.num{font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums}
+.sec-t{font-family:var(--f-display);font-weight:800;font-size:21px;line-height:1.1;margin:8px 2px 0}
+.lc svg{width:18px;height:18px}
+
+/* ---------- Início ---------- */
+.inicio{gap:16px}
+.arranque{position:relative;overflow:hidden;background:var(--volt);color:#17150F;border-radius:var(--kf-r-cartao);padding:30px 18px 12px;display:flex;flex-direction:column;gap:6px}
+.ar-fita{position:absolute;left:0;right:0;top:0;height:12px;background:repeating-linear-gradient(-45deg,#17150F 0 14px,transparent 14px 28px)}
+.arranque .saud{margin:0;font-family:var(--kf-font);font-weight:600;font-size:14.5px;color:#3B3523}
+.ar-t{font-family:var(--f-display);font-weight:800;font-size:clamp(31px,9.4vw,40px);line-height:.98;letter-spacing:-.01em;margin:0}
+.ar-sub{margin:2px 0 10px;font-size:15.5px;line-height:1.35;max-width:32ch;color:#2A2618}
+.arranque .ar-btn{min-height:58px;font-size:18px;background:#17150F;color:#FFD23A;border-color:#17150F;gap:10px}
+.arranque .ar-btn svg{width:22px;height:22px}
+.arranque .ar-rel{align-self:center;min-height:44px;color:#17150F;font-weight:600;font-size:14.5px;text-decoration:underline;text-underline-offset:3px;background:none;border:0}
+.arranque :focus-visible{outline-color:#17150F}
+.andamento .and-sub .num{font-size:16px}
+.pend{display:flex;flex-direction:column;gap:8px}
+.pend-lista{background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-cartao);overflow:hidden}
+.pend-lin{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto 18px;gap:10px;align-items:center;width:100%;min-height:62px;padding:10px 12px 10px 18px;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);text-align:left}
+.pend-lin:first-child{border-top:0}
+.pend-lin::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:5px;border-radius:0 5px 5px 0;background:var(--volt)}
+.pend-lin.st-aprovado::before{background:var(--ok)}
+.pend-lin.st-concluido::before{background:var(--sent)}
+.pend-tx{min-width:0}
+.pend-tx small{display:block;color:var(--muted);font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pend-tx b{display:block;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pend-val{font-size:18px;white-space:nowrap}
+.pend-mais{align-self:center;min-height:44px}
+@media (hover:hover){.pend-lin:hover,.tb-row:hover{background:var(--surface-2)}}
+
+/* ---------- o visor: o mês no Início e o total no pé do orçamento ---------- */
+.visor{background:var(--visor-bg);color:var(--visor-ink);border:1px solid var(--visor-borda);border-radius:var(--kf-r-cartao);padding:16px 16px 4px;display:flex;flex-direction:column;gap:2px}
+.visor :focus-visible,.visor-pe :focus-visible{outline-color:#FFD23A}
+.vs-topo{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.vs-topo h2{margin:0;font-family:var(--f-display);font-weight:700;font-size:19px}
+.vs-topo span{color:var(--visor-mut);font-size:13.5px;text-align:right}
+.vs-num{font-size:clamp(42px,12.5vw,56px);line-height:1.06;font-weight:800;color:var(--visor-num);letter-spacing:-.01em;white-space:nowrap}
+.vs-lins{display:flex;flex-direction:column;margin-top:8px}
+.vs-lin{display:grid;grid-template-columns:minmax(0,1fr) auto 18px;gap:8px;align-items:center;min-height:48px;width:100%;padding:0;border:0;border-top:1px solid var(--visor-line);background:none;color:inherit;text-align:left;font-size:15.5px}
+div.vs-lin{padding-right:26px;grid-template-columns:minmax(0,1fr) auto}
+.vs-lin b{font-size:19px}
+.vs-lin .lc{color:var(--visor-mut)}
+.bbar:has(.visor-pe){background:var(--visor-bg);border-top:1px solid var(--visor-borda)}
+.visor-pe .bb-total small{color:var(--visor-mut)}
+.visor-pe .bb-total b{color:var(--visor-num);font-size:clamp(21px,6.2vw,27px);font-weight:800}
+.visor-pe .icon-btn.boxed{color:var(--visor-ink);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.4)}
+.visor-pe .btn.primary{background:#FFC400;color:#17150F}
+
+/* ---------- a tira de categorias (o filtro da tabela) ---------- */
+.tira{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:2px 16px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tira::-webkit-scrollbar{display:none}
+.tira[hidden]{display:none}
+.tira button{flex:none;min-height:44px;padding:0 16px;border-radius:99px;border:1.5px solid var(--line-2);background:var(--surface);color:var(--ink);font-weight:600;font-size:14.5px;white-space:nowrap}
+.tira button[aria-pressed="true"]{background:var(--graphite);color:var(--graphite-ink);border-color:var(--graphite)}
+#mt-filtros{display:flex;flex-direction:column;gap:10px}
+#mt-filtros[hidden]{display:none}
+
+/* ---------- a tabela na mão: cada toque soma um ---------- */
+.montar{gap:12px}
+.mt-dica{margin:0 2px;color:var(--muted);font-size:14.5px}
+.mt-onde{margin:0}
+.mt-lista,.tb-lista{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-cartao);overflow:hidden}
+.mt-row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px;padding-right:10px;border-top:1px solid var(--line)}
+.mt-row:first-child{border-top:0}
+.mt-row.on{background:var(--volt-soft)}
+.mt-row.on::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--volt)}
+.mt-main{display:flex;flex-direction:column;gap:2px;min-width:0;min-height:62px;justify-content:center;padding:10px 4px 10px 18px;border:0;background:none;color:var(--ink);text-align:left}
+.mt-nome{font-weight:600;font-size:15.5px;line-height:1.25}
+.mt-nome mark,.tb-nome mark{background:var(--volt);color:#17150F;border-radius:3px;padding:0 1px}
+.mt-meta{color:var(--muted);font-size:13.5px;line-height:1.3}
+.mt-meta .num{color:var(--ink);font-size:15.5px}
+.mt-baixo{color:var(--bad);font-weight:600}
+.qty.mt-qty{border:0;background:none;height:auto;gap:4px}
+.qty.mt-qty button{width:44px;height:44px;min-width:44px;min-height:44px;border-radius:50%}
+.qty.mt-qty [data-menos]{box-shadow:inset 0 0 0 1.5px var(--line-2);background:var(--surface)}
+.qty.mt-qty .qty-n{border-radius:10px;min-width:38px;font-family:var(--f-display);font-size:20px;font-weight:800;text-decoration:none}
+.qty.mt-qty .mt-mais{background:var(--graphite);color:var(--graphite-ink)}
+.qty.mt-qty .mt-mais svg{width:22px;height:22px}
+.mt-lista > .add-btn{margin:10px;width:auto}
+.mt-lista > .kf-vazio,.tb-lista > .kf-vazio{margin:6px 10px}
+
+/* ---------- Tabela (os preços): a mesma lista, aqui para mudar o preço ---------- */
+.tb-row{display:grid;grid-template-columns:minmax(0,1fr) auto 18px;gap:10px;align-items:center;width:100%;min-height:60px;padding:9px 12px 9px 18px;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);text-align:left}
+.tb-row:first-child{border-top:0}
+.tb-nome{min-width:0}
+.tb-nome b{display:block;font-weight:600;font-size:15.5px;line-height:1.25}
+.tb-nome small{display:block;color:var(--muted);font-size:13.5px}
+.tb-preco{font-size:19px;white-space:nowrap}
+.tb-row .lc{color:var(--faint)}
+.tb-meus{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--kf-r-cartao);padding:12px 16px 14px}
+.tb-meus-t{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font-size:14.5px;color:var(--muted)}
+.tb-meus-t b{font-size:24px;font-weight:800;color:var(--ink)}
+
+/* ---------- o orçamento montado: cliente (só quando quiser) e os blocos ---------- */
+.resumo{gap:12px}
+.cli-lin{display:grid;grid-template-columns:auto minmax(0,1fr) 18px;gap:12px;align-items:center;width:100%;min-height:64px;padding:10px 14px;border:1px solid var(--line);border-radius:var(--kf-r-cartao);background:var(--surface);color:var(--ink);text-align:left}
+.cli-ic{width:40px;height:40px;border-radius:50%;background:var(--volt-soft);color:var(--volt-text);display:grid;place-items:center}
+.cli-ic svg{width:22px;height:22px}
+.cli-tx{min-width:0}
+.cli-tx b{display:block;font-size:16px;font-weight:700}
+.cli-tx small{display:block;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blocos{display:flex;flex-direction:column;gap:10px}
+.resumo .fo-excluir{margin-top:6px}
+
+/* ---------- Orçamentos: o cartão ---------- */
+.qc-total{font-family:var(--f-display);font-weight:800;font-size:20px}
+
+/* ---------- Gestão: o filtro com as contagens e a lista de compras ---------- */
+.g-topo{display:flex;flex-direction:column;gap:10px}
+.seg.g-seg button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:58px}
+.seg.g-seg button span{font-size:13.5px}
+.seg.g-seg button b{font-size:20px;font-weight:800;color:var(--ink);line-height:1.1}
+.g-custo{margin:0 2px;color:var(--muted);font-size:14px}
+.g-topo .g-cp{display:grid;grid-template-columns:auto minmax(0,1fr) 18px;gap:12px;align-items:center;width:100%;min-height:58px;padding:8px 14px;border:1px solid var(--line);border-radius:var(--kf-r-cartao);background:var(--surface);color:var(--ink);text-align:left;font-weight:400}
+.g-topo .g-cp > svg:first-child{width:22px;height:22px;color:var(--volt-text)}
+.g-topo .g-cp > svg:last-child{width:18px;height:18px;color:var(--faint)}
+.g-topo .g-cp .lt b{display:block;font-size:16px;font-weight:700}
+.g-topo .g-cp .lt small{display:block;color:var(--muted);font-size:13.5px;font-weight:400}
