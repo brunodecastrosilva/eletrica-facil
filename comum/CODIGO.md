@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.9.1 (rascunho)** · 15/11/2026 · Kit Fácil **0.9.0**
+Versão **0.10.0 (rascunho)** · 17/11/2026 · Kit Fácil **0.9.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -39,8 +39,9 @@ V – qualquer aplicativo novo do Projeto Fácil, desde a sua criação.
 
 **Parágrafo único.** O Projeto CCOE não segue este Código, por decisão do Bruno.
 
-**Art. 3º** Os aplicativos são percebidos como uma família: a estrutura, os nomes, os ícones, a ordem dos Ajustes, a
-barra de cima e o comportamento são iguais; cada aplicativo mantém a sua cor, a sua marca e as suas funções.
+**Art. 3º** Os aplicativos são percebidos como uma família: a moldura (barra de cima, navegação, Ajustes, janelas,
+guia e feedback), os nomes e ícones comuns e o comportamento dos controles são iguais. Cada aplicativo tem
+personalidade própria: cor, marca, funções, desenho das telas e fluxo de trabalho, pensados para o seu público.
 
 ### CAPÍTULO II — Da hierarquia e da interpretação
 
@@ -258,8 +259,9 @@ a verificação do padrão (Anexo II).
 
 **Art. 28.** Os aplicativos usam as peças do Kit em vez de criar versões próprias, salvo o caso do Art. 30-A.
 
-**Art. 29.** Se uma solução de um aplicativo servir aos outros, ela vira padrão no Integrador, como proposta. Soluções
-divergentes sem motivo não são aceitas.
+**Art. 29.** Se uma solução de um aplicativo servir aos outros, ela vira padrão no Integrador, como proposta. Componente
+ou comportamento de controle divergente sem motivo não é aceito. Fluxo de trabalho e desenho de tela próprios não são
+divergência.
 
 **Art. 30.** Para mudar o Kit:
 
@@ -428,7 +430,7 @@ reenviadas depois. A tela nunca diz "enviado" sem a confirmação do servidor.
 **Art. 55.** Todos os aplicativos usam o mesmo sistema de design do Kit: fonte Atkinson Hyperlegible, tamanhos de
 texto, espaços, cantos, cores de estado e ícones comuns (Anexo II).
 
-**Art. 56.** Cada aplicativo muda apenas:
+**Art. 56.** Dentro do sistema de design do Kit, cada aplicativo cria a sua personalidade visual:
 
 I – a cor de destaque, a cor de começar (Art. 66) e os neutros tingidos por elas (Anexo I);
 
@@ -439,9 +441,15 @@ III – as guias próprias dos Ajustes;
 IV – opcionalmente, o tema de fábrica e uma fonte de caráter só nos títulos, na marca e nos números grandes;
 
 V – a ideia visual do aplicativo (no Conta Fácil, a comanda de papel), que pode ter fonte e cores próprias dentro
-desse elemento, mantidos o contraste AA e o modo escuro no resto da tela.
+desse elemento, mantidos o contraste AA e o modo escuro no resto da tela;
 
-**Parágrafo único.** Os três temas (Automático, Claro e Escuro) continuam disponíveis em todos os aplicativos.
+VI – a composição de cada tela: o que aparece primeiro, como os dados se agrupam e o desenho dos seus cartões, usando
+as peças do Kit e cumprindo os Arts. 64 a 71.
+
+§ 1º Os três temas (Automático, Claro e Escuro) continuam disponíveis em todos os aplicativos.
+
+§ 2º Telas com a mesma função em aplicativos diferentes não precisam ter a mesma aparência; precisam se comportar do
+mesmo jeito.
 
 **Art. 57.** A mesma ideia tem o mesmo ícone em todos os aplicativos: controles deslizantes para Ajustes, presente para
 o apoio, nuvem para a sincronização e balão para a avaliação.
@@ -535,6 +543,9 @@ cada um.
 
 **Art. 64-C.** O aplicativo não decide pela pessoa. Quando há mais de um caminho (quem entra num sorteio, quem cobre
 uma diferença), a escolha é dela, com um padrão marcado quando houver.
+
+**Art. 64-D.** Cada aplicativo pede só o que precisa, quando precisa: um dado obrigatório é pedido quando se torna
+indispensável (no Elétrica Fácil, o nome do cliente ao gerar a proposta), nunca antes de começar o trabalho.
 
 ### CAPÍTULO V — Dos componentes
 
@@ -781,19 +792,22 @@ para o Projeto daquele aplicativo ou vira proposta de padrão, se servir aos out
 
 ## TÍTULO IX — DISPOSIÇÕES FINAIS E TRANSITÓRIAS
 
-**Art. 93.** O Conta Fácil é a referência do Projeto Fácil (decisão do Bruno, de 14/11/2026): o que foi decidido nele é
-regra, não exceção. Na dúvida sobre como cumprir este Código, faz-se como no Conta Fácil.
+**Art. 93.** O Conta Fácil é a referência do Projeto Fácil (decisão do Bruno, de 14/11/2026) para a moldura, os
+componentes e o comportamento dos controles: o que foi decidido nele sobre esses pontos é regra. O fluxo, os campos
+pedidos e o desenho das telas do Conta Fácil são dele, feitos para a comanda de bar. Na dúvida, pergunta-se se a decisão
+do Conta Fácil serve ao público do aplicativo; se não serve, o aplicativo decide pelo seu público (Arts. 64-A e 64-C).
 
 § 1º (Revogado no Código 0.9: o Kit já traz as peças do Conta Fácil.)
 
 § 2º A revisão dos outros aplicativos é feita um por vez. Até a vez de cada um, pode ainda haver nele o que este
 Código trocou: dados lado a lado, o guia em dois ou três níveis, a janela a cada abertura, o presente colorido, a
 navegação antiga, uma só cor de botão, durações diferentes de 600 ms, caixas de texto selecionadas sozinhas, botões
-próprios de excluir que não são vermelhos e janelas com "Pronto" ou "Fechar" no pé. Na vez de cada aplicativo, ele passa a seguir o Conta Fácil e sobe para
-1.0.0 (Art. 22, § 2º).
+próprios de excluir que não são vermelhos e janelas com "Pronto" ou "Fechar" no pé. Na vez de cada aplicativo, ele passa a seguir a moldura,
+os componentes e o comportamento dos controles do Conta Fácil, com telas e fluxo redesenhados para o seu público, e
+sobe para 1.0.0 (Art. 22, § 2º).
 
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 15/11/2026 como rascunho (versão 0.9.1). Regras e textos anteriores (Leis Globais,
-Padrão, Código 3.x, Códigos 0.4 a 0.8) são histórico.
+**Art. 95.** Este Código vale desde 17/11/2026 como rascunho (versão 0.10.0). Regras e textos anteriores (Leis Globais,
+Padrão, Código 3.x, Códigos 0.4 a 0.9.1) são histórico.
