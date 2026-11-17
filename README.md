@@ -5,7 +5,7 @@ Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no 
 Versão **2.0.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
-[Código do Projeto Fácil](comum/CODIGO.md) 0.10.0. Na 2.0.0 o app foi refeito para o eletricista (Código, Arts. 3º, 56
+[Código do Projeto Fácil](comum/CODIGO.md) 0.11.0. Na 2.0.0 o app foi refeito para o eletricista (Código, Arts. 3º, 56
 e 64-D): a moldura, os componentes e o comportamento dos controles são os da família; o fluxo e o desenho das telas
 são dele.
 

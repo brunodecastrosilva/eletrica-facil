@@ -5,7 +5,7 @@ com `0.`, o app está em fase de testes (rascunho).
 
 ## 2.0.0 · 2026-11-17
 
-O Elétrica Fácil foi refeito com o Código 0.10.0 ("cada app com personalidade própria"): o fluxo e o desenho das telas agora são pensados para o eletricista, não copiados da comanda de bar. Decisões do Bruno: o orçamento nasce na tabela de preços ("Tabela na mão") e a Tabela fica na barra de baixo.
+O Elétrica Fácil foi refeito com o Código novo (0.10.0, "cada app com personalidade própria"; publicado já com o 0.11.0): o fluxo e o desenho das telas agora são pensados para o eletricista, não copiados da comanda de bar. Decisões do Bruno: o orçamento nasce na tabela de preços ("Tabela na mão") e a Tabela fica na barra de baixo.
 
 - **Tabela na mão:** Novo orçamento abre direto na sua tabela de preços. Cada toque no + soma um serviço; − tira; tocar no número abre o item para digitar a quantidade ou mudar o preço. O total fica no pé, num visor. Uma tira de categorias (com "Mais usados", quando você já tem histórico) e a busca, que acha mão de obra e material juntos, levam ao item. Fora da tabela, dá para somar um item só daquele orçamento.
 - **O nome do cliente só é pedido na proposta (Código, Art. 64-D):** nada de nome antes de começar. Ao tocar em Ver proposta, o app pergunta para quem é: só o nome é obrigatório; WhatsApp, endereço, CPF ou CNPJ e o serviço em uma linha são opcionais. Quem quiser dizer antes toca em "Cliente e serviço", no orçamento. Enquanto não há cliente, o orçamento aparece pelo serviço em todas as listas.
