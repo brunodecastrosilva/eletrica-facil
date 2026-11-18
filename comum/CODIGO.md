@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.11.0 (rascunho)** · 17/11/2026 · Kit Fácil **0.9.0**
+Versão **0.11.1 (rascunho)** · 17/11/2026 · Kit Fácil **0.9.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -11,10 +11,10 @@ oficial.
 
 Onde fica cada arquivo:
 
-| Arquivo | Projeto Integrador | Repositórios (pasta `comum/`) | Skill `codigo-projeto-facil` |
-|---|---|---|---|
-| Código (artigos) | `claude/codigo-do-projeto-facil.md` | `CODIGO.md` | sim |
-| Anexos do Código | `claude/anexos-do-codigo.md` | `ANEXOS.md` | não |
+| Arquivo | Texto oficial | Cópia |
+|---|---|---|
+| Código (artigos) | `comum/CODIGO.md`, igual nos quatro repositórios | skill `codigo-projeto-facil` |
+| Anexos do Código | `comum/ANEXOS.md`, igual nos quatro repositórios | `claude/anexos-do-codigo.md`, no projeto Integrador |
 
 ---
 
@@ -87,7 +87,8 @@ I – o Código atualizado e a versão nova;
 
 II – o registro da mudança no Painel;
 
-III – a cópia nova em `comum/CODIGO.md` e `comum/ANEXOS.md` dos quatro repositórios, conforme o Art. 30;
+III – o texto novo em `comum/CODIGO.md` e `comum/ANEXOS.md` dos quatro repositórios, conforme o Art. 30, e a cópia
+dos Anexos no projeto Integrador;
 
 IV – a skill `codigo-projeto-facil` atualizada com o texto integral novo, que leva o Código a todos os Projetos;
 
@@ -827,5 +828,5 @@ sobe para 1.0.0 (Art. 22, § 2º).
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 17/11/2026 como rascunho (versão 0.11.0). Regras e textos anteriores (Leis Globais,
-Padrão, Código 3.x, Códigos 0.4 a 0.10.0) são histórico.
+**Art. 95.** Este Código vale desde 17/11/2026 como rascunho (versão 0.11.1). Regras e textos anteriores (Leis Globais,
+Padrão, Código 3.x, Códigos 0.4 a 0.11.0) são histórico.

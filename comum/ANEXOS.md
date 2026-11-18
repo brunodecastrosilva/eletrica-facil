@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **0.11.0 (rascunho)** · 17/11/2026 · Kit Fácil **0.9.0** (com as peças do Conta Fácil)
+Versão **0.11.1 (rascunho)** · 17/11/2026 · Kit Fácil **0.9.0** (com as peças do Conta Fácil)
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
