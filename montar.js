@@ -9,11 +9,7 @@ const quoteSub = q => q.client.name ? (q.title || resumoItens(q) || 'Sem itens a
 
 /* ---------- estado da tela (fica entre um desenho e outro) ---------- */
 const MT = { kind: 'svc', cat: null, q: '', room: '', id: null, svcAdd: {} };
-function abrirTabela(q, kind, room) {
-  if (MT.id !== q.id) { MT.q = ''; MT.cat = null; MT.svcAdd = {}; }
-  MT.id = q.id; if (kind) { if (MT.kind !== kind) MT.cat = null; MT.kind = kind; } MT.room = q.useRooms ? (room || '') : '';
-  go('/q/' + q.id + '/itens');
-}
+function abrirTabela(q, kind, room) { somarJanela(q, kind || 'svc', room || ''); }
 // os serviços que mais aparecem nos orçamentos de quem usa: são os primeiros da tabela
 function maisUsados(kind) {
   const n = new Map();
@@ -57,71 +53,6 @@ function mtTiraHTML() {
 }
 const mtPeHTML = (q, c = compute(q)) => `<small data-t="n">${q.items.length ? plural(q.items.length, 'item', 'itens') : 'Nenhum item ainda'}</small><b class="num" data-t="total">${BRL(c.total)}</b>`;
 
-VIEWS.montar = {
-  html(r) {
-    const q = getQ(r.id);
-    if (MT.id !== q.id) { MT.id = q.id; MT.q = ''; MT.cat = null; MT.svcAdd = {}; MT.room = ''; }
-    if (!q.useRooms) MT.room = ''; else if (MT.room && !q.rooms.some(x => x.id === MT.room)) MT.room = '';
-    const lista = mtListaHTML(q), salas = q.useRooms ? roomList(q) : [];
-    return `<header class="kf-barra appbar"><div class="kf-barra-in">
-      <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
-      <div class="ab-title"><span class="ab-eyebrow">${q.example ? 'Exemplo' : (isReport(q) ? 'Relatório ' : 'Orçamento ') + esc(numLabel(q).toLowerCase())}</span><span class="ab-main">Tabela na mão</span></div>
-      ${KitFacil.topo.html({ principal: false })}
-    </div></header>
-    <main class="page bar montar">
-      <h1 class="sr-only">Escolher serviços e materiais na tabela</h1>
-      <p class="mt-dica">Cada toque soma um. O nome do cliente fica para a proposta.</p>
-      ${salas.length ? `<div class="field mt-onde"><label for="mt-room">Somando em</label><select id="mt-room">${salas.map(g => `<option value="${esc(g.id)}" ${g.id === MT.room ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}</select></div>` : ''}
-      <label class="search">${I.search}<input type="search" id="mt-q" placeholder="Buscar serviço ou material" aria-label="Buscar na tabela" value="${esc(MT.q)}"></label>
-      <div id="mt-filtros"${MT.q.trim() ? ' hidden' : ''}>
-        <div class="seg" role="group" aria-label="Tipo">${[['svc', 'Mão de obra'], ['mat', 'Material']].map(([k, l]) => `<button type="button" data-kind="${k}" aria-pressed="${MT.kind === k}">${l}</button>`).join('')}</div>
-        <div class="tira" id="mt-tira" role="group" aria-label="Parte da tabela">${mtTiraHTML()}</div>
-      </div>
-      <div class="mt-lista" id="mt-lista">${lista}</div>
-    </main>
-    <div class="bbar"><div class="bbar-in visor-pe">
-      <div class="bb-total" id="mt-pe" role="status">${mtPeHTML(q)}</div>
-      <button class="btn primary" data-ver>Ver orçamento${I.arrow}</button>
-    </div></div>`;
-  },
-  bind(v, r) {
-    const q = getQ(r.id);
-    const pinta = () => { $('#mt-lista', v).innerHTML = mtListaHTML(q); $('#mt-pe', v).innerHTML = mtPeHTML(q); };
-    const pintaTira = () => { $('#mt-tira', v).innerHTML = mtTiraHTML(); $$('[data-kind]', v).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.kind === MT.kind))); };
-    const sair = para => {
-      const add = MT.svcAdd; MT.svcAdd = {};
-      // quem volta da tabela vê o que somou: os itens chegam abertos
-      [`q:${q.id}:items`, `q:${q.id}:svc`, ...(q.items.some(i => i.kind === 'mat') ? [] : [])].forEach(k => { PANEL[k] = true; });
-      para();
-      if (Object.keys(add).length && getQ(q.id)) setTimeout(() => sugerirMaterial(q, add, MT.room), semMovimento() ? 60 : 420);
-    };
-    $('[data-back]', v).onclick = () => sair(() => q.items.length ? go('/q/' + q.id, true) : back('/'));
-    $('[data-ver]', v).onclick = () => { if (!q.items.length) return toast('Toque num serviço para somar o primeiro item.'); sair(() => go('/q/' + q.id, true)); };
-    const busca = $('#mt-q', v);
-    busca.addEventListener('input', () => { MT.q = busca.value; $('#mt-filtros', v).hidden = !!MT.q.trim(); pinta(); });
-    $('#mt-room', v)?.addEventListener('change', e => { MT.room = e.target.value; pinta(); });
-    v.addEventListener('click', e => {
-      const kd = e.target.closest('[data-kind]');
-      if (kd) { MT.kind = kd.dataset.kind; MT.cat = null; pinta(); pintaTira(); return; }
-      const ct = e.target.closest('[data-cat]');
-      if (ct) { MT.cat = ct.dataset.cat; pinta(); pintaTira(); return; }
-      const mais = e.target.closest('[data-mais]');
-      if (mais) { const p = prices.find(x => x.id === mais.dataset.mais); if (!p) return; addFromPrice(q, p, MT.room); if (p.kind === 'svc' && (p.comp || []).length) MT.svcAdd[p.id] = (MT.svcAdd[p.id] || 0) + 1; pinta(); $(`[data-pid="${p.id}"] .mt-mais`, v)?.focus({ preventScroll: true }); return; }
-      const menos = e.target.closest('[data-menos]');
-      if (menos) {
-        const p = prices.find(x => x.id === menos.dataset.menos), L = p ? mtNoOrc(q, p) : []; if (!L.length) return;
-        const i = L[L.length - 1]; i.qty = Math.round((i.qty - 1) * 100) / 100;
-        if (i.qty <= 0) q.items = q.items.filter(x => x !== i);
-        if (MT.svcAdd[p.id]) { MT.svcAdd[p.id]--; if (MT.svcAdd[p.id] <= 0) delete MT.svcAdd[p.id]; }
-        touch(q); pinta(); ($(`[data-pid="${p.id}"] [data-menos]`, v) || $(`[data-pid="${p.id}"] .mt-mais`, v))?.focus({ preventScroll: true }); return;
-      }
-      const qd = e.target.closest('[data-qtd]');
-      if (qd) { const p = prices.find(x => x.id === qd.dataset.qtd), i = p && mtNoOrc(q, p)[0]; if (i) lineSheet(q, i); return; }
-      if (e.target.closest('[data-fora]')) customItemSheet(q, MT.kind, MT.q.trim(), MT.room);
-    });
-  },
-};
-
 /* ---------- o cliente: pedido só quando a proposta vai sair ---------- */
 function clienteSheet(q, depois) {
   const rel = isReport(q), pede = typeof depois === 'function';
@@ -162,10 +93,4 @@ function clienteSheet(q, depois) {
         closeSheet(true); if (pede) depois(); else rerender();
       };
     } });
-}
-// a proposta só sai com o nome do cliente: quem ainda não disse, diz agora
-function verProposta(q) {
-  const ir = () => go('/q/' + q.id + '/proposta');
-  if (!q.items.length && !isReport(q)) return toast('Some pelo menos um item antes de gerar a proposta.');
-  if (q.client.name) ir(); else clienteSheet(q, ir);
 }

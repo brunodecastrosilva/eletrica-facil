@@ -3,6 +3,34 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 3.0.0 · 2026-11-18
+
+O Elétrica Fácil foi refeito do zero, a partir do desenho aprovado pelo Bruno: telas, fluxo, navegação, apresentação, guia, raio e testes são novos. As contas e os documentos (PDF, Pix, recibo e mensagens) continuam os mesmos.
+
+- Elétrica Fácil refeito: o orçamento agora é montado na própria folha que o cliente recebe. O que é tracejado é só seu e não sai no documento.
+- O botão amarelo do pé é sempre o próximo passo: Enviar, Aprovou, Concluir, Receber e Recibo.
+- Orçamentos abre o app, num quadro por etapa: rascunhos, esperando resposta, para executar e para receber.
+- Navegação nova: Orçamentos, Tabela, o botão de novo orçamento no centro, Obra e Mais. A antiga Gestão virou Obra: Levar, Comprar, Estoque e Ferramentas.
+- Mudou um preço numa linha do orçamento? Dá para guardar na tabela ali mesmo.
+- Apresentação nova, sem pedir o seu nome: ele fica em Ajustes, Conta e perfil.
+- O raio de surpresa ficou mais parecido com um raio de verdade. A tempestade saiu.
+- Esta versão começa limpa: os orçamentos, preços e ajustes guardados pelas versões anteriores neste aparelho foram apagados.
+
+Mais detalhes:
+
+- **A folha é a tela:** cabeçalho, cliente, serviço, itens, totais, condições, Pix, observações e assinaturas aparecem como no documento. Tocar numa linha abre a quantidade e o preço ali mesmo; tocar numa condição abre a sua janela (Pagamento, Prazo e datas, Garantia e validade, Observações, Acertar o total).
+- **Somar:** a tabela de preços abre numa janela, em seções por categoria; cada toque soma um, e a folha atrás acompanha.
+- **Bastidor:** acima da folha, um quadro grafite com as cinco etapas (Rascunho, Enviado, Aprovado, Concluído, Recebido) e o que fazer em cada uma.
+- **Concluir** pede a data e dá baixa no estoque na mesma janela. **Receber** mostra o QR code do Pix do que falta e registra o pagamento.
+- **Tabela:** seções por categoria, uma aberta de cada vez. O preço que vem com o app aparece em letra fina e o seu, em letra forte; a letra fina agora passa no contraste, e a exceção antiga do cinza claro acabou.
+- **Obra:** a lista de levar aparece direto, sem seção para abrir; a lista de compras virou a guia Comprar.
+- **Apresentação:** quatro telas escuras. A lâmpada começa apagada e termina acesa; saíram o interruptor e o pedido do nome. A conquista Primeira luz acende quando você diz o seu nome em Ajustes.
+- **Começo limpo (Regras do app, Art. 6º):** na primeira abertura, a versão 3 apaga o que as versões 1 e 2 guardaram neste aparelho (fica só o tema). A sincronização usa um arquivo novo (`eletrica-facil-3.json`): o arquivo antigo do gist não é lido nem alterado, e um aparelho ainda na versão antiga não devolve dados velhos.
+- **Não mudou:** as contas (`compute`), os documentos em PDF, o código do Pix, o recibo, as mensagens, o catálogo de fábrica, as conquistas e a lâmpada em 3D.
+- **Passado por cima do Kit (Art. 30-A):** no celular de 320 px, o rótulo "Orçamentos" da navegação saía cortado; o app diminui a letra só nessa largura (`estilo.css`). Proposta para o Integrador registrada no README.
+- **Por dentro:** arquivo novo `folha.js` (a tela do orçamento); `inicio.js`, `guia.js` e `raio.js` reescritos; saíram as migrações de formato antigo. Testes reescritos: `tests/app.test.mjs` (17 testes) e `tests/acessibilidade.test.mjs` (cerca de 45 telas e janelas, nos temas claro e escuro, sem nada excluído da varredura); `tests/novo.test.mjs` saiu.
+- **Fica para a próxima versão:** as janelas de aprovação, situação, recibo, material e ferramentas ainda têm o desenho da versão anterior; "Acertar o total" ainda não abre uma seção por vez; o PDF continua em Helvetica; e há estilos antigos sem uso em `estilo.css`.
+
 ## 2.0.1 · 2026-11-17
 
 - **Correção:** com a internet lenta, a janela de Novidades ainda podia abrir junto com a apresentação: o Kit confere as novidades 0,7 s depois de começar, antes de o resto do app chegar. Achado na conferência da 2.0.0 no ar. Agora, quem ainda vai ver a apresentação tem as novidades marcadas como vistas antes de o Kit começar, como no Conta Fácil. A correção da 1.1.1 cobria só a espera de 30 segundos.

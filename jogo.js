@@ -43,7 +43,7 @@ const LP_IC = {
 };
 // ok(s): já acendeu? prog(s): [feito, meta] para mostrar o caminho
 const CONQUISTAS = [
-  { id: 'luz', nome: 'Primeira luz', etq: 'Seu nome', ic: 'pessoa', como: 'Diga como você assina os seus orçamentos, na apresentação ou em Ajustes.', ok: s => s.eu },
+  { id: 'luz', nome: 'Primeira luz', etq: 'Seu nome', ic: 'pessoa', como: 'Diga como você assina os seus orçamentos, em Ajustes, Conta e perfil.', ok: s => s.eu },
   { id: 'primeiro', nome: 'Primeiro orçamento', etq: 'Orçamento', ic: 'prancheta', como: 'Monte o primeiro orçamento com pelo menos um item.', ok: s => s.comItens >= 1 },
   { id: 'enviado', nome: 'Na mão do cliente', etq: 'Enviado', ic: 'enviar', como: 'Envie uma proposta ao cliente, em PDF ou pelo WhatsApp.', ok: s => s.enviados >= 1 },
   { id: 'aprovado', nome: 'Fechado', etq: 'Aprovado', ic: 'visto', como: 'Marque o primeiro orçamento aprovado pelo cliente.', ok: s => s.aprovados >= 1 },

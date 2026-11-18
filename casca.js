@@ -2,8 +2,8 @@
 'use strict';
 
 /* ---------- desenhar a tela ---------- */
-const PRINCIPAIS = ['home', 'lista', 'prices', 'gestao', 'conquistas', 'mais', 'settings'];
-const TITULOS = { home: '', lista: 'Orçamentos', prices: 'Tabela', gestao: 'Gestão', conquistas: 'Conquistas', mais: 'Mais', settings: 'Ajustes' };
+const PRINCIPAIS = ['home', 'prices', 'obra', 'conquistas', 'mais', 'settings'];
+const TITULOS = { home: 'Orçamentos', prices: 'Tabela', obra: 'Obra', conquistas: 'Conquistas', mais: 'Mais', settings: 'Ajustes' };
 function render(opts = {}) {
   let r = route();
   // orçamento novo que ficou vazio some ao sair dele
@@ -11,7 +11,7 @@ function render(opts = {}) {
     const q = getQ(openQuoteId);
     if (q && isEmptyQuote(q)) { quotes = quotes.filter(x => x !== q); saveQuotes(); }
   }
-  if ((r.name === 'quote' || r.name === 'preview' || r.name === 'montar') && !getQ(r.id)) { history.replaceState({ d: 0 }, '', '#/'); return render(); }
+  if (r.name === 'quote' && !getQ(r.id)) { history.replaceState({ d: 0 }, '', '#/'); return render(); }
   if (r.name === 'conquistas' && !jogoLigado()) { history.replaceState({ d: 0 }, '', '#/mais'); r = route(); }
   openQuoteId = r.id || null;
   const V = VIEWS[r.name];
@@ -44,23 +44,23 @@ function rerender() {
   render({ keep: true });
   window.scrollTo(0, y);
   if (f) { const el = document.getElementById(f); if (el && el.matches('input,textarea')) el.focus({ preventScroll: true }); }
+  refazerJanela(); // a janela da folha que estiver aberta mostra a mudança (folha.js)
 }
 function onScroll() { const ab = $('.appbar'); if (ab) ab.classList.toggle('scrolled', window.scrollY > 4); }
 window.addEventListener('scroll', onScroll, { passive: true });
 
 /* ---------- navegação: a barra de baixo e o trilho são os do Kit (KitFacil.nav.barra e .trilho) ----------
-   Início, Orçamentos, o orçamento novo no centro, Tabela e Mais (Gestão e Conquistas ficam em Mais). */
-const ROTAS = { inicio: '/', orcamentos: '/orcamentos', precos: '/precos', gestao: '/gestao', conquistas: '/conquistas', mais: '/mais' };
+   Orçamentos (a tela que abre o app), Tabela, o orçamento novo no centro, Obra e Mais (Conquistas, guia, exemplo e Ajustes). */
+const ROTAS = { orcamentos: '/', precos: '/precos', obra: '/obra', conquistas: '/conquistas', mais: '/mais' };
 function pintarNav(r = route()) {
-  const n = r.name, noOrc = n === 'lista' || n === 'quote' || n === 'preview' || n === 'montar';
+  const n = r.name, noOrc = n === 'home' || n === 'quote';
   const it = (id, rotulo, icone, atual) => ({ id, rotulo, icone, atual });
-  // a tabela de preços é ferramenta de todo dia: fica na barra; Gestão e Conquistas ficam em Mais (Regras do app)
-  const html = KitFacil.nav.barra({ itens: [it('inicio', 'Início', IN.casa, n === 'home'), it('orcamentos', 'Orçamentos', IN.folhas, noOrc), it('precos', 'Tabela', I.tag, n === 'prices')],
+  const html = KitFacil.nav.barra({ itens: [it('orcamentos', 'Orçamentos', IN.folhas, noOrc), it('precos', 'Tabela', I.tag, n === 'prices'), it('obra', 'Obra', IN.obra, n === 'obra')],
     centro: { id: 'novo', rotulo: 'Novo', nome: 'Novo orçamento', icone: I.plus },
-    mais: { atual: n === 'mais' || n === 'gestao' || n === 'conquistas' } });
+    mais: { atual: n === 'mais' || n === 'conquistas' } });
   const nav = $('#nav'); if (nav.dataset.h !== html) { nav.innerHTML = html; nav.dataset.h = html; }
   const lado = KitFacil.nav.trilho({ destaque: { id: 'novo', rotulo: 'Novo orçamento', icone: I.plus },
-    itens: [it('inicio', 'Início', IN.casa, n === 'home'), it('orcamentos', 'Orçamentos', IN.folhas, noOrc), it('precos', 'Tabela', I.tag, n === 'prices'), it('gestao', 'Gestão', I.box, n === 'gestao'),
+    itens: [it('orcamentos', 'Orçamentos', IN.folhas, noOrc), it('precos', 'Tabela', I.tag, n === 'prices'), it('obra', 'Obra', IN.obra, n === 'obra'),
       ...(jogoLigado() ? [it('conquistas', 'Conquistas', IN.lampada, n === 'conquistas')] : [])],
     mais: { atual: n === 'mais' } });
   const t = $('#trilho-lista'); if (t.dataset.h !== lado) { t.innerHTML = lado; t.dataset.h = lado; }
@@ -127,7 +127,7 @@ function settingsSums() {
   };
 }
 function pintarResumos() { const S = settingsSums(); for (const k in S) KitFacil.ajustes.resumo(k, S[k]); }
-/* cópia de segurança no formato comum da família (as cópias antigas, { app: 'eletrica-facil', v: 1 ou 2 }, continuam valendo) */
+/* cópia de segurança no formato comum da família */
 // no celular abre o menu de compartilhar (WhatsApp, Drive, e-mail…), como antes; no computador, baixa o arquivo
 function baixarCopiaEletrica() {
   jogoMarcar('copia');
@@ -135,11 +135,10 @@ function baixarCopiaEletrica() {
   saveFile(`eletrica-facil-copia-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(env, null, 1)], { type: 'application/json' }));
 }
 async function restaurarCopiaEletrica(file) {
-  const j = await KitFacil.copia.ler(file, { antigos: true });
+  const j = await KitFacil.copia.ler(file);
   let data = null;
   try {
     if (j && j.dados) data = { settings: j.dados.settings || {}, prices: j.dados.prices || seedPrices(), quotes: (j.dados.quotes || []).map(fixQuote), tools: Array.isArray(j.dados.tools) ? j.dados.tools : null, checks: Array.isArray(j.dados.checks) ? j.dados.checks : null };
-    else if (j && j.antigo && j.antigo.app === 'eletrica-facil') { const o = j.antigo; data = o.v >= 2 ? { settings: o.settings || {}, prices: o.prices || seedPrices(), quotes: (o.quotes || []).map(fixQuote) } : fromV1(o.catalog, o.bills, o.draft); }
   } catch { data = null; }
   if (!data || !Array.isArray(data.quotes) || !Array.isArray(data.prices)) { toast('Esse arquivo não é uma cópia do Elétrica Fácil.'); return; }
   confirmSheet('Restaurar a cópia?', `O arquivo tem ${plural(data.quotes.length, 'orçamento', 'orçamentos')} e ${plural(data.prices.length, 'preço', 'preços')}. Os dados deste aparelho${syncOn() ? ' e dos outros aparelhos conectados' : ''} serão substituídos.`, 'Restaurar', () => {
@@ -229,8 +228,8 @@ VIEWS.settings = {
               <div class="field"><label for="st-warrantyTerms">Condições da garantia</label><textarea id="st-warrantyTerms" data-set="warrantyTerms">${esc(s.warrantyTerms)}</textarea>
                 ${s.warrantyTerms !== WARRANTY_DEFAULT ? '<button class="linkish" data-reset="warrantyTerms">Voltar ao texto sugerido</button>' : ''}</div>`) },
           { id: 'conquistas', titulo: 'Conquistas e apresentação', icone: ICONES_AJ.conquistas, resumo: S.conquistas, html: bloco('Conquistas e níveis', `<label class="aj-chave"><span class="lin-tx"><b>Mostrar conquistas e níveis</b><small>Desligado, o app fica só com os orçamentos. Nada é apagado.</small></span><span class="kf-chave"><input type="checkbox" id="aj-jogo" ${jogoLigado() ? 'checked' : ''}><span class="kf-chave-trilho"></span></span></label>`)
-              + bloco('Raios de surpresa', `<label class="aj-chave"><span class="lin-tx"><b>Um raio de vez em quando</b><small>Às vezes um raio rasga a tela; mais raro, cai uma tempestade. É só enfeite e some em um segundo.</small></span><span class="kf-chave"><input type="checkbox" id="aj-raio" ${Raio.ligado() ? 'checked' : ''}><span class="kf-chave-trilho"></span></span></label>
-                <div class="aj-raio-bts"><button type="button" class="kf-btn kf-sec" id="aj-raio-ver">Soltar um raio</button><button type="button" class="kf-btn kf-sec" id="aj-raio-temp">Soltar uma tempestade</button></div>
+              + bloco('Raios de surpresa', `<label class="aj-chave"><span class="lin-tx"><b>Um raio de vez em quando</b><small>É enfeite: não recebe toque e some em um segundo.</small></span><span class="kf-chave"><input type="checkbox" id="aj-raio" ${Raio.ligado() ? 'checked' : ''}><span class="kf-chave-trilho"></span></span></label>
+                <div class="aj-raio-bts"><button type="button" class="kf-btn kf-sec" id="aj-raio-ver">Soltar um raio</button></div>
                 ${semMovimento() ? '<p class="kf-ajuda">Seu aparelho pede menos movimento, então os raios ficam desligados.</p>' : ''}`)
               + bloco('Apresentação', `<p class="kf-ajuda">As telas que aparecem na primeira vez que o app abre. O guia e o orçamento de exemplo ficam em Mais.</p><button type="button" class="kf-btn kf-sec" id="aj-abertura">Rever a apresentação</button>`) },
         ],
@@ -243,7 +242,6 @@ VIEWS.settings = {
     $('#aj-abertura', v)?.addEventListener('click', () => aberturaAbrir({ rever: true }));
     $('#aj-raio', v)?.addEventListener('change', e => { Raio.ligar(e.target.checked); toast(Raio.ligado() ? 'Raios de surpresa ligados.' : 'Raios de surpresa desligados.'); });
     $('#aj-raio-ver', v)?.addEventListener('click', () => { if (semMovimento()) return toast('Com movimento reduzido no aparelho, o raio não cai.'); Raio.cair({ forcar: true }); });
-    $('#aj-raio-temp', v)?.addEventListener('click', () => { if (semMovimento()) return toast('Com movimento reduzido no aparelho, a tempestade não vem.'); Raio.tempestade({ forcar: true }); });
     v.addEventListener('input', () => setTimeout(pintarResumos, 300));
     // as guias com texto longo crescem conforme o conteúdo quando são abertas
     v.addEventListener('click', e => { if (e.target.closest('[data-kf-aj-ir]')) requestAnimationFrame(() => $$('textarea', v).forEach(autoGrow)); });
@@ -294,64 +292,47 @@ function aberturaAbrir({ rever = false } = {}) {
   // quem ainda vai ver a apresentação não recebe, por cima dela, a janela de Novidades do Kit (que espera só 30 s):
   // as novidades ficam para a versão seguinte, como no Conta Fácil
   if (!rever) { try { localStorage.setItem('kitfacil.eletrica-facil.visto', JSON.stringify(VERSAO)); } catch {} }
-  const veterano = quotes.some(q => !q.example), j = jogoEstado();
-  // uma lâmpada de verdade (a mesma do varal), apagada e acesa uma sobre a outra: a cena troca de uma para a outra
-  const abLamp = (ic, i = 0) => { const c = { ic }; return `<span class="ab-lp" style="--i:${i}">${lampPendHTML(c)}<span class="ab-on">${lampPendHTML(c, { acesa: true })}</span></span>`; };
-  // tela 1: o interruptor acende a luz
-  let luz = false;
-  // tela 2: a planta da casa; cada toque num cômodo soma um ponto de tomada
-  const COMODOS = ['Sala', 'Cozinha', 'Quarto'], PONTO = 9000, pts = [2, 1, 0]; let tocou = false;
-  const plantaHTML = () => { const n = sum(pts);
-    return `<div class="ab-cena ab-planta"><div class="ab-casa">${COMODOS.map((c, k) => `<button type="button" class="ab-comodo c${k}" data-ab-comodo="${k}" aria-label="${c}: ${plural(pts[k], 'ponto de tomada', 'pontos de tomada')}. Tocar soma um" ${pts[k] >= 8 ? 'disabled' : ''}><b>${c}</b><span class="ab-pts" aria-hidden="true">${'<i></i>'.repeat(pts[k])}</span><span class="ab-mais" aria-hidden="true">${I.plus}</span></button>`).join('')}</div>
-      <p class="ab-soma" role="status"><span>${plural(n, 'ponto de tomada', 'pontos de tomada')}</span><b class="num">${BRL(n * PONTO)}</b></p>
-      <button type="button" class="linkish ab-zerar" data-ab-zerar ${n ? '' : 'disabled'}>Zerar a planta</button></div>`; };
-  // tela 3: o caminho de um serviço, aceso lâmpada por lâmpada
-  const PASSOS = [['enviar', 'Enviada'], ['visto', 'Aprovada'], ['raio', 'Concluído'], ['moeda', 'Recibo']];
-  const nomeAtual = () => settings.name || '';
+  // A lâmpada 3D (a mesma do varal) começa apagada na primeira tela e aparece acesa na última. Sem interruptor,
+  // sem raio e sem pedir o nome: ele fica em Ajustes, Conta e perfil (decisão do Bruno, 18/11/2026).
+  const lamp = acesa => `<div class="ab-cena ab-pend${acesa ? ' acesa' : ''}"><span class="ab-cabo" aria-hidden="true"></span><span class="ab-lp">${lampPendHTML({ ic: 'raio' }, { acesa })}</span>${acesa ? '' : '<span class="ab-marca"><img src="icons/icon-192.png" alt="" width="40" height="40"><b>Elétrica Fácil</b></span>'}</div>`;
+  // tela 2: a folha de demonstração; cada toque em Somar serviço soma uma tomada
+  let n = 3, tocou = false; const TOMADA = 6000;
+  const folhaDemo = () => `<div class="ab-cena ab-folha"><div class="fl"><div class="ab-fl-h"><b>Proposta</b><span>Nº 0001</span></div>
+      <div class="sh"><span class="lb">Mão de obra</span></div>
+      <div class="ln"><span><b>Instalação de tomada</b><small>${n} un. × ${BRL(TOMADA)}</small></span><span class="v">${BRL(n * TOMADA)}</span></div>
+      <button type="button" class="ad toque" data-ab-somar aria-label="Somar serviço: soma uma tomada"><span class="pl">${I.plus}</span>Somar serviço</button>
+      <div class="sh"><span class="lb">Material</span></div><div class="ad" aria-hidden="true"><span class="pl">${I.plus}</span>Somar material</div>
+      <div class="tg" role="status"><span>TOTAL</span><b>${BRL(n * TOMADA)}</b></div></div></div>`;
+  // tela 3: em cada etapa, qual é o botão amarelo
+  const PASSOS = [['Rascunho', 'Enviar'], ['Enviado', 'Aprovou'], ['Aprovado', 'Concluir'], ['Concluído', 'Receber'], ['Recebido', 'Recibo']];
+  const passos = `<div class="ab-cena ab-passos"><span class="lb">Em cada etapa, o botão amarelo é</span>
+      <div class="rl" role="img" aria-label="${PASSOS.map(x => `${x[0]}: ${x[1]}`).join('; ')}.">${PASSOS.map((x, i) => `<span class="rs${i < 2 ? ' ok' : i === 2 ? ' at' : ''}"><i></i>${x[0]}<b>${x[1]}</b></span>`).join('')}</div>
+      <span class="ab-liga" aria-hidden="true"></span>
+      <div class="ab-visor"><div class="bb-total"><small>Total</small><b class="num">${BRL(18000)}</b></div><span class="btn primary">Concluir</span></div></div>`;
   const telas = [
-    { arte: () => `<div class="ab-cena ab-noite ab-sala ${luz ? 'acesa' : ''}">${abLamp('raio')}
-        <button type="button" class="ab-interruptor" data-ab-luz aria-pressed="${luz}" aria-label="Interruptor da luz"><span class="ab-tecla" aria-hidden="true"></span></button>
-        <span class="ab-dica" role="status">${luz ? 'Luz acesa.' : 'Toque no interruptor'}</span></div>`, falada: true,
-      titulo: veterano && !rever ? 'O Elétrica Fácil está de cara nova' : 'Orçamento de elétrica, sem gambiarra',
-      texto: veterano && !rever ? 'Seus orçamentos, preços e ajustes continuam aqui. Acenda a luz e venha ver.' : 'Acenda a luz: toque no interruptor. Daqui a pouco é o seu orçamento que sai pronto, com tudo somado.' },
-    { arte: () => plantaHTML(), falada: true, titulo: 'Conte os pontos, cômodo por cômodo', texto: 'Experimente: toque num cômodo para somar uma tomada. No app é assim, cada toque soma uma unidade.' },
-    { arte: () => `<div class="ab-cena ab-noite ab-caminho"><div class="ab-fio">${PASSOS.map(([ic, nome], k) => `<span class="ab-passo">${abLamp(ic, k)}<b>${nome}</b></span>`).join('')}</div></div>`,
-      titulo: 'Do zap ao recibo', texto: 'Mande a proposta em PDF ou pelo WhatsApp, com Pix. Marque a resposta do cliente, conclua o serviço e gere o recibo.' },
-    { arte: () => `<div class="ab-cena ab-noite ab-assina ${nomeAtual() ? 'acesa' : ''}">${abLamp('pessoa')}
-        <div class="ab-cartao"><img src="icons/icon-192.png" alt="" width="44" height="44"><span><b id="ab-cartao-nome">${esc(nomeAtual() || 'Seu nome aqui')}</b><small>Eletricista · proposta nº 0001</small></span></div></div>`,
-      titulo: veterano && j.ganhas.length ? `Você já chega com ${plural(j.ganhas.length, 'lâmpada acesa', 'lâmpadas acesas')}` : 'Assine embaixo',
-      texto: 'Seu nome sai no alto das propostas e dos recibos. E cada passo bem dado acende uma lâmpada do seu varal.',
-      extra: settings.name ? '' : `<div class="field ab-nome"><label for="ab-eu">Como você assina os orçamentos? (opcional)</label><input id="ab-eu" class="kf-entrada" type="text" autocapitalize="words" autocomplete="off" maxlength="60" placeholder="Seu nome"></div>` },
+    { arte: () => lamp(false), titulo: 'Orçamento de elétrica, do pedido ao recibo', texto: 'Veja como funciona antes de começar.' },
+    { arte: () => folhaDemo(), falada: true, titulo: 'Monte o orçamento na folha do cliente', texto: 'Toque em Somar serviço e escolha na sua tabela. O nome do cliente só entra na hora de enviar.' },
+    { arte: () => passos, titulo: 'Toque no botão amarelo para avançar', texto: 'A cada etapa ele muda: Enviar, Aprovou, Concluir, Receber e Recibo. Para receber, Pix em QR code.' },
+    { arte: () => lamp(true), titulo: 'Pronto. Faça o primeiro orçamento.', texto: `A cada conquista, uma lâmpada se acende. São ${CONQUISTAS.length}.` },
   ];
   KitFacil.abertura.abrir({ telas, rever, rotulo: 'Apresentação do Elétrica Fácil',
-    fim: () => rever ? 'Concluir' : 'Começar um orçamento',
+    fim: () => rever ? 'Concluir' : 'Ir para o início',
     extra: { rotulo: 'Ver um orçamento de exemplo', mostrar: () => !rever },
     aoMontar: (el, { redesenharArte }) => {
       // as lâmpadas das cenas são as mesmas do varal, em 3D: desenha quando a tela entra
       const palco = $('#kf-ab-palco', el); if (palco) { new MutationObserver(() => lpPintarMinis(palco)).observe(palco, { childList: true, subtree: true }); lpPintarMinis(palco); }
       el.addEventListener('click', e => {
-        const b = e.target.closest('[data-ab-luz]');
-        if (b) { luz = !luz; tocou = true; b.setAttribute('aria-pressed', luz); b.closest('.ab-cena').classList.toggle('acesa', luz); $('.ab-dica', el).textContent = luz ? 'Luz acesa.' : 'Toque no interruptor'; try { navigator.vibrate && navigator.vibrate(12); } catch {} return; }
-        const c = e.target.closest('[data-ab-comodo]');
-        if (c) { const k = +c.dataset.abComodo; pts[k] = Math.min(8, pts[k] + 1); tocou = true; redesenharArte(); ($(`[data-ab-comodo="${k}"]:not([disabled])`, el) || $('[data-ab-zerar]', el))?.focus({ preventScroll: true }); return; }
-        if (e.target.closest('[data-ab-zerar]')) { pts.fill(0); redesenharArte(); $('[data-ab-comodo]', el)?.focus({ preventScroll: true }); }
+        if (!e.target.closest('[data-ab-somar]')) return;
+        n = n >= 12 ? 1 : n + 1; tocou = true; redesenharArte(); $('[data-ab-somar]', el)?.focus({ preventScroll: true });
+        try { navigator.vibrate && navigator.vibrate(8); } catch {}
       });
-      // o nome aparece no cartão enquanto a pessoa escreve, e a primeira lâmpada acende
-      el.addEventListener('input', e => { if (e.target.id !== 'ab-eu') return; const n = e.target.value.trim(); const t = $('#ab-cartao-nome', el); if (t) t.textContent = n || 'Seu nome aqui'; $('.ab-assina', el)?.classList.toggle('acesa', n.length >= 2); });
-      // a marca chega como deve: um raio rasga a tela (só na primeira vez; quem pede movimento reduzido não vê)
-      if (!rever && Raio.ligado()) setTimeout(() => { if (aberturaAtiva()) Raio.cair({ forcar: true }); }, 650);
     },
-    aoFechar: ({ como, el }) => {
-      const inp = $('#ab-eu', el), nome = inp ? inp.value.trim().replace(/\s+/g, ' ') : '';
-      const disse = !!nome && !settings.name;
-      if (disse) { settings.name = nome; saveSettings(); }
+    aoFechar: ({ como }) => {
       if (tocou) jogo.flags.abertura = jogo.flags.abertura || Date.now();
-      // quem já usava chega com as lâmpadas que os dados dele acendem; "Primeira luz" aparece para quem acabou de dizer o nome
-      const antes = { ...jogo.vistas }; jogoSalvar(); jogoConferir({ silencioso: true });
+      // quem já usava chega com as lâmpadas que os dados dele acendem
+      jogoSalvar(); jogoConferir({ silencioso: true });
       rerender();
-      const depois = como === 'extra' ? () => createExample() : como === 'fim' && !rever ? () => { const c = $('.arranque'); if (c) KitFacil.destacar(c); } : null;
-      const luzNova = disse && jogoLigado() && !antes.luz && CONQUISTAS.find(c => c.id === 'luz');
-      return () => { if (luzNova) setTimeout(() => lpNova([luzNova], () => { depois && depois(); }), semMovimento() ? 0 : 320); else depois && depois(); };
+      return como === 'extra' ? () => createExample() : null;
     } });
 }
 
@@ -360,10 +341,10 @@ function aberturaAbrir({ rever = false } = {}) {
    o roteiro (guia.js) e a troca dos dados reais pelos da demonstração. */
 const guiaAtivo = () => KitFacil.guia.emDemonstracao();
 let dadosReais = null;
-const guiaFoto = () => JSON.stringify({ quotes, prices, settings, tools, checks, jogo, hash: location.hash, homeFilter, homeQuery, gestaoAba, PANEL });
+const guiaFoto = () => JSON.stringify({ quotes, prices, settings, tools, checks, jogo, hash: location.hash, homeQuery, obraAba, PANEL });
 function guiaPor(o) {
-  quotes = o.quotes; prices = o.prices; settings = o.settings; tools = o.tools; checks = o.checks; jogo = o.jogo; homeFilter = o.homeFilter || 'todos'; homeQuery = o.homeQuery || '';
-  if (o.gestaoAba) gestaoAba = o.gestaoAba;
+  quotes = o.quotes; prices = o.prices; settings = o.settings; tools = o.tools; checks = o.checks; jogo = o.jogo; homeQuery = o.homeQuery || '';
+  if (o.obraAba) obraAba = o.obraAba;
   for (const k in PANEL) delete PANEL[k]; Object.assign(PANEL, o.PANEL || {});
 }
 function guiaLimparTela() { closeSheet(true); $$('.kf-toast').forEach(e => { e.hidden = true; }); lpFila = []; }
@@ -374,9 +355,9 @@ function guiaIniciar() {
     comecar: () => {
       closeSheet(true);
       // os dados de verdade ficam guardados na memória; a demonstração começa do zero e nada dela é gravado
-      dadosReais = { quotes, prices, settings, tools, checks, jogo, homeFilter, homeQuery, gestaoAba, PANEL: { ...PANEL } };
+      dadosReais = { quotes, prices, settings, tools, checks, jogo, homeQuery, obraAba, PANEL: { ...PANEL } };
       semSalvar = true;
-      guiaPor({ quotes: [], prices: seedPrices(), tools: seedTools(), checks: [], homeFilter: 'todos', gestaoAba: 'estoque',
+      guiaPor({ quotes: [], prices: seedPrices(), tools: seedTools(), checks: [], obraAba: 'levar',
         settings: { ...DEF, seedV: settings.seedV, toolSeedV: settings.toolSeedV, name: 'Carlos Pereira', phone: '11987654321', city: 'São Paulo', pix: 'carlos@exemplo.com.br', kmPerL: 10, fuelPrice: 619, wearPerKm: 40, surUrgent: 50, surNight: 30, surWeekend: 50 },
         jogo: { flags: {}, vistas: {}, off: jogo.off, pronto: true } });
       go('/', true);

@@ -1,13 +1,8 @@
 /* Elétrica Fácil · o orçamento: criar, a folha do orçamento, itens, ambientes, deslocamento, proposta, mensagens, Pix, PDF e recibo. */
 'use strict';
 /* ================= criar, duplicar, excluir ================= */
-function createQuote(client) {
-  openSheet({ title: 'O que você vai fazer?', body: `<div class="kind-pick">
-      <button data-kind="quote"><span class="ki">${I.doc}</span><span><b>Orçamento</b><small>Antes do serviço. Proposta com valores, prazos e validade para o cliente aprovar.</small></span></button>
-      <button data-kind="report"><span class="ki">${I.check}</span><span><b>Relatório de serviço</b><small>Serviço já feito. Registra o diagnóstico, o que foi executado, os testes e os valores.</small></span></button>
-    </div>`,
-    onMount: s => $$('[data-kind]', s).forEach(b => b.onclick = () => { closeSheet(true); startQuote(client, b.dataset.kind === 'report'); }) });
-}
+// o orçamento novo abre direto na folha em branco; o relatório de um serviço já feito começa em Concluído
+function createQuote(client) { startQuote(client, false); }
 function startQuote(client, report) {
   const q = blankQuote();
   settings.seq = (settings.seq || 0) + 1; q.num = settings.seq; saveSettings();
@@ -16,7 +11,7 @@ function startQuote(client, report) {
   if (report) { setStatus(q, 'concluido'); q.prevStatus = 'rascunho'; }
   saveQuotes();
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
-  if (report) go('/q/' + q.id); else abrirTabela(q, 'svc', '');
+  go('/q/' + q.id);
 }
 function createExample() {
   const ex = quotes.find(q => q.example);
@@ -69,7 +64,7 @@ function deleteQuote(q) {
   confirmSheet('Excluir orçamento?', `O orçamento ${numLabel(q)}${q.client.name ? ' de ' + q.client.name : ''} será apagado${syncOn() ? ' de todos os seus aparelhos' : ' deste aparelho'}.`, 'Excluir', () => {
     const idx = quotes.indexOf(q);
     quotes = quotes.filter(x => x !== q); saveQuotes();
-    go('/orcamentos', true);
+    go('/', true);
     toast('Orçamento excluído.', { label: 'Desfazer', run: () => { quotes.splice(Math.max(0, idx), 0, q); saveQuotes(); rerender(); } });
   });
 }
@@ -595,213 +590,12 @@ function bindDays(v, q) {
   di?.addEventListener('change', () => { di.value = rep ? q.days : q.prazo.n; });
   $('#q-prazo-u', v)?.addEventListener('change', e => { q.prazo.u = e.target.value; remarca(); pinta(); });
 }
-VIEWS.quote = {
-  html(r) {
-    const q = getQ(r.id), c = compute(q), S = quoteSums(q, c);
-    return `<header class="kf-barra appbar"><div class="kf-barra-in">
-      <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
-      <div class="ab-title"><span class="ab-row"><span class="ab-eyebrow">${q.example ? 'Exemplo' : `<span class="ab-tipo">${isReport(q) ? 'Relatório' : 'Orçamento'} </span>` + numLabel(q)} · ${STATUS[q.status]}</span><span class="ab-saved" id="ab-saved" role="status" aria-label="Alterações salvas neste aparelho">${I.check}<span>Salvo</span></span></span><span class="ab-main" id="ab-name">${esc(quoteNome(q))}</span></div>
-      ${KitFacil.topo.html({ principal: false })}
-    </div></header>
-    <main class="page bar resumo">
-      <h1 class="sr-only">${isReport(q) ? 'Relatório' : 'Orçamento'} ${esc(numLabel(q))}</h1>
-      ${q.example ? `<div class="banner b-tip"><p><b>Este é um orçamento de exemplo.</b> Mexa à vontade para conhecer o app e exclua quando quiser pelo botão ⋯, ao lado de Ver proposta.</p></div>` : ''}
-      ${statusBanner(q, c)}
-      <button type="button" class="cli-lin" data-cli><span class="cli-ic" aria-hidden="true">${IN.pessoa}</span><span class="cli-tx"><b>Cliente e serviço</b><small>${q.client.name ? esc([q.client.name, q.title].filter(Boolean).join(' · ')) : `Você preenche ao gerar ${isReport(q) ? 'o relatório' : 'a proposta'}`}</small></span><span class="lc" aria-hidden="true">${I.chev}</span></button>
-      <div class="blocos">
-      ${techCardHTML(q)}
-      ${panel(`q:${q.id}:items`, 'items', q.useRooms ? 'Ambientes e itens' : 'Serviços e material', S.items, roomToggleHTML(q) + (q.useRooms ? roomsHTML(q, c) : kindCardsHTML(q, c)), { right: S.itemsR })}
-      ${panel(`q:${q.id}:val`, 'val', 'Valores', S.val, valuesHTML(q, c), { right: S.valR })}
-
-      ${panelOpen(`q:${q.id}:pag`, 'pag', 'Pagamento', S.pag)}
-        <div class="field"><span class="lab">Pagamento</span>
-          <div class="seg" role="group" aria-label="Forma de pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${q.payment.mode === k}">${l}</button>`).join('')}</div>
-        </div>
-        ${payBlockHTML(q, c)}
-      ${panelClose}
-      ${panelOpen(`q:${q.id}:cond`, 'cond', isReport(q) ? 'Datas do serviço' : 'Prazo e datas', S.cond, { attrs: ' id="h-cond"' })}
-        ${daysBlockHTML(q)}
-      ${panelClose}
-      ${panelOpen(`q:${q.id}:gar`, 'gar', isReport(q) ? 'Garantia' : 'Garantia e validade', S.gar)}
-        <div class="grid2">
-          <div class="field"><label for="q-war">Garantia, em dias</label><input id="q-war" type="text" inputmode="numeric" placeholder="90" value="${q.warranty || ''}"></div>
-          ${isReport(q) ? '' : `<div class="field"><label for="q-val">Validade, em dias</label><input id="q-val" type="text" inputmode="numeric" placeholder="15" value="${q.validity || ''}"></div>`}
-        </div>
-      ${panelClose}
-      ${panelOpen(`q:${q.id}:notes`, 'notes', 'Observações', S.notes)}
-        <div class="field"><textarea id="q-notes" aria-label="Observações" placeholder="O que está fora do orçamento, cuidados no dia do serviço…">${esc(q.notes)}</textarea>
-          </div>
-        <div class="field"><span class="lab" id="q-nt-l">Textos prontos</span>${linhas(NOTE_CHIPS.map(([l, t], k) => linha(`data-note="${k}"`, l, { tipo: 'mais', dis: q.notes.includes(t) })), ' role="group" aria-labelledby="q-nt-l"')}</div>
-      ${panelClose}
-      </div>
-      <button type="button" class="kf-btn kf-perigo block fo-excluir" data-excluir>${q.example ? 'Excluir o exemplo' : isReport(q) ? 'Excluir relatório' : 'Excluir orçamento'}</button>
-    </main>
-    <aside class="q-vivo" aria-label="Prévia ${isReport(q) ? 'do relatório' : 'da proposta'}"><div class="q-vivo-in"><div class="q-vivo-cab"><b>Prévia ao vivo</b><span class="hint">Muda enquanto você edita</span></div>${paperHTML(q, c, docMode(q))}</div></aside>
-    <div class="bbar"><div class="bbar-in visor-pe">
-      <div class="bb-total"><small data-t="paylab">${payLabel(q, c)}</small><b data-t="paytotal">${BRL(c.payTotal)}</b></div>
-      <button class="icon-btn boxed" data-menu aria-label="Mais opções do orçamento">${I.more}</button>
-      <button class="btn primary" data-preview>${isReport(q) ? 'Ver relatório' : 'Ver proposta'}${I.arrow}</button>
-    </div></div>`;
-  },
-  bind(v, r) {
-    const q = getQ(r.id);
-    const paint = () => {
-      const c = compute(q);
-      $$('[data-t="labor"]', v).forEach(e => e.textContent = BRL(c.labor));
-      $$('[data-t="mat"]', v).forEach(e => e.textContent = BRL(c.matTotal));
-      $$('[data-t="total"]', v).forEach(e => e.textContent = BRL(c.total));
-      $$('[data-t="disc"]', v).forEach(e => { e.textContent = '− ' + BRL(c.discount); e.closest('.conta-lin').hidden = !c.discount; });
-      $$('[data-t="paytotal"]', v).forEach(e => e.textContent = BRL(c.payTotal));
-      $$('[data-t="paylab"]', v).forEach(e => e.textContent = payLabel(q, c));
-      const ps = $('#pay-sum', v); if (ps) ps.innerHTML = paySumHTML(q, c);
-      outrasFormas(q).forEach(m => { const e = $('#pay-sum-' + m, v); if (e) { const x = comForma(q, m); e.innerHTML = paySumHTML(x.q, x.c); } });
-      paintSums(v, quoteSums(q, c));
-    };
-    ['input', 'change'].forEach(ev => v.addEventListener(ev, () => requestAnimationFrame(paint)));
-    $('[data-back]', v).onclick = () => back('/');
-    $('[data-menu]', v).onclick = () => quoteMenu(q);
-    $('[data-excluir]', v).onclick = () => deleteQuote(q);
-    $('[data-preview]', v).onclick = () => verProposta(q);
-
-    $('[data-cli]', v).onclick = () => clienteSheet(q);
-
-    // itens e ambientes
-    $('#q-rooms', v).addEventListener('change', e => { q.useRooms = e.target.checked; touch(q); rerender(); if (q.useRooms && !q.rooms.length) roomAddSheet(q); });
-    $$('[data-add]', v).forEach(b => b.onclick = () => abrirTabela(q, b.dataset.add, ''));
-    $$('[data-add-room]', v).forEach(b => b.onclick = () => abrirTabela(q, 'svc', b.dataset.addRoom));
-    $$('[data-room-menu]', v).forEach(b => b.onclick = () => roomMenu(q, b.dataset.roomMenu));
-    $('[data-new-room]', v)?.addEventListener('click', () => roomAddSheet(q));
-    $('[data-conf-pdf]', v)?.addEventListener('click', e => shareConference(q, e.currentTarget));
-    $$('[data-dq]', v).forEach(b => b.onclick = () => { const i = q.items.find(x => x.id === b.dataset.id); if (!i) return; i.qty = Math.max(1, Math.round((i.qty + +b.dataset.dq) * 100) / 100); if (+b.dataset.dq < 0) ultimoMenos = { id: i.id, t: Date.now() }; touch(q); rerender(); });
-    // a lixeira aparece no lugar do − quando a quantidade chega a 1: um segundo toque logo em seguida não apaga (U9)
-    $$('[data-rm]', v).forEach(b => b.onclick = () => { if (ultimoMenos.id === b.dataset.rm && Date.now() - ultimoMenos.t < 900) return; removeLine(q, b.dataset.rm); });
-    // tocar no número abre o item com a quantidade pronta para digitar (U8)
-    $$('[data-qe]', v).forEach(b => b.onclick = () => { const i = q.items.find(x => x.id === b.dataset.qe); if (!i) return; lineSheet(q, i); });
-    $$('[data-edit]', v).forEach(b => b.onclick = () => lineSheet(q, q.items.find(x => x.id === b.dataset.edit)));
-    $('#q-matcli', v).addEventListener('change', e => { q.materialBy = e.target.checked ? 'cliente' : 'eu'; touch(q); rerender(); });
-
-    // valores
-    $$('[data-x]', v).forEach(b => b.onclick = () => {
-      const k = b.dataset.x, ex = EXTRAS.find(x => x[0] === k), sk = ex[2];
-      if (q.extras[k]) { q.extras[k] = 0; touch(q); return rerender(); }
-      if (settings[sk]) { q.extras[k] = settings[sk]; touch(q); return rerender(); }
-      // sem percentual padrão: pede o valor aqui mesmo, com a opção de guardar para os próximos
-      openSheet({ title: `Adicional de ${ex[3]}`, body: `<div class="field"><label for="ax-pct">Percentual sobre a mão de obra</label><input id="ax-pct" type="text" inputmode="numeric" placeholder="Ex.: ${{ urgent: 50, night: 30, weekend: 50 }[k]}"></div>
-          <label class="switch-row" for="ax-pad"><span><b>Usar nos próximos orçamentos</b><small>Fica em Ajustes, Adicionais.</small></span><input type="checkbox" class="sw" id="ax-pad" checked></label>`,
-        foot: `<button class="btn ghost" data-no>Cancelar</button><button class="btn primary" data-ok>${I.plus}Aplicar</button>`,
-        onMount: s => {
-          $('[data-no]', s).onclick = () => closeSheet();
-          $('[data-ok]', s).onclick = () => {
-            const n = Math.max(0, Math.min(300, parseInt($('#ax-pct', s).value.replace(/\D/g, ''), 10) || 0));
-            if (!n) return toast('Informe o percentual do adicional.');
-            q.extras[k] = n; if ($('#ax-pad', s).checked) { settings[sk] = n; saveSettings(); }
-            touch(q); closeSheet(true); rerender();
-          };
-        } });
-    });
-    $('[data-trip]', v).onclick = () => tripSheet(q);
-    $$('[data-dm]', v).forEach(b => b.onclick = () => { if (q.discount.mode === b.dataset.dm) return; q.discount.mode = b.dataset.dm; touch(q); rerender(); });
-    $('[data-pago]', v)?.addEventListener('click', () => pagoSheet(q));
-    $$('[data-pago-rm]', v).forEach(b => b.onclick = () => { const x = q.pagos.find(y => y.id === b.dataset.pagoRm); if (!x) return; q.pagos = q.pagos.filter(y => y !== x); touch(q); rerender(); toast(`Pagamento de ${BRL(x.v)} apagado.`, { label: 'Desfazer', run: () => { q.pagos.push(x); q.pagos.sort((a, b) => a.t - b.t); touch(q); rerender(); } }); });
-    // impostos (F6): o modo e a base escolhidos aqui viram o padrão dos próximos orçamentos
-    const lembraTax = () => { settings.taxMode = q.tax.mode; settings.taxPct = q.tax.pct; settings.taxBase = q.tax.base; saveSettings(); };
-    $$('[data-tx]', v).forEach(b => b.onclick = () => { q.tax = { ...taxOf(q), mode: b.dataset.tx }; if (q.tax.mode !== 'sem' && !q.tax.pct) q.tax.pct = 5; lembraTax(); touch(q); rerender(); });
-    $$('[data-txb]', v).forEach(b => b.onclick = () => { q.tax = { ...taxOf(q), base: b.dataset.txb }; lembraTax(); touch(q); rerender(); });
-    $('#q-txp', v)?.addEventListener('change', e => { const x = parseQty(e.target.value); q.tax = { ...taxOf(q), pct: Math.max(0, Math.min(30, x || 0)) }; e.target.value = fmtQty(q.tax.pct); lembraTax(); touch(q); rerender(); });
-    $('#q-disc', v).addEventListener('input', e => {
-      if (q.discount.mode === 'value') q.discount.value = parseMoney(e.target.value) || 0;
-      else q.discount.pct = Math.min(100, parseQty(e.target.value) || 0);
-      touch(q); paint();
-    });
-
-    // condições
-    $$('[data-pm]', v).forEach(b => b.onclick = () => { q.payment.mode = b.dataset.pm; q.payment.outras = (q.payment.outras || []).filter(m => m !== b.dataset.pm); touch(q); rerender(); });
-    $$('[data-outra]', v).forEach(b => b.onclick = () => { const m = b.dataset.outra, L = q.payment.outras || []; q.payment.outras = L.includes(m) ? L.filter(x => x !== m) : [...L, m]; touch(q); rerender(); });
-    $$('[data-ep]', v).forEach(b => b.onclick = () => { q.payment.entryPct = +b.dataset.ep; touch(q); rerender(); });
-    $$('[data-in]', v).forEach(b => b.onclick = () => { q.payment.installments = Math.max(1, Math.min(18, (q.payment.installments || 3) + +b.dataset.in)); q.payment.taxaPct = null; touch(q); rerender(); });
-    $$('[data-ct]', v).forEach(b => b.onclick = () => { q.payment.cardTipo = b.dataset.ct; if (b.dataset.ct === 'debito' && q.payment.juros === 'mes') q.payment.juros = 'taxa'; q.payment.taxaPct = null; touch(q); rerender(); });
-    $$('[data-jur]', v).forEach(b => b.onclick = () => { q.payment.juros = b.dataset.jur; touch(q); rerender(); });
-    $$('[data-paga]', v).forEach(b => b.onclick = () => { q.payment.paga = b.dataset.paga; touch(q); rerender(); });
-    $$('[data-sa]', v).forEach(b => b.onclick = () => { q.payment.semAte = Math.max(0, Math.min(18, (q.payment.semAte || 0) + +b.dataset.sa)); touch(q); rerender(); });
-    $$('[data-avm]', v).forEach(b => b.onclick = () => { if (q.payment.avista.mode === b.dataset.avm) return; q.payment.avista.mode = b.dataset.avm; touch(q); rerender(); });
-    $('[data-taxa-tab]', v)?.addEventListener('click', () => { q.payment.taxaPct = null; touch(q); rerender(); });
-    $('#q-taxa', v)?.addEventListener('input', e => { const x = parseQty(e.target.value); q.payment.taxaPct = x === null ? 0 : Math.max(0, Math.min(40, x)); touch(q); paint(); });
-    $('#q-taxa', v)?.addEventListener('change', () => rerender());
-    $('#q-mes', v)?.addEventListener('input', e => { q.payment.mesPct = Math.max(0, Math.min(20, parseQty(e.target.value) || 0)); touch(q); paint(); });
-    $('#q-avd', v)?.addEventListener('input', e => { const a = q.payment.avista; if (a.mode === 'value') a.value = parseMoney(e.target.value) || 0; else a.pct = Math.max(0, Math.min(50, parseQty(e.target.value) || 0)); touch(q); paint(); });
-    // só números: o que aparece no campo é o que vale (nada de "-10" na tela e 10 por dentro)
-    const soDigitos = el => { const d = el.value.replace(/\D/g, '').slice(0, 5); if (el.value !== d) el.value = d; return parseInt(d, 10) || 0; };
-    $('#q-war', v).addEventListener('input', e => { q.warranty = soDigitos(e.target); touch(q); });
-    $('#q-war', v).addEventListener('change', e => { if (q.warranty > 1825) confirmSheet('Garantia longa', `${q.warranty} dias são mais de ${Math.floor(q.warranty / 365)} anos. É isso mesmo?`, 'Manter', () => {}, false); });
-    $('#q-val', v)?.addEventListener('input', e => { q.validity = soDigitos(e.target); touch(q); });
-    $('#q-val', v)?.addEventListener('change', e => { if (!q.validity) { q.validity = 1; e.target.value = '1'; touch(q); toast('A validade mínima é de 1 dia: a proposta vale até amanhã.'); } else if (q.validity > 365) confirmSheet('Validade longa', `A proposta valeria por ${q.validity} dias. Preços de material mudam: é isso mesmo?`, 'Manter', () => {}, false); });
-    // datas do serviço: dias de serviço e calendário
-    bindDays(v, q);
-    $('#q-tbd', v)?.addEventListener('change', e => { q.dateTbd = e.target.checked; touch(q); $('#q-cal-area', v).hidden = q.dateTbd; const cdc = $('#q-cdc', v); if (cdc) cdc.hidden = q.dateTbd || !!q.dates.length; requestAnimationFrame(() => paintSums(v, quoteSums(q, compute(q)))); });
-    // serviço já realizado: vira relatório; desfazer volta para a situação anterior
-    $('#q-done', v)?.addEventListener('change', e => { if (!e.target.checked) return; setStatus(q, 'concluido'); rerender(); window.scrollTo({ top: 0 }); setTimeout(() => baixaSheet(q), 350); toast('Agora é um Relatório de Serviços Executados.'); });
-    $('[data-goto-days]', v)?.addEventListener('click', () => { const d = $(`details[data-panel="q:${q.id}:cond"]`, v); KitFacil.secao.abrir(d); setTimeout(() => $('#cal', v)?.querySelector('[aria-pressed="true"], button.cal-d:not([disabled])')?.focus({ preventScroll: true }), KitFacil.movimento.ms + 40); });
-    $('[data-undone]', v)?.addEventListener('click', () => {
-      const prev = q.prevStatus && q.prevStatus !== 'concluido' ? q.prevStatus : 'rascunho';
-      setStatus(q, prev); rerender(); toast(`Voltou para ${STATUS[prev].toLowerCase()}. O documento é orçamento de novo.`);
-    });
-    $('[data-pix-rest]', v)?.addEventListener('click', () => { const px = pixOf(q, compute(q), 'report'); if (px) pixSheet(px); });
-    const nt = $('#q-notes', v);
-    nt.addEventListener('input', () => { q.notes = nt.value; touch(q); $$('[data-note]', v).forEach(c => linhaFeita(c, q.notes.includes(NOTE_CHIPS[+c.dataset.note][1]))); });
-    $$('[data-note]', v).forEach(b => b.onclick = () => {
-      const t = NOTE_CHIPS[+b.dataset.note][1];
-      q.notes = (q.notes.trim() ? q.notes.trim() + '\n' : '') + t; nt.value = q.notes; autoGrow(nt); touch(q); linhaFeita(b, true);
-    });
-
-    // relatório técnico: etapa 1 (botão) abre a etapa 2 (detalhes); a frase entra no fim do campo
-    $$('[data-tech]', v).forEach(t => t.addEventListener('input', () => {
-      const k = t.dataset.tech; q[k] = t.value; touch(q);
-      $$(`[data-tc="${k}"]`, v).forEach(b => { const it = TECH[k][+b.dataset.ti]; if (it.s) linhaFeita(b, q[k].includes(it.s)); });
-    }));
-    $$('[data-tc]', v).forEach(b => b.onclick = () => {
-      const k = b.dataset.tc, it = TECH[k][+b.dataset.ti];
-      const add = txt => {
-        if (k === 'tests') { q.tests.push(txt); touch(q); rerender(); return; }
-        const ta = $('#q-' + k); q[k] = (q[k].trim() ? q[k].trim() + '\n' : '') + txt; touch(q);
-        if (ta) { ta.value = q[k]; autoGrow(ta); }
-        toast('Adicionado.');
-      };
-      if (it.s) { if (!q[k].includes(it.s)) { add(it.s); linhaFeita(b, true); } else toast('Esse texto já está no campo.'); return; }
-      techSheet(q, k, +b.dataset.ti, add);
-    });
-    $$('[data-test-rm]', v).forEach(b => b.onclick = () => {
-      const k = +b.dataset.testRm, [gone] = q.tests.splice(k, 1); touch(q); rerender();
-      toast('Teste removido.', { label: 'Desfazer', run: () => { q.tests.splice(k, 0, gone); touch(q); rerender(); } });
-    });
-    $('[data-work-items]', v)?.addEventListener('click', () => {
-      const txt = q.items.filter(i => i.kind === 'svc').map(i => `${i.name}: ${fmtQty(i.qty)} ${unitTxt(i.qty, i.unit)}.`).join('\n');
-      q.work = (q.work.trim() ? q.work.trim() + '\n' : '') + txt; $('#q-work', v).value = q.work; autoGrow($('#q-work', v)); touch(q);
-    });
-
-    // situação
-    $$('[data-st]', v).forEach(b => b.onclick = () => { if (b.dataset.st === 'aprovado') return approveSheet(q); setStatus(q, b.dataset.st); rerender(); if (q.status === 'concluido') setTimeout(() => baixaSheet(q), 350); toast({ aprovado: 'Boa! Orçamento aprovado.', recusado: 'Marcado como recusado.', concluido: 'Serviço concluído.', rascunho: 'Reaberto como rascunho.' }[b.dataset.st] || 'Situação alterada.'); });
-    $('[data-pix]', v)?.addEventListener('click', () => { const px = pixOf(q, compute(q)); if (px) pixSheet(px); });
-    $('[data-receipt]', v)?.addEventListener('click', () => receiptSheet(q));
-  },
-};
+/* a tela do orçamento (a folha) fica em folha.js */
 let ultimoMenos = { id: '', t: 0 };
 function removeLine(q, id) {
   const idx = q.items.findIndex(x => x.id === id); if (idx < 0) return;
   const [gone] = q.items.splice(idx, 1); touch(q); rerender();
   toast(`${gone.name} removido.`, { label: 'Desfazer', run: () => { q.items.splice(idx, 0, gone); touch(q); rerender(); } });
-}
-function quoteMenu(q) {
-  openSheet({ title: q.client.name || 'Orçamento', body: `<div class="opts">
-      <button class="opt" data-o="status">${I.flag}<span>Alterar situação<small>Agora: ${STATUS[q.status]}</small></span></button>
-      ${['aprovado', 'concluido'].includes(q.status) ? `<button class="opt" data-o="receipt">${I.receipt}<span>Gerar recibo</span></button>` : ''}
-      <button class="opt" data-o="dup">${I.dup}<span>Duplicar<small>Cria um rascunho igual, com novo número</small></span></button>
-    </div>`,
-    onMount: s => $$('[data-o]', s).forEach(b => b.onclick = () => {
-      const o = b.dataset.o;
-      if (o === 'status') statusSheet(q);
-      if (o === 'receipt') receiptSheet(q);
-      if (o === 'dup') { closeSheet(true); duplicateQuote(q); }
-    }) });
 }
 // campo de data: <input type="date"> que o Kit Fácil troca pelo calendário do app (KitFacil.data); aqui só convertemos
 const isoDe = t => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -1165,57 +959,6 @@ function markSent(q) {
   if (q.status !== 'rascunho' || q.example) return;
   setStatus(q, 'enviado'); rerender(); toast('Marcado como enviado.');
 }
-VIEWS.preview = {
-  html(r) {
-    const q = getQ(r.id), c = compute(q), mode = docMode(q);
-    const warn = [];
-    if (!settings.name && !settings.company) warn.push('Seu nome e telefone ainda não aparecem no cabeçalho.');
-    if (!q.client.name) warn.push('Falta o nome do cliente: ele é pedido quando você envia.');
-    if (!q.items.length) warn.push('Nenhum item lançado.');
-    if (!daysOk(q)) warn.push(prazoProblema(q) === 'retro' ? 'Há datas que já passaram: escolha um novo início.' : 'Os dias marcados não conferem com o prazo.');
-    return `<header class="kf-barra appbar"><div class="kf-barra-in">
-      <button class="icon-btn" data-back aria-label="Voltar">${I.back}</button>
-      <div class="ab-title"><span class="ab-eyebrow">${mode === 'report' ? 'Relatório' : 'Proposta'} · ${esc(numLabel(q))}</span><span class="ab-main">${esc(q.client.name || 'Falta o cliente')}</span></div>
-      ${KitFacil.topo.html({ principal: false })}
-    </div></header>
-    <main class="page bar proposta">
-      <h1 class="sr-only">${mode === 'report' ? 'Relatório' : 'Proposta'} ${esc(numLabel(q))}</h1>
-      ${warn.length ? `<div class="banner b-tip"><p><b>Antes de enviar:</b> ${esc(warn.join(' '))}</p>${!settings.name && !settings.company ? '<div class="banner-act"><button class="btn sm ghost" data-me>Preencher meus dados</button></div>' : ''}</div>` : ''}
-      ${isReport(q) ? KitFacil.ui.abas({ itens: [['report', 'Relatório de serviços'], ['quote', 'Orçamento original']], atual: mode, rotulo: 'Documento', dado: 'doc' }) : ''}
-      ${paperHTML(q, c, mode)}
-      <p class="foot-note">O PDF sai em folha A4, com este mesmo conteúdo.</p>
-      <button class="btn ghost block concluir" data-concluir>${I.check}Concluir e voltar à lista</button>
-      <p class="foot-note">Tudo o que você preencheu já está salvo neste aparelho.</p>
-    </main>
-    <div class="bbar"><div class="bbar-in acts">
-      <button class="btn primary" data-pdf>${I.share}Enviar PDF</button>
-      <a class="btn wa" data-wa href="${waLink(q.client.phone, quoteMessage(q, c, mode))}" target="_blank" rel="noopener">${I.wa}WhatsApp</a>
-      <button class="icon-btn boxed" data-more aria-label="Mais opções de envio">${I.more}</button>
-    </div></div>`;
-  },
-  bind(v, r) {
-    const q = getQ(r.id);
-    loadJsPDF().catch(() => {});
-    fitMark(v);
-    $('[data-back]', v).onclick = () => back('/q/' + q.id);
-    $('[data-concluir]', v).onclick = () => {
-      saveQuotes();
-      const msg = isEmptyQuote(q) ? 'Nada preenchido: o documento vazio foi descartado.' : `${isReport(q) ? 'Relatório' : 'Orçamento'} salvo${syncOn() ? '' : ' neste aparelho'}.`;
-      const d = (history.state && history.state.d) || 0;
-      if (d >= 2) history.go(-2); else go('/', true);
-      setTimeout(() => toast(msg), 60);
-    };
-    $('[data-me]', v)?.addEventListener('click', () => KitFacil.ajustes.ir('conta'));
-    const cv = $('canvas[data-qr]', v);
-    $$('[data-doc]', v).forEach(b => b.onclick = () => { previewDoc[q.id] = b.dataset.doc; rerender(); });
-    if (cv) { const px = pixOf(q, compute(q)); qrMatrix(pixPayload(px)).then(m => drawQR(cv.getContext('2d'), m, 0, 0, 200)).catch(() => cv.replaceWith(Object.assign(document.createElement('span'), { textContent: '' }))); }
-    // sem o nome do cliente nada sai: ele é pedido aqui, na hora de enviar (Código, Art. 64-D)
-    const semNome = e => { if (q.client.name) return false; e.preventDefault(); clienteSheet(q, () => rerender()); return true; };
-    $('[data-pdf]', v).onclick = e => { if (!semNome(e)) sharePDF(q, e.currentTarget); };
-    $('[data-wa]', v).addEventListener('click', e => { if (!semNome(e)) setTimeout(() => markSent(q), 400); });
-    $('[data-more]', v).onclick = e => { if (!semNome(e)) shareMore(q); };
-  },
-};
 async function sharePDF(q, btn) {
   const html = btn.innerHTML; btn.disabled = true; btn.textContent = 'Gerando…';
   try {
@@ -1223,26 +966,6 @@ async function sharePDF(q, btn) {
     if (await saveFile(fileName(DOC[mode].file, q), blob)) markSent(q);
   } catch (e) { console.warn(e); toast('Não foi possível gerar o PDF. Na primeira vez, o app precisa de internet.'); }
   btn.disabled = false; btn.innerHTML = html;
-}
-function shareMore(q) {
-  const c = compute(q), px = pixOf(q, c);
-  openSheet({ title: 'Mais opções', body: `<div class="opts">
-      <button class="opt" data-o="edit">${ic('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>')}<span>Editar ${isReport(q) ? 'o relatório' : 'o orçamento'}<small>Volta para os itens, valores e dados do cliente</small></span></button>
-      <button class="opt" data-o="copy">${I.copy}<span>Copiar texto${isReport(q) ? '' : ' da proposta'}<small>Para colar em outro aplicativo</small></span></button>
-      ${q.useRooms && q.items.length ? `<button class="opt" data-o="conf">${I.list}<span>PDF da conferência por ambiente<small>Quantidades de cada cômodo, sem preços, para conferir na obra</small></span></button>` : ''}
-      ${c.mat.length ? `<a class="opt" data-o="mat" href="${waLink(q.client.phone, materialMessage(q, c))}" target="_blank" rel="noopener">${I.wa}<span>Lista de material pelo WhatsApp<small>Total de cada item, para o cliente comprar</small></span></a>` : ''}
-      ${px ? `<button class="opt" data-o="pix">${I.pix}<span>QR code do Pix<small>${BRL(px.value)} · ${px.what}</small></span></button>` : ''}
-      <button class="opt" data-o="status">${I.flag}<span>Alterar situação<small>Agora: ${STATUS[q.status]}</small></span></button>
-    </div>`,
-    onMount: s => $$('[data-o]', s).forEach(b => b.addEventListener('click', () => {
-      const o = b.dataset.o;
-      if (o === 'edit') { closeSheet(true); back('/q/' + q.id); }
-      if (o === 'copy') { closeSheet(true); copyText(quoteMessage(q, c), 'Texto copiado.'); markSent(q); }
-      if (o === 'conf') { closeSheet(true); shareConference(q); }
-      if (o === 'mat') closeSheet(true);
-      if (o === 'pix') pixSheet(px);
-      if (o === 'status') statusSheet(q);
-    })) });
 }
 async function shareConference(q, btn) {
   const html = btn && btn.innerHTML;

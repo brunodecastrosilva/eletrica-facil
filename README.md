@@ -2,40 +2,45 @@
 
 Orçamentos de elétrica prontos em minutos, direto no celular, no tablet ou no computador.
 
-Versão **2.0.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **3.0.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
-[Código do Projeto Fácil](comum/CODIGO.md) 0.11.0. Na 2.0.0 o app foi refeito para o eletricista (Código, Arts. 3º, 56
-e 64-D): a moldura, os componentes e o comportamento dos controles são os da família; o fluxo e o desenho das telas
-são dele.
+[Código do Projeto Fácil](comum/CODIGO.md). Na 3.0.0 o app foi refeito do zero, a partir de um desenho aprovado antes
+do código (Regras do app, Art. 4º): a moldura, os componentes e o comportamento dos controles são os da família; o
+fluxo e o desenho das telas são do eletricista. As contas e os documentos vêm da versão anterior.
 
 ## O que o app faz
 
-- **Início:** toque em Novo orçamento e comece. Logo abaixo, o que pede a sua atenção (cobrar resposta, executar,
-  receber), o rascunho em andamento e o mês
-- **Tabela na mão:** o orçamento nasce na sua tabela de preços. Cada toque soma um serviço ou material, e o total sobe
-  no pé. Tira de categorias, "Mais usados" e busca; material sugerido para cada serviço; separe por ambiente quando
-  quiser
-- **O nome do cliente só é pedido ao gerar a proposta.** Até lá, o orçamento aparece pelo serviço
-- **Valores:** deslocamento pela distância, consumo do veículo e combustível; adicionais de urgência, noite e fim de
-  semana; desconto; impostos ou nota fiscal por orçamento (sem, por fora ou embutido)
+- **A folha é a tela:** o orçamento é montado na própria folha que o cliente recebe. Linha cheia sai no documento;
+  o que é tracejado é só seu. Tocar numa linha muda a quantidade e o preço ali mesmo, e dá para guardar o preço novo
+  na tabela
+- **Somar:** a tabela de preços abre numa janela, em seções por categoria, com busca e material sugerido para cada
+  serviço. Cada toque soma um; separe por ambiente quando quiser
+- **O botão amarelo é o próximo passo:** Enviar, Aprovou, Concluir, Receber e Recibo. Acima da folha, o bastidor
+  mostra as cinco etapas (Rascunho, Enviado, Aprovado, Concluído, Recebido) e o que fazer em cada uma
+- **O nome do cliente só é pedido ao enviar.** Até lá, o orçamento aparece pelo serviço
+- **Acertar o total:** deslocamento pela distância, consumo do veículo e combustível; adicionais de urgência, noite e
+  fim de semana; desconto; impostos ou nota fiscal por orçamento (sem, por fora ou embutido)
 - **Pagamento, prazo e garantia:** à vista, com entrada, no cartão (com ou sem juros) ou a combinar; o prazo marca os
   dias no calendário, pulando fins de semana e feriados
 - **Proposta em PDF (folha A4) ou pelo WhatsApp,** com QR code do Pix; relatório de serviços executados e recibo no fim
-- **Orçamentos:** tudo o que você orçou, por situação (aguardando resposta, aprovados, rascunhos, concluídos e recusados)
-- **Tabela:** os seus preços, na barra de baixo; os que vêm com o app aparecem em cinza e ficam em preto quando você muda
-- **Gestão:** materiais em estoque (com marcas, custo, repasse e mínimo), ferramentas, lista de compras e checklist de
-  ida e volta da obra; ao concluir um serviço, o app oferece dar baixa no material usado
+- **Orçamentos:** a tela que abre o app, num quadro por etapa (rascunhos, esperando resposta, para executar, para
+  receber), com o Arquivo e o resumo do mês
+- **Tabela:** os seus preços, em seções por categoria; os que vêm com o app aparecem em letra fina e ficam em letra
+  forte quando você muda
+- **Obra:** Levar (a lista de ida e volta), Comprar (o que chegou ao mínimo), Estoque (material, com marcas, custo,
+  repasse e mínimo) e Ferramentas; ao concluir um serviço, o app dá baixa no material usado
 - **Conquistas:** cada passo bem dado acende uma lâmpada do seu varal (18 ao todo) e conta para o nível, de Aprendiz a
   Mestre. Cada lâmpada é um objeto 3D (WebGL) que gira com o dedo, com o filamento na forma do ícone da conquista.
   Tocar na lâmpada (ou no fundo) faz ela piscar mais forte. O varal balança: com o dedo, e com o celular inclinado ou
   chacoalhado (no iPhone, depois do toque em "Balançar com o celular"). Nenhuma premia cobrar mais; dá para desligar em
   Ajustes → Conquistas e apresentação
-- **Apresentação na primeira abertura,** em quatro telas do próprio app: o interruptor que acende a luz, a planta da
-  casa em que cada toque soma uma tomada, o caminho da proposta ao recibo em quatro lâmpadas e o cartão com o seu nome.
-  E **um guia só,** que faz cada passo na tela, do começo ao fim, numa demonstração que não grava nada
-- **Um raio de surpresa:** de vez em quando um raio rasga a tela; mais raro, cai uma tempestade. É enfeite: não recebe
-  toque, some em um segundo, respeita o movimento reduzido e dá para desligar em Ajustes → Conquistas e apresentação
+- **Apresentação na primeira abertura,** em quatro telas: a lâmpada apagada, a folha em que cada toque soma, o botão
+  amarelo que avança e a lâmpada acesa. Não pede nada. E **um guia só,** que faz cada passo na tela, do começo ao fim,
+  numa demonstração que não grava nada
+- **Um raio de surpresa:** de vez em quando um raio rasga a tela. É enfeite: não recebe toque, dá no máximo dois
+  clarões, some em pouco mais de um segundo, respeita o movimento reduzido e dá para desligar em Ajustes → Conquistas e
+  apresentação. Não há tempestade
 - **Use em vários aparelhos (opcional):** orçamentos, preços e ajustes sincronizados, criptografados, num gist secreto
   da sua conta GitHub
 - **Avaliação e relato de problemas** pelo balão no alto da tela; **presente para o criador** (Pix, opcional)
@@ -64,7 +69,9 @@ Sem a sincronização, os dados ficam só no aparelho; toque na **nuvem** no alt
 O app guarda dados pessoais dos clientes de quem usa (nome, telefone, endereço, CPF ou CNPJ).
 A guia **Ajustes → Privacidade e segurança** explica isso para quem usa o app.
 
-Quem já usava a versão 0.5.1 não perde nada: as chaves do armazenamento e os formatos são os mesmos.
+A versão 3 começa limpa (Regras do app, Art. 6º): na primeira abertura ela apaga o que as versões 1 e 2 guardaram neste
+aparelho (fica só o tema) e usa um arquivo novo no gist da sincronização (`eletrica-facil-3.json`). O arquivo antigo do
+gist não é lido nem alterado.
 
 ## Para desenvolver
 
@@ -87,18 +94,17 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)) e o Conta Fácil, a referência:
 
 - **Identidade:** ferramenta de obra. Grafite, papel e amarelo de segurança; títulos e números em Barlow Semi Condensed
-  (letra de placa de obra), texto em Atkinson Hyperlegible Next. Os totais aparecem num visor (grafite com números
-  amarelos, como o de um multímetro); a fita zebrada marca o começo; as conquistas são lâmpadas de um varal
-- **Duas cores de botão (Art. 66):** amarelo para a ação principal da tela (Ver orçamento, Ver proposta, Salvar) e grafite
+  (letra de placa de obra), texto em Atkinson Hyperlegible Next. O orçamento é uma folha de papel; o bastidor e os
+  totais aparecem em grafite com números amarelos, como o visor de um multímetro; as conquistas são lâmpadas de um varal
+- **Duas cores de botão (Art. 66):** amarelo para o próximo passo (Enviar, Aprovou, Concluir, Receber, Salvar) e grafite
   com letra amarela para a ação que começa o trabalho (Novo orçamento, o botão do centro, o + da tabela). Vermelho só
   para excluir
-- **Alto da tela:** a marca à esquerda; nuvem, presente e balão à direita. No orçamento e na proposta, voltar, título,
-  nuvem e balão
-- **Navegação:** Início, Orçamentos, o orçamento novo no centro, Tabela e Mais (Gestão, Conquistas, guia, exemplo e
+- **Alto da tela:** a marca à esquerda; nuvem, presente e balão à direita. No orçamento, voltar, título, nuvem e balão
+- **Navegação:** Orçamentos, Tabela, o orçamento novo no centro, Obra e Mais (Conquistas, guia, exemplo e
   Ajustes). No computador, trilho lateral com Mais e Ajustes no pé
-- **Um jeito de criar (Art. 64, II):** o orçamento nasce no Início e no botão do centro; Tabela e Gestão têm a linha de
+- **Um jeito de criar (Art. 64, II):** o orçamento nasce em Orçamentos e no botão do centro; Tabela e Obra têm a linha de
   adicionar no fim de cada lista, sem botão flutuante
-- **Pede só o que precisa, quando precisa (Art. 64-D):** o nome do cliente é pedido ao gerar a proposta
+- **Pede só o que precisa, quando precisa (Art. 64-D):** o nome do cliente é pedido ao enviar
 - **Janelas:** nenhuma abre com caixa de texto selecionada, e nenhuma tem "Pronto" ou "Fechar" sozinho no pé: o X fecha
 - **Ajustes:** as oito guias comuns e as guias próprias **Pix**, **Veículo e deslocamento**, **Adicionais**,
   **Orçamento novo**, **Textos dos documentos** e **Conquistas e apresentação**. "Seus dados na proposta" fica em Conta
@@ -109,20 +115,21 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)) e 
 | Arquivo | Conteúdo |
 |---|---|
 | `index.html` | moldura da página e a política de segurança (CSP); nenhum script dentro da página |
-| `estilo.css` | estilo do app; a identidade da 2.0 (visor, fita, tira de categorias, tabela na mão) fica no fim |
+| `estilo.css` | estilo do app; a 3.0 (a folha, o bastidor, o quadro, as seções, a apresentação e o raio) fica no fim |
 | `motor.js` | utilidades, tabela de preços inicial, dados, sincronização, contas, rotas e janelas |
-| `orcamento.js` | criar, a tela do orçamento, itens, ambientes, deslocamento, proposta, mensagens, Pix, PDF e recibo |
-| `montar.js` | a tabela na mão (somar itens tocando) e a janela do cliente, pedida ao gerar a proposta |
-| `telas.js` | Tabela (os preços) e Gestão (materiais, ferramentas e checklist) |
+| `orcamento.js` | criar, itens, ambientes, deslocamento, mensagens, Pix, PDF, recibo e as janelas de aprovação, situação e relatório |
+| `folha.js` | a tela do orçamento: a folha, o bastidor com as etapas, o pé com o próximo passo e as janelas (Somar, Acertar o total, Pagamento, Prazo, Garantia, Observações, Enviar, Concluir, Receber e Mais opções) |
+| `montar.js` | as linhas da tabela dentro da janela Somar e o nome com que o orçamento aparece nas listas |
+| `telas.js` | Tabela (os preços) e Obra (Levar, Comprar, Estoque e Ferramentas) |
 | `lampada.js` | a lâmpada em 3D das conquistas: malha gerada no código, WebGL com vidro transparente e giro com o dedo; sem WebGL, desenho em canvas comum |
-| `raio.js` | o raio de surpresa e a tempestade: desenho do raio, quando pode cair e o liga-desliga |
+| `raio.js` | o raio de surpresa: desenho do raio, os tempos do clarão, quando pode cair e o liga-desliga |
 | `jogo.js` | conquistas: as lâmpadas, os níveis, a tela Conquistas e o varal que balança (pêndulos, dedo e movimento do aparelho) |
-| `inicio.js` | Início (começar, pendências e o mês), Orçamentos (a lista) e Mais |
+| `inicio.js` | Orçamentos (o quadro por etapa, o Arquivo e o mês) e Mais |
 | `guia.js` | roteiro do guia, na ordem de uso |
 | `casca.js` | troca de tela, navegação, Ajustes, abertura (onboarding), guia e arranque |
 | `comum/` | **Kit Fácil**: sistema de design, barra de cima, navegação, Ajustes, avaliação, sincronização, janelas, abertura, guia e a verificação. Igual nos quatro apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
-| `tests/` | testes do app: `app.test.mjs` (contas, janelas e Ajustes), `novo.test.mjs` (Início, tabela na mão e cliente na proposta, navegação, conquistas e lâmpada 3D, abertura, raio de surpresa, piscar e varal, e guia) e `acessibilidade.test.mjs` |
+| `tests/` | testes do app: `app.test.mjs` (começo limpo, folha, Somar, contas, próximo passo, quadro, Tabela, Obra, Ajustes, apresentação, raio, documentos, sincronização e guia) e `acessibilidade.test.mjs` (varredura WCAG 2.2 AA, claro e escuro) |
 
 ## Serviços externos e configuração
 
@@ -148,27 +155,24 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)) e 
 - **Apresentação em tela baixa:** no Kit, o palco da abertura encolhe (`min-height:0`) e, em celular pequeno ou com o
   teclado aberto, o texto passa por baixo dos botões. Aqui o palco não encolhe além do conteúdo e a abertura rola
   (`estilo.css`, fim do arquivo). Proposta para o Integrador: o Kit fazer o mesmo.
-- **Marca que leva ao Início:** no Conta Fácil a marca do alto é um botão; o teste comum `conferirTopo` acusa qualquer
+- **Marca que leva ao começo:** no Conta Fácil a marca do alto é um botão; o teste comum `conferirTopo` acusa qualquer
   botão a mais em `.kf-barra-in`. Aqui a marca ficou sem toque. Proposta para o Integrador: o Kit dizer qual dos dois vale.
+- **Rótulo da navegação em celular de 320 px (3.0.0):** o Kit corta com reticências o rótulo que não cabe, e
+  "Orçamentos" saía "Orçame…". Só nessa largura (até 359 px), o app diminui a letra do rótulo para 10 px e tira a
+  margem lateral do item (`estilo.css`, fim do arquivo). Proposta para o Integrador: a navegação do Kit ajustar a letra
+  quando há cinco itens e a tela é estreita.
+- **Apresentação escura (3.0.0):** a abertura do Kit usa as cores do tema; aqui ela é sempre escura (a lâmpada precisa
+  do escuro para acender), trocando as variáveis de cor só dentro de `.kf-abertura`. Não muda o comportamento.
 
 ## Exceções ao padrão
-
-- **Contraste dos preços de fábrica (lei 7, contraste AA):** os preços que vêm com o app aparecem em cinza claro
-  (`--ref`: `#A6A193` no tema claro, 2,6:1 sobre o branco; `#6E6A5D` no escuro, 3,3:1), abaixo dos 4,5:1 do AA.
-  Justificativa (decisão do Bruno, 03/11/2026): o cinza é a única indicação de que o preço ainda é o de fábrica e precisa
-  se destacar claramente do preto dos preços do usuário; o mais claro que passa no AA ficava escuro demais. Para não
-  depender só da cor: o leitor de tela diz "preço que vem com o app" e a nota no fim da Tabela explica o cinza. A levar
-  ao Integrador para registro.
 
 - **Lista de escolha, calendário e relógio do Kit perto do pé da tela:** o Kit só rola quando a lista passa do fim da
   janela do navegador; dentro de uma janela do app, a lista pode ficar atrás do rodapé (e, na página, atrás das barras de
   baixo). O app completa: depois de abrir, rola o que falta para o último item aparecer (correção em `casca.js`, sem
   mexer no `comum/`). A levar ao Integrador como correção do Kit, para os quatro apps.
 
-- **Tabela e Gestão sem linha de apoio (lei 6, telas principais com título e uma linha de apoio):** a pedido do Bruno
-  (04/11/2026), as duas telas que trocam de parte por guias não têm a linha de apoio: as guias já dizem o que há na tela,
-  e a linha só empurrava a lista para baixo. Proposta para o Integrador: telas principais com guias não têm linha de
-  apoio, nos quatro apps (o `KitFacil.ui.cabecalho` já aceita `sub` vazio).
+Exceções retiradas na 3.0.0: o contraste dos preços de fábrica (a letra fina passa no AA: `#767162` no tema claro e
+`#A39E8D` no escuro) e as telas Tabela e Gestão sem linha de apoio (Tabela e Obra têm a linha).
 
 ## Publicação
 

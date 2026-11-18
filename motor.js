@@ -1,6 +1,6 @@
 /* Elétrica Fácil · motor: utilidades, tabela de preços, dados, sincronização, contas e janelas. */
 'use strict';
-const VERSAO = '2.0.1';
+const VERSAO = '3.0.0';
 // a marca do alto é o ícone do app, o mesmo da tela de início do celular (um ícone só, como no Conta Fácil)
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 /* ================= utilidades ================= */
@@ -475,7 +475,6 @@ const COMPOSICAO = {
   'Instalação de carregador de veículo elétrico': [['Disjuntor bipolar 40 a 63 A', 1], ['DR bipolar 63 A 30 mA', 1], ['Cabo flexível 10 mm²', 30], ['Eletroduto corrugado 1"', 10]],
 };
 const compDe = name => (COMPOSICAO[name] || []).map(([n, q]) => ({ n, q }));
-const SEED_V2 = ['Ponto de interruptor paralelo three-way', 'Tomada dupla 10 A com placa', 'Interruptor duplo com placa', 'Interruptor paralelo three-way com placa', 'Interruptor intermediário four-way'];
 const seedPrices = () => SEED.map(([kind, cat, name, unit, price]) => ({ id: uid(), kind, cat, name, unit, price, ref: true, ...(kind === 'svc' && COMPOSICAO[name] ? { comp: compDe(name) } : {}) }));
 /* preços de fábrica: os que vêm com o app aparecem em cinza; qualquer mudança no valor (no item, na caixa do material
    ou no reajuste) deixa o preço em preto. O leitor de tela diz "preço que vem com o app" e a nota no fim de Preços
@@ -490,8 +489,19 @@ const LS = {
   get(k, d) { try { const v = localStorage.getItem(KEY + k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { if (semSalvar) return true; try { localStorage.setItem(KEY + k, JSON.stringify(v)); return true; } catch { return false; } },
 };
+/* Versão 3: os dados começam limpos (Regras do app, Art. 6º). O que as versões anteriores guardaram neste aparelho é
+   apagado uma vez, junto com a ligação da sincronização antiga; só a preferência de tema fica. Dado antigo não trava o app. */
+const FORMATO = '3';
+(() => {
+  try {
+    if (localStorage.getItem(KEY + 'formato') === FORMATO) return;
+    const tema = localStorage.getItem(KEY + 'pref');
+    Object.keys(localStorage).filter(k => k.startsWith(KEY) || k.startsWith('kitfacil.eletrica-facil.')).forEach(k => localStorage.removeItem(k));
+    if (tema) localStorage.setItem(KEY + 'pref', tema);
+    localStorage.setItem(KEY + 'formato', FORMATO);
+  } catch {}
+})();
 const ACCEPT_DEFAULT = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita, no WhatsApp ou no e-mail.';
-const ACCEPT_V6 = 'Ao aprovar este orçamento, o cliente concorda com os serviços, valores e condições descritos. A aprovação pode ser feita por assinatura ou por mensagem escrita (WhatsApp ou e-mail).';
 const WARRANTY_DEFAULT = 'A garantia cobre falhas no serviço executado. Não cobre: mau uso; alterações feitas por terceiros; sobrecarga causada por equipamentos ligados depois do serviço; surtos de tensão, descargas atmosféricas e falhas da rede da concessionária; e materiais fornecidos pelo cliente, que seguem a garantia do fabricante. Esta garantia não exclui os direitos previstos no Código de Defesa do Consumidor.';
 const DEF = { toolSeedV: 0, name: '', company: '', phone: '', email: '', doc: '', registro: '', city: '', pix: '', logo: '', logoRatio: 1,
   taxMode: 'sem', taxPct: 5, taxBase: 'servico',
@@ -501,8 +511,6 @@ const DEF = { toolSeedV: 0, name: '', company: '', phone: '', email: '', doc: ''
   kmPerL: 0, fuelPrice: 0, wearPerKm: 0, hourRate: 0, minVisit: 0, roundTrip: true,
   surUrgent: 0, surNight: 0, surWeekend: 0, seedV: 0,
   acceptText: ACCEPT_DEFAULT, warrantyTerms: WARRANTY_DEFAULT };
-const TESTS_V1 = { tensao: 'Medição de tensão nas tomadas e no quadro de distribuição.', dr: 'Teste do DR pelo botão de teste.', terra: 'Verificação do aterramento.',
-  func: 'Teste de funcionamento dos circuitos e equipamentos.', aquec: 'Verificação de aquecimento nas conexões.', carga: 'Teste do circuito com carga.', isol: 'Medição de resistência de isolamento.' };
 const STATUS = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado', concluido: 'Concluído', recusado: 'Recusado' };
 
 let settings = { ...DEF, ...LS.get('settings', {}) };
@@ -512,35 +520,17 @@ let quotes = LS.get('quotes', null);
 // o estoque de material fica na própria tabela de preços (campos stock, cost e brand dos materiais)
 let tools = LS.get('tools', []);
 let checks = LS.get('checks', []);
-// primeiro uso: nada guardado ainda neste aparelho (nem da versão antiga)
-const PRIMEIRO_USO = quotes === null && !LS.get('catalog', null);
 // sincronização entre aparelhos: motor comum do Kit Fácil (a regra de junção dos dados fica mais abaixo)
 // o que mudou em cada versão, para quem usa (as mesmas linhas do CHANGELOG: Código, Art. 25, I)
-const NOVIDADES = [{ versao: '2.0.1', itens: [
-  'Correção: a janela de Novidades não aparece mais junto com a apresentação, mesmo com a internet lenta.',
-] }, { versao: '2.0.0', itens: [
-  'Elétrica Fácil refeito para o eletricista: o orçamento agora nasce na sua tabela de preços. Cada toque soma um serviço, e o total sobe no pé da tela.',
-  'O nome do cliente só é pedido na hora de gerar a proposta. Até lá, o orçamento aparece pelo serviço.',
-  'Início novo: Novo orçamento em um toque, o que pede a sua atenção (cobrar resposta, executar, receber) e o mês num visor.',
-  'A Tabela (seus preços) foi para a barra de baixo. Gestão e Conquistas ficam em Mais.',
-  'Tabela e Gestão redesenhadas: categorias numa tira, preços em lista e os filtros da Gestão com as contagens.',
-  'Catálogo só de eletricista predial de baixa tensão: saíram rede, antena, câmera, alarme e cerca elétrica; entraram serviços, materiais e ferramentas que faltavam, e os preços de fábrica foram revistos.',
-  'Valores mostra a conta (como o total se forma); Pagamento, Prazo e datas e Garantia viraram três blocos.',
-  'Seus orçamentos, os preços que você já mudou, o estoque, as ferramentas e os ajustes continuam os mesmos.',
-] }, { versao: '1.1.1', itens: [
-  'Apresentação nova, com a cara do app: acenda a luz no interruptor, conte os pontos na planta da casa e assine embaixo.',
-  'Um raio de surpresa: de vez em quando, um raio rasga a tela; mais raro, cai uma tempestade. Dá para desligar em Ajustes, em Conquistas e apresentação.',
-  'Lâmpadas: toque na lâmpada (ou no fundo) e ela pisca mais forte.',
-  'O varal balança: passe o dedo por ele, incline ou chacoalhe o celular. No iPhone, toque em Balançar com o celular.',
-  'Ícone novo do app, com o mesmo raio.',
-  'Correção: a janela de Novidades não abre mais por cima da apresentação.',
-] }, { versao: '1.0.0', itens: [
-  'Elétrica Fácil refeito: o orçamento agora é uma folha só, presa na prancheta, com o total sempre à vista.',
-  'Início novo: diga para quem é o serviço e comece. O mês aparece logo abaixo: aprovado, aguardando resposta e a receber.',
-  'Navegação nova: Início, Orçamentos, o botão de novo orçamento no centro, Conquistas e Mais (Preços, Gestão, guia e Ajustes).',
-  'Conquistas: cada passo bem dado no app acende uma lâmpada do seu varal e conta para o seu nível. Toque numa lâmpada e gire com o dedo. Dá para desligar nos Ajustes.',
-  'Apresentação em quatro telas na primeira abertura e um guia só, que faz cada passo na tela sem gravar nada.',
-  'Seus orçamentos, preços, materiais, ferramentas e ajustes continuam os mesmos.',
+const NOVIDADES = [{ versao: '3.0.0', itens: [
+  'Elétrica Fácil refeito: o orçamento agora é montado na própria folha que o cliente recebe. O que é tracejado é só seu e não sai no documento.',
+  'O botão amarelo do pé é sempre o próximo passo: Enviar, Aprovou, Concluir, Receber e Recibo.',
+  'Orçamentos abre o app, num quadro por etapa: rascunhos, esperando resposta, para executar e para receber.',
+  'Navegação nova: Orçamentos, Tabela, o botão de novo orçamento no centro, Obra e Mais. A antiga Gestão virou Obra: Levar, Comprar, Estoque e Ferramentas.',
+  'Mudou um preço numa linha do orçamento? Dá para guardar na tabela ali mesmo.',
+  'Apresentação nova, sem pedir o seu nome: ele fica em Ajustes, Conta e perfil.',
+  'O raio de surpresa ficou mais parecido com um raio de verdade. A tempestade saiu.',
+  'Esta versão começa limpa: os orçamentos, preços e ajustes guardados pelas versões anteriores neste aparelho foram apagados.',
 ] }];
 // quem ainda vai ver a apresentação não recebe a janela de Novidades do Kit: nem por cima dela, nem antes (o Kit olha 0,7 s
 // depois de começar, e numa internet lenta o resto do app ainda está chegando). É o que o Conta Fácil faz.
@@ -561,7 +551,8 @@ KitFacil.iniciar({
 });
 KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#EFEEE9', escuro: '#0E0D0A' } });
 const SY = KitFacil.sync.criar({
-  app: 'eletrica-facil', nome: 'Elétrica Fácil', chave: 'eletricafacil.sync', dados: 'os mesmos orçamentos, preços, estoque, ferramentas e ajustes',
+  app: 'eletrica-facil-3', nome: 'Elétrica Fácil', chave: 'eletricafacil.sync', // arquivo novo na nuvem: o formato das versões 1 e 2 não é lido nem devolvido
+  dados: 'os mesmos orçamentos, preços, estoque, ferramentas e ajustes',
   aplicar: R => applyRemote(R), pacote: () => syncPayload(),
   mesmo: (out, remote) => canon(out) === canon({ settings: remote.settings, prices: remote.prices, quotes: remote.quotes, tools: remote.tools || [], checks: remote.checks || [], st: remote.st, del: remote.del }),
   redesenhar: () => rerender(),
@@ -624,7 +615,7 @@ function fixQuote(q) {
   acertaGeral(q);
   q.trip = q.trip && typeof q.trip === 'object' ? q.trip : null;
   ['diag', 'work', 'recs'].forEach(k => { q[k] = String(q[k] || ''); });
-  q.tests = Array.isArray(q.tests) ? q.tests.map(t => TESTS_V1[t] || String(t)).filter(Boolean) : [];
+  q.tests = Array.isArray(q.tests) ? q.tests.map(String).filter(Boolean) : [];
   if (!STATUS[q.status]) q.status = 'rascunho';
   // dias de serviço: lista de dias marcados (podem não ser seguidos); versões antigas só tinham início e término
   q.dates = [...new Set((Array.isArray(q.dates) ? q.dates : []).map(dayTs).filter(Boolean))].sort((a, b) => a - b);
@@ -732,138 +723,16 @@ const stockLow = p => inStock(p) && (p.stock <= 0 || (p.min > 0 && p.stock <= p.
 const sugestaoCompra = p => p.min > 0 ? Math.max(1, Math.ceil(p.min * 2 - (p.stock || 0))) : 1;
 const stockTxt = p => !inStock(p) ? '' : p.stock <= 0 ? 'em falta no estoque' : `${fmtQty(p.stock)} em estoque${stockLow(p) ? ' · repor' : ''}`;
 // dados da primeira versão do app (mesmo aparelho ou cópia de segurança antiga)
-function fromV1(cat, bills, draft) {
-  const out = { settings: {}, prices: seedPrices(), quotes: [] };
-  const m = (cat && cat.me) || {};
-  ['name', 'company', 'phone', 'doc', 'pix', 'city'].forEach(k => { if (m[k]) out.settings[k] = m[k]; });
-  if (m.validity) out.settings.validity = m.validity;
-  if (m.warranty !== undefined) out.settings.warranty = m.warranty;
-  ((cat && cat.items) || []).forEach(p => {
-    const ex = out.prices.find(x => norm(x.name) === norm(p.name));
-    if (ex) { ex.price = p.price ?? ex.price; ex.unit = p.unit || ex.unit; }
-    else out.prices.push({ id: uid(), kind: p.kind === 'mat' ? 'mat' : 'svc', cat: 'Outros', name: p.name, unit: p.unit || 'un', price: p.price || 0 });
-  });
-  const conv = b => {
-    const at = b.statusAt || b.closedAt || b.createdAt || Date.now(), st = b.status || 'rascunho';
-    return fixQuote({ ...b, updatedAt: b.savedAt || at, sentAt: st !== 'rascunho' ? at : null,
-      approvedAt: st === 'aprovado' ? at : null, refusedAt: st === 'recusado' ? at : null });
-  };
-  out.quotes = (bills || []).map(conv);
-  if (draft && draft.active && !draft.isExample && (draft.items || []).length && !out.quotes.some(q => q.id === draft.id)) out.quotes.unshift(conv(draft));
-  out.settings.seq = Math.max((cat && cat.seq) || 0, 0, ...out.quotes.map(q => q.num || 0));
-  return out;
-}
-if (!prices || !quotes) {
-  const old = LS.get('catalog', null);
-  if (!quotes && old) {
-    const v = fromV1(old, LS.get('bills', []), LS.get('draft', null));
-    settings = { ...DEF, ...v.settings, ...LS.get('settings', {}) };
-    prices = prices || v.prices; quotes = v.quotes;
-  }
-  prices = prices || seedPrices(); quotes = quotes || [];
+/* começo limpo: na primeira vez entram a tabela e as ferramentas que vêm com o app */
+if (!Array.isArray(prices) || !Array.isArray(quotes)) {
+  prices = Array.isArray(prices) ? prices : seedPrices(); quotes = Array.isArray(quotes) ? quotes : [];
   saveSettings(); savePrices(); saveQuotes();
 }
 quotes = quotes.map(fixQuote);
 prices.forEach(acertaLotes);
 tools = normTools(tools); checks = (Array.isArray(checks) ? checks : []).map(fixCheck);
-// ferramentas pré-cadastradas: entram uma vez, como "não tenho" (quem já tinha uma com o mesmo nome fica com a sua)
-if ((settings.toolSeedV || 0) < 2) {
-  seedTools().forEach(t => { const ja = tools.find(x => x.k === 'tipo' && (x.id === t.id || norm(x.name) === norm(t.name))); if (!ja) tools.push(t); else if (ja.cat === 'Outras') ja.cat = t.cat; });
-  settings.toolSeedV = 2; LS.set('tools', tools); saveSettings();
-}
+if (!settings.toolSeedV) { seedTools().forEach(t => { if (!tools.some(x => x.k === 'tipo' && (x.id === t.id || norm(x.name) === norm(t.name)))) tools.push(t); }); settings.toolSeedV = 3; LS.set('tools', tools); saveSettings(); }
 settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
-// 2.19.1: nenhum nome de fábrica tem parênteses
-const RENOMEIA_V7 = [['Ponto novo de tomada (com fiação)', 'Ponto novo de tomada com fiação'], ['Ponto de interruptor paralelo (three-way)', 'Ponto de interruptor paralelo three-way'], ['Aterramento (haste e conexões)', 'Aterramento com haste e conexões'], ['Interruptor paralelo (three-way) com placa', 'Interruptor paralelo three-way com placa'], ['Interruptor intermediário (four-way)', 'Interruptor intermediário four-way'], ['Ponto de iluminação novo (com fiação)', 'Ponto de iluminação novo com fiação'], ['Instalação de aquecedor a gás (parte elétrica)', 'Instalação elétrica de aquecedor a gás'], ['Instalação de máquina de lavar (ponto exclusivo)', 'Instalação de máquina de lavar com ponto exclusivo'], ['Instalação de ar-condicionado split (parte elétrica)', 'Instalação elétrica de ar-condicionado split'], ['Ramal de entrada (concessionária)', 'Ramal de entrada da concessionária'], ['Ponto de rede (RJ45)', 'Ponto de rede RJ45'], ['Tomada de embutir 2P+T 10 A (módulo)', 'Módulo de tomada 2P+T 10 A'], ['Tomada de embutir 2P+T 20 A (módulo)', 'Módulo de tomada 2P+T 20 A'], ['Interruptor simples (módulo)', 'Módulo de interruptor simples'], ['Interruptor paralelo (módulo)', 'Módulo de interruptor paralelo'], ['Placa 4x2 (1 posto)', 'Placa 4x2 de 1 posto'], ['Placa 4x2 (2 postos)', 'Placa 4x2 de 2 postos'], ['Barra de equipotencialização (BEP)', 'Barra de equipotencialização BEP'], ['Tomada RJ45 (módulo)', 'Módulo de tomada RJ45'], ['Conector de emenda Wago (2 vias)', 'Conector de emenda Wago de 2 vias'], ['Conector de emenda Wago (3 vias)', 'Conector de emenda Wago de 3 vias'], ['Conector de emenda Wago (5 vias)', 'Conector de emenda Wago de 5 vias'], ['Escada de fibra (isolante)', 'Escada de fibra isolante']];
-const CATS_V7 = [['Segurança (EPI)', 'Segurança e EPI']];
-if ((settings.seedV || 0) < 7) {
-  RENOMEIA_V7.forEach(([de, para]) => {
-    prices.filter(x => norm(x.name) === norm(de)).forEach(p => { if (!prices.some(x => x.kind === p.kind && norm(x.name) === norm(para))) p.name = para; });
-    tools.filter(t => t.k === 'tipo' && norm(t.name) === norm(de)).forEach(t => { t.name = para; });
-    checks.forEach(c => { if (c.name && norm(c.name) === norm(de)) c.name = para; });
-  });
-  CATS_V7.forEach(([de, para]) => { tools.forEach(t => { if (t.cat === de) t.cat = para; }); prices.forEach(p => { if (p.cat === de) p.cat = para; }); });
-  if (settings.acceptText === ACCEPT_V6) settings.acceptText = ACCEPT_DEFAULT;
-  LS.set('tools', tools); LS.set('checks', checks);
-}
-// 2.19: a unidade sai do nome do material e fica só no campo de unidade ("Gesso (saco 1 kg)" vira "Gesso 1 kg", por saco)
-const RENOMEIA_V6 = [['Abraçadeiras (pacote)', 'Abraçadeiras', 'un', 'pct'], ['Eletroduto rígido PVC 3/4" (barra 3 m)', 'Eletroduto rígido PVC 3/4" de 3 m'],
-  ['Eletroduto rígido PVC 1" (barra 3 m)', 'Eletroduto rígido PVC 1" de 3 m'], ['Eletroduto metálico 3/4" (barra 3 m)', 'Eletroduto metálico 3/4" de 3 m'],
-  ['Canaleta 20 x 10 mm (barra 2 m)', 'Canaleta 20 x 10 mm de 2 m'], ['Eletrocalha perfurada 100 x 50 (barra 3 m)', 'Eletrocalha perfurada 100 x 50 de 3 m'],
-  ['Perfil de alumínio para LED (barra 2 m)', 'Perfil de alumínio para LED de 2 m'], ['Terminal tubular (pacote 100)', 'Terminal tubular, 100 peças'],
-  ['Terminal olhal (pacote 100)', 'Terminal olhal, 100 peças'], ['Terminal forquilha (pacote 100)', 'Terminal forquilha, 100 peças'],
-  ['Bucha e parafuso 6 mm (pacote 100)', 'Bucha e parafuso 6 mm, 100 peças'], ['Bucha e parafuso 8 mm (pacote 100)', 'Bucha e parafuso 8 mm, 100 peças'],
-  ['Abraçadeira de nylon (pacote 100)', 'Abraçadeira de nylon, 100 peças'], ['Abraçadeira com base adesiva (pacote 100)', 'Abraçadeira com base adesiva, 100 peças'],
-  ['Fita isolante colorida (kit)', 'Fita isolante colorida', 'un', 'kit'], ['Gesso (saco 1 kg)', 'Gesso 1 kg', 'un', 'saco'],
-  ['Massa corrida (galão)', 'Massa corrida', 'un', 'galão'], ['Identificador de cabos (kit)', 'Identificador de cabos', 'un', 'kit']];
-if ((settings.seedV || 0) < 6) {
-  RENOMEIA_V6.forEach(([de, para, u0, u1]) => {
-    const p = prices.find(x => x.kind === 'mat' && norm(x.name) === norm(de));
-    if (!p || prices.some(x => x.kind === 'mat' && norm(x.name) === norm(para))) return;
-    p.name = para; if (u1 && p.unit === u0) p.unit = u1;
-  });
-}
-if ((settings.seedV || 0) < 2) {
-  prices.forEach(p => { if (p.name === 'Interruptor paralelo com placa') p.name = 'Interruptor paralelo three-way com placa'; });
-  SEED.filter(x => SEED_V2.includes(x[2])).forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price }); });
-  settings.seedV = 2; savePrices(); saveSettings();
-}
-if ((settings.seedV || 0) < 3) {
-  SEED.forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price, ref: true }); });
-  settings.seedV = 3; savePrices(); saveSettings();
-}
-// 2.16: item do app com o preço de fábrica ainda não foi conferido; adicionais com os valores de fábrica também
-if ((settings.seedV || 0) < 4) {
-  prices.forEach(p => { const sd = SEED.find(x => x[0] === p.kind && norm(x[2]) === norm(p.name)); if (sd && p.price === sd[4] && p.ref === undefined) p.ref = true; });
-  settings.seedV = 4; savePrices(); saveSettings();
-}
-// 2.16.2: adicionais começam vazios (quem nunca mudou os de fábrica 50/30/50 fica vazio); sai Atendimento de emergência
-// da tabela (o adicional de urgência já cobre), se ainda estiver com o preço de fábrica
-if ((settings.seedV || 0) < 5) {
-  if (settings.refAdic !== false && settings.surUrgent === 50 && settings.surNight === 30 && settings.surWeekend === 50) { settings.surUrgent = 0; settings.surNight = 0; settings.surWeekend = 0; }
-  delete settings.refAdic;
-  prices = prices.filter(p => !(p.ref && p.kind === 'svc' && norm(p.name) === norm('Atendimento de emergência')));
-  settings.seedV = 5; savePrices(); saveSettings();
-}
-if ((settings.seedV || 0) < 6) { settings.seedV = 6; savePrices(); saveSettings(); }
-if ((settings.seedV || 0) < 7) { settings.seedV = 7; savePrices(); saveSettings(); }
-// 2.22: catálogo revisado (F9). Renomeia o que é de fábrica, tira o que sobrava (só se ainda estiver com o preço de fábrica
-// e fora de qualquer orçamento), inclui os itens novos e a composição de material dos serviços (F5)
-const RENOMEIA_V8 = [['Disjuntor bipolar', 'Disjuntor bipolar 10 a 32 A', 'mat'], ['Disjuntor tripolar', 'Disjuntor tripolar 10 a 32 A', 'mat'], ['DPS 275 V', 'DPS classe II 275 V 20 kA', 'mat'],
-  ['DPS 175 V', 'DPS classe II 175 V 20 kA', 'mat'], ['Ponto para ar-condicionado', 'Ponto e circuito para ar-condicionado', 'svc'], ['Ramal de entrada da concessionária', 'Ramal de ligação até o padrão de entrada', 'svc']];
-const SAI_V8 = [['mat', 'Conector de emenda', 150], ['mat', 'Abraçadeiras', 1000], ['svc', 'Orçamento no local', 8000]];
-if ((settings.seedV || 0) < 8) {
-  RENOMEIA_V8.forEach(([de, para, k]) => { const p = prices.find(x => x.kind === k && norm(x.name) === norm(de)); if (p && !prices.some(x => x.kind === k && norm(x.name) === norm(para))) p.name = para; });
-  const usado = (k, n) => quotes.some(q => q.items.some(i => i.kind === k && norm(i.name) === norm(n)));
-  prices = prices.filter(p => !SAI_V8.some(([k, n, pr]) => p.kind === k && norm(p.name) === norm(n) && p.price === pr && p.ref !== false && !p.stock && !usado(k, n)));
-  prices.forEach(p => { if (p.cat === 'Diversos' && p.kind === 'mat') p.cat = 'Fixação e acabamento'; });
-  SEED.forEach(([kind, cat, name, unit, price]) => { if (!prices.some(p => p.kind === kind && norm(p.name) === norm(name))) prices.push({ id: uid(), kind, cat, name, unit, price, ref: true }); });
-  prices.forEach(p => { if (p.kind === 'svc' && !p.comp && COMPOSICAO[p.name]) p.comp = compDe(p.name); });
-  settings.seedV = 8; savePrices(); saveSettings();
-}
-// 2.1: catálogo só de eletricista predial de baixa tensão. Saem rede, antena, câmera, alarme e cerca (só o que ainda é de
-// fábrica, sem estoque e fora de qualquer orçamento); entram os itens novos; o que é de fábrica recebe o preço e a categoria revistos
-const SAI_V9 = { svc: ['Ponto de rede RJ45', 'Ponto de antena ou TV', 'Instalação de câmera de segurança', 'Instalação de cerca elétrica', 'Instalação de alarme', 'Instalação de sensor de alarme'], mat: ['Cabo de rede UTP Cat6', 'Cabo coaxial RG6', 'Cabo para alarme 4 vias', 'Conector RJ45', 'Módulo de tomada RJ45', 'Conector F para coaxial', 'Câmera de segurança', 'Fonte 12 V para câmera', 'Sensor de alarme'] }, SAI_TOOL_V9 = ['Testador de cabo de rede', 'Alicate crimpador RJ45'];
-const MUDA_V9 = [['svc', 'Configuração de interruptor ou tomada inteligente', 'Instalação de interruptor ou tomada inteligente']];
-if ((settings.seedV || 0) < 9) {
-  const usado = (k, n) => quotes.some(q => q.items.some(i => i.kind === k && norm(i.name) === norm(n)));
-  MUDA_V9.forEach(([k, de, para]) => { const p = prices.find(x => x.kind === k && norm(x.name) === norm(de)); if (p && !prices.some(x => x.kind === k && norm(x.name) === norm(para))) p.name = para; });
-  prices = prices.filter(p => !((SAI_V9[p.kind] || []).some(n => norm(n) === norm(p.name)) && p.ref !== false && !p.stock && !p.repor && !usado(p.kind, p.name)));
-  prices.forEach(p => { if (p.kind === 'svc' && Array.isArray(p.comp)) p.comp = p.comp.filter(c => !SAI_V9.mat.some(n => norm(n) === norm(c.n))); });
-  SEED.forEach(([kind, cat, name, unit, price]) => {
-    const p = prices.find(x => x.kind === kind && norm(x.name) === norm(name));
-    if (!p) return prices.push({ id: uid(), kind, cat, name, unit, price, ref: true, ...(kind === 'svc' && COMPOSICAO[name] ? { comp: compDe(name) } : {}) });
-    if (p.ref) { p.price = price; p.unit = unit; }
-    if (catOrder(kind).includes(p.cat) || p.cat === 'Rede, som e segurança') p.cat = cat;
-  });
-  prices.forEach(p => { if (p.cat === 'Rede, som e segurança') p.cat = 'Outros'; });
-  settings.seedV = 9; savePrices(); saveSettings();
-}
-if ((settings.toolSeedV || 0) < 3) {
-  tools = tools.filter(t => !(t.k === 'tipo' && SAI_TOOL_V9.some(n => norm(n) === norm(t.name)) && !t.quero && !tools.some(x => x.k === 'item' && x.tipo === t.id)));
-  checks = checks.filter(c => !c.toolId || tools.some(t => t.id === c.toolId));
-  seedTools().forEach(t => { if (!tools.some(x => x.k === 'tipo' && (x.id === t.id || norm(x.name) === norm(t.name)))) tools.push(t); });
-  settings.toolSeedV = 3; LS.set('tools', tools); LS.set('checks', checks); saveSettings();
-}
 
 const getQ = id => quotes.find(q => q.id === id);
 const touch = q => { acertaGeral(q); q.updatedAt = Date.now(); saveQuotes(); };
@@ -1451,14 +1320,11 @@ const vibrate = () => { try { navigator.vibrate && navigator.vibrate(8); } catch
 function route() {
   const h = decodeURIComponent(location.hash.replace(/^#/, '')) || '/';
   let m;
-  if ((m = h.match(/^\/q\/([\w-]+)\/proposta$/))) return { name: 'preview', id: m[1], key: h };
-  if ((m = h.match(/^\/q\/([\w-]+)\/itens$/))) return { name: 'montar', id: m[1], key: h };
-  if ((m = h.match(/^\/q\/([\w-]+)$/))) return { name: 'quote', id: m[1], key: h };
-  if (h === '/orcamentos') return { name: 'lista', key: h };
+  if ((m = h.match(/^\/q\/([\w-]+)/))) return { name: 'quote', id: m[1], key: '/q/' + m[1] };
   if (h === '/conquistas') return { name: 'conquistas', key: h };
   if (h === '/mais') return { name: 'mais', key: h };
   if (h === '/precos') return { name: 'prices', key: h };
-  if (h === '/gestao') return { name: 'gestao', key: h };
+  if (h === '/obra' || h === '/gestao') return { name: 'obra', key: '/obra' };
   if (h === '/ajustes') return { name: 'settings', key: h };
   return { name: 'home', key: '/' };
 }

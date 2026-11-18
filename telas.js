@@ -5,51 +5,51 @@ let priceKind = 'svc', priceQuery = '', priceCat = null;
 // a mesma tabela do orçamento: lá, cada toque soma; aqui, cada toque abre o preço para mudar
 const tbRow = (p, qf, comCat) => `<button type="button" class="tb-row" data-pid="${p.id}"><span class="tb-nome"><b>${hl(p.name, qf)}</b><small>por ${unitName(p.unit)}${comCat ? ` · ${esc(p.cat || 'Outros')}` : ''}${inStock(p) ? ` · ${stockTxt(p)}` : ''}</small></span><span class="tb-preco num">${p.ref ? refV(BRL(p.price)) : BRL(p.price)}</span><span class="lc" aria-hidden="true">${I.chev}</span></button>`;
 const priceCats = () => groupByCat(prices.filter(p => p.kind === priceKind)).map(g => g[0]);
-function priceTiraHTML() {
-  const cats = priceCats(); if (priceCat === null || !cats.includes(priceCat)) priceCat = cats[0] || '';
-  return cats.map(c => `<button type="button" data-cat="${esc(c)}" aria-pressed="${priceCat === c}">${esc(c)}</button>`).join('');
-}
 function priceListHTML() {
   const qf = fold(priceQuery);
   if (qf) {
     const L = prices.filter(p => p.kind === priceKind && (fold(p.name).includes(qf) || fold(p.cat).includes(qf))).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true }));
-    return L.length ? L.map(p => tbRow(p, qf, true)).join('') : KitFacil.ui.vazio({ titulo: 'Nenhum item encontrado', texto: 'Confira o nome do item ou da categoria.' });
+    return L.length ? `<div class="tb-lista">${L.map(p => tbRow(p, qf, true)).join('')}</div>` : `<div class="vaz"><span class="ci">${I.search}</span><b>Nada com “${esc(priceQuery.trim())}”</b><p>Confira a palavra. Se o item não existe na tabela, crie o preço.</p></div>`;
   }
-  const cats = priceCats(); if (priceCat === null || !cats.includes(priceCat)) priceCat = cats[0] || '';
-  const L = prices.filter(p => p.kind === priceKind && (p.cat || 'Outros') === priceCat).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true }));
-  return L.length ? L.map(p => tbRow(p, '', false)).join('') : KitFacil.ui.vazio({ titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo preço</b> para cadastrar.' });
+  const cats = priceCats(); if (priceCat === null) priceCat = cats[0] || '';
+  if (!cats.length) return KitFacil.ui.vazio({ titulo: 'Nenhum item nesta tabela', texto: 'Toque em <b>Novo preço</b> para cadastrar.' });
+  // uma seção por categoria; abre uma de cada vez
+  return cats.map(c => {
+    const L = prices.filter(p => p.kind === priceKind && (p.cat || 'Outros') === c).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true })), ab = priceCat === c;
+    return `<section class="sx${ab ? ' ab' : ''}"><button type="button" class="st" data-cat="${esc(c)}" aria-expanded="${ab}">${esc(c)}<span class="ct">${L.length}</span>${I.chev}</button>${ab ? `<div class="sx-in tb-lista">${L.map(p => tbRow(p, '', false)).join('')}</div>` : ''}</section>`;
+  }).join('');
 }
 // quantos preços já são de quem usa: os que vêm com o app (em cinza) são só ilustrativos
 function priceMeusHTML() {
   const L = prices.filter(p => p.kind === priceKind), meus = L.filter(p => !p.ref).length;
   if (!L.length) return '';
-  return `<section class="tb-meus" aria-label="Preços definidos por você"><div class="tb-meus-t"><b class="num">${meus} de ${L.length}</b><span>${meus === L.length ? 'Todos os preços são seus.' : 'preços já são seus. Os em cinza vêm com o app.'}</span></div>
-    <div class="g-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${L.length}" aria-valuenow="${meus}" aria-label="Preços definidos por você"><span style="width:${Math.round(meus / L.length * 100)}%"></span></div></section>`;
+  return `<section class="tb-meus" aria-label="Preços definidos por você"><div class="g-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${L.length}" aria-valuenow="${meus}" aria-label="Preços definidos por você"><span style="width:${Math.round(meus / L.length * 100)}%"></span></div>
+    <span class="tb-meus-t"><b class="num">${meus} de ${L.length}</b> ${meus === L.length ? 'são seus' : 'já são seus'}</span></section>
+    ${meus === L.length ? '' : '<p class="hint tb-leg">Letra fina: preço que vem com o app. Letra forte: o seu.</p>'}`;
 }
 VIEWS.prices = {
   html() {
     const n = k => prices.filter(p => p.kind === k).length;
     return `${barraTopo()}
     <main class="page tabela">
-      ${KitFacil.ui.cabecalho({ titulo: 'Tabela' })}
-      ${KitFacil.ui.abas({ itens: [['svc', 'Mão de obra', n('svc')], ['mat', 'Material', n('mat')]], atual: priceKind, rotulo: 'Tipo de preço', dado: 'k' })}
+      ${KitFacil.ui.cabecalho({ titulo: 'Tabela', sub: 'Seus preços. Toque num preço para mudar.' })}
+      ${KitFacil.ui.abas({ itens: [['svc', 'Mão de obra', n('svc')], ['mat', 'Material', n('mat')]], atual: priceKind, rotulo: 'Parte da tabela', dado: 'k' })}
+      <label class="search">${I.search}<input type="search" id="pr-q" placeholder="Buscar na tabela" value="${esc(priceQuery)}" aria-label="Buscar na tabela"></label>
       <div id="pr-meus">${priceMeusHTML()}</div>
-      <label class="search">${I.search}<input type="search" id="pr-q" placeholder="Buscar item ou categoria" value="${esc(priceQuery)}" aria-label="Buscar na tabela"></label>
-      <div class="tira" id="pr-tira" role="group" aria-label="Categoria"${priceQuery.trim() ? ' hidden' : ''}>${priceTiraHTML()}</div>
-      <div id="pr-list" class="tb-lista">${priceListHTML()}</div>
+      <div id="pr-list">${priceListHTML()}</div>
       ${KitFacil.ui.adicionar({ rotulo: 'Novo preço', attrs: 'data-new-price' })}
       ${prices.length ? `<button class="pr-ajuste" data-adjust>${I.percent}<span class="lt"><b>Reajustar preços</b></span>${I.chev}</button>` : ''}
-      ${prices.some(p => p.ref) ? `<aside class="pr-aviso" role="note" aria-label="Sobre os preços em cinza">
-        <p><b>Atenção: os preços em cinza são apenas valores ilustrativos.</b> Eles são fornecidos exclusivamente como referência inicial para configurar o aplicativo. Não representam preços de mercado, não constituem recomendações comerciais e não foram definidos com base em pesquisas de preços.</p>
+      ${prices.some(p => p.ref) ? `<aside class="pr-aviso" role="note" aria-label="Sobre os preços que vêm com o app">
+        <p><b>Atenção: os preços em letra fina são apenas valores ilustrativos.</b> Eles são fornecidos exclusivamente como referência inicial para configurar o aplicativo. Não representam preços de mercado, não constituem recomendações comerciais e não foram definidos com base em pesquisas de preços.</p>
         <p>Você é o responsável por definir seus preços. Antes de elaborar qualquer orçamento, ajuste os valores conforme seus custos, sua região e as características do serviço.</p>
-        <p>Ao personalizar um preço, ele passa de cinza para preto, indicando que foi definido por você.</p></aside>` : ''}
+        <p>Ao personalizar um preço, ele passa para letra forte, indicando que foi definido por você.</p></aside>` : ''}
     </main>`;
   },
   bind(v) {
     $$('[data-k]', v).forEach(b => b.onclick = () => { priceKind = b.dataset.k; priceCat = null; rerender(); });
-    const sq = $('#pr-q', v); sq.addEventListener('input', () => { priceQuery = sq.value; $('#pr-tira', v).hidden = !!priceQuery.trim(); $('#pr-list').innerHTML = priceListHTML(); });
-    $('#pr-tira', v).addEventListener('click', e => { const b = e.target.closest('[data-cat]'); if (!b) return; priceCat = b.dataset.cat; $('#pr-tira', v).innerHTML = priceTiraHTML(); $('#pr-list').innerHTML = priceListHTML(); });
+    const sq = $('#pr-q', v); sq.addEventListener('input', () => { priceQuery = sq.value; $('#pr-list').innerHTML = priceListHTML(); });
     $('#pr-list', v).addEventListener('click', e => {
+      const c = e.target.closest('[data-cat]'); if (c) { priceCat = priceCat === c.dataset.cat ? '' : c.dataset.cat; $('#pr-list').innerHTML = priceListHTML(); $(`#pr-list [data-cat="${CSS.escape(c.dataset.cat)}"]`)?.focus({ preventScroll: true }); return; }
       const b = e.target.closest('[data-pid]'); if (b) priceSheet(prices.find(p => p.id === b.dataset.pid));
     });
     $('[data-new-price]', v).onclick = () => priceSheet(null);
@@ -156,14 +156,9 @@ function adjustSheet() {
 
 /* ================= tela: gestão (estoque, ferramentas e checklist) ================= */
 // estoque = materiais da tabela de preços com quantidade guardada; o preço de repasse é o próprio preço da tabela
-let gestaoAba = 'estoque', gestaoQuery = '', checkLado = 'ida';
-const GESTAO = {
-  estoque: { nome: 'Materiais', criar: 'Novo material', sub: 'O que você tem em estoque, o que precisa repor e o catálogo de materiais.' },
-  ferramentas: { nome: 'Ferramentas', criar: 'Nova ferramenta', sub: 'As suas ferramentas, as que quer comprar e o catálogo.' },
-  checklist: { nome: 'Checklist', criar: 'Novo item', sub: 'Confira o que levar antes de ir e o que trazer antes de voltar da obra.' },
-};
+let obraAba = 'levar', gestaoQuery = '', checkLado = 'ida';
 // o alto de cada parte da Gestão: o filtro (com as contagens) e a lista de compras. Nada de quadrinhos lado a lado com dados (Código, Art. 67)
-function gHero(attr, L, atual, n, topo = '', compras = true) {
+function gHero(attr, L, atual, n, topo = '', compras = false) {
   const cn = comprasN();
   return `<section class="g-topo" aria-label="Resumo">
     <div class="seg filtro g-seg" role="group" aria-label="Mostrar">${L.map(([k, l]) => `<button type="button" ${attr}="${k}" aria-pressed="${atual === k}"><span>${capFirst(l)}</span><b class="num">${n(k)}</b></button>`).join('')}</div>
@@ -562,7 +557,8 @@ function newToolSheet() {
 }
 /* lista de compras única: material para repor e ferramentas que você quer comprar */
 const comprasN = () => prices.filter(precisaRepor).length + tiposTool().filter(t => t.quero).length;
-function comprasSheet() {
+// a lista de compras fica na guia Comprar da Obra: o material que chegou ao mínimo e as ferramentas que você quer comprar
+function comprasEstado() {
   const L = [
     ...prices.filter(precisaRepor).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(p => ({ k: 'm', id: p.id, nome: p.name, marca: p.brand || '', un: p.unit, qtd: p.repor && p.reporQtd ? p.reporQtd : sugestaoCompra(p), on: true, info: !inStock(p) ? 'não tem no estoque' : p.stock <= 0 ? 'em falta' : `tem ${fmtQty(p.stock)}${p.min ? `, mínimo ${fmtQty(p.min)}` : ''}` })),
     ...tiposTool().filter(t => t.quero).sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')).map(t => ({ k: 'f', id: t.id, nome: t.name, marca: '', un: 'un', qtd: t.queroQtd || 1, on: true, info: t.cat })),
@@ -580,10 +576,11 @@ function comprasSheet() {
     return `${m.length ? panel('cp:mat', '', 'Material para repor', resumoDe(m, ([x]) => x.nome), `<p class="hint">Sugestão: o bastante para ficar com o dobro do mínimo. Ajuste à vontade.</p>${m.map(([x, i]) => row(x, i)).join('')}`, { right: conta(m.length) }) : ''}
       ${f.length ? panel('cp:ferr', '', 'Ferramentas para comprar', resumoDe(f, ([x]) => x.nome), f.map(([x, i]) => row(x, i)).join(''), { right: conta(f.length) }) : ''}`;
   };
-  openSheet({ title: 'Lista de compras', tall: true, body: `<div id="cp-list">${corpo()}</div>`,
-    foot: L.length ? `<div class="cp-pe"><button class="btn ghost" data-cp-copy>${I.copy}Copiar</button><a class="btn wa" data-cp-wa href="#" target="_blank" rel="noopener">${I.wa}WhatsApp</a></div><button class="btn ok block" data-cp-tudo>${I.check}Comprei tudo</button>` : '',
-    onMount: s => {
-      const pinta = () => { const st = $('.kf-dlg-corpo', s)?.scrollTop; $('#cp-list', s).innerHTML = corpo(); if (st != null) $('.kf-dlg-corpo', s).scrollTop = st; };
+  return { L, texto, corpo };
+}
+const comprasPe = () => `<div class="cp-pe"><button class="btn ghost" data-cp-copy>${I.copy}Copiar</button><a class="btn wa" data-cp-wa href="#" target="_blank" rel="noopener">${I.wa}WhatsApp</a></div><button class="btn ok block" data-cp-tudo>${I.check}Comprei tudo</button>`;
+function comprasLigar(s, { L, texto, corpo }) {
+      const pinta = () => { $('#cp-list', s).innerHTML = corpo(); };
       s.addEventListener('click', e => {
         const b = e.target.closest('[data-cq]');
         if (b) { const x = L[+b.dataset.i]; x.qtd = Math.max(1, Math.round((x.qtd + +b.dataset.cq) * 100) / 100); pinta(); return; }
@@ -604,7 +601,7 @@ function comprasSheet() {
               t.quero = false;
             }
           });
-          savePrices(); saveTools(); closeSheet(true); rerender();
+          savePrices(); saveTools(); rerender();
           toast(`${plural(M.length, 'item comprado', 'itens comprados')}: o material entrou no estoque e as ferramentas, nas suas.`, { label: 'Desfazer', run: () => { prices = JSON.parse(antes.prices); tools = JSON.parse(antes.tools); savePrices(); saveTools(); rerender(); } });
           return;
         }
@@ -616,13 +613,12 @@ function comprasSheet() {
         const c = e.target.closest('[data-cp]'); if (c) { L[+c.dataset.cp].on = c.checked; return; }
         const i = e.target.closest('[data-ci]'); if (i) { L[+i.dataset.ci].qtd = Math.max(1, parseQty(i.value) || 1); pinta(); }
       });
-    } });
 }
 const checkNome = c => { const t = c.toolId && tools.find(x => x.id === c.toolId); return t ? t.name : c.name; };
 function checklistHTML() {
   const faltam = tiposTool().filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
   const addTools = faltam.length ? `<button class="btn sm ghost" data-ck-tools>${I.plus}${checks.length ? `Adicionar ${plural(faltam.length, 'ferramenta que falta', 'ferramentas que faltam')}` : `Adicionar minhas ${plural(faltam.length, 'ferramenta', 'ferramentas')}`}</button>` : '';
-  if (!checks.length) return KitFacil.ui.vazio({ titulo: 'Checklist vazio', texto: 'Monte uma vez a lista do que sempre vai para a obra. Toque em <b>Novo item</b>' + (faltam.length ? ' ou adicione as suas ferramentas de uma vez.' : '.'), icone: I.checklist, acao: addTools });
+  if (!checks.length) return KitFacil.ui.vazio({ titulo: 'Sua lista de levar', texto: 'Monte uma vez a lista do que vai com você para a obra. Na ida e na volta, é só conferir. Toque em <b>Novo item</b>' + (faltam.length ? ' ou adicione as suas ferramentas de uma vez.' : '.'), icone: I.checklist, acao: addTools });
   const lista = checks.filter(c => checkLado === 'ida' || c.back);
   const k = checkLado, feitos = lista.filter(c => c[k]).length, tot = lista.length, pct = tot ? Math.round(feitos / tot * 100) : 0;
   const conta2 = lado => { const L = checks.filter(c => lado === 'ida' || c.back); return `${L.filter(c => c[lado]).length} de ${L.length}`; };
@@ -630,13 +626,13 @@ function checklistHTML() {
     <p class="hint">${k === 'ida' ? 'Antes de sair: marque o que já está no carro.' : 'Antes de ir embora: marque o que já recolheu. Só aparecem os itens que voltam.'}</p>
     <div class="g-prog"><div class="g-prog-t"><b>${feitos} de ${tot}</b> conferidos</div><div class="g-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${feitos}" aria-label="Itens conferidos"><span style="width:${pct}%"></span></div></div>
     ${tot && feitos === tot ? `<div class="cal-msg" role="status">${I.check}<span><b>Tudo conferido.</b> ${k === 'ida' ? 'Bom serviço!' : 'Nada ficou para trás.'}</span></div>` : ''}
-    ${panel(`ck:${k}`, '', k === 'ida' ? 'Ida para a obra' : 'Volta da obra', `${feitos} de ${tot} conferidos`, `${tot ? `<div class="ck-list">${lista.map(c => `<div class="ck-row"><label><input type="checkbox" data-ck="${c.id}" ${c[k] ? 'checked' : ''}><span>${esc(checkNome(c))}${checkLado === 'ida' && !c.back ? '<small>fica na obra</small>' : ''}</span></label><button class="icon-btn sm" data-ck-edit="${c.id}" aria-label="Alterar ${esc(checkNome(c))}">${I.more}</button></div>`).join('')}</div>` : '<p class="hint">Nenhum item volta da obra. Ao alterar um item, ligue "Conferir também na volta".</p>'}`, { right: conta(tot) })}
+    ${`${tot ? `<div class="ck-list card">${lista.map(c => `<div class="ck-row"><label><input type="checkbox" data-ck="${c.id}" ${c[k] ? 'checked' : ''}><span>${esc(checkNome(c))}${checkLado === 'ida' && !c.back ? '<small>fica na obra</small>' : ''}</span></label><button class="icon-btn sm" data-ck-edit="${c.id}" aria-label="Alterar ${esc(checkNome(c))}">${I.more}</button></div>`).join('')}</div>` : '<p class="hint">Nenhum item volta da obra. Ao alterar um item, ligue "Conferir também na volta".</p>'}`}
     <div class="g-acts">${feitos ? `<button class="btn sm ghost" data-ck-reset>Desmarcar tudo</button>` : ''}${addTools}</div>`;
 }
 function checkSheet(c) {
   const isNew = !c;
   const it = c ? { ...c, name: checkNome(c) } : { name: '', back: true };
-  openSheet({ title: isNew ? 'Novo item no checklist' : 'Item do checklist', body: `
+  openSheet({ title: isNew ? 'Novo item para levar' : 'Item para levar', body: `
       <div class="field"><label for="ck-name">Item</label><input id="ck-name" type="text" value="${esc(it.name)}" placeholder="Ex.: Escada, fita isolante, multímetro" autocomplete="off" ${c && c.toolId && tools.some(t => t.id === c.toolId) ? 'readonly aria-describedby="ck-tool"' : ''}></div>
       ${c && c.toolId && tools.some(t => t.id === c.toolId) ? '<p class="hint" id="ck-tool">O nome vem da sua lista de ferramentas.</p>' : ''}
       <label class="switch-row" for="ck-back"><span><b>Conferir também na volta</b><small>Desligue para o que fica na obra, como material usado.</small></span><input type="checkbox" class="sw" id="ck-back" ${it.back ? 'checked' : ''}></label>`,
@@ -647,39 +643,44 @@ function checkSheet(c) {
       $('[data-del]', s)?.addEventListener('click', () => {
         const idx = checks.findIndex(x => x.id === c.id); if (idx < 0) return;
         const [gone] = checks.splice(idx, 1); saveChecks(); closeSheet(true); rerender();
-        toast(`${checkNome(gone)} saiu do checklist.`, { label: 'Desfazer', run: () => { checks.splice(idx, 0, gone); saveChecks(); rerender(); } });
+        toast(`${checkNome(gone)} saiu da lista de levar.`, { label: 'Desfazer', run: () => { checks.splice(idx, 0, gone); saveChecks(); rerender(); } });
       });
       $('[data-save]', s).onclick = () => {
         const name = $('#ck-name', s).value.trim().replace(/\s+/g, ' ');
         if (!name) return toast('Escreva o que conferir.');
         const back = $('#ck-back', s).checked;
         if (isNew) {
-          if (checks.some(x => norm(checkNome(x)) === norm(name))) return toast(`${name} já está no checklist.`);
+          if (checks.some(x => norm(checkNome(x)) === norm(name))) return toast(`${name} já está na lista de levar.`);
           const t = tiposTool().find(x => temTool(x) && norm(x.name) === norm(name));
           checks.push(fixCheck({ id: uid(), name, back, toolId: t ? t.id : '' }));
         } else Object.assign(checks.find(x => x.id === c.id) || {}, { name, back });
-        saveChecks(); closeSheet(true); rerender(); toast(isNew ? `${name} no checklist.` : 'Item salvo.');
+        saveChecks(); closeSheet(true); rerender(); toast(isNew ? `${name} na lista de levar.` : 'Item salvo.');
       };
     } });
 }
-VIEWS.gestao = {
+const OBRA = { levar: ['Levar', 'Novo item'], comprar: ['Comprar', ''], estoque: ['Estoque', 'Novo material'], ferramentas: ['Ferramentas', 'Nova ferramenta'] };
+let CP = null;
+VIEWS.obra = {
   html() {
-    const G = GESTAO[gestaoAba];
-    const corpo = gestaoAba === 'estoque' ? stockListHTML() : gestaoAba === 'ferramentas' ? toolsListHTML() : checklistHTML();
+    const cn = comprasN();
+    if (obraAba === 'comprar') CP = comprasEstado();
+    const corpo = obraAba === 'estoque' ? stockListHTML() : obraAba === 'ferramentas' ? toolsListHTML() : obraAba === 'levar' ? checklistHTML()
+      : `<div id="cp-list">${CP.corpo()}</div>${CP.L.length ? comprasPe() : ''}`;
     return `${barraTopo()}
-    <main class="page">
-      ${KitFacil.ui.cabecalho({ titulo: 'Gestão' })}
-      ${KitFacil.ui.abas({ itens: Object.entries(GESTAO).map(([k, x]) => [k, x.nome]), atual: gestaoAba, rotulo: 'Parte da gestão' })}
+    <main class="page obra">
+      ${KitFacil.ui.cabecalho({ titulo: 'Obra', sub: 'O que levar, comprar e ter guardado.' })}
+      ${KitFacil.ui.abas({ itens: Object.entries(OBRA).map(([k, x]) => k === 'comprar' && cn ? [k, x[0], cn] : [k, x[0]]), atual: obraAba, rotulo: 'Parte da Obra' })}
       <div class="g-body" id="g-body">${corpo}</div>
-      ${KitFacil.ui.adicionar({ rotulo: G.criar, attrs: 'data-g-new' })}
+      ${OBRA[obraAba][1] ? KitFacil.ui.adicionar({ rotulo: OBRA[obraAba][1], attrs: 'data-g-new' }) : ''}
     </main>`;
   },
   bind(v) {
-    $$('[data-aba]', v).forEach(b => b.onclick = () => { if (gestaoAba === b.dataset.aba) return; gestaoAba = b.dataset.aba; gestaoQuery = ''; rerender(); });
-    $('[data-compras]', v)?.addEventListener('click', comprasSheet);
-    $('[data-g-new]', v).onclick = () => gestaoAba === 'estoque' ? stockSheet(null) : gestaoAba === 'ferramentas' ? newToolSheet() : checkSheet(null);
+    $$('[data-aba]', v).forEach(b => b.onclick = () => { if (obraAba === b.dataset.aba) return; obraAba = b.dataset.aba; gestaoQuery = ''; rerender(); });
+    $('[data-compras]', v)?.addEventListener('click', () => { obraAba = 'comprar'; rerender(); window.scrollTo({ top: 0 }); });
+    $('[data-g-new]', v)?.addEventListener('click', () => obraAba === 'estoque' ? stockSheet(null) : obraAba === 'ferramentas' ? newToolSheet() : checkSheet(null));
+    if (obraAba === 'comprar' && CP) comprasLigar(v, CP);
     const sq = $('#g-q', v);
-    if (sq) sq.addEventListener('input', () => { gestaoQuery = sq.value; const tmp = document.createElement('div'); tmp.innerHTML = gestaoAba === 'estoque' ? stockListHTML() : toolsListHTML(); $('#g-list', v).replaceWith($('#g-list', tmp)); });
+    if (sq) sq.addEventListener('input', () => { gestaoQuery = sq.value; const tmp = document.createElement('div'); tmp.innerHTML = obraAba === 'estoque' ? stockListHTML() : toolsListHTML(); $('#g-list', v).replaceWith($('#g-list', tmp)); });
     v.addEventListener('click', e => {
       const sb = e.target.closest('[data-mat]'); if (sb) return matSheet(prices.find(p => p.id === sb.dataset.mat));
       const mf = e.target.closest('[data-mf]'); if (mf) { matFiltro = mf.dataset.mf; gestaoQuery = ''; return rerender(); }
@@ -691,12 +692,12 @@ VIEWS.gestao = {
       if (e.target.closest('[data-ck-tools]')) {
         const novos = tiposTool().filter(t => temTool(t) && !checks.some(c => c.toolId === t.id));
         novos.forEach(t => checks.push(fixCheck({ id: uid(), name: t.name, toolId: t.id, back: true })));
-        saveChecks(); rerender(); return toast(`${plural(novos.length, 'ferramenta entrou', 'ferramentas entraram')} no checklist.`, { label: 'Desfazer', run: () => { checks = checks.filter(c => !novos.some(t => t.id === c.toolId)); saveChecks(); rerender(); } });
+        saveChecks(); rerender(); return toast(`${plural(novos.length, 'ferramenta entrou', 'ferramentas entraram')} na lista de levar.`, { label: 'Desfazer', run: () => { checks = checks.filter(c => !novos.some(t => t.id === c.toolId)); saveChecks(); rerender(); } });
       }
       if (e.target.closest('[data-ck-reset]')) {
         const k = checkLado, antes = checks.filter(c => c[k]).map(c => c.id);
         checks.forEach(c => { c[k] = false; }); saveChecks(); rerender();
-        toast(`Checklist de ${k === 'ida' ? 'ida' : 'volta'} desmarcado.`, { label: 'Desfazer', run: () => { checks.forEach(c => { if (antes.includes(c.id)) c[k] = true; }); saveChecks(); rerender(); } });
+        toast(`Lista de ${k === 'ida' ? 'ida' : 'volta'} desmarcada.`, { label: 'Desfazer', run: () => { checks.forEach(c => { if (antes.includes(c.id)) c[k] = true; }); saveChecks(); rerender(); } });
       }
     });
     v.addEventListener('change', e => {
@@ -706,4 +707,3 @@ VIEWS.gestao = {
     });
   },
 };
-
