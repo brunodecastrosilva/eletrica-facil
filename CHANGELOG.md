@@ -3,6 +3,34 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 4.0.0 · 2026-11-20
+
+O Elétrica Fácil recomeçou enxuto, por decisão do Bruno: o app faz uma coisa só, o orçamento de serviços de elétrica, e fecha a cobrança. Telas, ícones, dados, contas, documentos, apresentação, guia e testes são novos. O raio é o mesmo; mudou a hora em que ele cai.
+
+- Elétrica Fácil recomeçou enxuto: o app agora faz uma coisa, o orçamento de serviços de elétrica, do pedido ao recibo.
+- Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito.
+- O botão do pé é sempre o próximo passo: Enviar, Aprovou, Receber e Enviar recibo.
+- Preços em blocos por categoria, com ícones. Toque no bloco e mude o preço na hora.
+- Visual novo, com o amarelo na frente, e ícones desenhados para o app.
+- O raio agora cai sozinho, de vez em quando. Dá para desligar em Ajustes.
+- Saíram as conquistas, a Obra, o estoque e as ferramentas. Os dados da versão anterior continuam guardados no aparelho, mas não aparecem aqui.
+
+Mais detalhes:
+
+- **Orçamento e relatório:** o orçamento segue Rascunho, Enviado, Aprovado e Recebido; o relatório, Rascunho, Enviado e Recebido, sem entrada e com o dia em que o serviço foi feito. Os dois saem da mesma tela e do mesmo PDF.
+- **Somar serviço:** a lista de preços abre numa janela, em blocos por categoria; cada toque no + soma um e o − tira um. Tem busca, os mais usados no alto e a linha avulsa para o que não está na lista.
+- **Receber:** QR code do Pix com o valor (a entrada primeiro; depois, o que falta) e o registro do pagamento, que pode entrar em partes. Valor maior que o que falta é recusado. Cada pagamento tem o seu recibo, em PDF ou em mensagem.
+- **Início:** um painel com o que há para receber, o que espera resposta, o que está aprovado para fazer e o recebido no mês; abaixo, os documentos em andamento, cada um com o próximo passo.
+- **Documentos:** a lista de tudo, com busca e filtro por tipo.
+- **Preços:** grade de blocos grandes, um por categoria, com pictograma. Dentro do bloco, os preços; dá para criar, renomear e excluir categorias e escolher o ícone entre 18. Catálogo de fábrica com 9 categorias e 65 itens de predial de baixa tensão.
+- **Visual:** amarelo `#FFD21F` e azul-noite `#0B1128`; títulos e números grandes em Red Hat Display. Dois jogos de ícones desenhados para o app: 36 de linha e 18 pictogramas em dois tons. O Pix continua sendo um QR code.
+- **Raio:** o desenho é o da versão 3. Agora ele cai sozinho: o primeiro entre 20 e 70 segundos depois de abrir o app, os seguintes a cada 1,5 a 4 minutos, ao acaso. Não cai com alguém digitando, com janela aberta, no guia nem na apresentação; respeita o movimento reduzido; desliga em Ajustes, Raio e apresentação.
+- **Apresentação e guia:** quatro telas novas, com um bloco de verdade para tocar; guia único de 12 passos, do + ao recibo.
+- **Dados (Regras do app, Art. 6º):** o formato é novo, mas nada da versão 3 é apagado: orçamentos, preços, estoque e ajustes antigos continuam no aparelho, nas chaves antigas, e só não aparecem aqui. Vêm de lá os dados que saem nos documentos (nome, empresa, telefone, e-mail, CPF ou CNPJ, registro, cidade, Pix e logotipo) e a ligação da sincronização, que passa a usar um arquivo novo no gist (`eletrica-facil-4.json`). A cópia de segurança da versão 3 não abre na 4.
+- **Saíram, com a aprovação do Bruno (Regras do app, Art. 8º):** conquistas e lâmpadas em 3D, Obra (levar, comprar, estoque e ferramentas), deslocamento, adicionais, impostos, cartão com taxa da maquininha, ambientes, composição de material, relatório técnico em blocos e a folha como tela.
+- **Passado por cima do Kit (Art. 30-A):** título da tela na fonte de caráter, aviso rápido acima da doca nas telas internas, a fresta abaixo da janela do guia nas telas internas, o rótulo "Documentos" em celular de 320 px e as cores da linha fina por lugar. Propostas para o Integrador registradas no README.
+- **Testes:** 12 testes do app (fluxo do orçamento e do relatório, contas, PDF, recibo, Pix, sincronização entre dois aparelhos, o começo sem apagar a versão 3, raio, apresentação e guia), a varredura de acessibilidade em 42 telas e janelas, no claro e no escuro, e os 59 testes do Kit.
+
 ## 3.0.0 · 2026-11-18
 
 O Elétrica Fácil foi refeito do zero, a partir do desenho aprovado pelo Bruno: telas, fluxo, navegação, apresentação, guia, raio e testes são novos. As contas e os documentos (PDF, Pix, recibo e mensagens) continuam os mesmos.

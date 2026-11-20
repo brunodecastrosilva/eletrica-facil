@@ -1,457 +1,390 @@
-/* Elétrica Fácil 3 · testes do app (npm test). Rodam num Chromium, sem internet: o GitHub (sincronização) e o Firestore
-   (avaliações) são simulados por comum/testes/ambiente.mjs. Escritos junto com a refação: seguem a folha, o botão
-   amarelo, o quadro por etapa, a Tabela em seções, a Obra, a apresentação, o raio e o guia. */
+/* Elétrica Fácil 4 · testes do app (npm test). Rodam num Chromium, sem internet: o GitHub (sincronização) é simulado por
+   comum/testes/ambiente.mjs. Escritos junto com o app enxuto: seguem o orçamento e o relatório, o botão do pé, os preços
+   em blocos, as contas, os documentos, o começo sem apagar a versão 3, o raio que cai sozinho, a apresentação e o guia. */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { preparar, aparelho as aparelhoKit, githubFalso, semRolagemLateral, conferirTopo, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ, semCampoEmFoco } from '../comum/testes/ambiente.mjs';
+import { preparar, aparelho, githubFalso, semRolagemLateral, conferirTopo, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ, semCampoEmFoco } from '../comum/testes/ambiente.mjs';
 
-/* as conquistas ficam desligadas nos testes das contas e das janelas, para a janela da lâmpada não entrar no meio de um
-   toque (elas têm o seu teste). A apresentação não aparece em navegador de teste, a não ser quando o teste pede. */
-const SEM_CONQUISTAS = `try { localStorage.setItem('eletricafacil.formato', '3'); if (!localStorage.getItem('eletricafacil.jogo')) localStorage.setItem('eletricafacil.jogo', JSON.stringify({ flags: {}, vistas: {}, off: true, pronto: true })); } catch {}`;
-const aparelho = (amb, o = {}) => aparelhoKit(amb, { ...o, antes: o.conquistas ? (o.antes ? o.antes : undefined) : (o.antes ? `${SEM_CONQUISTAS}; (${o.antes})();` : SEM_CONQUISTAS) });
 let amb, versao;
 before(async () => { amb = await preparar(); versao = JSON.parse(await readFile(RAIZ + '/package.json', 'utf8')).version; });
 after(async () => { await amb?.encerrar(); });
 const esperar = async (cond, ms = 8000) => { const fim = Date.now() + ms; while (Date.now() < fim) { if (await cond()) return true; await new Promise(r => setTimeout(r, 50)); } return false; };
 const fecharJanela = async p => { await p.evaluate(() => KitFacil.dialogo.fechar(true)); await p.waitForTimeout(150); };
 const TELAS = [[{ width: 320, height: 568 }, 'celular mínimo'], [{ width: 390, height: 844 }, 'celular'], [{ width: 820, height: 1180 }, 'tablet'], [{ width: 1440, height: 900 }, 'computador']];
-/* o orçamento de exemplo do design: os mesmos itens, o mesmo deslocamento e o mesmo pagamento das pranchas */
-const EXEMPLO = () => {
-  settings.kmPerL = 10; settings.fuelPrice = 619; saveSettings();
-  const P = n => prices.find(x => x.name === n);
-  const q = blankQuote(); q.num = ++settings.seq; q.title = 'Reforma elétrica da cozinha';
-  const add = (n, qty) => { const p = P(n); q.items.push({ id: uid(), kind: p.kind, name: p.name, unit: p.unit, qty, price: p.price, room: '' }); };
-  add('Ponto novo de tomada com fiação', 6); add('Instalação de luminária ou plafon', 3); add('Instalação de DR', 1); add('Instalação de chuveiro elétrico', 1);
-  add('Caixa 4x2', 6); add('Tomada 10 A com placa', 6); add('Cabo flexível 2,5 mm²', 72); add('Eletroduto corrugado 3/4"', 24); add('DR bipolar 40 A 30 mA', 1);
-  q.trip = { km: 12, visits: 2, roundTrip: true, kmPerL: 10, fuelPrice: 619, toll: 0, wearPerKm: 0, minutes: 0, hourRate: 0, minVisit: 0 };
-  q.travel = tripCalc(q.trip).total; q.payment.mode = 'entrada'; q.payment.entryPct = 50;
-  quotes.unshift(q); saveQuotes(); go('/q/' + q.id, true);
-  return q.id;
-};
+const pronto = p => p.locator('main.inicio').waitFor();
+// campo de dinheiro do Kit: os dígitos entram como centavos (Regras do app, Art. 15)
+const digitar = async (p, sel, digitos) => { await p.locator(sel).click(); await p.locator(sel).pressSequentially(digitos); await p.locator(sel).blur(); };
+const novoPelaBarra = async (p, tipo) => { await p.evaluate(() => irPara('novo')); await p.locator(`.kf-dlg [data-novo-tipo="${tipo}"]`).click(); await p.locator('#pe-doc').waitFor(); };
+const pe = p => p.evaluate(() => ({ rotulo: document.querySelector('#pe-doc [data-prox]').textContent.trim(), total: document.querySelector('#pe-doc .pe-total b').textContent.trim().replace(/\s/g, ' '), que: document.querySelector('#pe-doc .pe-total small').textContent.trim() }));
+const aqui = p => p.evaluate(() => getDoc(rota().id));
 
-test('abre sem erros em celular, tablet e computador, sem rolagem lateral; topo e navegação nova', async () => {
+test('abre sem erros em celular, tablet e computador, sem rolagem lateral; topo, navegação e nomes inteiros', async () => {
   for (const [viewport, nome] of TELAS) {
-    const a = await aparelho(amb, { viewport });
-    const p = a.page;
-    await p.locator('.page.orc [data-novo]').waitFor();
+    const a = await aparelho(amb, { viewport }); const p = a.page;
+    await pronto(p);
     assert.equal(await p.evaluate(() => VERSAO), versao, 'a versão do código é a do package.json');
-    assert.equal(await p.evaluate(() => route().name), 'home', 'Orçamentos abre o app');
-    await conferirTopo(p, { comAjustes: false });
+    assert.deepEqual((await conferirTopo(p, { presente: true })).erros, [], `topo (${nome})`);
     assert.equal(await semRolagemLateral(p), true, `rolagem lateral em ${nome}`);
     const nomes = await p.evaluate(() => [...document.querySelectorAll(innerWidth >= 1024 ? '.kf-trilho [data-kf-ir]' : '.kf-nav [data-kf-ir]')].filter(b => b.getClientRects().length).map(b => (b.getAttribute('aria-label') || b.textContent).trim()));
-    for (const n of ['Orçamentos', 'Tabela', 'Obra', 'Mais']) assert.ok(nomes.some(x => x.includes(n)), `${n} na navegação (${nome}): ${nomes.join(' | ')}`);
-    assert.ok(!nomes.some(x => /Início|Gestão/.test(x)), 'Início e Gestão saíram da navegação');
-    for (const h of ['#/precos', '#/obra', '#/mais', '#/conquistas', '#/ajustes']) { await p.evaluate(x => { location.hash = x; }, h); await p.waitForTimeout(120); assert.equal(await semRolagemLateral(p), true, `rolagem lateral em ${h} (${nome})`); }
-    await p.evaluate(() => createExample()); await p.locator('#fo-folha .ln').first().waitFor();
-    assert.equal(await semRolagemLateral(p), true, `rolagem lateral na folha (${nome})`);
+    for (const n of ['Início', 'Documentos', 'Preços', 'Mais', 'Novo documento']) assert.ok(nomes.some(x => x.includes(n)), `${n} na navegação (${nome}): ${nomes.join(' | ')}`);
+    assert.equal(nomes.filter(x => !x.includes('Novo')).length, 4, 'quatro seções e a ação do centro: no máximo cinco posições');
+    assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.kf-nav .kf-nav-it:not(.kf-nav-centro) .kf-nav-l')].filter(e => e.getClientRects().length && e.scrollWidth > e.clientWidth + 1).map(e => e.textContent)), [], `rótulo cortado na barra de baixo (${nome})`);
+    for (const h of ['#/docs', '#/precos', '#/precos/c-quadro', '#/mais', '#/ajustes']) { await p.evaluate(x => { location.hash = x; }, h); await p.waitForTimeout(140); assert.equal(await semRolagemLateral(p), true, `rolagem lateral em ${h} (${nome})`); }
+    await p.evaluate(() => { criarExemplo(); }); await p.locator('#pe-doc').waitFor();
+    assert.equal(await semRolagemLateral(p), true, `rolagem lateral no documento (${nome})`);
+    assert.deepEqual((await conferirTopo(p, { presente: false })).erros, [], `topo da tela interna (${nome})`);
     assert.deepEqual(a.erros, [], `erros no console (${nome})`);
     await a.fechar();
   }
 });
 
-test('começo limpo: o que as versões 1 e 2 guardaram é apagado uma vez; o tema fica; dado antigo não trava o app', async () => {
+test('começo novo: nada da versão 3 é apagado; vêm de lá os dados dos documentos e a ligação da nuvem; dado torto não trava', async () => {
   const a = await aparelho(amb, { antes: () => {
     if (sessionStorage.getItem('ja')) return; sessionStorage.setItem('ja', '1');
-    localStorage.removeItem('eletricafacil.formato');
-    localStorage.setItem('eletricafacil.quotes', '{"isto":"não é uma lista"');   // lixo de propósito
-    localStorage.setItem('eletricafacil.prices', JSON.stringify([{ id: 'velho', kind: 'svc', name: 'Preço antigo', unit: 'un', price: 1 }]));
-    localStorage.setItem('eletricafacil.settings', JSON.stringify({ name: 'Nome Antigo', seq: 41 }));
-    localStorage.setItem('eletricafacil.sync', JSON.stringify({ token: 'ghp_antigo', gistId: 'abc' }));
-    localStorage.setItem('eletricafacil.pref', JSON.stringify({ tema: 'dark' }));
+    const L = (k, v) => localStorage.setItem('eletricafacil.' + k, typeof v === 'string' ? v : JSON.stringify(v));
+    L('formato', '3'); L('abertura', '1');
+    L('settings', { name: 'Carlos Antigo', company: 'CA Elétrica', phone: '11999990000', pix: 'antigo@exemplo.com', city: 'Fortaleza', seq: 41 });
+    L('quotes', [{ id: 'q1', client: { name: 'Cliente da versão 3' } }]); L('prices', [{ id: 'velho', kind: 'svc', name: 'Preço antigo', unit: 'un', price: 1 }]);
+    L('sync', { token: 'ghp_antigo', gistId: 'abc', login: 'fulano', lastSync: 123, st: { 's:name': 5 }, del: { x: 1 } });
+    L('docs', '{"isto":"não é uma lista"'); L('precos', '"texto"'); // lixo de propósito nas chaves novas
   } });
-  const p = a.page;
-  await p.locator('.page.orc [data-novo]').waitFor();
-  assert.deepEqual(await p.evaluate(() => [quotes.length, settings.name, settings.seq, prices.some(x => x.name === 'Preço antigo'), SY.ligada(), localStorage.getItem('eletricafacil.formato')]), [0, '', 0, false, false, '3']);
-  assert.equal(await p.evaluate(() => localStorage.getItem('eletricafacil.pref')), JSON.stringify({ tema: 'dark' }), 'a preferência de tema é do aparelho e fica');
-  assert.ok(await p.evaluate(() => prices.length > 300), 'a tabela que vem com o app entra na primeira vez');
-  // na segunda abertura nada mais é apagado
-  await p.evaluate(() => { settings.name = 'Carlos'; saveSettings(); }); await p.reload(); await p.locator('.page.orc').waitFor();
-  assert.equal(await p.evaluate(() => settings.name), 'Carlos');
+  const p = a.page; await pronto(p);
+  const antigo = () => p.evaluate(() => ['settings', 'quotes', 'prices'].map(k => localStorage.getItem('eletricafacil.' + k)));
+  const v3 = await antigo();
+  assert.match(v3[1], /Cliente da versão 3/, 'os orçamentos da versão 3 continuam no aparelho');
+  assert.match(v3[2], /Preço antigo/);
+  assert.deepEqual(await p.evaluate(() => [ajustes.nome, ajustes.empresa, ajustes.fone, ajustes.pix, ajustes.cidade, ajustes.seq]), ['Carlos Antigo', 'CA Elétrica', '11999990000', 'antigo@exemplo.com', 'Fortaleza', 0]);
+  assert.deepEqual(await p.evaluate(() => [docs.length, cats.length, precos.length > 50, precos.some(x => x.nome === 'Preço antigo')]), [0, 9, true, false], 'o app começa com o catálogo de fábrica, mesmo com lixo guardado');
+  assert.deepEqual(await p.evaluate(() => [SY.ligada(), sinc.token, sinc.gistId, Object.keys(sinc.st).filter(k => k.startsWith('s:')).length, localStorage.getItem('eletricafacil.formato'), localStorage.getItem('eletricafacil.abertura')]), [true, 'ghp_antigo', '', 0, '4', null]);
+  await p.evaluate(() => { ajustes.nome = 'Nome Novo'; salvarAjustes(); });
+  await p.reload(); await pronto(p);
+  assert.equal(await p.evaluate(() => ajustes.nome), 'Nome Novo', 'a passagem roda uma vez só');
+  assert.deepEqual(await antigo(), v3, 'nada da versão 3 mudou');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
 
-test('a folha: Novo orçamento abre em branco, sem pedir o cliente e sem campo em foco; o vazio some ao sair', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.click('.page.orc [data-novo]');
-  await p.locator('#fo-folha [data-add="svc"]').waitFor();
-  assert.deepEqual(await p.evaluate(() => [route().name, quotes[0].client.name, quotes[0].num, quotes[0].status]), ['quote', '', 1, 'rascunho']);
-  assert.equal(await semCampoEmFoco(p), true, 'a folha abre sem campo em foco');
-  assert.equal(await p.locator('#fo-folha input').count(), 0, 'a folha em branco não pede nada (Código, Art. 64-D)');
-  assert.match(await p.textContent('#fo-folha'), /Fica em branco até o envio/);
-  assert.match(await p.textContent('#fo-visor'), /R\$\s0,00[\s\S]*Enviar/);
-  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('#fo-bd .rs')].map(e => e.className.trim())), ['rs at', 'rs', 'rs', 'rs', 'rs'], 'o trilho começa em Rascunho');
-  await p.click('[data-back]');
-  assert.ok(await esperar(() => p.evaluate(() => route().name === 'home' && quotes.length === 0)), 'o orçamento vazio é descartado');
-  // serviço já feito: nasce como relatório, em Concluído
-  await p.click('[data-relatorio]');
-  assert.ok(await esperar(() => p.evaluate(() => route().name === 'quote' && getQ(route().id).status === 'concluido')));
-  assert.match(await p.textContent('#fo-folha'), /Diagnóstico[\s\S]*Serviços realizados[\s\S]*Testes e verificações[\s\S]*Recomendações/);
-  assert.deepEqual(a.erros, []);
-  await a.fechar();
-});
-
-test('Somar: a tabela numa janela; cada toque soma um, o pé mostra o total e a busca acha serviço e material', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.click('.page.orc [data-novo]'); await p.click('#fo-folha [data-add="svc"]');
-  await p.locator('#mt-lista .sx').first().waitFor();
-  assert.equal(await semCampoEmFoco(p), true, 'a janela abre sem campo em foco (Código, Art. 68, § 5º)');
-  assert.equal(await p.locator('#mt-lista .sx.ab').count(), 1, 'uma seção aberta de cada vez');
-  const linha = p.locator('#mt-lista .mt-row', { hasText: 'Instalação de tomada ou interruptor' });
-  await linha.locator('.mt-mais').click(); await linha.locator('.mt-mais').click(); await linha.locator('.mt-mais').click();
-  assert.deepEqual(await p.evaluate(() => quotes[0].items.map(i => [i.name, i.qty, i.price])), [['Instalação de tomada ou interruptor', 3, 6000]]);
-  assert.match(await p.textContent('#mt-pe'), /R\$\s180,00/);
-  assert.match(await p.textContent('#fo-folha'), /Instalação de tomada ou interruptor/, 'a folha atrás acompanha');
-  await linha.locator('[data-menos]').click();
-  assert.equal(await p.evaluate(() => quotes[0].items[0].qty), 2);
-  // abrir outra seção fecha a primeira
-  await p.locator('#mt-lista [data-cat]', { hasText: 'Iluminação' }).click();
-  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('#mt-lista .sx.ab .st')].map(b => b.textContent.replace(/\d+/g, '').trim())), ['Iluminação']);
-  await p.fill('#mt-q', 'cabo flex'); await p.locator('#mt-lista .mt-row').first().waitFor();
-  assert.ok((await p.locator('#mt-lista .mt-row').allTextContents()).every(t => /cabo flex/i.test(t)));
-  await p.locator('#mt-lista .mt-row .mt-mais').first().click();
-  assert.equal(await p.evaluate(() => quotes[0].items.filter(i => i.kind === 'mat').length), 1, 'a busca soma material também');
-  await fecharJanela(p);
-  assert.match(await p.textContent('#fo-visor'), /Enviar/);
-  assert.deepEqual(a.erros, []);
-  await a.fechar();
-});
-
-test('linha no lugar: quantidade e preço mudam na folha; o campo de valor entra como centavos; guardar na tabela; tirar com Desfazer', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.evaluate(() => { startQuote(null, false); const q = quotes[0], pr = prices.find(x => x.name === 'Instalação de tomada ou interruptor'); q.items.push({ id: uid(), kind: 'svc', name: pr.name, unit: pr.unit, qty: 2, price: pr.price, room: '' }); touch(q); rerender(); });
-  await p.click('#fo-folha [data-ln]');
-  await p.locator('#fo-folha .ed #ed-p').waitFor();
-  assert.equal(await semCampoEmFoco(p), true, 'abrir a linha não põe o cursor em campo nenhum');
-  await p.click('[data-edq="1"]'); await p.click('[data-edq="1"]');
-  assert.equal(await p.evaluate(() => quotes[0].items[0].qty), 4);
-  assert.match(await p.textContent('#fo-visor'), /R\$\s240,00/);
-  // "1290" = R$ 12,90 (Regras do app, Art. 15)
-  await p.fill('#ed-p', ''); await p.type('#ed-p', '1290');
-  assert.equal(await p.inputValue('#ed-p'), 'R$ 12,90');
-  assert.equal(await p.evaluate(() => quotes[0].items[0].price), 1290);
-  assert.match(await p.textContent('#fo-visor'), /R\$\s51,60/);
-  await p.locator('#ed-p').blur();
-  await p.locator('[data-ed-guardar]').waitFor();
-  assert.match(await p.textContent('#fo-folha .ed .fx'), /vale só nesta proposta[\s\S]*R\$\s60,00/);
-  await p.click('[data-ed-guardar]');
-  assert.deepEqual(await p.evaluate(() => { const x = prices.find(y => y.name === 'Instalação de tomada ou interruptor'); return [x.price, x.ref]; }), [1290, false], 'o preço novo vai para a tabela e deixa de ser o de fábrica');
-  assert.equal(await p.locator('[data-ed-guardar]').count(), 0);
-  await p.click('[data-ed-rm]');
-  assert.ok(await esperar(() => p.evaluate(() => quotes[0].items.length === 0)));
-  await p.click('.kf-toast button');
-  assert.ok(await esperar(() => p.evaluate(() => quotes[0].items.length === 1)), 'Desfazer devolve a linha');
-  assert.deepEqual(a.erros, []);
-  await a.fechar();
-});
-
-test('contas: total, entrada, cartão com taxa, imposto por fora, urgência e desconto conferem com o exemplo do design', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.locator('.page.orc').waitFor();
-  await p.evaluate(EXEMPLO); await p.locator('#fo-folha .tg').waitFor();
-  const conta = () => p.evaluate(() => { const q = getQ(route().id), c = compute(q); return { labor: c.labor, mat: c.matTotal, travel: c.travel, total: c.total, entry: c.entry, rest: c.rest }; });
-  assert.deepEqual(await conta(), { labor: 113500, mat: 58500, travel: 2971, total: 174971, entry: 87486, rest: 87485 });
-  assert.match(await p.textContent('#fo-folha .tg'), /R\$\s1\.749,71/);
-  assert.match(await p.textContent('#fo-folha .cns'), /Entrada de 50%, R\$\s874,86[\s\S]*R\$\s874,85/);
-  // Acertar o total, pela janela: urgência de 20%, desconto de 5% e imposto de 6% por fora
-  await p.click('#fo-folha .tts .ad');
-  await p.locator('#fo-jan [data-x="urgent"]').click();
-  await p.fill('.kf-dlg #ax-pct', '20'); await p.click('.kf-dlg [data-ok]');
-  await p.locator('#fo-jan [data-x="urgent"]').waitFor();
-  assert.deepEqual(await p.evaluate(() => { const c = compute(getQ(route().id)); return [c.extra, c.total]; }), [22700, 197671], 'urgência de 20% sobre a mão de obra');
-  await p.locator('#fo-jan [data-x="urgent"]').click();
-  await p.click('#fo-jan [data-dm="pct"]'); await p.fill('#fo-jan #q-disc', '5');
-  assert.deepEqual(await p.evaluate(() => { const c = compute(getQ(route().id)); return [c.discount, c.total]; }), [8749, 166222], 'desconto de 5%');
-  assert.ok(await esperar(async () => /R\$\s1\.662,22/.test(await p.textContent('#fo-folha .tg'))), 'a folha atrás mostra o total novo');
-  await p.fill('#fo-jan #q-disc', '0');
-  await p.click('#fo-jan [data-tx="fora"]'); await p.fill('#fo-jan #q-txp', '6'); await p.locator('#fo-jan #q-txp').blur();
-  assert.ok(await esperar(() => p.evaluate(() => { const c = compute(getQ(route().id)); return c.taxFora === 6810 && c.total === 181781; })), 'imposto de 6% por fora, sobre a mão de obra');
-  await p.click('#fo-jan [data-tx="sem"]'); await fecharJanela(p);
-  // Pagamento: cartão em 6×, com taxa de 12,39% paga pelo cliente
-  await p.click('#fo-folha [data-j="pag"]'); await p.click('#fo-jan [data-pm="parcelado"]');
-  for (let k = 0; k < 3; k++) await p.click('#fo-jan [data-in="1"]');
-  await p.click('#fo-jan [data-jur="taxa"]'); await p.fill('#fo-jan #q-taxa', '12,39'); await p.locator('#fo-jan #q-taxa').blur();
-  assert.ok(await esperar(() => p.evaluate(() => { const k = compute(getQ(route().id)).card; return k.n === 6 && k.total === 199716 && k.recebe === 174971 && k.parts[0] === 33286; })), 'cartão: 6× de R$ 332,86 = R$ 1.997,16; você recebe R$ 1.749,71');
-  assert.match(await p.textContent('#fo-jan #pay-sum'), /Você recebe, depois da taxa[\s\S]*R\$\s1\.749,71/);
-  await fecharJanela(p);
-  assert.deepEqual(a.erros, []);
-  await a.fechar();
-});
-
-test('o botão amarelo é o próximo passo: Enviar pede o cliente, Aprovou, Concluir com baixa no estoque, Receber e Recibo', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.locator('.page.orc').waitFor();
-  await p.evaluate(EXEMPLO); await p.locator('#fo-visor [data-prox="enviar"]').waitFor();
-  await p.evaluate(() => { const c = prices.find(x => x.name === 'Caixa 4x2'); c.stock = 10; c.cost = 150; c.min = 2; acertaLotes(c); savePrices(); });
-  const etapa = () => p.evaluate(() => [getQ(route().id).status, document.querySelector('#fo-bd .rs.at').textContent, document.querySelector('#fo-visor [data-prox]').textContent.trim()]);
-  // Enviar: sem o nome nada sai, e o campo é apontado sem receber o foco
-  await p.click('#fo-visor [data-prox="enviar"]'); await p.locator('.kf-dlg #q-name').waitFor();
-  assert.equal(await semCampoEmFoco(p), true);
-  await p.click('.kf-dlg [data-pdf]');
-  assert.equal(await p.getAttribute('.kf-dlg #q-name', 'aria-invalid'), 'true');
-  assert.equal(await p.evaluate(() => getQ(route().id).status), 'rascunho');
-  await p.fill('.kf-dlg #q-name', 'Mariana Souza'); await p.fill('.kf-dlg #q-phone', '11911112222');
-  assert.match(await p.evaluate(() => { const q = getQ(route().id); return quoteMessage(q, compute(q), 'quote'); }), /Mariana[\s\S]*1\.749,71/);
-  // o envio abriria outro app (WhatsApp) ou o menu de compartilhar: aqui marcamos como o app marca depois de enviar
-  await p.evaluate(() => { KitFacil.dialogo.fechar(true); markSent(getQ(route().id)); });
-  assert.deepEqual(await etapa(), ['enviado', 'Enviado', 'Aprovou']);
-  assert.match(await p.textContent('#fo-folha'), /Mariana Souza/);
-  await p.click('#fo-visor [data-prox="aprovou"]'); await p.click('.kf-dlg [data-ok]');
-  assert.ok(await esperar(async () => (await etapa())[0] === 'aprovado'));
-  assert.deepEqual(await etapa(), ['aprovado', 'Aprovado', 'Concluir']);
-  // Concluir: a data e a baixa no estoque, numa janela só
-  await p.click('#fo-visor [data-prox="concluir"]'); await p.locator('.kf-dlg [data-ok]').waitFor();
-  assert.match(await p.textContent('.kf-dlg'), /Caixa 4x2[\s\S]*Usa 6[\s\S]*você tem 10/);
-  await p.click('.kf-dlg [data-ok]');
-  assert.ok(await esperar(async () => (await etapa())[0] === 'concluido'));
-  assert.deepEqual(await etapa(), ['concluido', 'Concluído', 'Receber']);
-  assert.equal(await p.evaluate(() => prices.find(x => x.name === 'Caixa 4x2').stock), 4, 'o material saiu do estoque');
-  assert.match(await p.textContent('#ab-name'), /Relatório/, 'a folha virou o relatório');
-  assert.match(await p.textContent('#fo-visor'), /Falta receber[\s\S]*R\$\s1\.749,71/);
-  // Receber: registra a entrada; depois o restante; a etapa vira Recebido e o botão, Recibo
-  await p.click('#fo-visor [data-prox="receber"]'); await p.locator('.kf-dlg #pg-v').waitFor();
-  await p.fill('.kf-dlg #pg-v', ''); await p.type('.kf-dlg #pg-v', '87486'); await p.click('.kf-dlg [data-ok]');
-  assert.ok(await esperar(() => p.evaluate(() => falta(getQ(route().id)) === 87485)));
-  assert.deepEqual(await etapa(), ['concluido', 'Concluído', 'Receber']);
-  await p.click('#fo-visor [data-prox="receber"]'); await p.locator('.kf-dlg #pg-v').waitFor();
-  assert.equal(await p.inputValue('.kf-dlg #pg-v'), 'R$ 874,85', 'o valor sugerido é o que falta');
-  await p.click('.kf-dlg [data-ok]');
-  assert.ok(await esperar(async () => (await etapa())[1] === 'Recebido'));
-  assert.deepEqual(await etapa(), ['concluido', 'Recebido', 'Recibo']);
-  await p.click('#fo-visor [data-prox="recibo"]'); await p.locator('.kf-dlg').waitFor();
-  assert.match(await p.textContent('.kf-dlg'), /Recibo de pagamento/);
-  assert.equal(await p.evaluate(() => extenso(87485)), 'oitocentos e setenta e quatro reais e oitenta e cinco centavos');
-  await fecharJanela(p);
-  // desfazer a conclusão devolve o material
-  await p.click('#fo-visor [data-menu]'); await p.click('.kf-dlg [data-o="status"]'); await p.click('.kf-dlg [data-s="enviado"]');
-  assert.ok(await esperar(() => p.evaluate(() => prices.find(x => x.name === 'Caixa 4x2').stock === 10)), 'saiu de Concluído: o material volta para o estoque');
-  assert.deepEqual(a.erros, []);
-  await a.fechar();
-});
-
-test('janelas da folha: prazo no calendário, garantia e validade só com números, observações com textos prontos e ambientes', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.locator('.page.orc').waitFor();
-  await p.evaluate(EXEMPLO); await p.locator('#fo-folha .cns').waitFor();
-  await p.click('#fo-folha [data-j="prazo"]'); await p.locator('#fo-jan #cal [data-cal]:not([disabled])').first().waitFor();
-  assert.equal(await p.locator('#fo-jan #cal [data-cal][disabled]').count() > 0 || await p.evaluate(() => new Date().getDate() === 1), true, 'dias que já passaram ficam fora');
-  await p.locator('#fo-jan #cal [data-cal]:not([disabled])').nth(1).click();
-  assert.ok(await esperar(() => p.evaluate(() => getQ(route().id).dates.length >= 1)));
-  await fecharJanela(p);
-  assert.match(await p.textContent('#fo-folha .cns'), /Execução/);
-  await p.locator('#fo-folha [data-j="gar"]').first().click();
-  await p.fill('#fo-jan #q-war', '-12a0'); await p.fill('#fo-jan #q-val', '30');
-  assert.deepEqual(await p.evaluate(() => { const q = getQ(route().id); return [q.warranty, q.validity]; }), [120, 30]);
-  await fecharJanela(p);
-  assert.match(await p.textContent('#fo-folha .cns'), /120 dias/);
-  await p.click('#fo-folha .fb [data-j="obs"]'); await p.click('#fo-jan [data-note="0"]');
-  assert.ok(await p.evaluate(() => getQ(route().id).notes.length > 10));
-  await fecharJanela(p);
-  // ⋯: separar por ambiente e material por conta do cliente
-  await p.click('#fo-visor [data-menu]'); await p.locator('.kf-dlg #q-matcli').check();
-  assert.ok(await esperar(() => p.evaluate(() => { const c = compute(getQ(route().id)); return c.total === 113500 + 2971; })), 'material por conta do cliente sai do total');
-  assert.match(await p.textContent('#fo-folha'), /por conta do cliente/);
-  await p.locator('.kf-dlg #q-matcli').uncheck(); await fecharJanela(p);
-  assert.deepEqual(a.erros, []);
-  await a.fechar();
-});
-
-test('Orçamentos: o quadro por etapa, o Arquivo, a busca, o resumo do mês e o rascunho que se arrasta para excluir', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.locator('.page.orc').waitFor();
-  assert.match(await p.textContent('.page.orc .vaz'), /Nenhum orçamento ainda/);
-  await p.evaluate(() => {
-    const novo = (nome, st, extra = () => {}) => { const q = blankQuote(); q.num = ++settings.seq; q.client.name = nome; q.items = [{ id: uid(), kind: 'svc', name: 'Troca de tomada', unit: 'un', qty: 2, price: 5000, room: '' }]; quotes.push(q); if (st !== 'rascunho') setStatus(q, st); extra(q); return q; };
-    novo('', 'rascunho'); novo('Mariana', 'enviado', q => { q.sentAt = Date.now() - 4 * 864e5; }); novo('Paulo', 'aprovado'); novo('Lúcia', 'concluido');
-    novo('Quitado', 'concluido', q => { q.pagos = [{ id: uid(), v: 10000, t: Date.now() }]; }); novo('Recusado', 'recusado');
-    saveSettings(); saveQuotes(); rerender();
+test('contas: subtotal, desconto, total, entrada e restante fecham no centavo; a etapa acompanha o que falta', async () => {
+  const a = await aparelho(amb); const p = a.page; await pronto(p);
+  const r = await p.evaluate(() => {
+    const d = acertaDoc({ tipo: 'orc', linhas: [{ nome: 'A', un: 'un', q: 3, pu: 6000 }, { nome: 'B', un: 'm', q: 12, pu: 350 }, { nome: 'C', un: 'un', q: 1, pu: 11550 }], desc: 1250, pag: 'entrada', entradaPct: 40 });
+    const o = { c1: conta(d), cob1: cobrarAgora(d) };
+    d.pagos.push({ id: 'a', v: 5000, em: 1, meio: 'Pix' }); o.cob2 = cobrarAgora(d);
+    d.pagos.push({ id: 'b', v: 8000, em: 1, meio: 'Pix' }); o.cob3 = cobrarAgora(d);
+    d.etapa = 'aprovado'; d.pagos.push({ id: 'c', v: 19500, em: 1, meio: 'Dinheiro' }); acertaEtapa(d); o.etapa1 = d.etapa; o.c2 = conta(d);
+    d.linhas.push({ id: 'x', pid: '', nome: 'D', un: 'un', q: 1, pu: 1000 }); acertaEtapa(d); o.etapa2 = d.etapa; o.falta2 = conta(d).falta;
+    const q = acertaDoc({ tipo: 'orc', linhas: [{ nome: 'A', un: 'un', q: 1, pu: 33333 }], pag: 'entrada', entradaPct: 30 }); o.quebrado = conta(q);
+    const g = acertaDoc({ tipo: 'orc', linhas: [{ nome: 'A', un: 'un', q: 1, pu: 5000 }], desc: 99999999 }); o.descMaior = conta(g);
+    const rel = acertaDoc({ tipo: 'rel', pag: 'entrada', etapa: 'aprovado', linhas: [{ nome: 'A', un: 'un', q: 2, pu: 5000 }] });
+    o.rel = [rel.pag, rel.etapa, ETAPAS.rel.length, conta(rel).entrada, proximo(rel).id, proximo({ ...rel, etapa: 'enviado' }).id];
+    o.ext = [extenso(143550), extenso(100), extenso(1), extenso(100000000), extenso(2000), extenso(101)];
+    return o;
   });
-  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.qd .et')].map(e => e.textContent.replace(/\s+/g, ' ').trim())), ['Rascunhos 1', 'Esperando resposta 1', 'Para executar 1', 'Para receber 1', 'Arquivo 2']);
-  assert.match(await p.textContent('.qd'), /Vale cobrar/);
-  assert.match(await p.textContent('.qd'), /Sem cliente ainda · 1 item/);
-  assert.equal(await p.locator('.qd .qcard', { hasText: 'Quitado' }).count(), 0, 'o que já foi recebido vai para o Arquivo');
-  await p.click('[data-arquivo]');
-  assert.deepEqual((await p.locator('.sx.arq .qcard b').allTextContents()).sort(), ['Quitado', 'Recusado']);
-  assert.match(await p.textContent('.vs'), /aprovado no mês/);
-  await p.fill('#h-q', 'paulo');
-  assert.deepEqual(await p.locator('#q-list .qcard b').allTextContents(), ['Paulo']);
-  await p.fill('#h-q', '');
-  // o rascunho tem o Excluir (vermelho e cheio) para quem usa teclado ou leitor de tela
-  await p.locator('.qswipe .qc-del').focus(); await p.keyboard.press('Enter');
-  assert.ok(await esperar(() => p.evaluate(() => !quotes.some(q => q.status === 'rascunho'))));
-  await p.click('.kf-toast button');
-  assert.ok(await esperar(() => p.evaluate(() => quotes.some(q => q.status === 'rascunho'))), 'Desfazer devolve o rascunho');
-  await p.locator('.qd .qcard', { hasText: 'Paulo' }).click();
-  assert.ok(await esperar(() => p.evaluate(() => route().name === 'quote')));
+  assert.deepEqual(r.c1, { sub: 33750, desc: 1250, total: 32500, entrada: 13000, resto: 19500, pago: 0, falta: 32500 });
+  assert.deepEqual([r.cob1, r.cob2, r.cob3], [{ v: 13000, que: 'a entrada' }, { v: 8000, que: 'a entrada' }, { v: 19500, que: 'o restante' }]);
+  assert.deepEqual([r.etapa1, r.c2.falta, r.etapa2, r.falta2], ['recebido', 0, 'aprovado', 1000], 'quitou, vira Recebido; mexeu no valor, volta a cobrar');
+  assert.equal(r.quebrado.entrada + r.quebrado.resto, r.quebrado.total, 'entrada e restante somam o total');
+  assert.deepEqual([r.descMaior.desc, r.descMaior.total], [5000, 0], 'o desconto não passa do subtotal');
+  assert.deepEqual(r.rel, ['vista', 'rascunho', 3, 0, 'enviar', 'receber'], 'o relatório não tem entrada nem etapa Aprovado');
+  assert.deepEqual(r.ext, ['mil quatrocentos e trinta e cinco reais e cinquenta centavos', 'um real', 'um centavo', 'um milhão de reais', 'vinte reais', 'um real e um centavo']);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
 
-test('Tabela em seções: uma abre de cada vez, a busca filtra e mudar um preço tira a letra fina', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.locator('.page.orc').waitFor(); await p.evaluate(() => { location.hash = '#/precos'; });
-  await p.locator('#pr-list .sx').first().waitFor();
-  assert.equal(await p.locator('#pr-list .sx.ab').count(), 1);
-  assert.ok(await p.locator('#pr-list .sx').count() >= 5);
-  await p.locator('#pr-list [data-cat]', { hasText: 'Iluminação' }).click();
-  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('#pr-list .sx.ab .st')].map(b => b.textContent.replace(/\d+/g, '').trim())), ['Iluminação']);
-  assert.ok(await p.locator('#pr-list .sx.ab .ref-v').count() > 0, 'preço que vem com o app: letra fina');
-  assert.match(await p.textContent('#pr-meus'), /0 de \d+/);
-  await p.locator('#pr-list .sx.ab .tb-row').first().click(); await p.locator('.kf-dlg').waitFor();
-  const campo = p.locator('.kf-dlg input[data-money]').first();
-  await campo.fill(''); await campo.type('9900');
-  await p.locator('.kf-dlg .btn.primary, .kf-dlg [data-save]').first().click();
-  assert.ok(await esperar(() => p.evaluate(() => prices.filter(x => x.kind === 'svc' && !x.ref).length === 1)), 'o preço alterado passa a ser de quem usa');
-  assert.match(await p.textContent('#pr-meus'), /1 de \d+/);
-  await p.fill('#pr-q', 'zzzz');
-  assert.match(await p.textContent('#pr-list'), /Nada com/);
-  // só itens de eletricista predial de baixa tensão (Regras do app, Art. 9º)
-  assert.deepEqual(await p.evaluate(() => prices.filter(x => /(^|\s)rede(\s|$)|rj45|cat ?6|coaxial|câmera|alarme|cerca elétrica/i.test(x.name)).map(x => x.name)), []);
+test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entrada, Enviar pede o nome, Aprovou, Receber em duas vezes', async () => {
+  const a = await aparelho(amb); const p = a.page; await pronto(p);
+  await p.click('#kf-nav-novo'); await p.locator('.kf-dlg [data-novo-tipo="orc"]').click(); await p.locator('#pe-doc').waitFor();
+  assert.equal(await semCampoEmFoco(p), true, 'nenhum campo é selecionado sozinho');
+  assert.deepEqual(await pe(p), { rotulo: 'Somar serviço', total: 'R$ 0,00', que: 'Total' });
+  // somar: blocos por categoria, cada toque soma um, o − tira um, a busca acha pelo nome
+  await p.click('#pe-doc [data-prox]'); await p.locator('.kf-dlg .blocos .bloco').first().waitFor();
+  assert.equal(await p.locator('.kf-dlg .blocos .bloco').count(), 9, 'um bloco por categoria');
+  assert.equal(await semCampoEmFoco(p), true);
+  await p.click('.kf-dlg [data-cat="c-tomadas"]');
+  for (let i = 0; i < 3; i++) await p.click('.kf-dlg [data-soma="p-tomadas-1"]');
+  assert.match(await p.locator('#so-conta').innerText(), /3 itens no documento · R\$\s180,00/);
+  await p.click('.kf-dlg [data-tira="p-tomadas-1"]'); assert.match(await p.locator('#so-conta').innerText(), /2 itens .* R\$\s120,00/);
+  await p.click('.kf-dlg [data-soma="p-tomadas-1"]');
+  await p.fill('#so-q', 'chuveiro'); await p.click('.kf-dlg [data-soma="p-aparelhos-1"]');
+  await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.equal(await p.locator('#conteudo .itens .item').count(), 2);
+  assert.deepEqual(await pe(p), { rotulo: 'Enviar', total: 'R$ 295,00', que: 'Total' });
+  // a linha: quantidade no passo a passo e preço em centavos ("1290" = R$ 12,90)
+  await p.locator('#conteudo .itens .item').first().click(); await p.locator('#ln-p').waitFor();
+  assert.equal(await semCampoEmFoco(p), true);
+  await digitar(p, '#ln-p', '1290'); assert.match(await p.inputValue('#ln-p'), /R\$\s12,90/);
+  await p.click('.kf-dlg [data-kf-passo="1"]'); await p.click('.kf-dlg [data-salvar]');
+  assert.equal((await pe(p)).total, 'R$ 166,60', '4 × 12,90 + 115,00');
+  assert.equal(await p.evaluate(() => precos.find(x => x.id === 'p-tomadas-1').preco), 6000, 'mudar a linha não muda a lista de preços');
+  // desconto: não passa do subtotal
+  await p.click('#conteudo [data-j="desc"]'); await p.locator('#cd-d').waitFor();
+  await digitar(p, '#cd-d', '99999999'); await p.click('.kf-dlg [data-salvar]');
+  assert.equal(await p.getAttribute('#cd-d', 'aria-invalid'), 'true'); assert.equal((await aqui(p)).desc, 0);
+  await digitar(p, '#cd-d', '660'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.equal((await pe(p)).total, 'R$ 160,00');
+  // pagamento com entrada
+  await p.click('#conteudo [data-j="pag"]'); await p.click('.kf-dlg [data-pag="entrada"]'); await p.click('.kf-dlg [data-ep="40"]');
+  assert.match(await p.locator('.kf-dlg [role="status"]').innerText(), /Entrada de 40% \(R\$\s64,00\) na aprovação e R\$\s96,00 na conclusão/);
+  await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  // enviar: o nome do cliente só é pedido aqui
+  await p.click('#pe-doc [data-prox="enviar"]'); await p.locator('#ev-nome').waitFor();
+  assert.equal(await semCampoEmFoco(p), true);
+  await p.click('.kf-dlg [data-ja]');
+  assert.equal(await p.getAttribute('#ev-nome', 'aria-invalid'), 'true', 'sem nome, o campo é apontado'); assert.equal((await aqui(p)).etapa, 'rascunho');
+  await p.fill('#ev-nome', 'Mariana Souza'); await p.fill('#ev-fone', '(11) 98888-7777'); await p.click('.kf-dlg [data-ja]');
+  assert.ok(await esperar(async () => (await aqui(p)).etapa === 'enviado'));
+  assert.equal((await pe(p)).rotulo, 'Aprovou');
+  assert.match(await p.evaluate(() => linkWhats(getDoc(rota().id).cliente.fone, 'oi')), /^https:\/\/wa\.me\/5511988887777\?text=oi$/);
+  await p.click('#pe-doc [data-prox="aprovou"]');
+  assert.equal((await aqui(p)).etapa, 'aprovado'); assert.equal((await pe(p)).rotulo, 'Receber');
+  assert.equal(await p.locator('.kf-toast .kf-toast-acao').innerText(), 'Desfazer');
+  // receber: primeiro a entrada, depois o restante; valor maior que o que falta é recusado
+  await p.evaluate(() => { document.querySelector('.kf-toast').hidden = true; });
+  await p.click('#pe-doc [data-prox="receber"]'); await p.locator('#rc-v').waitFor();
+  assert.match(await p.inputValue('#rc-v'), /R\$\s64,00/, 'o valor sugerido é a entrada');
+  await digitar(p, '#rc-v', '99999'); await p.click('.kf-dlg [data-recebi]');
+  assert.equal(await p.getAttribute('#rc-v', 'aria-invalid'), 'true'); assert.equal((await aqui(p)).pagos.length, 0);
+  await digitar(p, '#rc-v', '6400'); await p.click('.kf-dlg [data-recebi]');
+  assert.ok(await esperar(async () => (await aqui(p)).pagos.length === 1));
+  assert.deepEqual(await pe(p).then(x => [x.rotulo, x.que, x.total]), ['Receber', 'Falta', 'R$ 96,00']);
+  await p.evaluate(() => { document.querySelector('.kf-toast').hidden = true; });
+  await p.click('#pe-doc [data-prox="receber"]'); await p.locator('#rc-v').waitFor();
+  assert.match(await p.inputValue('#rc-v'), /R\$\s96,00/);
+  await p.click('.kf-dlg [data-meio="Dinheiro"]'); await p.click('.kf-dlg [data-recebi]');
+  assert.ok(await esperar(async () => (await aqui(p)).etapa === 'recebido'));
+  assert.deepEqual((await aqui(p)).pagos.map(x => [x.v, x.meio]), [[6400, 'Pix'], [9600, 'Dinheiro']]);
+  assert.equal((await pe(p)).rotulo, 'Enviar recibo');
+  // recibo: um por pagamento
+  await p.evaluate(() => { document.querySelector('.kf-toast').hidden = true; });
+  await p.click('#pe-doc [data-prox="recibo"]'); await p.locator('.kf-dlg [data-pg]').first().waitFor();
+  assert.equal(await p.locator('.kf-dlg [data-pg]').count(), 2);
+  assert.match(await p.evaluate(() => { const d = getDoc(rota().id); return mensagemRecibo(d, d.pagos[0]); }), /Olá, Mariana![\s\S]*Recebi R\$\s64,00 \(pix\)/);
+  await fecharJanela(p);
+  // voltar uma etapa tira os recebimentos, e Desfazer devolve
+  await p.click('#pe-doc [data-menu]'); await p.click('.kf-dlg [data-m="volta"]');
+  assert.deepEqual(await aqui(p).then(d => [d.etapa, d.pagos.length]), ['aprovado', 0]);
+  await p.click('.kf-toast .kf-toast-acao');
+  assert.deepEqual(await aqui(p).then(d => [d.etapa, d.pagos.length]), ['recebido', 2]);
+  // o Início: nada em andamento, e o recebido do mês
+  await p.evaluate(() => ir('/', true));
+  assert.match(await p.locator('.painel').innerText(), /Recebido neste mês\s+R\$\s160,00/);
+  assert.equal(await p.locator('#conteudo .docs .doc').count(), 0);
+  await p.evaluate(() => ir('/docs', true)); assert.equal(await p.locator('#dc-lista .doc').count(), 1);
+  await p.fill('#dc-q', 'ninguém'); assert.equal(await p.locator('#dc-lista .doc').count(), 0);
+  await p.fill('#dc-q', 'mariana'); assert.equal(await p.locator('#dc-lista .doc').count(), 1);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
 
-test('Obra: Levar, Comprar, Estoque e Ferramentas; o que chega ao mínimo entra em Comprar, e Comprei tudo repõe', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.locator('.page.orc').waitFor(); await p.evaluate(() => { location.hash = '#/obra'; });
-  await p.locator('.page.obra [data-aba]').first().waitFor();
-  assert.deepEqual((await p.locator('.page.obra [data-aba]').allTextContents()).map(t => t.replace(/[\s·\d]+$/g, '').trim()), ['Levar', 'Comprar', 'Estoque', 'Ferramentas']);
-  assert.match(await p.textContent('#g-body'), /Sua lista de levar/);
-  // Levar: um item novo, marcado na ida
-  await p.click('[data-g-new]'); await p.fill('.kf-dlg #ck-name', 'Escada'); await p.click('.kf-dlg [data-save]');
-  await p.locator('#g-body [data-ck]').first().check();
-  assert.deepEqual(await p.evaluate(() => checks.map(c => [c.name, c.ida])), [['Escada', true]]);
-  // Comprar: material abaixo do mínimo
-  await p.evaluate(() => { const c = prices.find(x => x.name === 'Caixa 4x2'); c.stock = 1; c.cost = 150; c.min = 4; acertaLotes(c); savePrices(); rerender(); });
-  assert.match(await p.locator('.page.obra [data-aba="comprar"]').textContent(), /1/);
-  await p.click('.page.obra [data-aba="comprar"]');
-  assert.match(await p.textContent('#cp-list'), /Caixa 4x2/);
-  await p.click('[data-cp-tudo]');
-  assert.ok(await esperar(() => p.evaluate(() => prices.find(x => x.name === 'Caixa 4x2').stock > 4)), 'Comprei tudo: o material entra no estoque');
-  assert.match(await p.textContent('#g-body'), /Nada para comprar/);
-  await p.click('.page.obra [data-aba="estoque"]'); await p.locator('#g-body #g-q').waitFor();
-  await p.click('.page.obra [data-aba="ferramentas"]'); await p.locator('#g-body #g-q').waitFor();
-  assert.ok(await p.evaluate(() => tools.filter(t => t.k === 'tipo').length > 100), 'as ferramentas que vêm com o app');
+test('relatório: cobra o que já foi feito; três etapas, sem entrada e sem Aprovou; linha avulsa; documento vazio some ao sair', async () => {
+  const a = await aparelho(amb); const p = a.page; await pronto(p);
+  await novoPelaBarra(p, 'rel');
+  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('#conteudo .tr-passos li span')].map(e => e.textContent)), ['Rascunho', 'Enviado', 'Recebido']);
+  assert.equal(await p.locator('#conteudo [data-j="feito"]').count(), 1); assert.equal(await p.locator('#conteudo [data-j="validade"]').count(), 0);
+  await p.click('#conteudo [data-j="pag"]'); assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.kf-dlg [data-pag]')].map(b => b.dataset.pag)), ['vista', 'combinar']); await fecharJanela(p);
+  await p.click('#conteudo [data-j="feito"]'); await p.locator('.kf-dlg').waitFor();
+  assert.equal(await p.locator('.kf-dlg input[type="date"]:not([hidden])').count(), 0, 'o calendário é o do Kit, não o do sistema'); await fecharJanela(p);
+  await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-avulsa]'); await p.locator('#ln-n').waitFor();
+  await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#ln-n', 'aria-invalid'), 'true');
+  await p.fill('#ln-n', 'Troca da fiação do banheiro'); await digitar(p, '#ln-p', '35000'); await p.click('.kf-dlg [data-salvar]');
+  await p.locator('#conteudo .itens .item').waitFor();
+  assert.equal((await pe(p)).total, 'R$ 350,00');
+  await p.click('#pe-doc [data-prox="enviar"]'); await p.fill('#ev-nome', 'João Lima'); await p.click('.kf-dlg [data-ja]');
+  assert.ok(await esperar(async () => (await aqui(p)).etapa === 'enviado'));
+  assert.equal((await pe(p)).rotulo, 'Receber', 'no relatório, depois de enviar vem receber');
+  assert.match(await p.evaluate(() => mensagem(getDoc(rota().id))), /Olá, João![\s\S]*relatório do serviço executado em[\s\S]*• 1 un\. · Troca da fiação do banheiro: R\$\s350,00[\s\S]*\*Total: R\$\s350,00\*[\s\S]*Pagamento à vista\./);
+  assert.equal(await p.evaluate(() => painel().receber), 35000, 'relatório enviado entra em Para receber');
+  // documento novo que ficou vazio some ao sair, e o número volta
+  const antes = await p.evaluate(() => [docs.length, ajustes.seq]);
+  await p.evaluate(() => { fecharJanela(true); ir('/', true); irPara('novo'); }); await p.locator('.kf-dlg [data-novo-tipo="orc"]').click(); await p.locator('#pe-doc').waitFor();
+  assert.equal(await p.evaluate(() => ajustes.seq), antes[1] + 1);
+  await p.click('.barra-app [data-voltar]'); await pronto(p);
+  assert.deepEqual(await p.evaluate(() => [docs.length, ajustes.seq]), antes);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
 
-test('Ajustes: guias comuns na ordem do padrão e as do Elétrica Fácil; o nome fica em Conta e perfil e acende a Primeira luz', async () => {
-  const a = await aparelho(amb, { conquistas: true }); const p = a.page;
-  await p.locator('.page.orc').waitFor(); await p.evaluate(() => { location.hash = '#/ajustes'; });
-  await p.locator('[data-kf-aj]').waitFor();
+test('Preços: blocos em grade, um por categoria; mudar preço em centavos; preço e categoria novos; excluir com Desfazer', async () => {
+  const a = await aparelho(amb); const p = a.page; await pronto(p);
+  await p.evaluate(() => ir('/precos', true)); await p.locator('#conteudo .blocos').waitFor();
+  assert.equal(await p.locator('#conteudo .blocos .bloco').count(), 10, 'nove categorias de fábrica e o bloco de criar');
+  const grade = await p.evaluate(() => [...document.querySelectorAll('#conteudo .blocos .bloco')].slice(0, 2).map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.width), Math.round(r.height), !!b.querySelector('svg.pic')]; }));
+  assert.equal(grade[0][0], grade[1][0], 'os blocos ficam lado a lado, em grade'); assert.ok(grade[0][1] > 130 && grade[0][2] > 130 && grade[0][3], 'blocos grandes, com pictograma');
+  await p.click('#conteudo [data-cat="c-quadro"]'); await p.locator('#conteudo [data-preco]').first().waitFor();
+  assert.equal(await p.locator('#conteudo [data-preco]').count(), 8);
+  await p.click('#conteudo [data-preco="p-quadro-1"]'); await p.locator('#pr-p').waitFor();
+  assert.equal(await semCampoEmFoco(p), true);
+  await digitar(p, '#pr-p', '8550'); assert.match(await p.inputValue('#pr-p'), /R\$\s85,50/); await p.click('.kf-dlg [data-salvar]');
+  assert.equal(await p.evaluate(() => precos.find(x => x.id === 'p-quadro-1').preco), 8550);
+  await p.click('#conteudo [data-novo-preco]'); await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#pr-n', 'aria-invalid'), 'true');
+  await p.fill('#pr-n', 'Instalação de IDR'); await digitar(p, '#pr-p', '16000'); await p.click('.kf-dlg [data-salvar]');
+  assert.deepEqual(await p.evaluate(() => { const L = precos.filter(x => x.cat === 'c-quadro'); return [L.length, L[L.length - 1].nome, L[L.length - 1].preco]; }), [9, 'Instalação de IDR', 16000], 'o preço novo entra no fim da lista');
+  // categoria nova, com ícone escolhido
+  await p.click('.barra-app [data-voltar]'); await p.click('#conteudo [data-nova-cat]'); await p.locator('#ct-n').waitFor();
+  await p.fill('#ct-n', 'Ar-condicionado'); await p.click('.kf-dlg [data-ic="ar"]'); await p.click('.kf-dlg [data-salvar]');
+  await p.locator('#conteudo [data-novo-preco]').waitFor();
+  assert.deepEqual(await p.evaluate(() => { const c = cats[cats.length - 1]; return [cats.length, c.nome, c.icone, rota().id === c.id]; }), [10, 'Ar-condicionado', 'ar', true]);
+  await p.click('#conteudo [data-novo-preco]'); await p.fill('#pr-n', 'Limpeza de split'); await digitar(p, '#pr-p', '18000'); await p.click('.kf-dlg [data-salvar]');
+  await p.locator('#conteudo [data-preco]').waitFor();
+  // excluir a categoria leva os preços dela; Desfazer devolve tudo
+  await p.evaluate(() => { document.querySelector('.kf-toast').hidden = true; });
+  await p.click('[data-editar-cat]'); await p.click('.kf-dlg [data-tirar]');
+  assert.match(await p.locator('.kf-dlg').innerText(), /O preço dela também sai da sua lista[\s\S]*Dá para desfazer logo depois/);
+  await p.click('.kf-dlg [data-kf-ok]');
+  assert.ok(await esperar(() => p.evaluate(() => rota().nome === 'precos')));
+  assert.deepEqual(await p.evaluate(() => [cats.length, precos.some(x => x.nome === 'Limpeza de split')]), [9, false]);
+  await p.click('.kf-toast .kf-toast-acao');
+  assert.deepEqual(await p.evaluate(() => [cats.length, precos.some(x => x.nome === 'Limpeza de split')]), [10, true]);
+  // o preço novo vale para os documentos seguintes
+  await novoPelaBarra(p, 'orc'); await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-cat="c-quadro"]'); await p.click('.kf-dlg [data-soma="p-quadro-1"]');
+  assert.equal((await aqui(p)).linhas[0].pu, 8550);
+  assert.equal(await p.evaluate(() => ajustes.usos['p-quadro-1']), 1, 'o que você usa sobe para Mais usados');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+/* um jsPDF de mentira, que só anota os textos: assim o teste lê o que sai no documento, sem internet */
+const PDF_FALSO = () => {
+  class F {
+    constructor() { this.t = []; this.pg = 1; window.__pdf = this; }
+    text(s) { this.t.push(String(s)); } splitTextToSize(s) { return String(s).split('\n'); }
+    addPage() { this.pg++; } getNumberOfPages() { return this.pg; } output() { return new Blob(['%PDF-falso'], { type: 'application/pdf' }); }
+  }
+  for (const m of ['setFont', 'setFontSize', 'setTextColor', 'setFillColor', 'setDrawColor', 'setLineWidth', 'rect', 'roundedRect', 'line', 'lines', 'addImage', 'setPage']) F.prototype[m] = function () {};
+  window.jspdf = { jsPDF: F };
+};
+test('documentos: o PDF do orçamento e do relatório, o recibo, o código do Pix (QR code, sem o símbolo do Pix) e a cópia de segurança', async () => {
+  const a = await aparelho(amb, { antes: PDF_FALSO }); const p = a.page; await pronto(p);
+  const r = await p.evaluate(async () => {
+    Object.assign(ajustes, { nome: 'Carlos Pereira', fone: '11987654321', cidade: 'São Paulo', pix: 'carlos@exemplo.com.br' }); salvarAjustes();
+    const d = criarExemplo(); d.exemplo = false; d.num = 7; d.desc = 3500; d.etapa = 'enviado'; d.enviadoEm = new Date('2026-11-20T12:00').getTime();
+    const o = {};
+    await montarPDF(d); o.orc = window.__pdf.t.join('\n');
+    const rel = acertaDoc({ ...clone(d), tipo: 'rel', id: 'r1', num: 8, feito: new Date('2026-11-18T12:00').getTime() }); docs.push(rel);
+    await montarPDF(rel); o.rel = window.__pdf.t.join('\n');
+    const pg = { id: 'p', v: 55000, em: new Date('2026-11-21T12:00').getTime(), meio: 'Pix' };
+    await montarRecibo(d, pg); o.rec = window.__pdf.t.join('\n');
+    o.pix = codigoPix(55000); ajustes.pix = ''; o.semPix = codigoPix(55000); ajustes.pix = 'carlos@exemplo.com.br';
+    o.arq = [nomeArquivo('Orcamento', d), nomeArquivo('Recibo', rel)];
+    o.icones = [/M13\.500 13\.500h3\.200/.test(IC.qr), Object.keys(IC).some(k => /pix/i.test(k))];
+    return o;
+  });
+  for (const t of ['ORÇAMENTO', 'Nº 0007', '20/11/2026', 'Carlos Pereira', '(11) 98765-4321', 'Mariana Souza', 'Reforma elétrica da cozinha', 'Ponto novo de tomada com fiação', '6 pontos', 'Subtotal', '- R$ 35,00', 'TOTAL', 'R$ 1.100,00', 'Entrada de 50% (R$ 550,00) na aprovação e R$ 550,00 na conclusão do serviço.', 'Este orçamento vale até 05/12/2026.', 'PAGUE COM PIX', 'R$ 550,00', 'De acordo: Mariana Souza', 'Material por conta do cliente.'])
+    assert.ok(r.orc.replace(/ /g, ' ').includes(t), `o PDF do orçamento sem "${t}"`);
+  for (const t of ['RELATÓRIO DE SERVIÇO', 'Nº 0008', 'Executado em 18/11/2026', 'Pagamento à vista.', 'R$ 1.100,00']) assert.ok(r.rel.replace(/ /g, ' ').includes(t), `o PDF do relatório sem "${t}"`);
+  assert.ok(!/vale até|De acordo/.test(r.rel), 'o relatório não tem validade nem "de acordo"');
+  for (const t of ['RECIBO', 'R$ 550,00', 'quinhentos e cinquenta reais', 'Recebi de Mariana Souza', 'Forma de pagamento: Pix.', 'São Paulo, 21 de novembro de 2026.']) assert.ok(r.rec.replace(/ /g, ' ').includes(t), `o recibo sem "${t}"`);
+  assert.match(r.pix, /^000201.*br\.gov\.bcb\.pix0121carlos@exemplo\.com\.br.*5406550\.00.*5802BR5914CARLOS PEREIRA6009SAO PAULO.*6304[0-9A-F]{4}$/);
+  assert.equal(r.semPix, '', 'sem chave, não há código');
+  assert.deepEqual(r.arq, ['Orcamento-0007-mariana-souza.pdf', 'Recibo-0008-mariana-souza.pdf']);
+  assert.deepEqual(r.icones, [true, false], 'onde há Pix, o ícone é um QR code');
+  // cópia de segurança: baixa no formato da família e restaura por cima; cópia de versão anterior é recusada
+  const copia = await p.evaluate(() => JSON.stringify(KitFacil.copia.envelope({ ajustes, cats, precos, docs: docs.filter(d => !d.exemplo) }, 4)));
+  await p.evaluate(() => { docs = []; precos = precos.slice(0, 3); salvarDocs(); salvarPrecos(); });
+  await p.evaluate(j => restaurarCopia(new File([j], 'copia.json', { type: 'application/json' })), copia);
+  await p.locator('.kf-dlg [data-kf-ok]').click();
+  assert.deepEqual(await p.evaluate(() => [docs.length, precos.length > 50, ajustes.seq >= 8, ajustes.nome]), [2, true, true, 'Carlos Pereira']);
+  await p.evaluate(j => restaurarCopia(new File([JSON.stringify({ ...JSON.parse(j), esquema: 2 })], 'velha.json')), copia);
+  assert.match(await p.locator('.kf-toast').innerText(), /versão anterior/);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('sincronização: arquivo novo na nuvem (o da versão 3 não é tocado), conteúdo criptografado, e dois aparelhos se juntam', async () => {
+  const gh = githubFalso();
+  const A = await aparelho(amb, { github: gh }), B = await aparelho(amb, { github: gh });
+  const criar = (p, nome) => p.evaluate(nome => { const d = acertaDoc({ tipo: 'orc', cliente: { nome }, linhas: [{ nome: 'Troca de tomada', un: 'un', q: 1, pu: 15000 }] }); d.num = ++ajustes.seq; docs.push(d); salvarAjustes(); salvarDocs(); desenhar(); return d.id; }, nome);
+  await pronto(A.page); await pronto(B.page);
+  const idA = await criar(A.page, 'Cliente do A');
+  assert.equal(await A.page.evaluate(t => SY.conectar(t), TOKEN_TESTE), true);
+  assert.ok(await esperar(() => A.page.evaluate(() => SY.ligada() && sinc.lastSync > 0)), 'A não sincronizou');
+  assert.ok(gh.arquivo('eletrica-facil-4.json'), 'o arquivo novo na nuvem');
+  assert.ok(!gh.arquivo('eletrica-facil-3.json') && !gh.arquivo('eletrica-facil.json'), 'os arquivos das versões anteriores não são tocados');
+  assert.ok(!/Cliente do A/.test(gh.arquivo('eletrica-facil-4.json').conteudo), 'o conteúdo vai criptografado');
+  await criar(B.page, 'Cliente do B');
+  assert.equal(await B.page.evaluate(t => SY.conectar(t), TOKEN_TESTE), true);
+  assert.ok(await esperar(() => B.page.evaluate(() => docs.length === 2)), 'B não recebeu o documento do A');
+  await A.page.evaluate(() => SY.agora({ quiet: true }));
+  assert.deepEqual(await A.page.evaluate(() => docs.map(d => d.cliente.nome).sort()), ['Cliente do A', 'Cliente do B']);
+  assert.deepEqual(await A.page.evaluate(() => docs.map(d => d.num).sort()), [1, 2], 'números repetidos são refeitos');
+  // um preço mudado no A e um documento excluído no A chegam ao B
+  await A.page.evaluate(id => { precos.find(x => x.id === 'p-visita-1').preco = 14000; salvarPrecos(); docs = docs.filter(d => d.id !== id); salvarDocs(); return SY.agora({ quiet: true }); }, idA);
+  await B.page.evaluate(() => SY.agora({ quiet: true }));
+  assert.deepEqual(await B.page.evaluate(() => [precos.find(x => x.id === 'p-visita-1').preco, docs.map(d => d.cliente.nome)]), [14000, ['Cliente do B']]);
+  assert.deepEqual([...A.erros, ...B.erros], []);
+  await A.fechar(); await B.fechar();
+});
+
+test('Ajustes: as oito guias comuns e as do app; os dados dos documentos, a chave Pix, o padrão do documento novo e o raio', async () => {
+  const a = await aparelho(amb); const p = a.page; await pronto(p);
+  await p.evaluate(() => { location.hash = '#/ajustes'; }); await p.locator('[data-kf-aj]').waitFor();
   const guias = await guiasAjustes(p);
   assert.deepEqual(guias.comuns, GUIAS_COMUNS);
-  assert.deepEqual(guias.produto, ['Pix', 'Veículo e deslocamento', 'Adicionais', 'Orçamento novo', 'Textos dos documentos', 'Conquistas e apresentação']);
-  assert.equal(await p.evaluate(() => jogoEstado().ganhas.includes('luz')), false);
-  await p.evaluate(() => { settings.name = 'Carlos Pereira'; saveSettings(); jogoConferir({ silencioso: true }); });
-  assert.equal(await p.evaluate(() => jogoEstado().ganhas.includes('luz')), true, 'dizer o nome, nos Ajustes, acende a Primeira luz');
-  assert.equal(await p.evaluate(() => CONQUISTAS.find(c => c.id === 'luz').como.includes('apresentação')), false);
+  assert.deepEqual(guias.produto, ['Pix', 'Documento novo', 'Raio e apresentação']);
+  await p.evaluate(() => KitFacil.ajustes.abrir('conta')); await p.fill('#aj-nome', 'Carlos Pereira'); await p.fill('#aj-fone', '11987654321'); await p.locator('#aj-fone').blur();
+  assert.deepEqual(await p.evaluate(() => [ajustes.nome, document.querySelector('#aj-fone').value, JSON.parse(localStorage.getItem('eletricafacil.ajustes')).nome]), ['Carlos Pereira', '(11) 98765-4321', 'Carlos Pereira']);
+  await p.evaluate(() => KitFacil.ajustes.abrir('pix')); await p.fill('#aj-pix', ' Carlos@Exemplo.com.br '); await p.locator('#aj-pix').blur();
+  assert.equal(await p.evaluate(() => ajustes.pix), 'carlos@exemplo.com.br', 'a chave fica do jeito que o Banco Central espera');
+  await p.evaluate(() => KitFacil.ajustes.abrir('padrao')); await p.click('[data-aj-val="30"]'); await p.click('[data-aj-pag="entrada"]'); await p.click('[data-aj-ep="30"]'); await p.click('[data-aj-gar="0"]');
+  assert.deepEqual(await p.evaluate(() => [ajustes.validade, ajustes.pag, ajustes.entradaPct, ajustes.garantia]), [30, 'entrada', 30, 0]);
+  await novoPelaBarra(p, 'orc');
+  assert.deepEqual(await aqui(p).then(d => [d.validade, d.pag, d.entradaPct, d.garantia]), [30, 'entrada', 30, 0], 'o documento novo começa com o padrão');
+  await p.evaluate(() => { ir('/ajustes', true); KitFacil.ajustes.abrir('raio'); });
+  await p.locator('#aj-raio').evaluate(el => el.click());
+  assert.deepEqual(await p.evaluate(() => [ajustes.raio, Raio.ligado()]), [false, false]);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
 
-test('apresentação: quatro telas, sem interruptor e sem pedir o nome; Pular em todas menos a última; termina em Orçamentos', async () => {
+test('apresentação: quatro telas, uma vez só; o bloco soma com um toque; termina no Início', async () => {
   const a = await aparelho(amb, { antes: () => { window.EF_TESTE_ABERTURA = true; } }); const p = a.page;
   await p.locator('.kf-abertura').waitFor();
   const titulos = [];
   for (let k = 0; k < 4; k++) {
-    await p.waitForTimeout(200);
-    titulos.push((await p.textContent('.kf-abertura .kf-ab-t')).trim());
-    assert.equal(await p.locator('.kf-abertura input, .kf-abertura textarea').count(), 0, `a tela ${k + 1} não pede nada`);
-    assert.equal(await p.locator('.kf-abertura [data-ab-luz], .kf-abertura .ab-interruptor').count(), 0, 'o interruptor saiu');
-    assert.equal(await p.locator('#kf-ab-pular').isVisible(), k < 3, 'Pular em todas, menos na última');
-    if (k === 0) assert.equal(await p.locator('.kf-abertura .ab-pend:not(.acesa) .lp-pend').count(), 1, 'a lâmpada começa apagada');
-    if (k === 1) { const antes = await p.textContent('.kf-abertura .tg'); await p.click('.kf-abertura [data-ab-somar]'); assert.notEqual(await p.textContent('.kf-abertura .tg'), antes, 'a folha de demonstração soma ao toque'); }
-    if (k === 3) assert.equal(await p.locator('.kf-abertura .ab-pend.acesa .lp-pend').count(), 1, 'e termina acesa');
-    if (k < 3) await p.click('#kf-ab-prox');
+    titulos.push(await p.locator('.kf-abertura .kf-ab-t').innerText());
+    if (k === 1) { const antes = await p.locator('.ab-conta').innerText(); await p.click('[data-ab-soma="3"]'); assert.notEqual(await p.locator('.ab-conta').innerText(), antes, 'o toque no bloco muda a conta'); assert.match(await p.locator('.ab-conta').innerText(), /2 serviços[\s\S]*R\$\s175,00/); }
+    assert.equal(await p.locator('.kf-abertura button:visible', { hasText: 'Pular' }).count(), k < 3 ? 1 : 0, `Pular na tela ${k + 1}`);
+    await p.click('#kf-ab-prox');
   }
-  assert.deepEqual(titulos, ['Orçamento de elétrica, do pedido ao recibo', 'Monte o orçamento na folha do cliente', 'Toque no botão amarelo para avançar', 'Pronto. Faça o primeiro orçamento.']);
-  assert.equal((await p.textContent('#kf-ab-prox')).trim(), 'Ir para o início');
-  assert.equal(await p.locator('#raio-cena .rz').count(), 0, 'nenhum raio na apresentação');
-  await p.click('#kf-ab-prox');
-  assert.ok(await esperar(() => p.evaluate(() => !KitFacil.abertura.ativa() && route().name === 'home' && settings.name === '')));
-  await p.reload(); await p.locator('.page.orc').waitFor(); await p.waitForTimeout(300);
+  assert.deepEqual(titulos.map(t => t.replace(/\s+/g, ' ')), ['Orçamento de elétrica, do pedido ao recibo', 'Some os serviços com um toque', 'O botão do pé é o próximo passo', 'Orçamento antes, relatório depois']);
+  await p.locator('.kf-abertura').waitFor({ state: 'detached' }); await pronto(p);
+  assert.equal(await p.evaluate(() => KitFacil.abertura.vista()), true);
+  await p.reload(); await pronto(p); await p.waitForTimeout(400);
   assert.equal(await p.locator('.kf-abertura').count(), 0, 'a apresentação aparece uma vez só');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
 
-test('raio: é enfeite (não recebe toque), dá no máximo dois clarões, some em pouco mais de um segundo e não há tempestade', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.locator('.page.orc').waitFor();
-  assert.equal(await p.evaluate(() => typeof Raio.tempestade), 'undefined', 'a tempestade saiu');
-  await p.emulateMedia({ reducedMotion: 'no-preference' });
-  assert.equal(await p.evaluate(() => { Raio.cair({ forcar: true, x: 200 }); return document.querySelectorAll('#raio-cena .rz').length; }), 1);
-  const r = await p.evaluate(() => {
-    const cena = document.getElementById('raio-cena'), luz = cena.querySelector('.rz-f'), an = luz.getAnimations()[0], T = an.effect.getKeyframes().map(k => [Math.round(k.offset * an.effect.getTiming().duration), +k.opacity]);
-    let clar = 0; for (let i = 1; i < T.length - 1; i++) if (T[i][1] > T[i - 1][1] && T[i][1] >= T[i + 1][1] && T[i][1] >= 0.4) clar++;
-    return { toque: getComputedStyle(cena).pointerEvents, clar, dura: an.effect.getTiming().duration, camadas: cena.querySelectorAll('.rz-c')[1].querySelectorAll('.rz-cm').length, cores: [...cena.querySelectorAll('.rz-c')[1].querySelectorAll('.rz-cm')].map(s => s.style.fill) };
-  });
-  assert.equal(r.toque, 'none'); assert.ok(r.clar <= 2, `clarões: ${r.clar}`); assert.ok(r.dura <= 1200);
-  assert.equal(r.camadas, 7, 'sete camadas de brilho, da mesma cor quente');
-  assert.equal(await p.locator('.page.orc [data-novo]').isEnabled(), true);
-  await p.click('.page.orc [data-novo]', { timeout: 2000 });   // o toque passa pelo raio
-  assert.ok(await esperar(() => p.evaluate(() => document.querySelectorAll('#raio-cena .rz').length === 0), 2500), 'o raio some sozinho');
-  // quem pede movimento reduzido não vê raio; e dá para desligar
-  await p.emulateMedia({ reducedMotion: 'reduce' });
-  assert.equal(await p.evaluate(async () => Raio.cair({ forcar: true })), false);
-  await p.evaluate(() => Raio.ligar(false));
-  assert.equal(await p.evaluate(() => Raio.ligado()), false);
+test('raio: cai sozinho, sem toque na tela; é enfeite (não recebe toque); não cai com janela aberta, desligado ou com movimento reduzido', async () => {
+  const a = await aparelho(amb, { antes: () => { window.__raios = 0; document.addEventListener('DOMContentLoaded', () => new MutationObserver(M => M.forEach(m => m.addedNodes.forEach(n => { if (n.classList && n.classList.contains('rz')) window.__raios++; }))).observe(document.body, { childList: true, subtree: true })); } });
+  const p = a.page; await pronto(p);
+  assert.equal(await p.evaluate(() => window.__raios), 0, 'em teste, o raio só cai quando o teste pede');
+  await p.evaluate(() => Raio.comecar({ primeiro: 150, entre: [1500, 1600] }));
+  assert.ok(await esperar(() => p.evaluate(() => window.__raios === 1), 1500), 'o primeiro raio cai sozinho, sem nenhum toque');
+  assert.deepEqual(await p.evaluate(() => { const c = document.querySelector('#raio-cena'); return [getComputedStyle(c).pointerEvents, document.querySelectorAll('#raio-cena .rz-f').length]; }), ['none', 1], 'não recebe toque; um clarão por raio na tela');
+  await p.evaluate(() => Raio.ligar(false)); await p.waitForTimeout(2000);
+  assert.equal(await p.evaluate(() => window.__raios), 1, 'desligado nos Ajustes, não cai');
+  assert.equal(await p.locator('#raio-cena .rz').count(), 0, 'o raio some em pouco mais de um segundo');
+  await p.evaluate(() => { Raio.ligar(true); janelaNovo(); }); await p.waitForTimeout(2000);
+  assert.equal(await p.evaluate(() => window.__raios), 1, 'com janela aberta, não cai');
+  await fecharJanela(p);
+  assert.ok(await esperar(() => p.evaluate(() => window.__raios === 2), 2500), 'fechada a janela, volta a cair sozinho');
+  await p.waitForTimeout(1400); await p.emulateMedia({ reducedMotion: 'reduce' });
+  assert.equal(await p.evaluate(() => Raio.cair({ forcar: true })), false, 'com movimento reduzido, não há raio');
   assert.deepEqual(a.erros, []);
   await a.fechar();
-});
-
-test('documentos: o texto da proposta, o Pix em QR code (sem o símbolo do Pix) e a cópia de segurança', async () => {
-  const a = await aparelho(amb); const p = a.page;
-  await p.locator('.page.orc').waitFor();
-  await p.evaluate(() => { settings.name = 'Carlos Pereira'; settings.pix = 'carlos@exemplo.com.br'; settings.city = 'São Paulo'; saveSettings(); });
-  await p.evaluate(EXEMPLO); await p.locator('#fo-folha .px').waitFor();
-  assert.match(await p.textContent('#fo-folha .px'), /Pague a entrada com Pix: R\$\s874,86/);
-  assert.equal(await p.locator('#fo-folha .px canvas[data-qr]').count(), 1, 'onde há Pix, o desenho é um QR code');
-  const cod = await p.evaluate(() => { const q = getQ(route().id); return pixPayload(pixOf(q, compute(q), 'quote')); });
-  assert.match(cod, /^000201.*br\.gov\.bcb\.pix.*5406874\.86.*6304[0-9A-F]{4}$/);
-  assert.match(await p.textContent('#fo-folha .fh'), /Carlos Pereira/);
-  const txt = await p.evaluate(() => { const q = getQ(route().id); q.client.name = 'Mariana Souza'; return quoteMessage(q, compute(q), 'quote'); });
-  assert.match(txt, /Olá, Mariana![\s\S]*Ponto novo de tomada com fiação[\s\S]*1\.749,71/);
-  // a cópia de segurança sai no formato comum da família e volta inteira
-  const env = await p.evaluate(() => KitFacil.copia.envelope({ settings, prices, quotes: quotes.filter(q => !q.example), tools, checks }, 2));
-  assert.equal(env.dados.quotes.length, 1); assert.equal(env.app, 'eletrica-facil');
-  assert.deepEqual(a.erros, []);
-  await a.fechar();
-});
-
-test('sincronização: usa um arquivo novo na nuvem (o das versões 1 e 2 não é lido) e junta dois aparelhos', async () => {
-  const gh = githubFalso();
-  const A = await aparelho(amb, { github: gh }), B = await aparelho(amb, { github: gh });
-  const criar = (p, nome) => p.evaluate(nome => { const q = blankQuote(); q.num = ++settings.seq; q.client.name = nome; q.items = [{ id: uid(), kind: 'svc', name: 'Troca de tomada', unit: 'un', qty: 1, price: 15000, room: '' }]; quotes.push(q); saveSettings(); saveQuotes(); render(); }, nome);
-  await A.page.locator('.page.orc').waitFor(); await B.page.locator('.page.orc').waitFor();
-  await criar(A.page, 'Cliente do A');
-  assert.equal(await A.page.evaluate(t => SY.conectar(t), TOKEN_TESTE), true);
-  assert.ok(await esperar(() => A.page.evaluate(() => SY.ligada() && sync.lastSync > 0)), 'A não sincronizou');
-  assert.ok(gh.arquivo('eletrica-facil-3.json'), 'o arquivo novo na nuvem');
-  assert.ok(!gh.arquivo('eletrica-facil.json'), 'o arquivo do formato antigo não é tocado');
-  assert.ok(!/Cliente do A/.test(gh.arquivo('eletrica-facil-3.json').conteudo), 'o conteúdo vai criptografado');
-  await criar(B.page, 'Cliente do B');
-  assert.equal(await B.page.evaluate(t => SY.conectar(t), TOKEN_TESTE), true);
-  assert.deepEqual(await B.page.evaluate(() => quotes.map(q => q.client.name).sort()), ['Cliente do A', 'Cliente do B']);
-  await A.page.evaluate(() => SY.agora({ quiet: true }));
-  assert.deepEqual(await A.page.evaluate(() => quotes.map(q => q.client.name).sort()), ['Cliente do A', 'Cliente do B']);
-  assert.deepEqual([...A.erros, ...B.erros], []);
-  await A.fechar(); await B.fechar();
 });
 
 test('guia: um só, do começo ao fim, sem avisos e sem gravar nada', async () => {
-  const a = await aparelhoKit(amb, { antes: () => { window.__avisos = []; const w = console.warn; console.warn = (...x) => { window.__avisos.push(x.map(String).join(' ')); w.apply(console, x); }; } });
-  const p = a.page;
-  await p.locator('.page.orc').waitFor();
-  await p.evaluate(() => { const q = blankQuote(); q.num = ++settings.seq; q.client.name = 'Cliente Real'; q.items = [{ id: uid(), kind: 'svc', name: 'x', unit: 'un', qty: 1, price: 100, room: '' }]; quotes.push(q); settings.name = 'Eu Mesmo'; saveSettings(); saveQuotes(); jogoConferir({ silencioso: true }); render(); });
-  const foto = () => p.evaluate(() => JSON.stringify([localStorage.getItem('eletricafacil.quotes'), localStorage.getItem('eletricafacil.settings'), localStorage.getItem('eletricafacil.prices'), localStorage.getItem('eletricafacil.tools')]));
+  const a = await aparelho(amb, { antes: () => { window.__avisos = []; const w = console.warn; console.warn = (...x) => { window.__avisos.push(x.map(String).join(' ')); w.apply(console, x); }; } });
+  const p = a.page; await pronto(p);
+  await p.evaluate(() => { const d = acertaDoc({ tipo: 'orc', cliente: { nome: 'Cliente Real' }, linhas: [{ nome: 'x', un: 'un', q: 1, pu: 100 }] }); d.num = ++ajustes.seq; docs.push(d); ajustes.nome = 'Eu Mesmo'; salvarAjustes(); salvarDocs(); desenhar(); });
+  const foto = () => p.evaluate(() => JSON.stringify(['docs', 'ajustes', 'precos', 'cats'].map(k => localStorage.getItem('eletricafacil.' + k))));
   const antes = await foto();
-  await p.evaluate(() => go('/mais', true)); await p.click('.kf-mais [data-kf-ir="guia"]');
+  await p.evaluate(() => ir('/mais', true)); await p.click('.kf-mais [data-kf-ir="guia"]');
   assert.ok(await esperar(() => p.evaluate(() => !!KitFacil.guia.estado())));
-  assert.deepEqual(await p.evaluate(() => [semSalvar, quotes.length, settings.name]), [true, 0, 'Carlos Pereira'], 'a demonstração começa do zero');
+  assert.deepEqual(await p.evaluate(() => [semSalvar, docs.length, ajustes.nome]), [true, 0, 'Carlos Pereira'], 'a demonstração começa do zero');
   const fim = Date.now() + 300000; let maior = 0;
   while (Date.now() < fim && await p.evaluate(() => !!KitFacil.guia.estado())) {
     const e = await p.evaluate(() => KitFacil.guia.estado()); if (e) maior = Math.max(maior, e.i);
@@ -459,10 +392,10 @@ test('guia: um só, do começo ao fim, sem avisos e sem gravar nada', async () =
     await p.waitForTimeout(100);
   }
   assert.equal(await p.evaluate(() => !!KitFacil.guia.estado()), false, 'o guia não chegou ao fim');
-  assert.equal(maior, await p.evaluate(() => GUIA.filter(x => !x.se || x.se()).length - 1), 'o guia passou por todos os passos');
+  assert.equal(maior, await p.evaluate(() => GUIA.length - 1), 'o guia passou por todos os passos');
   assert.deepEqual(await p.evaluate(() => window.__avisos.filter(x => /guia/i.test(x))), [], 'algum passo do guia falhou');
   assert.equal(await foto(), antes, 'o guia gravou alguma coisa');
-  assert.deepEqual(await p.evaluate(() => [semSalvar, !!dadosReais, quotes.length, quotes[0].client.name, settings.name, route().name, !!jogo.flags.guia]), [false, false, 1, 'Cliente Real', 'Eu Mesmo', 'home', true]);
+  assert.deepEqual(await p.evaluate(() => [semSalvar, !!dadosReais, docs.length, docs[0].cliente.nome, ajustes.nome, rota().nome]), [false, false, 1, 'Cliente Real', 'Eu Mesmo', 'inicio']);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });

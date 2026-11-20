@@ -5,15 +5,18 @@
    e mais fraca que a anterior. O raio desce em degraus (0,15 s), dá dois clarões e apaga.
    Cuidados (Código, Art. 16, e WCAG 2.3.1): no máximo dois clarões por raio; quem pede movimento reduzido não vê raio
    nenhum; não cai com alguém digitando, com janela aberta, no guia nem na apresentação; e dá para desligar em
-   Ajustes → Conquistas e apresentação.
-   Tudo fica em Raio: cair({ x, forcar }), sortear() (o app chama ao trocar de tela), ligado(), ligar(sim). */
+   Ajustes → Raio e apresentação.
+   Versão 4: o desenho é o mesmo. O que mudou é a hora: o raio cai sozinho, de tempos em tempos, com ou sem toque na tela
+   (antes ele só era sorteado numa troca de tela). O primeiro vem entre 20 e 70 segundos depois de abrir o app; os
+   seguintes, a cada 1,5 a 4 minutos, ao acaso.
+   Tudo fica em Raio: cair({ x, forcar }), comecar() (o app chama uma vez, ao abrir), ligado(), ligar(sim). */
 'use strict';
 const Raio = (() => {
   const NS = 'http://www.w3.org/2000/svg', FIM = 1150;
   const sorte = (a, b) => a + Math.random() * (b - a);
-  let caindo = false, ultimo = 0, entrou = Date.now();
-  const ligado = () => !(typeof jogo !== 'undefined' && jogo.semRaio);
-  function ligar(sim) { jogo.semRaio = !sim; jogoSalvar(); }
+  let caindo = false;
+  const ligado = () => ajustes.raio !== false;
+  function ligar(sim) { ajustes.raio = !!sim; salvarAjustes(); }
   const podeAgora = () => !KitFacil.movimento.reduzido() && !document.hidden;
   // caminho quebrado: corta ao meio e desvia para o lado, várias vezes (o desvio cai pela metade a cada vez)
   function quebrado(a, b, desvio, vezes) {
@@ -84,17 +87,21 @@ const Raio = (() => {
     anima(veu, TEMPO.veu); anima(luz, TEMPO.clarao); anima(gGalhos, TEMPO.galhos); anima(gTronco, TEMPO.tronco); anima(guia, TEMPO.guiaV);
     guia.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 150, easing: 'steps(9, end)', fill: 'both' });
     try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate([24, 50, 70]); } catch {}
-    caindo = true; ultimo = Date.now();
+    caindo = true;
     return new Promise(ok => setTimeout(() => { raiz.remove(); caindo = false; ok(true); }, FIM + 40));
   }
-  // o app chama ao trocar de tela: de vez em quando cai um raio
-  function sortear() {
-    if (!ligado() || caindo || !podeAgora()) return;
-    const agora = Date.now();
-    if (agora - entrou < 25000 || agora - ultimo < 300000) return; // nada nos primeiros segundos, e um bom intervalo entre um e outro
-    if (KitFacil.dialogo.aberto() || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof aberturaAtiva === 'function' && aberturaAtiva())) return;
-    const f = document.activeElement; if (f && f.matches && f.matches('input, textarea, select')) return;
-    if (Math.random() < 0.075) cair();
+  // pode cair agora? Nunca com alguém digitando, com janela aberta, no guia ou na apresentação
+  function livre() {
+    if (!ligado() || caindo || !podeAgora()) return false;
+    if (KitFacil.dialogo.aberto() || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof aberturaAtiva === 'function' && aberturaAtiva())) return false;
+    const f = document.activeElement; return !(f && f.matches && f.matches('input, textarea, select'));
   }
-  return { cair, sortear, ligado, ligar };
+  // o app chama uma vez: daí em diante o raio cai sozinho, ao acaso, com ou sem toque na tela
+  let rodando = false;
+  function comecar({ primeiro = sorte(20000, 70000), entre = [90000, 240000] } = {}) {
+    if (rodando) return; rodando = true;
+    const marcar = ms => setTimeout(() => { if (livre()) cair(); marcar(sorte(entre[0], entre[1])); }, ms);
+    marcar(primeiro);
+  }
+  return { cair, comecar, ligado, ligar };
 })();

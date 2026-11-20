@@ -1,375 +1,261 @@
-/* Elétrica Fácil · moldura (navegação e troca de tela), Ajustes, abertura (onboarding), guia e arranque do app. */
+/* Elétrica Fácil 4 · moldura (navegação e troca de tela), Ajustes, apresentação, guia e arranque do app. */
 'use strict';
 
 /* ---------- desenhar a tela ---------- */
-const PRINCIPAIS = ['home', 'prices', 'obra', 'conquistas', 'mais', 'settings'];
-const TITULOS = { home: 'Orçamentos', prices: 'Tabela', obra: 'Obra', conquistas: 'Conquistas', mais: 'Mais', settings: 'Ajustes' };
-function render(opts = {}) {
-  let r = route();
-  // orçamento novo que ficou vazio some ao sair dele
-  if (openQuoteId && r.id !== openQuoteId) {
-    const q = getQ(openQuoteId);
-    if (q && isEmptyQuote(q)) { quotes = quotes.filter(x => x !== q); saveQuotes(); }
+const PRINCIPAIS = ['inicio', 'docs', 'precos', 'mais', 'ajustes'];
+const TITULOS = { inicio: 'Início', docs: 'Documentos', doc: 'Documento', precos: 'Preços', cat: 'Preços', mais: 'Mais', ajustes: 'Ajustes' };
+function desenhar(o = {}) {
+  let r = rota();
+  // documento novo que ficou vazio some ao sair dele, e o número volta para o próximo
+  if (docAberto && r.id !== docAberto) {
+    const d = getDoc(docAberto);
+    if (d && docVazio(d)) { docs = docs.filter(x => x !== d); if (d.num === ajustes.seq) { ajustes.seq--; salvarAjustes(); } salvarDocs(); }
   }
-  if (r.name === 'quote' && !getQ(r.id)) { history.replaceState({ d: 0 }, '', '#/'); return render(); }
-  if (r.name === 'conquistas' && !jogoLigado()) { history.replaceState({ d: 0 }, '', '#/mais'); r = route(); }
-  openQuoteId = r.id || null;
-  const V = VIEWS[r.name];
+  if ((r.nome === 'doc' && !getDoc(r.id)) || (r.nome === 'cat' && !cats.some(c => c.id === r.id))) { history.replaceState({ d: 0 }, '', r.nome === 'cat' ? '#/precos' : '#/'); r = rota(); }
+  docAberto = r.nome === 'doc' ? r.id : null;
+  const T = TELAS[r.nome];
   // a área da tela é trocada por uma nova a cada desenho: assim os toques ligados pela tela anterior não se acumulam
   const velho = $('#app'), app = velho.cloneNode(false);
-  app.innerHTML = V.html(r);
-  // trilho e barra de baixo ficam logo depois da barra de cima: no teclado, barra de cima → menu → conteúdo.
-  // São fixos na tela, então o lugar no documento não muda o desenho.
+  app.innerHTML = T.html(r);
+  // trilho e barra de baixo ficam logo depois da barra de cima: no teclado, barra de cima → menu → conteúdo
   const fixos = [$('#trilho'), $('#nav')].filter(Boolean);
   fixos.forEach(el => document.body.appendChild(el));
   velho.replaceWith(app);
   const cab = $(':scope > header', app);
   if (cab) cab.after(...fixos); else app.prepend(...fixos);
-  const top = PRINCIPAIS.includes(r.name);
-  $('#nav').hidden = !top;
-  document.body.dataset.tela = r.name;
+  const principal = PRINCIPAIS.includes(r.nome);
+  $('#nav').hidden = !principal;
+  document.body.dataset.tela = r.nome;
   pintarNav(r);
   KitFacil.topo.atualizar();
-  prepFields($('#app'));
-  V.bind($('#app'), r);
-  $$('textarea', $('#app')).forEach(autoGrow);
-  if (!opts.keep) window.scrollTo(0, navMode === 'pop' && top ? (scrollMem[r.key] || 0) : 0);
-  if (r.key !== curKey) { KitFacil.movimento.entrar(app, { de: 'tela' }); document.title = TITULOS[r.name] ? `${TITULOS[r.name]} · Elétrica Fácil` : 'Elétrica Fácil'; if (curKey && top) Raio.sortear(); }
-  curKey = r.key;
-  onScroll();
-  clearTimeout(render.t); render.t = setTimeout(() => { if (!guiaAtivo() && !aberturaAtiva()) jogoConferir(); lpFilaMostrar(); }, 700);
+  prepararCampos(app);
+  T.ligar(app, r);
+  if (!o.manter) window.scrollTo(0, modoNav === 'volta' && principal ? (rolagem[r.chave] || 0) : 0);
+  if (r.chave !== chaveAtual) { KitFacil.movimento.entrar(app, { de: 'tela' }); document.title = `${TITULOS[r.nome]} · Elétrica Fácil`; }
+  chaveAtual = r.chave;
+  aoRolar();
 }
-function rerender() {
+function redesenhar() {
   const y = window.scrollY, f = document.activeElement && document.activeElement.id;
-  render({ keep: true });
+  desenhar({ manter: true });
   window.scrollTo(0, y);
   if (f) { const el = document.getElementById(f); if (el && el.matches('input,textarea')) el.focus({ preventScroll: true }); }
-  refazerJanela(); // a janela da folha que estiver aberta mostra a mudança (folha.js)
 }
-function onScroll() { const ab = $('.appbar'); if (ab) ab.classList.toggle('scrolled', window.scrollY > 4); }
-window.addEventListener('scroll', onScroll, { passive: true });
+function aoRolar() { const b = $('.barra-app'); if (b) b.classList.toggle('kf-rolou', window.scrollY > 4); }
+window.addEventListener('scroll', aoRolar, { passive: true });
 
-/* ---------- navegação: a barra de baixo e o trilho são os do Kit (KitFacil.nav.barra e .trilho) ----------
-   Orçamentos (a tela que abre o app), Tabela, o orçamento novo no centro, Obra e Mais (Conquistas, guia, exemplo e Ajustes). */
-const ROTAS = { orcamentos: '/', precos: '/precos', obra: '/obra', conquistas: '/conquistas', mais: '/mais' };
-function pintarNav(r = route()) {
-  const n = r.name, noOrc = n === 'home' || n === 'quote';
-  const it = (id, rotulo, icone, atual) => ({ id, rotulo, icone, atual });
-  const html = KitFacil.nav.barra({ itens: [it('orcamentos', 'Orçamentos', IN.folhas, noOrc), it('precos', 'Tabela', I.tag, n === 'prices'), it('obra', 'Obra', IN.obra, n === 'obra')],
-    centro: { id: 'novo', rotulo: 'Novo', nome: 'Novo orçamento', icone: I.plus },
-    mais: { atual: n === 'mais' || n === 'conquistas' } });
+/* ---------- navegação: a barra de baixo e o trilho são os do Kit ----------
+   Início, Documentos, o documento novo no centro, Preços e Mais (guia, exemplo e Ajustes). */
+const ROTAS = { inicio: '/', docs: '/docs', precos: '/precos', mais: '/mais' };
+function pintarNav(r = rota()) {
+  const n = r.nome, it = (id, rotulo, icone, atual) => ({ id, rotulo, icone, atual });
+  const itens = [it('inicio', 'Início', IC.inicio, n === 'inicio'), it('docs', 'Documentos', IC.docs, n === 'docs' || n === 'doc'), it('precos', 'Preços', IC.precos, n === 'precos' || n === 'cat')];
+  const html = KitFacil.nav.barra({ itens, centro: { id: 'novo', rotulo: 'Novo', nome: 'Novo documento', icone: IC.soma }, mais: { atual: n === 'mais' } });
   const nav = $('#nav'); if (nav.dataset.h !== html) { nav.innerHTML = html; nav.dataset.h = html; }
-  const lado = KitFacil.nav.trilho({ destaque: { id: 'novo', rotulo: 'Novo orçamento', icone: I.plus },
-    itens: [it('orcamentos', 'Orçamentos', IN.folhas, noOrc), it('precos', 'Tabela', I.tag, n === 'prices'), it('obra', 'Obra', IN.obra, n === 'obra'),
-      ...(jogoLigado() ? [it('conquistas', 'Conquistas', IN.lampada, n === 'conquistas')] : [])],
-    mais: { atual: n === 'mais' } });
+  const lado = KitFacil.nav.trilho({ destaque: { id: 'novo', rotulo: 'Novo documento', icone: IC.soma }, itens, mais: { atual: n === 'mais' } });
   const t = $('#trilho-lista'); if (t.dataset.h !== lado) { t.innerHTML = lado; t.dataset.h = lado; }
 }
 function irPara(id) {
-  if (id === 'novo') return createQuote();
+  if (id === 'novo') return janelaNovo();
   if (id === 'guia') return guiaIniciar();
-  if (id === 'exemplo') return createExample();
-  const path = ROTAS[id]; if (!path) return;
-  if (route().key === path) { window.scrollTo({ top: 0, behavior: semMovimento() ? 'auto' : 'smooth' }); return; }
+  if (id === 'exemplo') return criarExemplo();
+  const caminho = ROTAS[id]; if (!caminho) return;
+  if (rota().chave === caminho) { window.scrollTo({ top: 0, behavior: semMovimento() ? 'auto' : 'smooth' }); return; }
   // estando numa guia dos Ajustes (celular), primeiro tira a guia do histórico e depois troca de tela
-  if (history.state && history.state.kfAjPush) { irDepois = path; history.back(); return; }
-  go(path, true);
+  if (history.state && history.state.kfAjPush) { irDepois = caminho; history.back(); return; }
+  ir(caminho, true);
 }
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-kf-ir]'); if (!b) return;
   e.preventDefault(); irPara(b.dataset.kfIr);
 });
-// barra de cima das telas principais: a marca à esquerda; nuvem, presente e balão à direita (Código, Art. 58)
-const barraTopo = () => `<header class="kf-barra appbar"><div class="kf-barra-in"><div class="kf-marca">${MARCA}</div>${KitFacil.topo.html({ principal: true })}</div></header>`;
 
-// lista de escolha, calendário e relógio do Kit abertos perto do pé: rola o que falta para o último item ficar à vista,
-// acima do rodapé da janela ou das barras fixas de baixo. Correção do app até o Kit corrigir (Proposta para o Integrador)
+// lista de escolha e calendário do Kit abertos perto do pé: rola o que falta para o último item ficar à vista, acima do
+// rodapé da janela ou das barras fixas de baixo. Correção do app até o Kit corrigir (Exceções ao padrão, no README)
 document.addEventListener('click', e => {
-  const w = e.target.closest('.kf-esc'); if (!w || !e.target.closest('.kf-esc-btn')) return;
+  const w = e.target.closest && e.target.closest('.kf-esc'); if (!w || !e.target.closest('.kf-esc-btn')) return;
   setTimeout(() => {
     const el = w.classList.contains('kf-aberta') && $('.kf-esc-lista:not([hidden]), .kf-cal:not([hidden])', w); if (!el) return;
     const corpo = el.closest('.kf-dlg-corpo');
     let fundo = corpo ? corpo.getBoundingClientRect().bottom : innerHeight;
-    if (!corpo) $$('.bbar, .kf-nav').forEach(b => { if (b.getClientRects().length) fundo = Math.min(fundo, b.getBoundingClientRect().top); });
+    if (!corpo) $$('.pe-tela .pe-in, .kf-nav').forEach(b => { if (b.getClientRects().length) fundo = Math.min(fundo, b.getBoundingClientRect().top); });
     const falta = el.getBoundingClientRect().bottom + 12 - fundo;
-    if (falta > 0) (corpo || window).scrollBy({ top: falta, behavior: KitFacil.movimento.reduzido() ? 'auto' : 'smooth' });
+    if (falta > 0) (corpo || window).scrollBy({ top: falta, behavior: semMovimento() ? 'auto' : 'smooth' });
   }, KitFacil.movimento.curto + 60);
 });
 
-/* ---------- Ajustes (guias do Kit Fácil, mais as do Elétrica Fácil) ---------- */
-function readLogo(file) {
-  return new Promise((res, rej) => {
+/* ---------- Ajustes: as oito guias do Kit e, depois, as do Elétrica Fácil (Código, Art. 62) ---------- */
+function lerLogo(arquivo) {
+  return new Promise((ok, falhou) => {
     const fr = new FileReader();
     fr.onload = () => {
       const img = new Image();
       img.onload = () => {
-        const max = 320, r = img.width / img.height;
+        const max = 320, prop = img.width / img.height;
         let w = img.width, h = img.height;
-        if (w >= h && w > max) { w = max; h = Math.round(max / r); } else if (h > w && h > max) { h = max; w = Math.round(max * r); }
+        if (w >= h && w > max) { w = max; h = Math.round(max / prop); } else if (h > w && h > max) { h = max; w = Math.round(max * prop); }
         const cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.getContext('2d').drawImage(img, 0, 0, w, h);
-        res({ url: cv.toDataURL('image/png'), ratio: r });
+        ok({ url: cv.toDataURL('image/png'), prop });
       };
-      img.onerror = rej; img.src = fr.result;
+      img.onerror = falhou; img.src = fr.result;
     };
-    fr.onerror = rej; fr.readAsDataURL(file);
+    fr.onerror = falhou; fr.readAsDataURL(arquivo);
   });
 }
-function settingsSums() {
-  const s = settings;
+function resumosAjustes() {
+  const s = ajustes;
   return {
-    conta: [s.company || s.name, s.phone ? fmtPhone(s.phone) : ''].filter(Boolean).join(' · ') || undefined,
     pix: s.pix || 'Nenhuma chave cadastrada',
-    deslocamento: s.kmPerL || s.fuelPrice ? [s.kmPerL && `${fmtQty(s.kmPerL)} km/l`, s.fuelPrice && `combustível ${BRL(s.fuelPrice)}`].filter(Boolean).join(' · ') : 'Consumo do veículo e preço do combustível',
-    adicionais: s.surUrgent || s.surNight || s.surWeekend ? [s.surUrgent && `urgência ${s.surUrgent}%`, s.surNight && `noturno ${s.surNight}%`, s.surWeekend && `fim de semana ${s.surWeekend}%`].filter(Boolean).join(' · ').replace(/^./, c => c.toUpperCase()) : 'Urgência, noturno e fim de semana',
-    padrao: `Prazo ${prazoTxt({ n: Math.max(1, s.prazoN || 1), u: PRAZO_U[s.prazoU] ? s.prazoU : 'uteis' })} · validade ${s.validity} dias · garantia ${s.warranty} dias · ${payShort({ mode: s.payMode, entryPct: s.entryPct, installments: s.installments }).toLowerCase()}`,
-    textos: 'Termo de aceite e condições da garantia',
-    conquistas: (() => { if (!jogoLigado()) return 'Conquistas desligadas'; const j = jogoEstado(); return `Nível ${j.nivel} · ${j.ganhas.length} de ${CONQUISTAS.length} lâmpadas acesas`; })(),
+    padrao: `Validade de ${plural(s.validade, 'dia', 'dias')} · ${s.garantia ? 'garantia de ' + plural(s.garantia, 'dia', 'dias') : 'sem garantia'} · ${s.pag === 'entrada' ? `entrada de ${s.entradaPct}%` : s.pag === 'combinar' ? 'pagamento a combinar' : 'à vista'}`,
+    raio: Raio.ligado() ? 'Raio ligado' : 'Raio desligado',
   };
 }
-function pintarResumos() { const S = settingsSums(); for (const k in S) KitFacil.ajustes.resumo(k, S[k]); }
-/* cópia de segurança no formato comum da família */
-// no celular abre o menu de compartilhar (WhatsApp, Drive, e-mail…), como antes; no computador, baixa o arquivo
-function baixarCopiaEletrica() {
-  jogoMarcar('copia');
-  const env = KitFacil.copia.envelope({ settings, prices, quotes: quotes.filter(q => !q.example), tools, checks }, 2);
-  saveFile(`eletrica-facil-copia-${new Date().toISOString().slice(0, 10)}.json`, new Blob([JSON.stringify(env, null, 1)], { type: 'application/json' }));
-}
-async function restaurarCopiaEletrica(file) {
-  const j = await KitFacil.copia.ler(file);
-  let data = null;
-  try {
-    if (j && j.dados) data = { settings: j.dados.settings || {}, prices: j.dados.prices || seedPrices(), quotes: (j.dados.quotes || []).map(fixQuote), tools: Array.isArray(j.dados.tools) ? j.dados.tools : null, checks: Array.isArray(j.dados.checks) ? j.dados.checks : null };
-  } catch { data = null; }
-  if (!data || !Array.isArray(data.quotes) || !Array.isArray(data.prices)) { toast('Esse arquivo não é uma cópia do Elétrica Fácil.'); return; }
-  confirmSheet('Restaurar a cópia?', `O arquivo tem ${plural(data.quotes.length, 'orçamento', 'orçamentos')} e ${plural(data.prices.length, 'preço', 'preços')}. Os dados deste aparelho${syncOn() ? ' e dos outros aparelhos conectados' : ''} serão substituídos.`, 'Restaurar', () => {
-    settings = { ...DEF, ...data.settings }; prices = data.prices; prices.forEach(acertaLotes); quotes = data.quotes.map(fixQuote);
-    if (data.tools) { tools = normTools(data.tools); saveTools(); }
-    if (data.checks) { checks = data.checks.map(fixCheck); saveChecks(); }
-    settings.seq = Math.max(settings.seq || 0, 0, ...quotes.map(q => q.num || 0));
-    saveSettings(); savePrices(); saveQuotes(); rerender(); toast('Cópia restaurada.');
-  });
-}
-// cartão nos Ajustes: como cobrar o parcelado e a tabela de taxas da maquininha
-function cartaoAjHTML(s) {
-  const R = s.cardRates || {}, v = k => typeof R[k] === 'number' ? fmtQty(R[k]) : '';
-  const cel = (k, l) => `<label class="tx-cel"><span>${l}</span><input type="text" inputmode="decimal" data-rate="${k}" value="${v(k)}" placeholder="0" aria-label="Taxa ${l} (%)"></label>`;
-  return `<div class="field"><span class="lab" id="aj-jur-l">Cartão: juros e taxas</span><div class="seg" role="group" aria-labelledby="aj-jur-l">${[['sem', 'Sem juros'], ['taxa', 'Taxa da maquininha'], ['mes', 'Juros ao mês']].map(([k, l]) => `<button data-aj-jur="${k}" aria-pressed="${(s.cardJuros || 'sem') === k}">${l}</button>`).join('')}</div>
-      <span class="kf-ajuda">Como começa todo orçamento novo no cartão. Dá para mudar em cada orçamento.</span></div>
-    <div class="field"><span class="lab">Taxa da maquininha, em %</span><div class="tx-grid">${cel('debito', 'Débito')}${Array.from({ length: 12 }, (_, i) => cel(String(i + 1), `${i + 1}×`)).join('')}</div>
-      <span class="kf-ajuda">Copie da sua maquininha ou do app do banco. ${(s.cardPaga || 'cliente') === 'cliente' ? 'Repassada ao cliente: ele paga o suficiente para você receber o valor cheio.' : 'Paga por você: o cliente paga o valor do orçamento e você recebe menos.'}</span></div>
-    <div class="grid2"><div class="field"><span class="lab" id="aj-paga-l">Quem paga a taxa</span><div class="seg" role="group" aria-labelledby="aj-paga-l"><button data-aj-paga="cliente" aria-pressed="${(s.cardPaga || 'cliente') === 'cliente'}">O cliente</button><button data-aj-paga="eu" aria-pressed="${s.cardPaga === 'eu'}">Eu</button></div></div>
-      <div class="field"><label for="st-cardSemAte">Sem juros até quantas parcelas</label><input id="st-cardSemAte" data-set="cardSemAte" data-int type="text" inputmode="numeric" placeholder="0" value="${s.cardSemAte || ''}"></div></div>
-    <div class="field"><label for="st-cardMes">Juros ao mês, em %</label><input id="st-cardMes" data-set="cardMes" data-dec type="text" inputmode="decimal" placeholder="Ex.: 2,99" value="${s.cardMes ? fmtQty(s.cardMes) : ''}"></div>`;
-}
+function pintarResumos() { const S = resumosAjustes(); for (const k in S) KitFacil.ajustes.resumo(k, S[k]); }
 const ICONES_AJ = {
-  pix: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M13.5 13.5h3.2v3.2h-3.2z"/><path d="M20.5 17.2v3.3h-3.3"/>',
-  deslocamento: '<path d="M3 16V9l2.5-4h9L17 9h2a2 2 0 0 1 2 2v5"/><path d="M3 16h18"/><circle cx="7.5" cy="17.5" r="2"/><circle cx="16.5" cy="17.5" r="2"/>',
-  adicionais: '<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
-  padrao: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v7M8.5 14.5h7"/>',
-  textos: '<path d="M4 6h16M4 11h16M4 16h10M4 21h6"/>',
-  conquistas: '<rect x="3.500" y="4.500" width="17" height="15" rx="2"/><path d="M8 9v6M12 9v6M16 9v6"/><path d="M6.500 9h3M10.500 15h3M14.500 9h3"/>',
+  pix: '<rect x="3.500" y="3.500" width="7" height="7" rx="1.500"/><rect x="13.500" y="3.500" width="7" height="7" rx="1.500"/><rect x="3.500" y="13.500" width="7" height="7" rx="1.500"/><path d="M13.500 13.500h3.200v3.200h-3.200z"/><path d="M20.500 17.200v3.300h-3.300"/>',
+  padrao: '<path d="M8 3.500h7.500L19 7v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.500a2 2 0 0 1 2-2z"/><path d="M15 3.500V7.500h4"/><path d="M12.500 10.500v6M9.500 13.500h6"/>',
+  raio: '<path d="M13.500 2.500 4.500 13.500h6l-1 8 9-11.500h-6z"/>',
 };
-VIEWS.settings = {
+TELAS.ajustes = {
   html() {
-    const s = settings, S = settingsSums();
-    const money = (k, label, ph) => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" data-money type="text" inputmode="numeric" value="${s[k] ? BRL(s[k]) : ''}" placeholder="${esc(ph)}"></div>`;
-    const pct = (k, label) => `<div class="field"><label for="st-${k}">${label}, em %</label><input id="st-${k}" data-set="${k}" data-int type="text" inputmode="numeric" placeholder="${{ surUrgent: 50, surNight: 30, surWeekend: 50 }[k]}" value="${s[k] || ''}"></div>`;
-    const f = (k, label, ph, type = 'text', extra = '') => `<div class="field"><label for="st-${k}">${label}</label><input id="st-${k}" data-set="${k}" type="${type}" value="${esc(k === 'phone' ? fmtPhone(s[k]) : s[k])}" placeholder="${esc(ph)}" ${extra}></div>`;
+    const s = ajustes, S = resumosAjustes();
+    const f = (k, rotulo, dica, attrs = '') => campo('aj-' + k, rotulo, `<input id="aj-${k}" class="kf-entrada" data-aj="${k}" type="text" value="${esc(k === 'fone' ? fone(s[k]) : k === 'doc' ? cpfCnpj(s[k]) : s[k])}" placeholder="${esc(dica)}" ${attrs}>`);
     const bloco = (titulo, corpo) => `<div class="kf-bloco"><h3>${titulo}</h3>${corpo}</div>`;
     return `${barraTopo()}
-    <main class="page largo">
+    <main class="tela larga" id="conteudo">
       ${KitFacil.ajustes.html({
-        resumos: { conta: S.conta },
         extras: {
-          conta: bloco('Seus dados na proposta', `<p class="kf-ajuda">Saem no cabeçalho das propostas, dos relatórios e dos recibos.</p>
-            <div class="logo-row">
-              <button class="logo-pick" data-logo aria-label="Escolher logotipo">${s.logo ? `<img src="${s.logo}" alt="Seu logotipo">` : I.image}</button>
-              <div><b>Logotipo</b><small>Opcional. Sem logo, a proposta usa o raio do app.</small>${s.logo ? '<button class="linkish" data-logo-rm style="margin-top:4px;font-size:14px;color:var(--bad)">Remover logotipo</button>' : ''}</div>
-              <input type="file" id="st-logo" accept="image/*" hidden>
+          conta: bloco('Seus dados nos documentos', `<p class="kf-ajuda">Saem no alto dos orçamentos, dos relatórios e dos recibos.</p>
+            <div class="logo-lin">
+              <button type="button" class="logo-bt" data-logo aria-label="Escolher logotipo">${s.logo ? `<img src="${esc(s.logo)}" alt="Seu logotipo">` : IC.imagem}</button>
+              <div class="logo-tx"><b>Logotipo</b><small>Opcional. Sem ele, o documento sai com o raio do app.</small></div>
+              <input type="file" id="aj-logo" accept="image/*" hidden>
             </div>
-            ${f('name', 'Seu nome', 'Ex.: Carlos Pereira', 'text', 'autocapitalize="words"')}
-            ${f('company', 'Nome da empresa <span class="lab-opt">opcional</span>', 'Ex.: Pereira Instalações Elétricas', 'text', 'autocapitalize="words"')}
-            <div class="grid2 stack">
-              ${f('phone', 'WhatsApp', '(11) 90000-0000', 'tel', 'inputmode="tel"')}
-              ${f('email', 'E-mail <span class="lab-opt">opcional</span>', 'voce@email.com', 'email', 'autocapitalize="off"')}
-              ${f('doc', 'CPF ou CNPJ <span class="lab-opt">opcional</span>', 'Sai no recibo')}
-              ${f('registro', 'Registro profissional <span class="lab-opt">opcional</span>', 'CREA-DF 123456/D, CFT ou NR-10')}
-              ${f('city', 'Cidade', 'Ex.: São Paulo', 'text', 'autocapitalize="words"')}
-            </div>`),
+            ${s.logo ? '<button type="button" class="kf-btn kf-perigo kf-p" data-logo-tira>Remover logotipo</button>' : ''}
+            ${f('nome', 'Seu nome', 'Ex.: Carlos Pereira', 'autocapitalize="words"')}
+            ${f('empresa', 'Nome da empresa', 'Opcional', 'autocapitalize="words"')}
+            ${f('fone', 'WhatsApp', '(11) 90000-0000', 'inputmode="tel"')}
+            ${f('email', 'E-mail', 'Opcional', 'autocapitalize="off" inputmode="email"')}
+            ${f('doc', 'CPF ou CNPJ', 'Opcional. Sai no recibo', 'inputmode="numeric"')}
+            ${f('registro', 'Registro profissional', 'Opcional. CREA, CFT ou NR-10')}
+            ${f('cidade', 'Cidade', 'Ex.: São Paulo', 'autocapitalize="words"')}`),
         },
         produto: [
-          { id: 'pix', titulo: 'Pix', icone: ICONES_AJ.pix, resumo: S.pix, html: bloco('Chave Pix', `<p class="kf-ajuda">Com a chave, a proposta já sai com o QR code da entrada, ou do total no pagamento à vista.</p>
-              ${f('pix', 'Chave Pix', 'CPF, celular, e-mail ou chave aleatória', 'text', 'autocapitalize="off" spellcheck="false"')}`) },
-          { id: 'deslocamento', titulo: 'Veículo e deslocamento', icone: ICONES_AJ.deslocamento, resumo: S.deslocamento, html: bloco('Calculadora de deslocamento', `<p class="kf-ajuda">Base da calculadora de deslocamento. O preço do combustível também pode ser atualizado direto no orçamento.</p>
-              <div class="grid2">
-                <div class="field"><label for="st-kmPerL">Consumo médio, em km por litro</label><input id="st-kmPerL" data-set="kmPerL" data-dec type="text" inputmode="decimal" value="${s.kmPerL ? fmtQty(s.kmPerL) : ''}" placeholder="Ex.: 10"></div>
-                ${money('fuelPrice', 'Preço do litro do combustível', 'Ex.: R$ 6,19')}
-                ${money('wearPerKm', 'Desgaste por km', 'Opcional')}
-                ${money('hourRate', 'Valor da sua hora', 'Opcional')}
-              </div>
-              ${money('minVisit', 'Mínimo por visita', 'Opcional')}
-              <p class="kf-ajuda">O desgaste cobre pneus, óleo e manutenção. A hora entra quando você informa o tempo de viagem. O mínimo protege as obras muito perto.</p>`) },
-          { id: 'adicionais', titulo: 'Adicionais', icone: ICONES_AJ.adicionais, resumo: S.adicionais, html: bloco('Adicionais sobre a mão de obra', `<p class="kf-ajuda">Percentual usado quando você marca o adicional no orçamento. Se marcar mais de um, eles se somam.</p>
-              <div class="grid3">${pct('surUrgent', 'Urgência')}${pct('surNight', 'Noturno')}${pct('surWeekend', 'Fim de sem.')}</div>`) },
-          { id: 'padrao', titulo: 'Orçamento novo', icone: ICONES_AJ.padrao, resumo: S.padrao, html: bloco('Padrão de cada orçamento novo', `<p class="kf-ajuda">Dá para mudar em cada orçamento.</p>
-              <div class="grid2">
-                ${f('validity', 'Validade, em dias', '15', 'text', 'inputmode="numeric" data-int')}
-                ${f('warranty', 'Garantia, em dias', '90', 'text', 'inputmode="numeric" data-int')}
-              </div>
-              <div class="field"><label for="st-prazoN">Prazo de execução</label><div class="prazo-row"><input id="st-prazoN" data-set="prazoN" data-int type="text" inputmode="numeric" value="${s.prazoN || 1}" style="max-width:96px" aria-label="Quantidade do prazo"><select id="st-prazoU" data-set="prazoU" aria-label="Unidade do prazo">${Object.entries(PRAZO_U).map(([k, [pl, sg]]) => `<option value="${k}" ${s.prazoU === k ? 'selected' : ''}>${(s.prazoN || 1) === 1 ? sg : pl}</option>`).join('')}</select></div></div>
-              <div class="field"><span class="lab">Pagamento</span><div class="seg" role="group" aria-label="Pagamento">${[['avista', 'À vista'], ['entrada', 'Entrada'], ['parcelado', 'Cartão'], ['combinar', 'Combinar']].map(([k, l]) => `<button data-pm="${k}" aria-pressed="${s.payMode === k}">${l}</button>`).join('')}</div></div>
-              ${s.payMode === 'entrada' ? `<div class="field"><span class="lab">Entrada</span><div class="seg" role="group" aria-label="Entrada">${[30, 40, 50, 60, 70].map(n => `<button data-ep="${n}" aria-pressed="${s.entryPct === n}">${n}%</button>`).join('')}</div></div>` : ''}
-              ${cartaoAjHTML(s)}
-              <div class="field"><label for="st-avistaPct">Desconto para pagamento à vista, em %</label><input id="st-avistaPct" data-set="avistaPct" data-dec type="text" inputmode="decimal" placeholder="0" value="${s.avistaPct ? fmtQty(s.avistaPct) : ''}"><span class="kf-ajuda">Entra em todo orçamento novo à vista. Separado do desconto do serviço.</span></div>
-              <div class="field"><label for="st-notes">Observações que sempre vão na proposta</label><textarea id="st-notes" data-set="notes" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.notes)}</textarea></div>`) },
-          { id: 'textos', titulo: 'Textos dos documentos', icone: ICONES_AJ.textos, resumo: S.textos, html: bloco('Textos dos documentos', `<p class="kf-ajuda">Saem em todos os orçamentos e relatórios. Deixe em branco para não usar.</p>
-              <div class="field"><label for="st-acceptText">Termo de aceite, acima da assinatura do orçamento</label><textarea id="st-acceptText" data-set="acceptText">${esc(s.acceptText)}</textarea>
-                ${s.acceptText !== ACCEPT_DEFAULT ? '<button class="linkish" data-reset="acceptText">Voltar ao texto sugerido</button>' : ''}</div>
-              <div class="field"><label for="st-warrantyTerms">Condições da garantia</label><textarea id="st-warrantyTerms" data-set="warrantyTerms">${esc(s.warrantyTerms)}</textarea>
-                ${s.warrantyTerms !== WARRANTY_DEFAULT ? '<button class="linkish" data-reset="warrantyTerms">Voltar ao texto sugerido</button>' : ''}</div>`) },
-          { id: 'conquistas', titulo: 'Conquistas e apresentação', icone: ICONES_AJ.conquistas, resumo: S.conquistas, html: bloco('Conquistas e níveis', `<label class="aj-chave"><span class="lin-tx"><b>Mostrar conquistas e níveis</b><small>Desligado, o app fica só com os orçamentos. Nada é apagado.</small></span><span class="kf-chave"><input type="checkbox" id="aj-jogo" ${jogoLigado() ? 'checked' : ''}><span class="kf-chave-trilho"></span></span></label>`)
-              + bloco('Raios de surpresa', `<label class="aj-chave"><span class="lin-tx"><b>Um raio de vez em quando</b><small>É enfeite: não recebe toque e some em um segundo.</small></span><span class="kf-chave"><input type="checkbox" id="aj-raio" ${Raio.ligado() ? 'checked' : ''}><span class="kf-chave-trilho"></span></span></label>
-                <div class="aj-raio-bts"><button type="button" class="kf-btn kf-sec" id="aj-raio-ver">Soltar um raio</button></div>
-                ${semMovimento() ? '<p class="kf-ajuda">Seu aparelho pede menos movimento, então os raios ficam desligados.</p>' : ''}`)
-              + bloco('Apresentação', `<p class="kf-ajuda">As telas que aparecem na primeira vez que o app abre. O guia e o orçamento de exemplo ficam em Mais.</p><button type="button" class="kf-btn kf-sec" id="aj-abertura">Rever a apresentação</button>`) },
+          { id: 'pix', titulo: 'Pix', icone: ICONES_AJ.pix, resumo: S.pix, html: bloco('Chave Pix', `<p class="kf-ajuda">Com a chave, o documento sai com o QR code do valor, e a tela de receber mostra o código para o cliente pagar.</p>
+            ${f('pix', 'Chave Pix', 'CPF, celular, e-mail ou chave aleatória', 'autocapitalize="off" spellcheck="false"')}`) },
+          { id: 'padrao', titulo: 'Documento novo', icone: ICONES_AJ.padrao, resumo: S.padrao, html: bloco('Como começa todo documento novo', `<p class="kf-ajuda">Dá para mudar em cada documento.</p>
+            <div class="kf-campo"><span class="kf-rotulo">Validade do orçamento</span>${segmento('Validade do orçamento', 'aj-val', VAL_OP, s.validade)}</div>
+            <div class="kf-campo"><span class="kf-rotulo">Garantia do serviço</span><div class="escolhas">${GAR_OP.map(([k, l]) => KitFacil.ui.escolha({ rotulo: l, on: s.garantia === k, attrs: `data-aj-gar="${k}"` })).join('')}</div></div>
+            <div class="kf-campo"><span class="kf-rotulo">Pagamento</span>${segmento('Pagamento', 'aj-pag', [['vista', 'À vista'], ['entrada', 'Entrada'], ['combinar', 'A combinar']], s.pag)}</div>
+            ${s.pag === 'entrada' ? `<div class="kf-campo"><span class="kf-rotulo">Quanto de entrada</span>${segmento('Quanto de entrada', 'aj-ep', [30, 40, 50, 60, 70].map(n => [n, n + '%']), s.entradaPct)}</div>` : ''}
+            ${campo('aj-obs', 'Observações que sempre vão no documento', `<textarea id="aj-obs" class="kf-entrada" data-aj="obs" rows="4" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.obs)}</textarea>`)}`) },
+          { id: 'raio', titulo: 'Raio e apresentação', icone: ICONES_AJ.raio, resumo: S.raio, html: bloco('Um raio de vez em quando', `<label class="aj-chave"><span class="aj-chave-tx"><b>Soltar raios</b><small>Cai sozinho, de tempos em tempos. É enfeite: não recebe toque e some em um segundo.</small></span>${KitFacil.ui.chave({ attrs: 'id="aj-raio"', on: Raio.ligado() })}</label>
+              <button type="button" class="kf-btn kf-sec" id="aj-raio-ver">Soltar um raio agora</button>
+              ${semMovimento() ? '<p class="kf-ajuda">Seu aparelho pede menos movimento, então os raios ficam desligados.</p>' : ''}`)
+            + bloco('Apresentação', '<p class="kf-ajuda">As quatro telas que aparecem na primeira vez que o app abre. O guia e o exemplo ficam em Mais.</p><button type="button" class="kf-btn kf-sec" id="aj-abertura">Rever a apresentação</button>') },
         ],
       })}
     </main>`;
   },
-  bind(v) {
+  ligar(v) {
     KitFacil.ajustes.ligar(v);
-    $('#aj-jogo', v)?.addEventListener('change', e => { jogo.off = !e.target.checked; jogoSalvar(); pintarNav(); pintarResumos(); toast(jogoLigado() ? 'Conquistas e níveis ligados.' : 'Conquistas e níveis desligados.'); if (jogoLigado()) jogoConferir({ silencioso: true }); });
     $('#aj-abertura', v)?.addEventListener('click', () => aberturaAbrir({ rever: true }));
-    $('#aj-raio', v)?.addEventListener('change', e => { Raio.ligar(e.target.checked); toast(Raio.ligado() ? 'Raios de surpresa ligados.' : 'Raios de surpresa desligados.'); });
-    $('#aj-raio-ver', v)?.addEventListener('click', () => { if (semMovimento()) return toast('Com movimento reduzido no aparelho, o raio não cai.'); Raio.cair({ forcar: true }); });
-    v.addEventListener('input', () => setTimeout(pintarResumos, 300));
-    // as guias com texto longo crescem conforme o conteúdo quando são abertas
-    v.addEventListener('click', e => { if (e.target.closest('[data-kf-aj-ir]')) requestAnimationFrame(() => $$('textarea', v).forEach(autoGrow)); });
+    $('#aj-raio', v)?.addEventListener('change', e => { Raio.ligar(e.target.checked); pintarResumos(); aviso(Raio.ligado() ? 'Raios ligados.' : 'Raios desligados.'); });
+    $('#aj-raio-ver', v)?.addEventListener('click', () => { if (semMovimento()) return aviso('Com movimento reduzido no aparelho, o raio não cai.'); Raio.cair({ forcar: true }); });
     let t;
-    $$('[data-set]', v).forEach(i => {
-      const save = () => {
-        const k = i.dataset.set;
-        let val = i.value;
-        if (i.hasAttribute('data-int')) val = parseInt(val.replace(/\D/g, ''), 10) || 0;
-        else if (i.hasAttribute('data-money')) val = parseMoney(val) || 0;
-        else if (i.hasAttribute('data-dec')) val = parseQty(val) || 0;
-        else if (i.tagName === 'INPUT') val = val.trim();
-        settings[k] = val; clearTimeout(t); t = setTimeout(saveSettings, 250);
-      };
-      i.addEventListener('input', save);
+    $$('[data-aj]', v).forEach(i => {
+      const k = i.dataset.aj;
+      i.addEventListener('input', () => { ajustes[k] = i.tagName === 'INPUT' ? i.value.trim() : i.value; clearTimeout(t); t = setTimeout(() => { salvarAjustes(); pintarResumos(); }, 300); });
       i.addEventListener('change', () => {
-        const k = i.dataset.set;
-        if (k === 'pix' && settings.pix) { settings.pix = normPixKey(settings.pix); i.value = settings.pix; }
-        if (k === 'phone') i.value = fmtPhone(settings.phone);
-        saveSettings(); pintarResumos(); toast('Salvo.');
+        clearTimeout(t);
+        if (k === 'pix' && ajustes.pix) { ajustes.pix = KitFacil.pix.chave(ajustes.pix); i.value = ajustes.pix; }
+        if (k === 'fone') i.value = fone(ajustes.fone);
+        if (k === 'doc') i.value = cpfCnpj(ajustes.doc);
+        salvarAjustes(); pintarResumos(); aviso('Salvo.');
       });
     });
-    $$('[data-pm]', v).forEach(b => b.onclick = () => { settings.payMode = b.dataset.pm; saveSettings(); rerender(); });
-    $$('[data-aj-jur]', v).forEach(b => b.onclick = () => { settings.cardJuros = b.dataset.ajJur; saveSettings(); rerender(); });
-    $$('[data-aj-paga]', v).forEach(b => b.onclick = () => { settings.cardPaga = b.dataset.ajPaga; saveSettings(); rerender(); });
-    $$('[data-rate]', v).forEach(i => {
-      i.addEventListener('input', () => { const R = { ...(settings.cardRates || {}) }, x = parseQty(i.value); if (x === null || i.value.trim() === '') delete R[i.dataset.rate]; else R[i.dataset.rate] = Math.max(0, Math.min(40, x)); settings.cardRates = R; clearTimeout(t); t = setTimeout(saveSettings, 250); });
-      i.addEventListener('change', () => { saveSettings(); pintarResumos(); toast('Salvo.'); });
+    v.addEventListener('click', e => {
+      const t2 = e.target; let b;
+      if ((b = t2.closest('[data-aj-val]'))) ajustes.validade = +b.dataset.ajVal;
+      else if ((b = t2.closest('[data-aj-gar]'))) ajustes.garantia = +b.dataset.ajGar;
+      else if ((b = t2.closest('[data-aj-pag]'))) ajustes.pag = b.dataset.ajPag;
+      else if ((b = t2.closest('[data-aj-ep]'))) ajustes.entradaPct = +b.dataset.ajEp;
+      else return;
+      salvarAjustes(); redesenhar();
     });
-    $$('[data-reset]', v).forEach(b => b.onclick = () => { const k = b.dataset.reset; settings[k] = k === 'acceptText' ? ACCEPT_DEFAULT : WARRANTY_DEFAULT; saveSettings(); rerender(); toast('Texto sugerido de volta.'); });
-    $$('[data-ep]', v).forEach(b => b.onclick = () => { settings.entryPct = +b.dataset.ep; saveSettings(); rerender(); });
-    const lf = $('#st-logo', v);
+    const lf = $('#aj-logo', v);
     $('[data-logo]', v).onclick = () => lf.click();
     lf.addEventListener('change', async () => {
-      const file = lf.files[0]; if (!file) return;
-      try { const r = await readLogo(file); settings.logo = r.url; settings.logoRatio = r.ratio; if (!saveSettings()) { settings.logo = ''; toast('Imagem grande demais. Tente outra.'); } else toast('Logotipo salvo.'); rerender(); }
-      catch { toast('Não foi possível abrir essa imagem.'); }
+      const arq = lf.files[0]; if (!arq) return;
+      try { const r = await lerLogo(arq); ajustes.logo = r.url; ajustes.logoProp = r.prop; if (!salvarAjustes()) { ajustes.logo = ''; aviso('Imagem grande demais. Tente outra.'); } else aviso('Logotipo salvo.'); redesenhar(); }
+      catch { aviso('Não foi possível abrir essa imagem.'); }
     });
-    $('[data-logo-rm]', v)?.addEventListener('click', () => { settings.logo = ''; saveSettings(); rerender(); });
+    $('[data-logo-tira]', v)?.addEventListener('click', () => { ajustes.logo = ''; salvarAjustes(); redesenhar(); aviso('Logotipo removido.'); });
   },
 };
 
-
-/* ---------- abertura (onboarding): quatro telas, uma vez só (Código, Art. 75) ---------- */
+/* ---------- apresentação: quatro telas, uma vez só (Código, Art. 75) ---------- */
 const aberturaAtiva = () => KitFacil.abertura.ativa();
 function aberturaAbrir({ rever = false } = {}) {
   if (aberturaAtiva()) return;
-  // quem ainda vai ver a apresentação não recebe, por cima dela, a janela de Novidades do Kit (que espera só 30 s):
-  // as novidades ficam para a versão seguinte, como no Conta Fácil
   if (!rever) { try { localStorage.setItem('kitfacil.eletrica-facil.visto', JSON.stringify(VERSAO)); } catch {} }
-  // A lâmpada 3D (a mesma do varal) começa apagada na primeira tela e aparece acesa na última. Sem interruptor,
-  // sem raio e sem pedir o nome: ele fica em Ajustes, Conta e perfil (decisão do Bruno, 18/11/2026).
-  const lamp = acesa => `<div class="ab-cena ab-pend${acesa ? ' acesa' : ''}"><span class="ab-cabo" aria-hidden="true"></span><span class="ab-lp">${lampPendHTML({ ic: 'raio' }, { acesa })}</span>${acesa ? '' : '<span class="ab-marca"><img src="icons/icon-192.png" alt="" width="40" height="40"><b>Elétrica Fácil</b></span>'}</div>`;
-  // tela 2: a folha de demonstração; cada toque em Somar serviço soma uma tomada
-  let n = 3, tocou = false; const TOMADA = 6000;
-  const folhaDemo = () => `<div class="ab-cena ab-folha"><div class="fl"><div class="ab-fl-h"><b>Proposta</b><span>Nº 0001</span></div>
-      <div class="sh"><span class="lb">Mão de obra</span></div>
-      <div class="ln"><span><b>Instalação de tomada</b><small>${n} un. × ${BRL(TOMADA)}</small></span><span class="v">${BRL(n * TOMADA)}</span></div>
-      <button type="button" class="ad toque" data-ab-somar aria-label="Somar serviço: soma uma tomada"><span class="pl">${I.plus}</span>Somar serviço</button>
-      <div class="sh"><span class="lb">Material</span></div><div class="ad" aria-hidden="true"><span class="pl">${I.plus}</span>Somar material</div>
-      <div class="tg" role="status"><span>TOTAL</span><b>${BRL(n * TOMADA)}</b></div></div></div>`;
-  // tela 3: em cada etapa, qual é o botão amarelo
-  const PASSOS = [['Rascunho', 'Enviar'], ['Enviado', 'Aprovou'], ['Aprovado', 'Concluir'], ['Concluído', 'Receber'], ['Recebido', 'Recibo']];
-  const passos = `<div class="ab-cena ab-passos"><span class="lb">Em cada etapa, o botão amarelo é</span>
-      <div class="rl" role="img" aria-label="${PASSOS.map(x => `${x[0]}: ${x[1]}`).join('; ')}.">${PASSOS.map((x, i) => `<span class="rs${i < 2 ? ' ok' : i === 2 ? ' at' : ''}"><i></i>${x[0]}<b>${x[1]}</b></span>`).join('')}</div>
-      <span class="ab-liga" aria-hidden="true"></span>
-      <div class="ab-visor"><div class="bb-total"><small>Total</small><b class="num">${BRL(18000)}</b></div><span class="btn primary">Concluir</span></div></div>`;
+  // tela 2: quatro blocos de verdade; cada toque soma um serviço e a conta anda
+  const DEMO = [['tomada', 'Tomada', 6000], ['lampada', 'Luminária', 9000], ['quadro', 'Disjuntor', 7000], ['chuveiro', 'Chuveiro', 11500]];
+  const n = [1, 0, 0, 0];
+  const blocos = () => { const q = soma(n), v = soma(n.map((x, i) => x * DEMO[i][2])); return `<div class="ab-cena ab-somar"><div class="blocos p">${DEMO.map(([ic, nome], i) => `<button type="button" class="bloco" data-ab-soma="${i}"><span class="bl-ic">${PIC[ic]}</span><b class="bl-nome">${nome}</b>${n[i] ? `<span class="bl-selo num">${n[i]}</span>` : ''}</button>`).join('')}</div>
+    <p class="ab-conta" role="status"><span>${plural(q, 'serviço', 'serviços')}</span><b class="num">${BRL(v)}</b></p></div>`; };
+  const PASSOS = [['Rascunho', 'Enviar'], ['Enviado', 'Aprovou'], ['Aprovado', 'Receber'], ['Recebido', 'Enviar recibo']];
+  const passos = `<div class="ab-cena ab-passos"><ol class="tr-passos" role="img" aria-label="${PASSOS.map(x => `${x[0]}: ${x[1]}`).join('; ')}.">${PASSOS.map((x, i) => `<li class="${i < 2 ? 'feito' : i === 2 ? 'atual' : ''}"><i aria-hidden="true">${i < 2 ? IC.certo : ''}</i><span>${x[0]}</span></li>`).join('')}</ol>
+      <div class="ab-pe" aria-hidden="true"><div class="pe-total"><small>Total</small><b class="num">${BRL(143500)}</b></div><span class="kf-btn kf-pri">Receber</span></div></div>`;
+  const dois = `<div class="ab-cena ab-dois" role="img" aria-label="Orçamento, antes do serviço. Relatório, depois do serviço."><div class="ab-papel"><span class="op-ic">${IC.docs}</span><b>Orçamento</b><small>Antes do serviço</small></div><div class="ab-papel"><span class="op-ic">${IC.recibo}</span><b>Relatório</b><small>Depois do serviço</small></div></div>`;
+  const marca = '<div class="ab-cena ab-marca"><span class="ab-halo" aria-hidden="true"></span><img src="icons/icon-192.png" alt="" width="132" height="132"></div>';
   const telas = [
-    { arte: () => lamp(false), titulo: 'Orçamento de elétrica, do pedido ao recibo', texto: 'Veja como funciona antes de começar.' },
-    { arte: () => folhaDemo(), falada: true, titulo: 'Monte o orçamento na folha do cliente', texto: 'Toque em Somar serviço e escolha na sua tabela. O nome do cliente só entra na hora de enviar.' },
-    { arte: () => passos, titulo: 'Toque no botão amarelo para avançar', texto: 'A cada etapa ele muda: Enviar, Aprovou, Concluir, Receber e Recibo. Para receber, Pix em QR code.' },
-    { arte: () => lamp(true), titulo: 'Pronto. Faça o primeiro orçamento.', texto: `A cada conquista, uma lâmpada se acende. São ${CONQUISTAS.length}.` },
+    { arte: () => marca, titulo: 'Orçamento de elétrica, do pedido ao recibo', texto: 'Veja em quatro telas como funciona.' },
+    { arte: () => blocos(), falada: true, titulo: 'Some os serviços com um toque', texto: 'Os seus preços ficam em blocos. Toque num bloco e veja a conta andar.' },
+    { arte: () => passos, titulo: 'O botão do pé é o próximo passo', texto: 'Enviar, Aprovou, Receber e Enviar recibo. Para receber, Pix em QR code.' },
+    { arte: () => dois, titulo: 'Orçamento antes, relatório depois', texto: 'O orçamento o cliente aprova. O relatório cobra o que você já fez.' },
   ];
   KitFacil.abertura.abrir({ telas, rever, rotulo: 'Apresentação do Elétrica Fácil',
-    fim: () => rever ? 'Concluir' : 'Ir para o início',
-    extra: { rotulo: 'Ver um orçamento de exemplo', mostrar: () => !rever },
+    fim: () => rever ? 'Concluir' : 'Começar',
+    extra: { rotulo: 'Abrir um orçamento de exemplo', mostrar: () => !rever },
     aoMontar: (el, { redesenharArte }) => {
-      // as lâmpadas das cenas são as mesmas do varal, em 3D: desenha quando a tela entra
-      const palco = $('#kf-ab-palco', el); if (palco) { new MutationObserver(() => lpPintarMinis(palco)).observe(palco, { childList: true, subtree: true }); lpPintarMinis(palco); }
       el.addEventListener('click', e => {
-        if (!e.target.closest('[data-ab-somar]')) return;
-        n = n >= 12 ? 1 : n + 1; tocou = true; redesenharArte(); $('[data-ab-somar]', el)?.focus({ preventScroll: true });
-        try { navigator.vibrate && navigator.vibrate(8); } catch {}
+        const b = e.target.closest('[data-ab-soma]'); if (!b) return;
+        const i = +b.dataset.abSoma; n[i] = n[i] >= 9 ? 0 : n[i] + 1; redesenharArte(); $(`[data-ab-soma="${i}"]`, el)?.focus({ preventScroll: true }); vibrar();
       });
     },
-    aoFechar: ({ como }) => {
-      if (tocou) jogo.flags.abertura = jogo.flags.abertura || Date.now();
-      // quem já usava chega com as lâmpadas que os dados dele acendem
-      jogoSalvar(); jogoConferir({ silencioso: true });
-      rerender();
-      return como === 'extra' ? () => createExample() : null;
-    } });
+    aoFechar: ({ como }) => { redesenhar(); return como === 'extra' ? () => criarExemplo() : null; } });
 }
 
-/* ---------- guia: o app faz cada passo na tela, do começo ao fim, numa demonstração que não grava nada ----------
-   O motor (janela fixa acima da barra, contagem, dedo, anel e as mãos) é o do Kit (KitFacil.guia.demonstrar); aqui ficam
-   o roteiro (guia.js) e a troca dos dados reais pelos da demonstração. */
+/* ---------- guia: o app faz cada passo na tela, numa demonstração que não grava nada (Código, Arts. 77 a 80) ----------
+   O motor (janela fixa, contagem, dedo e as mãos) é o do Kit; aqui ficam a troca dos dados reais pelos da demonstração
+   e, em guia.js, o roteiro. */
 const guiaAtivo = () => KitFacil.guia.emDemonstracao();
 let dadosReais = null;
-const guiaFoto = () => JSON.stringify({ quotes, prices, settings, tools, checks, jogo, hash: location.hash, homeQuery, obraAba, PANEL });
-function guiaPor(o) {
-  quotes = o.quotes; prices = o.prices; settings = o.settings; tools = o.tools; checks = o.checks; jogo = o.jogo; homeQuery = o.homeQuery || '';
-  if (o.obraAba) obraAba = o.obraAba;
-  for (const k in PANEL) delete PANEL[k]; Object.assign(PANEL, o.PANEL || {});
-}
-function guiaLimparTela() { closeSheet(true); $$('.kf-toast').forEach(e => { e.hidden = true; }); lpFila = []; }
+const guiaFoto = () => JSON.stringify({ docs, cats, precos, ajustes, hash: location.hash, filtroDocs, buscaDocs });
+function guiaPor(o) { docs = o.docs; cats = o.cats; precos = o.precos; ajustes = o.ajustes; filtroDocs = o.filtroDocs || 'todos'; buscaDocs = o.buscaDocs || ''; }
+function guiaLimparTela() { fecharJanela(true); $$('.kf-toast').forEach(e => { e.hidden = true; }); }
 function guiaIniciar() {
   if (guiaAtivo() || aberturaAtiva()) return;
   KitFacil.guia.demonstrar({
     passos: GUIA,
     comecar: () => {
-      closeSheet(true);
+      fecharJanela(true);
       // os dados de verdade ficam guardados na memória; a demonstração começa do zero e nada dela é gravado
-      dadosReais = { quotes, prices, settings, tools, checks, jogo, homeQuery, obraAba, PANEL: { ...PANEL } };
+      dadosReais = { docs, cats, precos, ajustes, filtroDocs, buscaDocs };
       semSalvar = true;
-      guiaPor({ quotes: [], prices: seedPrices(), tools: seedTools(), checks: [], obraAba: 'levar',
-        settings: { ...DEF, seedV: settings.seedV, toolSeedV: settings.toolSeedV, name: 'Carlos Pereira', phone: '11987654321', city: 'São Paulo', pix: 'carlos@exemplo.com.br', kmPerL: 10, fuelPrice: 619, wearPerKm: 40, surUrgent: 50, surNight: 30, surWeekend: 50 },
-        jogo: { flags: {}, vistas: {}, off: jogo.off, pronto: true } });
-      go('/', true);
+      const s = semente();
+      guiaPor({ docs: [], cats: s.cats, precos: s.precos, ajustes: acertaAjustes({ nome: 'Carlos Pereira', fone: '11987654321', cidade: 'São Paulo', pix: 'carlos@exemplo.com.br', raio: ajustes.raio }) });
+      ir('/', true);
     },
     foto: guiaFoto,
     limpar: guiaLimparTela,
-    restaurar: f => { const o = JSON.parse(f); guiaPor(o); history.replaceState({ d: 0 }, '', o.hash || '#/'); closeSheet(true); render(); },
+    restaurar: f => { const o = JSON.parse(f); guiaPor(o); history.replaceState({ d: 0 }, '', o.hash || '#/'); fecharJanela(true); desenhar(); },
     terminar: ({ concluiu }) => {
       const r = dadosReais; dadosReais = null;
       guiaPor(r); semSalvar = false;
-      history.replaceState({ d: 0 }, '', '#/'); closeSheet(true); render();
-      if (concluiu) { jogoMarcar('guia'); toast('Guia concluído. Para rever, toque em Mais e em Ver o guia.'); }
+      history.replaceState({ d: 0 }, '', '#/'); fecharJanela(true); desenhar();
+      if (concluiu) aviso('Guia concluído. Para rever, toque em Mais e em Ver o guia.');
     },
   });
 }
@@ -377,17 +263,16 @@ function guiaIniciar() {
 /* ---------- arranque ---------- */
 try { history.scrollRestoration = 'manual'; } catch {}
 // link de "Conectar outro aparelho": a chave vem depois do #, que não sai do aparelho
-const linkToken = SY.tokenDoLink();
-if (linkToken) history.replaceState({ d: 0 }, '', '#/ajustes');
+const tokenDoLink = SY.tokenDoLink();
+if (tokenDoLink) history.replaceState({ d: 0 }, '', '#/ajustes');
 if (!location.hash) history.replaceState({ d: 0 }, '', '#/');
 else if (!history.state) history.replaceState({ d: 0 }, '', location.hash);
-render();
-SY.iniciar({ token: linkToken, silencioso: false, textoConfirmar: 'Os orçamentos deste aparelho se juntam aos da nuvem. Os preços e os ajustes passam a ser os da nuvem.' });
-// a abertura aparece uma vez (Código, Art. 75); quem chega por um link de sincronização vai direto para os Ajustes
-if (!KitFacil.abertura.vista() && !linkToken && !(navigator.webdriver && !window.EF_TESTE_ABERTURA)) aberturaAbrir();
-else jogoConferir({ silencioso: !jogo.pronto });
-// a gracinha: de vez em quando um raio rasga a tela (também com o app parado numa tela principal)
-setInterval(() => { if (PRINCIPAIS.includes(route().name)) Raio.sortear(); }, 75000);
+desenhar();
+SY.iniciar({ token: tokenDoLink, silencioso: false, textoConfirmar: 'Os documentos deste aparelho se juntam aos da nuvem. Os preços e os ajustes passam a ser os da nuvem.' });
+// a apresentação aparece uma vez (Código, Art. 75); quem chega por um link de sincronização vai direto para os Ajustes
+if (!KitFacil.abertura.vista() && !tokenDoLink && !(navigator.webdriver && !window.EF_TESTE_ABERTURA)) aberturaAbrir();
+// o raio cai sozinho, de tempos em tempos, com ou sem toque na tela (em navegador de teste, só quando o teste pede)
+if (!navigator.webdriver || window.EF_TESTE_RAIO) Raio.comecar();
 // atalho "Novo orçamento" do ícone do app (manifesto)
-if (/[?&]novo=1/.test(location.search)) { try { history.replaceState(history.state, '', location.pathname + location.hash); } catch {} if (!aberturaAtiva()) setTimeout(() => createQuote(), 300); }
+if (/[?&]novo=1/.test(location.search)) { try { history.replaceState(history.state, '', location.pathname + location.hash); } catch {} if (!aberturaAtiva()) setTimeout(() => novoDocumento('orc'), 300); }
 try { if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(e => console.warn('sw', e)); } catch (e) { console.warn('sw', e); }
