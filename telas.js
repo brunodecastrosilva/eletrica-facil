@@ -1,4 +1,4 @@
-/* Elétrica Fácil 4 · telas: Início, Documentos, o documento (orçamento ou relatório), Preços e Mais.
+/* Elétrica Fácil 5 · telas: Início, Documentos, o documento (orçamento ou relatório), Preços e Mais.
    Ideias trazidas de apps premiados em design, e como entram aqui:
    - a informação que importa fica na frente e o resto sai do caminho (Flighty): o Início abre com o que há para receber;
    - mostrar só o passo atual (Crouton): no documento, o botão do pé é sempre o próximo passo, e só ele;
@@ -103,10 +103,17 @@ TELAS.docs = {
 // depois de mexer em linhas, desconto ou pagamentos, a etapa acompanha o que falta receber
 function acertaEtapa(d) {
   const c = conta(d), cobra = d.tipo === 'orc' ? 'aprovado' : 'enviado';
-  if (d.etapa === 'recebido' && (c.falta > 0 || !c.pago)) d.etapa = cobra;
+  if (d.etapa === 'recebido' && c.total > 0 && (c.falta > 0 || !c.pago)) d.etapa = cobra;
   else if (d.etapa === cobra && c.total > 0 && c.falta === 0 && c.pago > 0) d.etapa = 'recebido';
 }
 const mudouDoc = d => { acertaEtapa(d); tocarDoc(d); };
+// o eletricista vê o tempo e a condição em cada linha; o cliente, não (linhasCliente, em motor.js)
+const subLinha = l => l.tipo === 'diag' ? `${tempoTxt(l.min)} × ${BRL(l.pu)} a hora` : l.tipo === 'desl' ? `${l.q} ${unTxt(l.q, 'ida')} × ${BRL(l.pu)}${l.km ? ` · ${l.km} km` : ''}` : `${l.q} ${unTxt(l.q, l.un)} × ${BRL(l.pu)}${l.cond ? ` · ${NOME_COND[l.cond].toLowerCase()}` : ''}`;
+const itemDoc = l => `<button type="button" class="item" data-linha="${esc(l.id)}"><span class="it-q num" aria-hidden="true">${l.tipo === 'diag' ? tempoTxt(l.min) : l.q}</span><span class="it-tx"><b>${esc(l.nome)}</b><small>${esc(subLinha(l))}</small></span><b class="it-v num">${BRL(totalLinha(l))}</b></button>`;
+// serviços da tabela que seguem a hora: são os que podem ter o tempo real anotado
+const anotaveis = d => d.linhas.filter(l => !l.tipo && l.pid).map(l => precos.find(p => p.id === l.pid)).filter((p, i, a) => p && !p.fixo && a.indexOf(p) === i);
+const mediaReal = p => p.reais.length ? Math.max(5, Math.round(soma(p.reais) / p.reais.length / 5) * 5) : 0;
+const seletorTempo = (id, atual, max, passo) => { const L = new Set([atual]); for (let m = passo; m <= max; m += passo) L.add(m); return `<select id="${id}" class="kf-entrada">${[...L].sort((a, b) => a - b).map(m => `<option value="${m}"${m === atual ? ' selected' : ''}>${tempoTxt(m)}</option>`).join('')}</select>`; };
 TELAS.doc = {
   html(r) {
     const d = getDoc(r.id), c = conta(d), px = proximo(d), E = ETAPAS[d.tipo], i = E.indexOf(d.etapa), rel = d.tipo === 'rel';
@@ -124,7 +131,7 @@ TELAS.doc = {
       </section>
       <section aria-labelledby="dc-it">
         <h2 class="sec" id="dc-it">${rel ? 'O que foi feito' : 'Serviços'}${d.linhas.length ? ` <span class="sec-n">· ${d.linhas.length}</span>` : ''}</h2>
-        ${d.linhas.length ? `<div class="cx itens">${d.linhas.map(l => `<button type="button" class="item" data-linha="${esc(l.id)}"><span class="it-q num" aria-hidden="true">${l.q}</span><span class="it-tx"><b>${esc(l.nome)}</b><small>${l.q} ${unTxt(l.q, l.un)} × ${BRL(l.pu)}</small></span><b class="it-v num">${BRL(totalLinha(l))}</b></button>`).join('')}</div>` : ''}
+        ${d.linhas.length ? `<div class="cx itens">${d.linhas.map(itemDoc).join('')}${c.minimo ? `<div class="item minimo"><span class="it-q" aria-hidden="true">${IC.raio}</span><span class="it-tx"><b>Atendimento mínimo</b><small>Completa ${BRL(d.minIda)} por ida</small></span><b class="it-v num">${BRL(c.minimo)}</b></div>` : ''}</div>` : ''}
         ${KitFacil.ui.adicionar({ rotulo: 'Somar serviço', attrs: 'data-somar' })}
       </section>
       <section aria-labelledby="dc-co">
@@ -133,18 +140,20 @@ TELAS.doc = {
           ${lin('data-j="pag"', IC.dinheiro, 'Pagamento', pagCurto(d))}
           ${rel ? lin('data-j="feito"', IC.dia, 'Serviço feito em', d.feito ? dataBR(d.feito) : 'Escolha o dia', !d.feito) : lin('data-j="validade"', IC.relogio, 'Validade', `${plural(d.validade, 'dia', 'dias')} · até ${dataCurta(validoAte(d))}`)}
           ${lin('data-j="garantia"', IC.escudo, 'Garantia', d.garantia ? plural(d.garantia, 'dia', 'dias') : 'Sem garantia', !d.garantia)}
-          ${lin('data-j="desc"', IC.desconto, 'Desconto', c.desc ? BRL(c.desc) : 'Sem desconto', !c.desc)}
+          ${lin('data-j="desc"', IC.desconto, 'Desconto', c.desc ? `${d.descPct ? d.descPct + '% · ' : ''}${BRL(c.desc)}` : 'Sem desconto', !c.desc)}
           ${lin('data-j="obs"', IC.nota, 'Observações', obs || 'Nenhuma', !obs)}
         </div>
       </section>
       <section aria-label="Valores">
         <dl class="resumo">
-          ${c.desc ? resumo('Subtotal', BRL(c.sub)) + resumo('Desconto', '− ' + BRL(c.desc)) : ''}
+          ${c.desl || c.mat ? resumo('Mão de obra', BRL(c.mao)) + (c.desl ? resumo('Deslocamento', BRL(c.desl)) : '') + (c.mat ? resumo('Material', BRL(c.mat)) : '') : ''}
+          ${c.desc ? resumo('Valor do serviço', BRL(c.sub)) + resumo(esc(descTxt(d)), '− ' + BRL(c.desc)) : ''}
           ${resumo('Total', BRL(c.total), true)}
           ${d.pag === 'entrada' && !c.pago ? resumo(`Entrada de ${d.entradaPct}%`, BRL(c.entrada)) + resumo('Na conclusão', BRL(c.resto)) : ''}
           ${c.pago ? resumo('Já recebido', BRL(c.pago)) + resumo('Falta receber', BRL(c.falta)) : ''}
         </dl>
       </section>
+      ${anotaveis(d).length && (rel || ['aprovado', 'recebido'].includes(d.etapa)) ? `<section aria-labelledby="dc-tr"><h2 class="sec" id="dc-tr">Depois do serviço</h2><div class="cx">${lin('data-j="tempo"', IC.relogio, 'Tempo real', d.tempoOk ? 'Anotado' : 'Anotar, para a tabela ter os seus tempos', !d.tempoOk)}</div></section>` : ''}
       ${d.pagos.length ? `<section aria-labelledby="dc-pg"><h2 class="sec" id="dc-pg">Recebimentos</h2><div class="cx">${d.pagos.map(p => `<div class="pago"><span class="lin-ic">${IC.certo}</span><span class="lin-tx"><small>${dataBR(p.em)} · ${esc(p.meio)}</small><b class="num">${BRL(p.v)}</b></span><button type="button" class="kf-btn kf-sec kf-p" data-recibo="${esc(p.id)}">Recibo</button></div>`).join('')}</div></section>` : ''}
     </main>
     <div class="pe-tela" id="pe-doc">
@@ -163,7 +172,7 @@ TELAS.doc = {
       if (t.closest('[data-somar]')) return janelaSomar(d);
       let b;
       if ((b = t.closest('[data-linha]'))) return janelaLinha(d, d.linhas.find(l => l.id === b.dataset.linha));
-      if ((b = t.closest('[data-j]'))) return b.dataset.j === 'cliente' ? janelaCliente(d) : janelaCond(d, b.dataset.j);
+      if ((b = t.closest('[data-j]'))) return b.dataset.j === 'cliente' ? janelaCliente(d) : b.dataset.j === 'tempo' ? janelaTempo(d) : janelaCond(d, b.dataset.j);
       if ((b = t.closest('[data-recibo]'))) return janelaRecibo(d, b.dataset.recibo);
       if (t.closest('[data-menu]')) return janelaMenu(d);
       if ((b = t.closest('[data-prox]'))) return avancar(d, b.dataset.prox);
@@ -176,11 +185,13 @@ function avancar(d, passo) {
   if (passo === 'enviar') return janelaEnviar(d);
   if (passo === 'receber') return janelaReceber(d);
   if (passo === 'recibo') return janelaRecibo(d);
+  if (passo === 'pdf') return gerarPDF(null, () => montarPDF(d), nomeArquivo(TIPO[d.tipo].arquivo, d));
   const antes = d.etapa, quando = d.aprovadoEm;
   if (passo === 'aprovou') { d.etapa = 'aprovado'; d.aprovadoEm = Date.now(); }
+  else if (passo === 'concluir') d.etapa = 'recebido';
   else if (passo === 'reabrir') d.etapa = 'rascunho';
   tocarDoc(d); redesenhar(); vibrar();
-  aviso(passo === 'aprovou' ? 'Orçamento aprovado.' : 'Documento reaberto.', { label: 'Desfazer', run: () => { d.etapa = antes; d.aprovadoEm = quando; tocarDoc(d); redesenhar(); } });
+  aviso(passo === 'aprovou' ? 'Orçamento aprovado.' : passo === 'concluir' ? 'Documento concluído.' : 'Documento reaberto.', { label: 'Desfazer', run: () => { d.etapa = antes; d.aprovadoEm = quando; tocarDoc(d); redesenhar(); } });
 }
 function marcarEnviado(d) {
   if (d.etapa !== 'rascunho') return;
@@ -211,7 +222,11 @@ function janelaCond(d, qual) {
     if (qual === 'validade') return `<div class="kf-campo"><span class="kf-rotulo">O orçamento vale por</span>${segmento('Validade', 'val', VAL_OP, d.validade)}</div><p class="kf-ajuda" role="status">Vale até ${dataBR(validoAte(d))}.</p>`;
     if (qual === 'garantia') return `<div class="kf-campo"><span class="kf-rotulo">Garantia do serviço</span><div class="escolhas">${GAR_OP.map(([k, l]) => KitFacil.ui.escolha({ rotulo: l, on: d.garantia === k, attrs: `data-gar="${k}"` })).join('')}</div></div><p class="kf-ajuda" role="status">${esc(garantiaTxt(d))}.</p>`;
     if (qual === 'feito') return campo('cd-f', 'Dia em que o serviço foi feito', `<input id="cd-f" class="kf-entrada" type="date" value="${dataISO(d.feito || Date.now())}" max="${dataISO()}">`);
-    if (qual === 'desc') return campo('cd-d', 'Desconto, em reais', campoDinheiro('cd-d', d.desc), `Subtotal: ${BRL(c.sub)}. Deixe em branco para tirar o desconto.`);
+    if (qual === 'desc') return `${campo('cd-dn', 'Nome que aparece no documento', entrada('cd-dn', d.descNome, 'placeholder="Ex.: Desconto de família"'))}
+      <div class="kf-campo"><span class="kf-rotulo">Quanto</span>${segmento('Quanto de desconto', 'dp', [[0, 'Sem'], [10, '10%'], [25, '25%'], [50, '50%'], [100, '100%']], d.descPct)}</div>
+      ${campo('cd-dp', 'Outra porcentagem', `<input id="cd-dp" class="kf-entrada" type="text" inputmode="numeric" maxlength="3" value="${d.descPct || ''}" placeholder="De 1 a 100">`)}
+      <dl class="resumo"><div><dt>Valor do serviço</dt><dd class="num">${BRL(c.sub)}</dd></div>${c.desc ? `<div><dt>${esc(descTxt(d))}</dt><dd class="num">− ${BRL(c.desc)}</dd></div>` : ''}<div class="forte"><dt>Total</dt><dd class="num">${BRL(c.total)}</dd></div></dl>
+      <p class="kf-ajuda" role="status">${d.descPct === 100 ? 'Com 100%, o documento sai como cortesia e não pede pagamento.' : c.mat ? 'O desconto não incide sobre o material.' : 'O cliente vê o valor cheio e a linha do desconto.'}</p>`;
     return campo('cd-o', 'Observações', `<textarea id="cd-o" class="kf-entrada" rows="5" placeholder="Ex.: Material por conta do cliente.">${esc(d.obs)}</textarea>`, 'Saem no fim do documento.');
   };
   const T = { titulo: rel ? 'Serviço executado' : 'Serviço', pag: 'Pagamento', validade: 'Validade', garantia: 'Garantia', feito: 'Dia do serviço', desc: 'Desconto', obs: 'Observações' };
@@ -226,10 +241,11 @@ function janelaCond(d, qual) {
         else if ((b = t.closest('[data-ep]'))) d.entradaPct = +b.dataset.ep;
         else if ((b = t.closest('[data-val]'))) d.validade = +b.dataset.val;
         else if ((b = t.closest('[data-gar]'))) d.garantia = +b.dataset.gar;
+        else if ((b = t.closest('[data-dp]'))) { d.descNome = $('#cd-dn', j).value.trim(); d.descPct = +b.dataset.dp; d.desc = 0; }
         else if (t.closest('[data-salvar]')) {
           if (qual === 'titulo') d.titulo = $('#cd-t', j).value.trim();
           else if (qual === 'obs') d.obs = $('#cd-o', j).value.trim();
-          else { const v = lerDinheiro($('#cd-d', j)), sub = conta(d).sub; if (v > sub) { KitFacil.apontar($('#cd-d', j)); return aviso(`O desconto não pode passar do subtotal, ${BRL(sub)}.`); } d.desc = v; }
+          else { const v = $('#cd-dp', j).value.trim(), n = v ? parseInt(v, 10) : 0; if (v && !(n >= 0 && n <= 100)) { KitFacil.apontar($('#cd-dp', j)); return aviso('A porcentagem vai de 0 a 100.'); } d.descNome = $('#cd-dn', j).value.trim(); d.descPct = n || 0; d.desc = 0; }
           mudouDoc(d); return fecharJanela();
         } else return;
         mudouDoc(d); refaz();
@@ -237,20 +253,44 @@ function janelaCond(d, qual) {
       j.addEventListener('change', e => { if (e.target.id === 'cd-f') { const v = deISO(e.target.value); if (v) { d.feito = v; tocarDoc(d); } } });
     } });
 }
-function janelaLinha(d, l) {
-  const nova = !l, x = l || { nome: '', un: 'un', q: 1, pu: 0 };
-  janela({ titulo: nova ? 'Linha avulsa' : 'Linha do documento', sub: nova ? 'Um serviço ou material que não está nos seus preços.' : 'Vale só neste documento. Para mudar sempre, vá em Preços.',
-    corpo: `${campo('ln-n', 'Descrição', entrada('ln-n', x.nome, 'placeholder="Ex.: Instalação de tomada"'))}
-      <div class="kf-campo"><span class="kf-rotulo" id="ln-ql">Quantidade</span>${KitFacil.ui.quantidade({ id: 'ln-q', valor: x.q, min: 1, max: 9999, rotulo: 'quantidade', attrs: 'aria-labelledby="ln-ql"' })}</div>
-      ${campo('ln-u', 'Unidade', `<select id="ln-u" class="kf-entrada">${UNIDADES.map(([k, n]) => `<option value="${k}"${k === x.un ? ' selected' : ''}>${n}</option>`).join('')}</select>`)}
-      ${campo('ln-p', 'Preço de cada', campoDinheiro('ln-p', x.pu))}`,
-    pe: `${nova ? '' : '<button type="button" class="kf-btn kf-perigo" data-tirar>Remover</button>'}<button type="button" class="kf-btn kf-pri" data-salvar>${nova ? 'Somar' : 'Salvar'}</button>`,
+function janelaLinha(d, l, tipoNovo = '') {
+  const nova = !l, tipo = l ? l.tipo : tipoNovo;
+  const x = l || (tipo === 'diag' ? { nome: 'Diagnóstico do defeito', min: 60, pu: HORA() } : tipo === 'desl' ? { nome: 'Deslocamento', q: 1, pu: ajustes.deslIda, km: 0, vkm: ajustes.deslKm } : { nome: '', un: 'un', q: 1, pu: 0, cond: 0, motivo: '' });
+  const porKm = tipo === 'desl' && (l ? l.km > 0 : ajustes.deslModo === 'km');
+  let cond = x.cond || 0;
+  const fraseCond = () => { const b = lerDinheiro($('#ln-p')); return cond ? `${NOME_COND[cond]} soma ${condPct(cond)}%: ${BRL(Math.round(b * (100 + condPct(cond)) / 100))} cada.` : `Difícil soma ${ajustes.cond1}%. Muito difícil soma ${ajustes.cond2}%. Você define em Ajustes.`; };
+  const segCond = () => segmento('Condição do serviço', 'cond', NOME_COND.map((n, k) => [k, n]), cond);
+  const qtd = rot => `<div class="kf-campo"><span class="kf-rotulo" id="ln-ql">${rot}</span>${KitFacil.ui.quantidade({ id: 'ln-q', valor: x.q, min: 1, max: tipo === 'desl' ? 99 : 9999, rotulo: rot.toLowerCase(), attrs: 'aria-labelledby="ln-ql"' })}</div>`;
+  const corpo = tipo === 'diag' ? `${campo('ln-n', 'Descrição', entrada('ln-n', x.nome))}
+      ${campo('ln-t', 'Tempo que levou', seletorTempo('ln-t', x.min, 600, 15), `${BRL(x.pu)} a hora. O cliente vê o tempo e o valor, não a sua hora.`)}`
+    : tipo === 'desl' ? `${qtd('Idas ao local')}
+      ${porKm ? campo('ln-k', 'Distância, ida e volta, em km', `<input id="ln-k" class="kf-entrada" type="text" inputmode="numeric" maxlength="4" value="${x.km || ''}" placeholder="Ex.: 16">`) + campo('ln-vk', 'Valor por km', campoDinheiro('ln-vk', x.vkm || ajustes.deslKm)) : campo('ln-p', 'Valor por ida', campoDinheiro('ln-p', x.pu))}`
+    : `${campo('ln-n', 'Descrição', entrada('ln-n', x.nome, 'placeholder="Ex.: Instalação de tomada"'))}
+      ${qtd('Quantidade')}
+      ${campo('ln-u', 'Unidade', `<select id="ln-u" class="kf-entrada">${UNIDADES.filter(u => u[0] !== 'ida').map(([k, n]) => `<option value="${k}"${k === x.un ? ' selected' : ''}>${n}</option>`).join('')}</select>`)}
+      ${campo('ln-p', 'Preço de cada', campoDinheiro('ln-p', x.cond ? x.base : x.pu))}
+      ${tipo === 'mat' ? '' : `<div class="kf-campo"><span class="kf-rotulo">Condição do serviço</span><div id="ln-cd">${segCond()}</div><p class="kf-ajuda" id="ln-cs" role="status"></p></div>
+      ${campo('ln-m', 'Motivo, se quiser mostrar ao cliente', entrada('ln-m', x.motivo || '', 'placeholder="Ex.: Forro baixo e fiação antiga"'))}`}`;
+  janela({ titulo: tipo === 'diag' ? 'Diagnóstico por tempo' : tipo === 'desl' ? 'Deslocamento' : nova ? 'Linha avulsa' : 'Linha do documento',
+    sub: tipo === 'diag' ? 'Para o defeito que você ainda não conhece: cobre pelo tempo.' : tipo === 'desl' ? 'Uma linha própria do documento, por ida.' : nova ? 'Um serviço ou material que não está nos seus preços.' : 'Vale só neste documento. Para mudar sempre, vá em Preços.',
+    corpo, pe: `${nova ? '' : '<button type="button" class="kf-btn kf-perigo" data-tirar>Remover</button>'}<button type="button" class="kf-btn kf-pri" data-salvar>${nova ? 'Somar' : 'Salvar'}</button>`,
     aoMontar: j => {
+      const cs = $('#ln-cs', j); if (cs) { cs.textContent = fraseCond(); $('#ln-p', j).addEventListener('input', () => { cs.textContent = fraseCond(); }); }
+      j.addEventListener('click', e => { const b = e.target.closest('[data-cond]'); if (!b) return; cond = +b.dataset.cond; $('#ln-cd', j).innerHTML = segCond(); cs.textContent = fraseCond(); $(`[data-cond="${cond}"]`, j)?.focus({ preventScroll: true }); });
       $('[data-salvar]', j).onclick = () => {
-        const nome = $('#ln-n', j).value.trim();
-        if (!nome) { KitFacil.apontar($('#ln-n', j)); return aviso('Escreva a descrição da linha.'); }
-        const v = { nome, q: Math.max(1, Math.min(9999, parseInt($('#ln-q', j).value, 10) || 1)), un: $('#ln-u', j).value, pu: lerDinheiro($('#ln-p', j)) };
-        if (nova) d.linhas.push({ id: uid(), pid: '', ...v }); else Object.assign(l, v);
+        const q = Math.max(1, Math.min(9999, parseInt($('#ln-q', j)?.value, 10) || 1));
+        let v;
+        if (tipo === 'diag') v = { nome: $('#ln-n', j).value.trim() || 'Diagnóstico do defeito', min: +$('#ln-t', j).value || 60, pu: x.pu };
+        else if (tipo === 'desl') {
+          if (porKm) { const km = Math.max(0, parseInt($('#ln-k', j).value, 10) || 0), vkm = lerDinheiro($('#ln-vk', j)); if (!km) { KitFacil.apontar($('#ln-k', j)); return aviso('Escreva a distância, ida e volta.'); } v = { nome: x.nome, q, km, vkm, pu: Math.round(km * vkm) }; }
+          else v = { nome: x.nome, q, km: 0, pu: lerDinheiro($('#ln-p', j)) };
+        } else {
+          const nome = $('#ln-n', j).value.trim(), base = lerDinheiro($('#ln-p', j));
+          if (!nome) { KitFacil.apontar($('#ln-n', j)); return aviso('Escreva a descrição da linha.'); }
+          v = { nome, q, un: $('#ln-u', j).value, pu: tipo === 'mat' ? base : Math.round(base * (100 + condPct(cond)) / 100) };
+          if (tipo !== 'mat') Object.assign(v, { base, cond, motivo: $('#ln-m', j).value.trim() });
+        }
+        if (nova) d.linhas.push(acertaLinha({ id: uid(), pid: '', tipo, ...v })); else Object.assign(l, acertaLinha({ ...l, ...v }));
         mudouDoc(d); fecharJanela(); redesenhar();
       };
       $('[data-tirar]', j)?.addEventListener('click', () => {
@@ -264,17 +304,25 @@ function janelaLinha(d, l) {
 function janelaSomar(d) {
   let busca = '', cat = null;
   const qtd = p => soma(d.linhas.filter(l => l.pid === p.id).map(l => l.q));
-  const linha = p => { const n = qtd(p); return `<div class="so-lin${n ? ' tem' : ''}"><span class="so-tx"><b>${esc(p.nome)}</b><small>${BRL(p.preco)} por ${unNome(p.un)}</small></span>
+  const linha = p => { const n = qtd(p); return `<div class="so-lin${n ? ' tem' : ''}"><span class="so-tx"><b>${esc(p.nome)}</b><small>${BRL(precoDe(p))} por ${unNome(p.un)}${p.fixo ? '' : ' · ' + tempoTxt(p.min)}</small></span>
       ${n ? `<button type="button" class="so-bt" data-tira="${esc(p.id)}" aria-label="Tirar um: ${esc(p.nome)}">${IC.menos}</button><b class="so-n num" aria-label="${n} no documento">${n}</b>` : ''}
       <button type="button" class="so-bt mais" data-soma="${esc(p.id)}" aria-label="Somar um: ${esc(p.nome)}">${IC.soma}</button></div>`; };
   const lista = L => `<div class="so-lista">${L.map(linha).join('')}</div>`;
+  const diag = () => d.linhas.find(l => l.tipo === 'diag'), desl = () => d.linhas.find(l => l.tipo === 'desl');
+  // o que não se cobra por serviço fica no alto: o diagnóstico, pelo tempo que levou, e o deslocamento, por ida
+  const porTempo = () => { const g = diag(), i = desl(); return `<h3 class="sec">Por tempo e por ida</h3>
+      <div class="cx tp"><div class="tp-l"><span class="lin-ic">${IC.relogio}</span><span class="lin-tx"><b>Diagnóstico do defeito</b><small>${g ? `${tempoTxt(g.min)} × ${BRL(g.pu)} a hora` : 'Pelo tempo que levou'}</small></span>${g ? `<b class="num">${BRL(totalLinha(g))}</b>` : ''}</div>
+        ${segmento('Tempo do diagnóstico', 'diag', [[30, '30 min'], [60, '1 h'], [90, '1h30'], [120, '2 h'], ['x', 'Outro']], g ? ([30, 60, 90, 120].includes(g.min) ? g.min : 'x') : '')}</div>
+      <div class="cx"><div class="so-lin${i ? ' tem' : ''}"><span class="so-tx"><b>Deslocamento</b><small>${i ? `${i.q} ${unTxt(i.q, 'ida')} · ${BRL(totalLinha(i))}` : ajustes.deslModo === 'km' ? `${BRL(ajustes.deslKm)} por km` : `${BRL(ajustes.deslIda)} por ida`}</small></span>
+        ${i ? `<button type="button" class="so-bt" data-ida="-1" aria-label="Tirar uma ida">${IC.menos}</button><b class="so-n num" aria-label="${plural(i.q, 'ida', 'idas')}">${i.q}</b>` : ''}
+        <button type="button" class="so-bt mais" data-ida="1" aria-label="Somar uma ida">${IC.soma}</button></div></div>`; };
   const conta2 = () => { const c = conta(d), n = soma(d.linhas.map(l => l.q)); return d.linhas.length ? `${plural(n, 'item', 'itens')} no documento · <b class="num">${BRL(c.sub)}</b>` : 'Toque num bloco e some com o +.'; };
   const corpo = () => {
     const q = dobra(busca);
     if (q) { const L = precos.filter(p => dobra(p.nome).includes(q)); return L.length ? lista(L) : `<p class="kf-ajuda">Nada com esse nome nos seus preços.</p>${KitFacil.ui.adicionar({ rotulo: 'Somar como linha avulsa', attrs: 'data-avulsa' })}`; }
     if (cat) { const c = cats.find(x => x.id === cat), L = precos.filter(p => p.cat === cat); return `<button type="button" class="so-volta" data-cats>${IC.voltar}<span>Categorias</span></button><h3 class="so-cat"><span class="bl-ic p">${picDe(c.icone)}</span>${esc(c.nome)}</h3>${L.length ? lista(L) : '<p class="kf-ajuda">Esta categoria ainda não tem preços. Cadastre em Preços.</p>'}`; }
     const U = maisUsados(4);
-    return `${U.length ? `<h3 class="sec">Mais usados por você</h3>${lista(U)}` : ''}
+    return `${porTempo()}${U.length ? `<h3 class="sec">Mais usados por você</h3>${lista(U)}` : ''}
       <h3 class="sec">Categorias</h3>
       <div class="blocos p">${cats.map(c => { const n = soma(precos.filter(p => p.cat === c.id).map(qtd)); return `<button type="button" class="bloco" data-cat="${esc(c.id)}"><span class="bl-ic">${picDe(c.icone)}</span><b class="bl-nome">${esc(c.nome)}</b>${n ? `<span class="bl-selo num" aria-label="${n} no documento">${n}</span>` : ''}</button>`; }).join('')}</div>
       ${KitFacil.ui.adicionar({ rotulo: 'Linha avulsa', attrs: 'data-avulsa' })}`;
@@ -289,11 +337,23 @@ function janelaSomar(d) {
         const t = e.target; let b;
         if ((b = t.closest('[data-cat]'))) { cat = b.dataset.cat; refaz(); KitFacil.movimento.entrar($('#so-corpo', j), { de: 'lado' }); $('.kf-dlg-corpo', j)?.scrollTo(0, 0); return; }
         if (t.closest('[data-cats]')) { const era = cat; cat = null; refaz(`[data-cat="${era}"]`); return; }
-        if (t.closest('[data-avulsa]')) { fecharJanela(true); return janelaLinha(d, null); }
+        if (t.closest('[data-avulsa]')) { fecharJanela(true); salvarAjustes(); redesenhar(); return janelaLinha(d, null); }
+        if ((b = t.closest('[data-diag]'))) {
+          const v = b.dataset.diag, g = diag();
+          if (v === 'x') { fecharJanela(true); salvarAjustes(); redesenhar(); return janelaLinha(d, g || null, 'diag'); }
+          if (g && g.min === +v) d.linhas.splice(d.linhas.indexOf(g), 1); else if (g) g.min = +v; else d.linhas.unshift(acertaLinha({ tipo: 'diag', nome: 'Diagnóstico do defeito', min: +v, pu: HORA() }));
+          mudouDoc(d); vibrar(); return refaz(`[data-diag="${v}"]`);
+        }
+        if ((b = t.closest('[data-ida]'))) {
+          const i = desl(), n = +b.dataset.ida;
+          if (!i) { if (ajustes.deslModo === 'km') { fecharJanela(true); salvarAjustes(); redesenhar(); return janelaLinha(d, null, 'desl'); } d.linhas.push(acertaLinha({ tipo: 'desl', nome: 'Deslocamento', q: 1, pu: ajustes.deslIda })); }
+          else if (i.q + n < 1) d.linhas.splice(d.linhas.indexOf(i), 1); else i.q = Math.min(99, i.q + n);
+          mudouDoc(d); vibrar(); return refaz('[data-ida="1"]');
+        }
         if ((b = t.closest('[data-soma]'))) {
           const p = precos.find(x => x.id === b.dataset.soma); if (!p) return;
-          const l = d.linhas.find(x => x.pid === p.id && x.pu === p.preco && x.nome === p.nome);
-          if (l) l.q = Math.min(9999, l.q + 1); else d.linhas.push({ id: uid(), pid: p.id, nome: p.nome, un: p.un, q: 1, pu: p.preco });
+          const v = precoDe(p), l = d.linhas.find(x => x.pid === p.id && x.pu === v && !x.cond && x.nome === p.nome);
+          if (l) l.q = Math.min(9999, l.q + 1); else d.linhas.push(acertaLinha({ pid: p.id, tipo: p.cat === CAT_MATERIAL ? 'mat' : '', nome: p.nome, un: p.un, q: 1, pu: v }));
           usar(p.id); mudouDoc(d); vibrar(); return refaz(`[data-soma="${p.id}"]`);
         }
         if ((b = t.closest('[data-tira]'))) {
@@ -399,7 +459,7 @@ function janelaMenu(d) {
       if (m === 'pdf') { if (await gerarPDF(null, () => montarPDF(d), nomeArquivo(TIPO[d.tipo].arquivo, d))) fecharJanela(); return; }
       fecharJanela(true);
       if (m === 'copia') {
-        const n = acertaDoc({ ...clone(d), id: uid(), exemplo: false, etapa: 'rascunho', pagos: [], enviadoEm: null, aprovadoEm: null, criado: Date.now(), mudou: Date.now(), feito: d.tipo === 'rel' ? Date.now() : null });
+        const n = acertaDoc({ ...clone(d), id: uid(), exemplo: false, etapa: 'rascunho', tempoOk: false, pagos: [], enviadoEm: null, aprovadoEm: null, criado: Date.now(), mudou: Date.now(), feito: d.tipo === 'rel' ? Date.now() : null });
         n.linhas.forEach(l => { l.id = uid(); }); n.num = ++ajustes.seq; salvarAjustes(); docs.unshift(n); salvarDocs(); ir('/d/' + n.id, true); return aviso('Documento duplicado.');
       }
       if (m === 'volta') {
@@ -419,16 +479,18 @@ TELAS.precos = {
   html() {
     return `${barraTopo()}
     <main class="tela" id="conteudo">
-      ${KitFacil.ui.cabecalho({ titulo: 'Preços', sub: 'A sua lista, em blocos. Toque num bloco para ver e mudar os preços.' })}
+      ${KitFacil.ui.cabecalho({ titulo: 'Preços', sub: 'A sua hora e a sua lista, em blocos. Toque num bloco para ver e mudar.' })}
+      ${painelHora()}
       <div class="blocos">
         ${cats.map(c => { const n = precos.filter(p => p.cat === c.id).length; return `<button type="button" class="bloco" data-cat="${esc(c.id)}"><span class="bl-ic">${picDe(c.icone)}</span><b class="bl-nome">${esc(c.nome)}</b><small class="bl-n">${plural(n, 'preço', 'preços')}</small></button>`; }).join('')}
         <button type="button" class="bloco novo" data-nova-cat><span class="bl-ic">${IC.soma}</span><b class="bl-nome">Nova categoria</b><small class="bl-n">Monte o seu bloco</small></button>
       </div>
-      <p class="kf-ajuda nota-pe">Os preços que vêm com o app são só um ponto de partida. Ajuste para os seus.</p>
+      <p class="kf-ajuda nota-pe">Os tempos e os preços que vêm com o app são só um ponto de partida. Ajuste para os seus.</p>
     </main>`;
   },
   ligar(el) {
     el.addEventListener('click', e => {
+      if (e.target.closest('[data-hora]')) return janelaHora();
       const b = e.target.closest('[data-cat]'); if (b) return ir('/precos/' + b.dataset.cat);
       if (e.target.closest('[data-nova-cat]')) janelaCat(null);
     });
@@ -439,8 +501,9 @@ TELAS.cat = {
     const c = cats.find(x => x.id === r.id), L = precos.filter(p => p.cat === c.id);
     return `${barraInterna(c.nome, 'Preços')}
     <main class="tela doc-tela" id="conteudo">
-      <header class="cat-cab"><span class="bl-ic g">${picDe(c.icone)}</span><div><h2 class="cat-nome">${esc(c.nome)}</h2><p class="kf-ajuda">${L.length ? `${plural(L.length, 'preço', 'preços')}. Toque para mudar.` : 'Nenhum preço ainda.'}</p></div></header>
-      ${L.length ? `<div class="cx itens">${L.map(p => `<button type="button" class="item" data-preco="${esc(p.id)}"><span class="it-tx"><b>${esc(p.nome)}</b><small>por ${unNome(p.un)}</small></span><b class="it-v num">${BRL(p.preco)}</b>${IC.seta}</button>`).join('')}</div>` : ''}
+      <header class="cat-cab"><span class="bl-ic g">${picDe(c.icone)}</span><div><h2 class="cat-nome">${esc(c.nome)}</h2><p class="kf-ajuda">${L.length ? `${plural(L.length, 'preço', 'preços')}. Toque para mudar o tempo ou o preço.` : 'Nenhum preço ainda.'}</p></div></header>
+      ${c.id === CAT_MATERIAL ? '' : painelHora()}
+      ${L.length ? `<div class="cx itens">${L.map(p => `<button type="button" class="item" data-preco="${esc(p.id)}"><span class="it-tx"><b>${esc(p.nome)}</b><small>${p.fixo ? 'Preço fixo' : tempoTxt(p.min)} · por ${unNome(p.un)}</small></span><b class="it-v num">${BRL(precoDe(p))}</b>${IC.seta}</button>`).join('')}</div>` : ''}
       ${KitFacil.ui.adicionar({ rotulo: 'Novo preço', attrs: 'data-novo-preco' })}
     </main>
     <div class="pe-tela"><div class="pe-in"><button type="button" class="kf-btn kf-sec pe-prox" data-editar-cat>${IC.lapis}Editar categoria</button></div></div>`;
@@ -450,25 +513,42 @@ TELAS.cat = {
     el.addEventListener('click', e => {
       const t = e.target; let b;
       if (t.closest('[data-voltar]')) return voltar('/precos');
+      if (t.closest('[data-hora]')) return janelaHora();
       if ((b = t.closest('[data-preco]'))) return janelaPreco(c, precos.find(p => p.id === b.dataset.preco));
       if (t.closest('[data-novo-preco]')) return janelaPreco(c, null);
       if (t.closest('[data-editar-cat]')) return janelaCat(c);
     });
   },
 };
+// O item guarda o tempo típico; o preço é o tempo vezes a hora. Mudar o preço reescreve o tempo, e a ligação com a hora
+// continua. Com a chave desligada, o preço é fixo. Material é sempre preço fixo.
 function janelaPreco(c, p) {
-  const novo = !p, x = p || { nome: '', un: 'un', preco: 0 };
-  janela({ titulo: novo ? 'Novo preço' : 'Preço', contexto: c.nome,
-    corpo: `${campo('pr-n', 'Nome do serviço ou material', entrada('pr-n', x.nome, 'placeholder="Ex.: Instalação de tomada"'))}
-      ${campo('pr-u', 'Cobrado por', `<select id="pr-u" class="kf-entrada">${UNIDADES.map(([k, n]) => `<option value="${k}"${k === x.un ? ' selected' : ''}>${n}</option>`).join('')}</select>`)}
-      ${campo('pr-p', 'Preço', campoDinheiro('pr-p', x.preco), novo ? '' : 'Os documentos já feitos não mudam.')}`,
+  const novo = !p, mat = c.id === CAT_MATERIAL;
+  const x = p ? { ...p } : { nome: '', un: 'un', min: mat ? 0 : 30, fixo: mat, preco: 0, reais: [] };
+  const media = mediaReal(x), arred = v => Math.max(5, Math.min(6000, Math.round(v * 60 / HORA() / 5) * 5));
+  const corpo = () => `${campo('pr-n', 'Nome do serviço ou material', entrada('pr-n', x.nome, 'placeholder="Ex.: Instalação de tomada"'))}
+      ${campo('pr-u', 'Cobrado por', `<select id="pr-u" class="kf-entrada">${UNIDADES.filter(u => u[0] !== 'ida').map(([k, n]) => `<option value="${k}"${k === x.un ? ' selected' : ''}>${n}</option>`).join('')}</select>`)}
+      ${mat ? '' : `<label class="aj-chave"><span class="aj-chave-tx"><b>Seguir a minha hora</b><small>Desligue para um preço fixo, que não muda com a hora.</small></span>${KitFacil.ui.chave({ attrs: 'id="pr-seg"', on: !x.fixo })}</label>`}
+      ${x.fixo ? campo('pr-p', 'Preço', campoDinheiro('pr-p', x.preco), 'Preço fixo. Os documentos já feitos não mudam.')
+      : `${campo('pr-t', 'Tempo típico', seletorTempo('pr-t', x.min, 720, 5))}
+        ${media ? `<div class="tp-real"><span class="lin-tx"><b>O seu tempo real: ${tempoTxt(media)}</b><small>Média de ${plural(x.reais.length, 'serviço anotado', 'serviços anotados')}</small></span>${media !== x.min ? '<button type="button" class="kf-btn kf-sec kf-p" data-usar>Usar</button>' : ''}</div>` : ''}
+        ${campo('pr-p', 'Preço', campoDinheiro('pr-p', precoDe(x)), `${tempoTxt(x.min)} × ${BRL(HORA())} a hora. Se você mudar o preço, o tempo acompanha.`)}`}`;
+  janela({ titulo: novo ? 'Novo preço' : 'Preço', contexto: c.nome, corpo: `<div id="pr-corpo" class="pilha">${corpo()}</div>`,
     pe: `${novo ? '' : '<button type="button" class="kf-btn kf-perigo" data-tirar>Excluir</button>'}<button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>`,
     aoMontar: j => {
+      const guarda = () => { x.nome = $('#pr-n', j).value.trim(); x.un = $('#pr-u', j).value; const v = lerDinheiro($('#pr-p', j)); if (x.fixo) x.preco = v; else if (v !== precoDe(x) && v > 0) x.min = arred(v); };
+      const refaz = foco => { const cx = $('#pr-corpo', j); cx.innerHTML = corpo(); prepararCampos(cx); if (foco) $(foco, j)?.focus({ preventScroll: true }); };
+      j.addEventListener('change', e => {
+        if (e.target.id === 'pr-seg') { guarda(); const v = precoDe(x); x.fixo = !e.target.checked; if (x.fixo) x.preco = v; else if (!x.min) x.min = x.preco ? arred(x.preco) : 30; refaz('#pr-seg'); }
+        else if (e.target.id === 'pr-t') { x.nome = $('#pr-n', j).value.trim(); x.un = $('#pr-u', j).value; x.min = +e.target.value || x.min; refaz('#pr-t'); }
+      });
+      j.addEventListener('focusout', e => { if (e.target.id !== 'pr-p' || x.fixo) return; const v = lerDinheiro(e.target); if (v > 0 && v !== precoDe(x)) { guarda(); refaz(); } });
+      j.addEventListener('click', e => { if (e.target.closest('[data-usar]')) { guarda(); x.min = media; refaz('#pr-t'); } });
       $('[data-salvar]', j).onclick = () => {
-        const nome = $('#pr-n', j).value.trim();
-        if (!nome) { KitFacil.apontar($('#pr-n', j)); return aviso('Escreva o nome.'); }
-        const v = { nome, un: $('#pr-u', j).value, preco: lerDinheiro($('#pr-p', j)) };
-        if (novo) precos.push({ id: uid(), cat: c.id, ...v }); else Object.assign(p, v);
+        guarda();
+        if (!x.nome) { KitFacil.apontar($('#pr-n', j)); return aviso('Escreva o nome.'); }
+        const v = acertaPreco({ id: p ? p.id : uid(), cat: c.id, nome: x.nome, un: x.un, min: x.min, fixo: x.fixo, preco: x.fixo ? x.preco : 0, reais: x.reais });
+        if (novo) precos.push(v); else Object.assign(p, v);
         salvarPrecos(); fecharJanela(); redesenhar(); aviso(novo ? 'Preço cadastrado.' : 'Preço salvo.');
       };
       $('[data-tirar]', j)?.addEventListener('click', () => confirmar('Excluir este preço?', `"${p.nome}" sai da sua lista. Os documentos já feitos não mudam.`, 'Excluir preço', () => {
@@ -476,6 +556,53 @@ function janelaPreco(c, p) {
         aviso('Preço excluído.', { label: 'Desfazer', run: () => { precos.splice(Math.min(i, precos.length), 0, p); salvarPrecos(); redesenhar(); } });
       }, { desfaz: 'Dá para desfazer logo depois.' }));
     } });
+}
+/* ---------- A hora: a base de todos os preços. Dois caminhos: digitar o valor ou descobrir pela conta do mês ---------- */
+const painelHora = () => `<section class="painel hora-pn" aria-label="A sua hora"><span class="pn-rot">${ajustes.hora ? 'A sua hora' : 'Hora de exemplo'}</span><b class="pn-num num">${BRL(HORA())}</b><span class="pn-sub">${ajustes.hora ? 'Mudou a hora, mudam os preços ligados a ela.' : 'Diga a sua hora para os preços ficarem certos.'}</span><button type="button" class="pn-bt" data-hora>${ajustes.hora ? 'Mudar' : 'Informar a minha hora'}</button></section>`;
+function janelaHora(depois, contexto = '') {
+  let modo = 'digitar', v = ajustes.hora, T = ajustes.hTirar, C = ajustes.hCustos, Hh = ajustes.hHoras;
+  const daConta = () => Hh > 0 ? Math.round((T + C) / Hh) : 0, atual = () => modo === 'conta' ? daConta() : v;
+  const exemplo = () => { const h = atual(); return h ? `Com essa hora: troca de tomada (20 min), ${BRL(Math.round(h / 3))}; instalação de chuveiro (1 h), ${BRL(h)}.` : 'Sem a hora, o app não tem como calcular os seus preços.'; };
+  const corpo = () => `${segmento('Como informar a hora', 'hm', [['digitar', 'Digitar o valor'], ['conta', 'Descobrir minha hora']], modo)}
+    ${modo === 'digitar' ? campo('hr-v', 'Valor da sua hora', campoDinheiro('hr-v', v))
+    : `${campo('hr-t', 'Quanto quer tirar por mês', campoDinheiro('hr-t', T))}
+      ${campo('hr-c', 'Custos do mês', campoDinheiro('hr-c', C), 'Carro, ferramenta, celular, imposto.')}
+      ${campo('hr-h', 'Horas que você cobra por mês', `<input id="hr-h" class="kf-entrada" type="text" inputmode="numeric" maxlength="3" value="${Hh || ''}" placeholder="Ex.: 60">`, 'Só as horas cobradas, sem trânsito nem orçamento.')}
+      <dl class="resumo"><div class="forte"><dt>A sua hora dá</dt><dd class="num" id="hr-r">${BRL(daConta())}</dd></div></dl>`}
+    <p class="kf-ajuda" id="hr-ex" role="status">${esc(exemplo())}</p>`;
+  janela({ titulo: 'Quanto vale a sua hora?', sub: 'É a base de todos os seus preços. Você muda quando quiser, em Preços.', contexto,
+    corpo: `<div id="hr-corpo" class="pilha">${corpo()}</div>`, pe: '<button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
+    aoMontar: j => {
+      const ler = () => { if (modo === 'digitar') v = lerDinheiro($('#hr-v', j)); else { T = lerDinheiro($('#hr-t', j)); C = lerDinheiro($('#hr-c', j)); Hh = Math.max(0, Math.min(744, parseInt($('#hr-h', j).value, 10) || 0)); } };
+      j.addEventListener('input', () => { ler(); const r = $('#hr-r', j); if (r) r.textContent = BRL(daConta()); $('#hr-ex', j).textContent = exemplo(); });
+      j.addEventListener('click', e => {
+        const b = e.target.closest('[data-hm]');
+        if (b) { ler(); modo = b.dataset.hm; const cx = $('#hr-corpo', j); cx.innerHTML = corpo(); prepararCampos(cx); return $(`[data-hm="${modo}"]`, j)?.focus({ preventScroll: true }); }
+        if (!e.target.closest('[data-salvar]')) return;
+        ler(); const h = atual();
+        if (!h) { KitFacil.apontar($(modo === 'digitar' ? '#hr-v' : '#hr-h', j)); return aviso(modo === 'digitar' ? 'Escreva o valor da sua hora.' : 'Preencha os três números da conta.'); }
+        ajustes.hora = h; if (modo === 'conta') { ajustes.hTirar = T; ajustes.hCustos = C; ajustes.hHoras = Hh; }
+        salvarAjustes(); fecharJanela(true);
+        if (depois) depois(); else { redesenhar(); aviso(`A sua hora agora é ${BRL(h)}.`); }
+      });
+    } });
+}
+/* ---------- Tempo real: depois do serviço, um toque; com três anotações o app sugere acertar a tabela ---------- */
+function janelaTempo(d) {
+  if (d.tempoOk) return aviso('O tempo deste documento já foi anotado.');
+  const P = anotaveis(d);
+  janela({ titulo: 'Quanto tempo levou?', sub: 'Não muda este documento. Serve para a sua tabela ficar com os seus tempos.', contexto: nomeDoc(d),
+    corpo: P.map((p, i) => campo('tr-' + i, esc(p.nome), seletorTempo('tr-' + i, p.min, 720, 5), `A tabela diz ${tempoTxt(p.min)}, cada.`)).join(''),
+    pe: '<button type="button" class="kf-btn kf-sec" data-igual>Foi no tempo da tabela</button><button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
+    aoMontar: j => j.addEventListener('click', e => {
+      const igual = e.target.closest('[data-igual]'); if (!igual && !e.target.closest('[data-salvar]')) return;
+      P.forEach((p, i) => { p.reais = [...p.reais, igual ? p.min : +$('#tr-' + i, j).value || p.min].slice(-5); });
+      d.tempoOk = true; salvarPrecos(); tocarDoc(d); fecharJanela(true); redesenhar();
+      const s2 = P.find(p => p.reais.length >= 3 && mediaReal(p) !== p.min);
+      if (!s2) return aviso('Tempo anotado.');
+      const m = mediaReal(s2);
+      aviso(`Você leva ${tempoTxt(m)} em ${s2.nome}. A tabela diz ${tempoTxt(s2.min)}.`, { label: 'Atualizar', run: () => { s2.min = m; salvarPrecos(); redesenhar(); aviso('Tempo atualizado na tabela.'); } });
+    }) });
 }
 function janelaCat(c) {
   const nova = !c; let icone = c ? c.icone : 'raio';

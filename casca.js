@@ -1,4 +1,4 @@
-/* Elétrica Fácil 4 · moldura (navegação e troca de tela), Ajustes, apresentação, guia e arranque do app. */
+/* Elétrica Fácil 5 · moldura (navegação e troca de tela), Ajustes, apresentação, guia e arranque do app. */
 'use strict';
 
 /* ---------- desenhar a tela ---------- */
@@ -105,6 +105,7 @@ function lerLogo(arquivo) {
 function resumosAjustes() {
   const s = ajustes;
   return {
+    cobranca: `${s.hora ? BRL(s.hora) + ' a hora' : 'Hora ainda não informada'} · ${s.deslModo === 'km' ? BRL(s.deslKm) + ' por km' : BRL(s.deslIda) + ' por ida'} · ${s.minIda ? 'mínimo de ' + BRL(s.minIda) : 'sem mínimo por ida'}`,
     pix: s.pix || 'Nenhuma chave cadastrada',
     padrao: `Validade de ${plural(s.validade, 'dia', 'dias')} · ${s.garantia ? 'garantia de ' + plural(s.garantia, 'dia', 'dias') : 'sem garantia'} · ${s.pag === 'entrada' ? `entrada de ${s.entradaPct}%` : s.pag === 'combinar' ? 'pagamento a combinar' : 'à vista'}`,
     raio: Raio.ligado() ? 'Raio ligado' : 'Raio desligado',
@@ -112,6 +113,7 @@ function resumosAjustes() {
 }
 function pintarResumos() { const S = resumosAjustes(); for (const k in S) KitFacil.ajustes.resumo(k, S[k]); }
 const ICONES_AJ = {
+  cobranca: '<circle cx="12" cy="12" r="8.500"/><path d="M12 7v5.300l3.300 2"/>',
   pix: '<rect x="3.500" y="3.500" width="7" height="7" rx="1.500"/><rect x="13.500" y="3.500" width="7" height="7" rx="1.500"/><rect x="3.500" y="13.500" width="7" height="7" rx="1.500"/><path d="M13.500 13.500h3.200v3.200h-3.200z"/><path d="M20.500 17.200v3.300h-3.300"/>',
   padrao: '<path d="M8 3.500h7.500L19 7v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.500a2 2 0 0 1 2-2z"/><path d="M15 3.500V7.500h4"/><path d="M12.500 10.500v6M9.500 13.500h6"/>',
   raio: '<path d="M13.500 2.500 4.500 13.500h6l-1 8 9-11.500h-6z"/>',
@@ -141,6 +143,16 @@ TELAS.ajustes = {
             ${f('cidade', 'Cidade', 'Ex.: São Paulo', 'autocapitalize="words"')}`),
         },
         produto: [
+          { id: 'cobranca', titulo: 'Cobrança', icone: ICONES_AJ.cobranca, resumo: S.cobranca, html: bloco('A sua hora', `<p class="kf-ajuda">É a base dos preços: cada serviço guarda um tempo, e o preço é o tempo vezes a hora.</p>
+              <dl class="resumo"><div class="forte"><dt>${s.hora ? 'A sua hora' : 'Hora de exemplo'}</dt><dd class="num">${BRL(HORA())}</dd></div></dl>
+              <button type="button" class="kf-btn kf-sec" id="aj-hora">${s.hora ? 'Mudar a minha hora' : 'Informar a minha hora'}</button>`)
+            + bloco('Deslocamento', `<p class="kf-ajuda">Sai numa linha própria do documento, por ida.</p>
+              <div class="kf-campo"><span class="kf-rotulo">Como você cobra</span>${segmento('Como você cobra o deslocamento', 'aj-dm', [['fixo', 'Fixo por ida'], ['km', 'Por quilômetro']], s.deslModo)}</div>
+              ${s.deslModo === 'km' ? campo('aj-deslKm', 'Valor por km', campoDinheiro('aj-deslKm', s.deslKm, 'data-ajd="deslKm"'), 'Você informa a distância, ida e volta, em cada documento.') : campo('aj-deslIda', 'Valor por ida', campoDinheiro('aj-deslIda', s.deslIda, 'data-ajd="deslIda"'))}`)
+            + bloco('Mínimo por ida', `${campo('aj-minIda', 'Mão de obra mínima por ida', campoDinheiro('aj-minIda', s.minIda, 'data-ajd="minIda"'), 'Se os serviços somarem menos, entra a linha "Atendimento mínimo" com a diferença. Em branco, não há mínimo. Vale para os documentos novos.')}`)
+            + bloco('Condição do serviço', `<p class="kf-ajuda">Quanto somar ao preço quando o serviço é mais difícil que o normal. Você escolhe em cada linha.</p>
+              ${campo('aj-cond1', 'Difícil, em %', `<input id="aj-cond1" class="kf-entrada" data-ajn="cond1" type="text" inputmode="numeric" maxlength="3" value="${s.cond1}">`)}
+              ${campo('aj-cond2', 'Muito difícil, em %', `<input id="aj-cond2" class="kf-entrada" data-ajn="cond2" type="text" inputmode="numeric" maxlength="3" value="${s.cond2}">`)}`) },
           { id: 'pix', titulo: 'Pix', icone: ICONES_AJ.pix, resumo: S.pix, html: bloco('Chave Pix', `<p class="kf-ajuda">Com a chave, o documento sai com o QR code do valor, e a tela de receber mostra o código para o cliente pagar.</p>
             ${f('pix', 'Chave Pix', 'CPF, celular, e-mail ou chave aleatória', 'autocapitalize="off" spellcheck="false"')}`) },
           { id: 'padrao', titulo: 'Documento novo', icone: ICONES_AJ.padrao, resumo: S.padrao, html: bloco('Como começa todo documento novo', `<p class="kf-ajuda">Dá para mudar em cada documento.</p>
@@ -159,6 +171,9 @@ TELAS.ajustes = {
   },
   ligar(v) {
     KitFacil.ajustes.ligar(v);
+    $('#aj-hora', v)?.addEventListener('click', () => janelaHora());
+    $$('[data-ajd]', v).forEach(i => i.addEventListener('focusout', () => { const k = i.dataset.ajd, n = lerDinheiro(i); if (n === ajustes[k]) return; ajustes[k] = n; salvarAjustes(); pintarResumos(); aviso('Salvo.'); }));
+    $$('[data-ajn]', v).forEach(i => i.addEventListener('change', () => { const k = i.dataset.ajn; ajustes[k] = Math.max(0, Math.min(300, parseInt(i.value, 10) || 0)); i.value = ajustes[k]; salvarAjustes(); aviso('Salvo.'); }));
     $('#aj-abertura', v)?.addEventListener('click', () => aberturaAbrir({ rever: true }));
     $('#aj-raio', v)?.addEventListener('change', e => { Raio.ligar(e.target.checked); pintarResumos(); aviso(Raio.ligado() ? 'Raios ligados.' : 'Raios desligados.'); });
     $('#aj-raio-ver', v)?.addEventListener('click', () => { if (semMovimento()) return aviso('Com movimento reduzido no aparelho, o raio não cai.'); Raio.cair({ forcar: true }); });
@@ -179,6 +194,7 @@ TELAS.ajustes = {
       if ((b = t2.closest('[data-aj-val]'))) ajustes.validade = +b.dataset.ajVal;
       else if ((b = t2.closest('[data-aj-gar]'))) ajustes.garantia = +b.dataset.ajGar;
       else if ((b = t2.closest('[data-aj-pag]'))) ajustes.pag = b.dataset.ajPag;
+      else if ((b = t2.closest('[data-aj-dm]'))) ajustes.deslModo = b.dataset.ajDm === 'km' ? 'km' : 'fixo';
       else if ((b = t2.closest('[data-aj-ep]'))) ajustes.entradaPct = +b.dataset.ajEp;
       else return;
       salvarAjustes(); redesenhar();
@@ -245,7 +261,7 @@ function guiaIniciar() {
       dadosReais = { docs, cats, precos, ajustes, filtroDocs, buscaDocs };
       semSalvar = true;
       const s = semente();
-      guiaPor({ docs: [], cats: s.cats, precos: s.precos, ajustes: acertaAjustes({ nome: 'Carlos Pereira', fone: '11987654321', cidade: 'São Paulo', pix: 'carlos@exemplo.com.br', raio: ajustes.raio }) });
+      guiaPor({ docs: [], cats: s.cats, precos: s.precos, ajustes: acertaAjustes({ nome: 'Carlos Pereira', fone: '11987654321', cidade: 'São Paulo', pix: 'carlos@exemplo.com.br', raio: ajustes.raio, hora: HORA_EXEMPLO, tab: 5 }) });
       ir('/', true);
     },
     foto: guiaFoto,

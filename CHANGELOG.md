@@ -3,6 +3,23 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.0.0 · 2026-11-21
+
+A hora de quem usa vira a base dos preços. O app passa a ajudar a saber quanto cobrar, e não só a apresentar o orçamento.
+
+- A sua hora é a base dos preços: diga quanto vale, ou descubra pela conta do mês.
+- Cada serviço guarda o tempo típico. Mudou a hora, os preços acompanham.
+- Diagnóstico por tempo, deslocamento por ida e valor mínimo por ida entram no documento.
+- Condição do serviço num toque: normal, difícil ou muito difícil.
+- Desconto em porcentagem, com nome: o cliente vê o valor cheio e o desconto.
+- Anote o tempo real depois do serviço e a tabela passa a ter os seus tempos.
+
+Também: o cliente não vê horas no PDF nem na mensagem (o tempo só aparece no diagnóstico); guia Cobrança em Ajustes;
+dois passos novos no guia (a hora e o diagnóstico por tempo); saíram do catálogo "Visita técnica", "Hora técnica" e
+"Localização de curto-circuito", e a troca de disjuntor virou dois itens (de circuito e geral). Da 4 para a 5, os itens
+de fábrica da tabela passam a seguir o tempo típico e os itens criados pela pessoa viram preço fixo; documentos e
+ajustes continuam.
+
 ## 4.0.0 · 2026-11-20
 
 O Elétrica Fácil recomeçou enxuto, por decisão do Bruno: o app faz uma coisa só, o orçamento de serviços de elétrica, e fecha a cobrança. Telas, ícones, dados, contas, documentos, apresentação, guia e testes são novos. O raio é o mesmo; mudou a hora em que ele cai.

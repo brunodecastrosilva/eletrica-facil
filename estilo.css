@@ -1,4 +1,4 @@
-/* Elétrica Fácil 4 · estilo do app.
+/* Elétrica Fácil 5 · estilo do app.
    Identidade: amarelo de alta tensão na frente, azul-noite para ler e agir, branco para o que se toca.
    Títulos e números grandes em Red Hat Display; o texto continua em Atkinson Hyperlegible (Código, Art. 56, IV).
    Botões, segmentos, janelas, avisos e campos são os do Kit Fácil: aqui só entram as cores e as peças do app. */
@@ -313,3 +313,13 @@ body:not(.kf-com-guia)[data-tela="doc"] .kf-toast,body:not(.kf-com-guia)[data-te
   .tela{padding-left:12px;padding-right:12px}.kf-titulo{font-size:30px}.bloco{min-height:150px;padding:13px}.bl-ic{width:58px;height:58px;border-radius:18px;padding:8px}.bl-nome{font-size:16px}
   .barra-app .kf-marca-nome{font-size:17.5px;letter-spacing:-.035em}.barra-app .kf-marca{gap:8px}
   .pe-in{padding-left:14px;gap:8px}.pe-total b{font-size:18px}.pe-prox{min-width:96px;padding:0 12px}.tr-passos li{font-size:11.5px}}
+
+/* versão 5: a hora como base */
+.hora-pn{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding-bottom:18px}
+.hora-pn .pn-num{font-size:clamp(30px,9vw,38px)}
+.pn-bt{margin-top:10px;min-height:44px;padding:0 18px;border-radius:14px;border:2px solid var(--painel-num);background:transparent;color:var(--painel-num);font-family:var(--kf-font-display);font-weight:800;font-size:15.5px}
+.tp{padding:12px;gap:10px}
+.tp-l{display:flex;align-items:center;gap:12px}
+.tp-real{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--kf-r-cartao);background:var(--sup-2)}
+.item.minimo .it-q{background:var(--sup-2);color:var(--tinta)}
+.item.minimo .it-q .kf-i{width:18px;height:18px}

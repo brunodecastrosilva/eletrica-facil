@@ -1,8 +1,8 @@
-/* Elétrica Fácil 4 · motor: utilidades, catálogo de fábrica, dados, contas, sincronização, janelas e rotas.
+/* Elétrica Fácil 5 · motor: utilidades, catálogo de fábrica, dados, contas, sincronização, janelas e rotas.
    O app faz uma coisa: orçar serviços de elétrica e fechar a cobrança (enviar, aprovar, receber, recibo).
    Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito. */
 'use strict';
-const VERSAO = '4.0.0';
+const VERSAO = '5.0.0';
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 
 /* ================= utilidades ================= */
@@ -39,29 +39,37 @@ const semMovimento = () => KitFacil.movimento.reduzido();
 const vibrar = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
 
 /* ================= catálogo de fábrica (Regras do app, Art. 9º: predial de baixa tensão; preços ilustrativos) ================= */
-const UNIDADES = [['un', 'Unidade'], ['ponto', 'Ponto'], ['m', 'Metro'], ['m²', 'Metro quadrado'], ['h', 'Hora'], ['dia', 'Diária'], ['vb', 'Verba'], ['rolo', 'Rolo'], ['kit', 'Kit']];
-const unTxt = (q, u) => ({ un: 'un.', ponto: q === 1 ? 'ponto' : 'pontos', m: 'm', 'm²': 'm²', h: 'h', dia: q === 1 ? 'diária' : 'diárias', vb: q === 1 ? 'verba' : 'verbas', rolo: q === 1 ? 'rolo' : 'rolos', kit: q === 1 ? 'kit' : 'kits' }[u] || 'un.');
+const UNIDADES = [['un', 'Unidade'], ['ponto', 'Ponto'], ['m', 'Metro'], ['m²', 'Metro quadrado'], ['h', 'Hora'], ['ida', 'Ida'], ['dia', 'Diária'], ['vb', 'Verba'], ['rolo', 'Rolo'], ['kit', 'Kit']];
+const unTxt = (q, u) => ({ un: 'un.', ponto: q === 1 ? 'ponto' : 'pontos', m: 'm', 'm²': 'm²', h: 'h', ida: q === 1 ? 'ida' : 'idas', dia: q === 1 ? 'diária' : 'diárias', vb: q === 1 ? 'verba' : 'verbas', rolo: q === 1 ? 'rolo' : 'rolos', kit: q === 1 ? 'kit' : 'kits' }[u] || 'un.');
 const unNome = u => (UNIDADES.find(x => x[0] === u) || UNIDADES[0])[1].toLowerCase();
+// Catálogo de fábrica. Serviço: [nome, unidade, minutos do tempo típico]. Preço fixo: [nome, unidade, 0, centavos].
+// O quinto valor, quando existe, é o número do id (os ids de fábrica não mudam de uma versão para a outra).
 const SEMENTE = [
-  ['tomadas', 'Tomadas e interruptores', 'tomada', [['Instalação de tomada ou interruptor', 'un', 6000], ['Troca de tomada ou interruptor', 'un', 4500], ['Ponto novo de tomada com fiação', 'ponto', 10000], ['Tomada de uso específico 20 A', 'un', 8000], ['Ponto de interruptor paralelo three-way', 'ponto', 12000], ['Instalação de tomada dupla ou tripla', 'un', 7500], ['Instalação de interruptor com dimmer', 'un', 8000], ['Troca de espelho ou placa', 'un', 2000]]],
-  ['iluminacao', 'Iluminação', 'lampada', [['Instalação de luminária ou plafon', 'un', 9000], ['Instalação de lustre ou pendente', 'un', 13000], ['Instalação de spot embutido', 'un', 4500], ['Instalação de fita de LED', 'm', 3500], ['Instalação de sensor de presença', 'un', 11000], ['Instalação de refletor externo', 'un', 12000], ['Ponto de iluminação novo com fiação', 'ponto', 10000], ['Instalação de arandela', 'un', 9000]]],
-  ['quadro', 'Quadro e proteção', 'quadro', [['Instalação ou troca de disjuntor', 'un', 7000], ['Instalação de DR', 'un', 15000], ['Instalação de DPS', 'un', 13000], ['Montagem de quadro de distribuição', 'un', 90000], ['Troca de quadro de distribuição', 'un', 95000], ['Organização e identificação de quadro', 'un', 30000], ['Aterramento com haste e conexões', 'un', 35000], ['Instalação de padrão de entrada', 'un', 150000]]],
-  ['aparelhos', 'Chuveiro e aparelhos', 'chuveiro', [['Instalação de chuveiro elétrico', 'un', 11500], ['Troca de resistência do chuveiro', 'un', 8000], ['Instalação de torneira elétrica', 'un', 11000], ['Instalação de ventilador de teto', 'un', 18000], ['Ponto e circuito para ar-condicionado', 'un', 30000], ['Instalação de cooktop ou forno elétrico', 'un', 16000], ["Instalação de bomba d'água", 'un', 25000], ['Instalação de carregador de veículo elétrico', 'un', 150000]]],
-  ['fiacao', 'Fiação e infraestrutura', 'fiacao', [['Passagem de fiação', 'm', 1000], ['Troca da fiação de um circuito', 'un', 25000], ['Eletroduto aparente', 'm', 2000], ['Instalação de eletroduto embutido', 'm', 3000], ['Instalação de canaleta', 'm', 2000], ['Rasgo e fechamento na parede', 'm', 3000], ['Abertura de caixa na alvenaria', 'un', 5000]]],
-  ['portao', 'Portão e interfone', 'interfone', [['Instalação de campainha', 'un', 9000], ['Instalação de interfone ou porteiro eletrônico', 'un', 20000], ['Instalação de motor de portão', 'un', 35000], ['Instalação de fechadura elétrica', 'un', 18500]]],
-  ['laudos', 'Laudos e manutenção', 'laudo', [['Inspeção de instalação elétrica', 'un', 30000], ['Laudo técnico com ART', 'un', 80000], ['Medição de aterramento', 'un', 20000], ['Manutenção preventiva de quadro', 'un', 25000], ['Reaperto de conexões', 'un', 15000], ['Balanceamento de fases', 'un', 35000]]],
-  ['visita', 'Visita e hora', 'visita', [['Visita técnica', 'un', 12000], ['Localização de curto-circuito', 'un', 40000], ['Hora técnica', 'h', 11000], ['Diária técnica', 'dia', 45000]]],
-  ['materiais', 'Materiais', 'material', [['Cabo flexível 1,5 mm²', 'm', 250], ['Cabo flexível 2,5 mm²', 'm', 350], ['Cabo flexível 4 mm²', 'm', 550], ['Cabo flexível 6 mm²', 'm', 850], ['Tomada 10 A com placa', 'un', 1800], ['Tomada 20 A com placa', 'un', 2200], ['Interruptor simples com placa', 'un', 1600], ['Caixa 4x2', 'un', 250], ['Eletroduto corrugado 3/4"', 'm', 250], ['DR bipolar 40 A 30 mA', 'un', 15000], ['DPS classe II 275 V 20 kA', 'un', 5500], ['Fita isolante', 'un', 800]]],
+  ['tomadas', 'Tomadas e interruptores', 'tomada', [['Instalação de tomada ou interruptor', 'un', 30], ['Troca de tomada ou interruptor', 'un', 20], ['Ponto novo de tomada com fiação', 'ponto', 50], ['Tomada de uso específico 20 A', 'un', 40], ['Ponto de interruptor paralelo three-way', 'ponto', 60], ['Instalação de tomada dupla ou tripla', 'un', 35], ['Instalação de interruptor com dimmer', 'un', 40], ['Troca de espelho ou placa', 'un', 10]]],
+  ['iluminacao', 'Iluminação', 'lampada', [['Instalação de luminária ou plafon', 'un', 45], ['Instalação de lustre ou pendente', 'un', 65], ['Instalação de spot embutido', 'un', 20], ['Instalação de fita de LED', 'm', 15], ['Instalação de sensor de presença', 'un', 55], ['Instalação de refletor externo', 'un', 60], ['Ponto de iluminação novo com fiação', 'ponto', 50], ['Instalação de arandela', 'un', 45]]],
+  ['quadro', 'Quadro e proteção', 'quadro', [['Troca de disjuntor de circuito', 'un', 20, 0, 1], ['Troca de disjuntor geral', 'un', 30, 0, 9], ['Instalação de DR', 'un', 75, 0, 2], ['Instalação de DPS', 'un', 60, 0, 3], ['Montagem de quadro de distribuição', 'un', 450, 0, 4], ['Troca de quadro de distribuição', 'un', 480, 0, 5], ['Organização e identificação de quadro', 'un', 150, 0, 6], ['Aterramento com haste e conexões', 'un', 180, 0, 7], ['Instalação de padrão de entrada', 'un', 0, 150000, 8]]],
+  ['aparelhos', 'Chuveiro e aparelhos', 'chuveiro', [['Instalação de chuveiro elétrico', 'un', 60], ['Troca de resistência do chuveiro', 'un', 40], ['Instalação de torneira elétrica', 'un', 55], ['Instalação de ventilador de teto', 'un', 90], ['Ponto e circuito para ar-condicionado', 'un', 150], ['Instalação de cooktop ou forno elétrico', 'un', 80], ["Instalação de bomba d'água", 'un', 120], ['Instalação de carregador de veículo elétrico', 'un', 0, 150000]]],
+  ['fiacao', 'Fiação e infraestrutura', 'fiacao', [['Passagem de fiação', 'm', 5], ['Troca da fiação de um circuito', 'un', 120], ['Eletroduto aparente', 'm', 10], ['Instalação de eletroduto embutido', 'm', 15], ['Instalação de canaleta', 'm', 10], ['Rasgo e fechamento na parede', 'm', 15], ['Abertura de caixa na alvenaria', 'un', 25]]],
+  ['portao', 'Portão e interfone', 'interfone', [['Instalação de campainha', 'un', 45], ['Instalação de interfone ou porteiro eletrônico', 'un', 100], ['Instalação de motor de portão', 'un', 180], ['Instalação de fechadura elétrica', 'un', 90]]],
+  ['laudos', 'Laudos e manutenção', 'laudo', [['Inspeção de instalação elétrica', 'un', 150], ['Laudo técnico com ART', 'un', 0, 80000], ['Medição de aterramento', 'un', 100], ['Manutenção preventiva de quadro', 'un', 120], ['Reaperto de conexões', 'un', 75], ['Balanceamento de fases', 'un', 180]]],
+  ['visita', 'Diária', 'visita', [['Diária técnica', 'dia', 0, 45000, 4]]],
+  ['materiais', 'Materiais', 'material', [['Cabo flexível 1,5 mm²', 'm', 0, 250], ['Cabo flexível 2,5 mm²', 'm', 0, 350], ['Cabo flexível 4 mm²', 'm', 0, 550], ['Cabo flexível 6 mm²', 'm', 0, 850], ['Tomada 10 A com placa', 'un', 0, 1800], ['Tomada 20 A com placa', 'un', 0, 2200], ['Interruptor simples com placa', 'un', 0, 1600], ['Caixa 4x2', 'un', 0, 250], ['Eletroduto corrugado 3/4"', 'm', 0, 250], ['DR bipolar 40 A 30 mA', 'un', 0, 15000], ['DPS classe II 275 V 20 kA', 'un', 0, 5500], ['Fita isolante', 'un', 0, 800]]],
 ];
+const CAT_MATERIAL = 'c-materiais';
 // os ids de fábrica são fixos: dois aparelhos que começam do zero têm o mesmo catálogo, e a sincronização não duplica
 function semente() {
   const cats = [], precos = [];
   SEMENTE.forEach(([id, nome, icone, L]) => {
     cats.push({ id: 'c-' + id, nome, icone });
-    L.forEach(([n, un, preco], i) => precos.push({ id: `p-${id}-${i + 1}`, cat: 'c-' + id, nome: n, un, preco }));
+    L.forEach(([n, un, min, preco, k], i) => precos.push({ id: `p-${id}-${k || i + 1}`, cat: 'c-' + id, nome: n, un, min, fixo: !min, preco: preco || 0, reais: [] }));
   });
   return { cats, precos };
 }
+// o que a versão 5 tirou do catálogo: o diagnóstico por tempo ocupa o lugar da visita, da hora técnica e da localização de curto
+const CORTADOS = ['p-visita-1', 'p-visita-2', 'p-visita-3'];
+const FABRICA = Object.fromEntries(semente().precos.map(p => [p.id, p]));
+const HORA_EXEMPLO = 12000; // só para mostrar os preços antes de a pessoa dizer a hora dela
+const tempoTxt = m => { m = Math.max(0, Math.round(m || 0)); const h = Math.floor(m / 60), r = m % 60; return h ? (r ? `${h}h${String(r).padStart(2, '0')}` : `${h} h`) : `${r} min`; };
 
 /* ================= dados (tudo guardado neste aparelho) ================= */
 const KEY = 'eletricafacil.';
@@ -93,7 +101,9 @@ const FORMATO = '4';
 })();
 
 const DEF = { nome: '', empresa: '', fone: '', email: '', doc: '', registro: '', cidade: '', pix: '', logo: '', logoProp: 1,
-  validade: 15, garantia: 90, pag: 'vista', entradaPct: 50, obs: '', seq: 0, raio: true, usos: {} };
+  validade: 15, garantia: 90, pag: 'vista', entradaPct: 50, obs: '', seq: 0, raio: true, usos: {},
+  // a hora é a base dos preços (0 = ainda não informada); os três números de "Descobrir minha hora"; deslocamento, mínimo por ida e condição
+  hora: 0, hTirar: 0, hCustos: 0, hHoras: 0, deslModo: 'fixo', deslIda: 2000, deslKm: 200, minIda: 0, cond1: 25, cond2: 50, tab: 0 };
 const ETAPAS = { orc: ['rascunho', 'enviado', 'aprovado', 'recebido'], rel: ['rascunho', 'enviado', 'recebido'] };
 const NOME_ETAPA = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado', recebido: 'Recebido', recusado: 'Recusado' };
 const TIPO = { orc: { nome: 'Orçamento', titulo: 'ORÇAMENTO', arquivo: 'Orcamento' }, rel: { nome: 'Relatório', titulo: 'RELATÓRIO DE SERVIÇO', arquivo: 'Relatorio' } };
@@ -103,27 +113,45 @@ const txt = v => typeof v === 'string' ? v : '';
 // os ids entram em endereços e em seletores da tela: só letras, números, _ e -
 const idOk = v => typeof v === 'string' && /^[\w-]{1,48}$/.test(v) ? v : '';
 // o que vem do armazenamento, da nuvem ou de uma cópia passa por aqui: campo que falta ou veio torto ganha o padrão
+// tipo da linha: '' serviço, 'diag' diagnóstico por tempo, 'desl' deslocamento por ida, 'mat' material
+function acertaLinha(l) {
+  const tipo = ['diag', 'desl', 'mat'].includes(l.tipo) ? l.tipo : '', pu = Math.max(0, Math.round(num(l.pu)));
+  const o = { id: idOk(l.id) || uid(), pid: idOk(l.pid), tipo, nome: txt(l.nome) || 'Serviço', un: UNIDADES.some(u => u[0] === l.un) ? l.un : 'un', q: Math.max(1, Math.min(9999, Math.round(num(l.q, 1)))), pu };
+  if (tipo === 'diag') { o.min = Math.max(5, Math.min(6000, Math.round(num(l.min, 60)))); o.q = 1; o.un = 'h'; }
+  else if (tipo === 'desl') { o.un = 'ida'; o.km = Math.max(0, Math.min(9999, Math.round(num(l.km)))); o.vkm = Math.max(0, Math.round(num(l.vkm))); }
+  else if (!tipo) { o.cond = [1, 2].includes(l.cond) ? l.cond : 0; o.base = o.cond ? Math.max(0, Math.round(num(l.base, pu))) : pu; o.motivo = txt(l.motivo).slice(0, 120); }
+  return o;
+}
 function acertaDoc(d) {
   d = d && typeof d === 'object' ? d : {};
   const tipo = d.tipo === 'rel' ? 'rel' : 'orc', c = d.cliente && typeof d.cliente === 'object' ? d.cliente : {};
   const etapa = d.etapa === 'recusado' && tipo === 'orc' ? 'recusado' : ETAPAS[tipo].includes(d.etapa) ? d.etapa : 'rascunho';
   return { id: idOk(d.id) || uid(), num: Math.max(0, Math.round(num(d.num))), tipo, etapa,
     cliente: { nome: txt(c.nome), fone: txt(c.fone), end: txt(c.end), doc: txt(c.doc) }, titulo: txt(d.titulo),
-    linhas: (Array.isArray(d.linhas) ? d.linhas : []).filter(l => l && typeof l === 'object').map(l => ({ id: idOk(l.id) || uid(), pid: idOk(l.pid), nome: txt(l.nome) || 'Serviço', un: UNIDADES.some(u => u[0] === l.un) ? l.un : 'un', q: Math.max(1, Math.min(9999, Math.round(num(l.q, 1)))), pu: Math.max(0, Math.round(num(l.pu))) })),
-    desc: Math.max(0, Math.round(num(d.desc))), pag: tipo === 'orc' && d.pag === 'entrada' ? 'entrada' : d.pag === 'combinar' ? 'combinar' : 'vista',
+    linhas: (Array.isArray(d.linhas) ? d.linhas : []).filter(l => l && typeof l === 'object').map(acertaLinha),
+    desc: Math.max(0, Math.round(num(d.desc))), descPct: Math.max(0, Math.min(100, Math.round(num(d.descPct)))), descNome: txt(d.descNome).slice(0, 60), minIda: Math.max(0, Math.round(num(d.minIda))), tempoOk: !!d.tempoOk, pag: tipo === 'orc' && d.pag === 'entrada' ? 'entrada' : d.pag === 'combinar' ? 'combinar' : 'vista',
     entradaPct: [30, 40, 50, 60, 70].includes(d.entradaPct) ? d.entradaPct : 50, validade: Math.max(1, Math.min(365, Math.round(num(d.validade, 15)))), garantia: Math.max(0, Math.min(3650, Math.round(num(d.garantia, 90)))),
     feito: num(d.feito) || null, obs: txt(d.obs),
     pagos: (Array.isArray(d.pagos) ? d.pagos : []).filter(p => p && num(p.v) > 0).map(p => ({ id: idOk(p.id) || uid(), v: Math.round(num(p.v)), em: num(p.em) || Date.now(), meio: MEIOS.includes(p.meio) ? p.meio : 'Pix' })),
     criado: num(d.criado) || Date.now(), mudou: num(d.mudou) || Date.now(), enviadoEm: num(d.enviadoEm) || null, aprovadoEm: num(d.aprovadoEm) || null, ...(d.exemplo ? { exemplo: true } : {}) };
 }
-const acertaPreco = p => ({ id: idOk(p.id) || uid(), cat: idOk(p.cat), nome: txt(p.nome) || 'Serviço', un: UNIDADES.some(u => u[0] === p.un) ? p.un : 'un', preco: Math.max(0, Math.round(num(p.preco))) });
+// preço guardado antes da versão 5 não tem tempo: o de fábrica ganha o tempo típico de fábrica; o que a pessoa criou vira preço fixo
+function acertaPreco(p) {
+  const id = idOk(p.id) || uid(), velho = p.min === undefined && p.fixo === undefined, F = FABRICA[id];
+  if (velho && F) return { ...F, cat: idOk(p.cat) || F.cat, reais: [] };
+  const min = velho ? 0 : Math.max(0, Math.min(6000, Math.round(num(p.min)))), fixo = velho || !!p.fixo || !min || p.cat === CAT_MATERIAL;
+  return { id, cat: idOk(p.cat), nome: txt(p.nome) || 'Serviço', un: UNIDADES.some(u => u[0] === p.un) ? p.un : 'un', min, fixo, preco: Math.max(0, Math.round(num(p.preco))),
+    reais: (Array.isArray(p.reais) ? p.reais : []).map(n => Math.round(num(n))).filter(n => n > 0 && n <= 6000).slice(-5) };
+}
 const acertaCat = c => ({ id: idOk(c.id) || uid(), nome: txt(c.nome) || 'Categoria', icone: PIC[c.icone] ? c.icone : 'raio' });
 function acertaAjustes(a) {
   const o = { ...DEF, ...(a && typeof a === 'object' ? a : {}) };
   ['nome', 'empresa', 'fone', 'email', 'doc', 'registro', 'cidade', 'pix', 'logo', 'obs'].forEach(k => { o[k] = txt(o[k]); });
   o.validade = Math.max(1, Math.min(365, Math.round(num(o.validade, 15)))); o.garantia = Math.max(0, Math.min(3650, Math.round(num(o.garantia, 90))));
   o.pag = ['vista', 'entrada', 'combinar'].includes(o.pag) ? o.pag : 'vista'; o.entradaPct = [30, 40, 50, 60, 70].includes(o.entradaPct) ? o.entradaPct : 50;
-  o.seq = Math.max(0, Math.round(num(o.seq))); o.raio = o.raio !== false; o.logoProp = num(o.logoProp, 1) || 1;
+  o.seq = Math.max(0, Math.round(num(o.seq))); o.raio = o.raio !== false;
+  ['hora', 'hTirar', 'hCustos', 'hHoras', 'deslIda', 'deslKm', 'minIda', 'tab'].forEach(k => { o[k] = Math.max(0, Math.min(99999999, Math.round(num(o[k])))); });
+  o.deslModo = o.deslModo === 'km' ? 'km' : 'fixo'; o.cond1 = Math.max(0, Math.min(300, Math.round(num(o.cond1, 25)))); o.cond2 = Math.max(0, Math.min(300, Math.round(num(o.cond2, 50)))); o.logoProp = num(o.logoProp, 1) || 1;
   if (!/^data:image\/(png|jpeg|webp);base64,/.test(o.logo)) o.logo = ''; // o logotipo é sempre uma imagem guardada no aparelho, nunca um endereço
   const U = {}; if (o.usos && typeof o.usos === 'object' && !Array.isArray(o.usos)) for (const k of Object.keys(o.usos)) if (idOk(k) && num(o.usos[k]) > 0) U[k] = Math.round(num(o.usos[k]));
   o.usos = U;
@@ -131,6 +159,8 @@ function acertaAjustes(a) {
 }
 // preço sem categoria (ela foi excluída em outro aparelho) vai para "Outros"
 function acertaCatalogo() {
+  precos = precos.filter(p => !CORTADOS.includes(p.id));
+  const vis = cats.find(c => c.id === 'c-visita'); if (vis && vis.nome === 'Visita e hora') vis.nome = 'Diária';
   const ids = new Set(cats.map(c => c.id)), soltos = precos.filter(p => !ids.has(p.cat));
   if (!soltos.length) return;
   if (!ids.has('c-outros')) cats.push({ id: 'c-outros', nome: 'Outros', icone: 'ferramenta' });
@@ -140,10 +170,22 @@ let ajustes = acertaAjustes(LS.get('ajustes', {}));
 let cats = LS.get('cats', null), precos = LS.get('precos', null), docs = LS.get('docs', null);
 if (!Array.isArray(cats) || !Array.isArray(precos)) { const s = semente(); cats = s.cats; precos = s.precos; }
 cats = cats.map(acertaCat); precos = precos.map(acertaPreco); acertaCatalogo();
+// primeira abertura da versão 5 com um catálogo antigo: entra o disjuntor geral, que não existia
+if (ajustes.tab < 5) {
+  if (!precos.some(p => p.id === 'p-quadro-9') && cats.some(c => c.id === 'c-quadro')) { const i = precos.findIndex(p => p.id === 'p-quadro-1'); precos.splice(i + 1, 0, { ...FABRICA['p-quadro-9'], reais: [] }); }
+  ajustes.tab = 5; LS.set('precos', precos); LS.set('ajustes', ajustes);
+}
 docs = (Array.isArray(docs) ? docs : []).map(acertaDoc);
 
 /* ================= Kit Fácil: moldura, tema e sincronização ================= */
-const NOVIDADES = [{ versao: '4.0.0', itens: [
+const NOVIDADES = [{ versao: '5.0.0', itens: [
+  'A sua hora é a base dos preços: diga quanto vale, ou descubra pela conta do mês.',
+  'Cada serviço guarda o tempo típico. Mudou a hora, os preços acompanham.',
+  'Diagnóstico por tempo, deslocamento por ida e valor mínimo por ida entram no documento.',
+  'Condição do serviço num toque: normal, difícil ou muito difícil.',
+  'Desconto em porcentagem, com nome: o cliente vê o valor cheio e o desconto.',
+  'Anote o tempo real depois do serviço e a tabela passa a ter os seus tempos.',
+] }, { versao: '4.0.0', itens: [
   'Elétrica Fácil recomeçou enxuto: o app agora faz uma coisa, o orçamento de serviços de elétrica, do pedido ao recibo.',
   'Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito.',
   'O botão do pé é sempre o próximo passo: Enviar, Aprovou, Receber e Enviar recibo.',
@@ -283,13 +325,34 @@ const pacoteSinc = () => ({ ajustes, cats, precos, docs: docs.filter(d => !d.exe
 fotografar();
 
 /* ================= contas (Regras do app, Art. 7º: os totais têm de sair certos) ================= */
-const totalLinha = l => Math.round(l.q * l.pu);
+const HORA = () => ajustes.hora || HORA_EXEMPLO;
+// o preço de um item da tabela: fixo, ou o tempo típico vezes a hora
+const precoDe = p => p.fixo ? p.preco : Math.round(p.min * HORA() / 60);
+const condPct = k => k === 1 ? ajustes.cond1 : k === 2 ? ajustes.cond2 : 0;
+const NOME_COND = ['Normal', 'Difícil', 'Muito difícil'];
+const totalLinha = l => l.tipo === 'diag' ? Math.round(l.min * l.pu / 60) : Math.round(l.q * l.pu);
+// Mão de obra, deslocamento e material somam separados. O mínimo por ida completa a mão de obra quando ela fica abaixo
+// do mínimo vezes o número de idas (sem linha de deslocamento, conta uma ida). O desconto em porcentagem não incide
+// sobre material. O valor do mínimo é o que valia quando o documento foi criado (d.minIda).
 function conta(d) {
-  const sub = soma(d.linhas.map(totalLinha));
-  const desc = Math.min(Math.max(0, d.desc || 0), sub), total = sub - desc;
+  const de = t => soma(d.linhas.filter(l => (l.tipo || '') === t).map(totalLinha));
+  const mat = de('mat'), desl = de('desl'), serv = de('') + de('diag');
+  const idas = soma(d.linhas.filter(l => l.tipo === 'desl').map(l => l.q)) || 1;
+  const minimo = d.minIda > 0 && serv > 0 && serv < d.minIda * idas ? d.minIda * idas - serv : 0;
+  const mao = serv + minimo, sub = mao + desl + mat;
+  const desc = d.descPct > 0 ? Math.round((sub - mat) * d.descPct / 100) : Math.min(Math.max(0, d.desc || 0), sub), total = sub - desc;
   const entrada = d.pag === 'entrada' ? Math.round(total * d.entradaPct / 100) : 0;
   const pago = soma((d.pagos || []).map(p => p.v));
-  return { sub, desc, total, entrada, resto: total - entrada, pago, falta: Math.max(0, total - pago) };
+  return { mao, minimo, desl, mat, idas, sub, desc, total, entrada, resto: total - entrada, pago, falta: Math.max(0, total - pago) };
+}
+const descTxt = d => d.descPct > 0 ? `${d.descNome || 'Desconto'} (${d.descPct}%)` : 'Desconto';
+// As linhas como o cliente vê: preço fechado por serviço, sem horas; o tempo só aparece no diagnóstico.
+function linhasCliente(d, c = conta(d)) {
+  const L = d.linhas.map(l => l.tipo === 'diag' ? { nome: `${l.nome} (${tempoTxt(l.min)})`, sub: '', qtd: '', pu: '', total: totalLinha(l) }
+    : l.tipo === 'desl' ? { nome: `${l.nome} (${l.q} ${unTxt(l.q, 'ida')})`, sub: '', qtd: '', pu: '', total: totalLinha(l) }
+    : { nome: l.nome, sub: l.motivo || '', qtd: `${l.q} ${unTxt(l.q, l.un)}`, pu: BRL(l.pu), total: totalLinha(l) });
+  if (c.minimo) { const i = d.linhas.findIndex(l => l.tipo === 'desl' || l.tipo === 'mat'); L.splice(i < 0 ? L.length : i, 0, { nome: 'Atendimento mínimo', sub: '', qtd: '', pu: '', total: c.minimo }); }
+  return L;
 }
 const getDoc = id => docs.find(d => d.id === id);
 const numTxt = d => d.exemplo ? 'Exemplo' : 'Nº ' + String(d.num || 0).padStart(4, '0');
@@ -303,6 +366,7 @@ function cobrarAgora(d, c = conta(d)) {
   return { v: c.falta, que: c.pago > 0 ? 'o restante' : 'o total' };
 }
 function pagTxt(d, c = conta(d)) {
+  if (c.total === 0 && c.sub > 0) return 'Cortesia: nada a pagar.';
   if (d.pag === 'entrada') return `Entrada de ${d.entradaPct}% (${BRL(c.entrada)}) na aprovação e ${BRL(c.resto)} na conclusão do serviço.`;
   if (d.pag === 'combinar') return 'Forma de pagamento a combinar.';
   return d.tipo === 'rel' ? 'Pagamento à vista.' : 'Pagamento à vista, na conclusão do serviço.';
@@ -312,6 +376,9 @@ const garantiaTxt = d => d.garantia > 0 ? `${plural(d.garantia, 'dia', 'dias')} 
 // o próximo passo de cada documento: é o botão do pé
 function proximo(d) {
   if (d.etapa === 'recusado') return { id: 'reabrir', rotulo: 'Reabrir', frase: 'O cliente recusou. Reabra para mudar e enviar de novo.' };
+  const cortesia = d.linhas.length && conta(d).total === 0;
+  if (cortesia && d.etapa === 'recebido') return { id: 'pdf', rotulo: 'Ver o PDF', frase: 'Cortesia concluída. Nada a receber.' };
+  if (cortesia && ((d.tipo === 'orc' && d.etapa === 'aprovado') || (d.tipo === 'rel' && d.etapa === 'enviado'))) return { id: 'concluir', rotulo: 'Concluir', frase: 'Cortesia: nada a receber. Conclua quando o serviço estiver feito.' };
   if (d.etapa === 'recebido') return { id: 'recibo', rotulo: 'Enviar recibo', frase: 'Pago. Mande o recibo ao cliente.' };
   if (!d.linhas.length) return { id: 'somar', rotulo: 'Somar serviço', frase: d.tipo === 'rel' ? 'Some o que foi feito.' : 'Some os serviços do orçamento.' };
   if (d.etapa === 'rascunho') return { id: 'enviar', rotulo: 'Enviar', frase: d.tipo === 'rel' ? 'Confira e envie a cobrança ao cliente.' : 'Confira e envie ao cliente.' };
@@ -328,7 +395,9 @@ function painel() {
     recebidoMes: soma(L.flatMap(d => d.pagos.filter(p => p.em >= ini.getTime()).map(p => p.v))) };
 }
 function novoDocumento(tipo) {
-  const d = acertaDoc({ id: uid(), tipo, num: 0, validade: ajustes.validade, garantia: ajustes.garantia, pag: tipo === 'orc' ? ajustes.pag : (ajustes.pag === 'combinar' ? 'combinar' : 'vista'), entradaPct: ajustes.entradaPct, obs: ajustes.obs, feito: tipo === 'rel' ? Date.now() : null, criado: Date.now(), mudou: Date.now() });
+  // a hora é pedida uma vez, antes do primeiro documento: sem ela não há preço certo (Código, Art. 64-D)
+  if (!ajustes.hora) return janelaHora(() => novoDocumento(tipo), 'Antes do primeiro documento');
+  const d = acertaDoc({ id: uid(), tipo, num: 0, minIda: ajustes.minIda, validade: ajustes.validade, garantia: ajustes.garantia, pag: tipo === 'orc' ? ajustes.pag : (ajustes.pag === 'combinar' ? 'combinar' : 'vista'), entradaPct: ajustes.entradaPct, obs: ajustes.obs, feito: tipo === 'rel' ? Date.now() : null, criado: Date.now(), mudou: Date.now() });
   d.num = ++ajustes.seq; salvarAjustes();
   docs.unshift(d); salvarDocs();
   ir('/d/' + d.id);
@@ -336,8 +405,8 @@ function novoDocumento(tipo) {
 }
 function criarExemplo() {
   docs = docs.filter(d => !d.exemplo);
-  const P = n => precos.find(p => p.nome === n) || { id: '', nome: n, un: 'un', preco: 10000 };
-  const lin = (n, q) => { const p = P(n); return { id: uid(), pid: p.id, nome: p.nome, un: p.un, q, pu: p.preco }; };
+  const P = n => precos.find(p => p.nome === n) || { id: '', nome: n, un: 'un', fixo: true, preco: 10000 };
+  const lin = (n, q) => { const p = P(n); return { id: uid(), pid: p.id, nome: p.nome, un: p.un, q, pu: precoDe(p) }; };
   const d = acertaDoc({ id: 'exemplo', tipo: 'orc', exemplo: true, cliente: { nome: 'Mariana Souza', fone: '(11) 98888-7777', end: 'Rua das Acácias, 120' }, titulo: 'Reforma elétrica da cozinha',
     linhas: [lin('Ponto novo de tomada com fiação', 6), lin('Instalação de luminária ou plafon', 3), lin('Instalação de DR', 1), lin('Instalação de chuveiro elétrico', 1)],
     pag: 'entrada', entradaPct: 50, validade: ajustes.validade, garantia: ajustes.garantia, obs: 'Material por conta do cliente.', criado: Date.now(), mudou: Date.now() });

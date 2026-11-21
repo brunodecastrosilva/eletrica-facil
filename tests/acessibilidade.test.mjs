@@ -1,4 +1,4 @@
-/* Elétrica Fácil 4 · varredura automática de acessibilidade (WCAG 2.2 A e AA) nas telas e janelas do app, nos temas claro
+/* Elétrica Fácil 5 · varredura automática de acessibilidade (WCAG 2.2 A e AA) nas telas e janelas do app, nos temas claro
    e escuro. Usa o axe-core pelo pacote de desenvolvimento @axe-core/playwright (npm install). Sem ele, o teste é pulado
    com aviso: não conta como aprovado. Substitui, neste app, comum/testes/acessibilidade.test.mjs, que procura os Ajustes
    na barra do Kit. Nada fica de fora da varredura. */
@@ -39,8 +39,14 @@ for (const tema of ['light', 'dark']) {
     await p.evaluate(() => ir('/docs', true)); await varrer(p, `Documentos, vazio (${nome})`);
     // documento novo, em branco, e a janela de somar
     await p.evaluate(() => { ir('/', true); irPara('novo'); }); await p.locator('.kf-dlg [data-novo-tipo]').first().waitFor(); await varrer(p, `Novo documento (${nome})`);
-    await p.click('.kf-dlg [data-novo-tipo="orc"]'); await p.locator('#pe-doc').waitFor(); await varrer(p, `orçamento em branco (${nome})`);
+    await p.click('.kf-dlg [data-novo-tipo="orc"]'); await p.locator('#hr-v').waitFor(); await varrer(p, `janela da hora (${nome})`);
+    await p.click('.kf-dlg [data-hm="conta"]'); await p.locator('#hr-h').waitFor(); await varrer(p, `janela da hora, pela conta (${nome})`); await p.click('.kf-dlg [data-hm="digitar"]');
+    await p.locator('#hr-v').click(); await p.locator('#hr-v').pressSequentially('12000'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor(); await varrer(p, `orçamento em branco (${nome})`);
     await p.click('#conteudo [data-somar]'); await p.locator('.kf-dlg .blocos').waitFor(); await varrer(p, `Somar, categorias (${nome})`);
+    await p.click('.kf-dlg [data-diag="60"]'); await p.click('.kf-dlg [data-ida="1"]'); await varrer(p, `Somar, com diagnóstico e ida (${nome})`);
+    await p.click('.kf-dlg [data-diag="x"]'); await p.locator('.kf-dlg #ln-n').waitFor(); await varrer(p, `janela do diagnóstico (${nome})`); await fechar(p);
+    await p.locator('#conteudo .itens .item', { hasText: 'Deslocamento' }).click(); await p.locator('#ln-q').waitFor(); await varrer(p, `janela do deslocamento (${nome})`); await fechar(p);
+    await p.click('#conteudo [data-somar]'); await p.locator('.kf-dlg .blocos').waitFor();
     await p.click('.kf-dlg [data-cat="c-tomadas"]'); await p.click('.kf-dlg [data-soma="p-tomadas-1"]'); await varrer(p, `Somar, dentro da categoria (${nome})`);
     await p.fill('#so-q', 'tomada'); await varrer(p, `Somar, busca (${nome})`); await fechar(p);
     // o orçamento de exemplo, etapa por etapa
@@ -58,6 +64,7 @@ for (const tema of ['light', 'dark']) {
     await p.click('#pe-doc [data-prox="receber"]'); await p.locator('#rc-v').waitFor(); await varrer(p, `Receber (${nome})`);
     await p.click('.kf-dlg [data-recebi]'); await p.locator('#conteudo [data-recibo]').waitFor(); await semAviso(p); await varrer(p, `orçamento com a entrada paga (${nome})`);
     await p.click('#conteudo [data-recibo]'); await p.locator('.kf-dlg .envios').waitFor(); await varrer(p, `Recibo (${nome})`); await fechar(p);
+    await p.click('#conteudo [data-j="tempo"]'); await p.locator('.kf-dlg [data-igual]').waitFor(); await varrer(p, `janela do tempo real (${nome})`); await fechar(p);
     await p.evaluate(() => { const d = getDoc('exemplo'); d.pagos.push({ id: 'z', v: conta(d).falta, em: Date.now(), meio: 'Dinheiro' }); mudouDoc(d); redesenhar(); }); await varrer(p, `orçamento recebido (${nome})`);
     // relatório, com o dia do serviço no calendário do Kit
     await p.evaluate(() => { const d = getDoc('exemplo'); d.tipo = 'rel'; d.etapa = 'rascunho'; d.pagos = []; d.pag = 'vista'; d.feito = Date.now(); tocarDoc(d); redesenhar(); }); await varrer(p, `relatório (${nome})`);
@@ -71,7 +78,7 @@ for (const tema of ['light', 'dark']) {
     await p.click('#conteudo [data-preco="p-quadro-1"]'); await p.locator('#pr-p').waitFor(); await varrer(p, `janela Preço (${nome})`); await fechar(p);
     await p.evaluate(() => ir('/mais', true)); await varrer(p, `Mais (${nome})`);
     await p.evaluate(() => ir('/ajustes', true)); await p.locator('[data-kf-aj]').waitFor(); await varrer(p, `Ajustes (${nome})`);
-    for (const g of ['conta', 'pix', 'padrao', 'raio']) { await p.evaluate(g => KitFacil.ajustes.abrir(g), g); await varrer(p, `Ajustes, guia ${g} (${nome})`); await p.evaluate(() => history.back()); await p.waitForTimeout(150); }
+    for (const g of ['conta', 'cobranca', 'pix', 'padrao', 'raio']) { await p.evaluate(g => KitFacil.ajustes.abrir(g), g); await varrer(p, `Ajustes, guia ${g} (${nome})`); await p.evaluate(() => history.back()); await p.waitForTimeout(150); }
     assert.deepEqual(falhas, [], falhas.join('\n\n'));
     assert.deepEqual(a.erros, []);
     await a.fechar();

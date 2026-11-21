@@ -1,4 +1,4 @@
-/* Elétrica Fácil 4 · ícones do app, desenhados para ele.
+/* Elétrica Fácil 5 · ícones do app, desenhados para ele.
    Dois jogos, com o mesmo traço:
    - IC: ícones de linha, na grade de 24, traço de 2 e pontas redondas (Código, Art. 57, parágrafo único);
    - PIC: pictogramas das categorias de preços, na grade de 48, em dois tons: contorno, uma área tingida e um detalhe cheio.

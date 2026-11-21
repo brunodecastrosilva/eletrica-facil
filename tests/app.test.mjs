@@ -1,4 +1,4 @@
-/* Elétrica Fácil 4 · testes do app (npm test). Rodam num Chromium, sem internet: o GitHub (sincronização) é simulado por
+/* Elétrica Fácil 5 · testes do app (npm test). Rodam num Chromium, sem internet: o GitHub (sincronização) é simulado por
    comum/testes/ambiente.mjs. Escritos junto com o app enxuto: seguem o orçamento e o relatório, o botão do pé, os preços
    em blocos, as contas, os documentos, o começo sem apagar a versão 3, o raio que cai sozinho, a apresentação e o guia. */
 import { test, before, after } from 'node:test';
@@ -15,7 +15,9 @@ const TELAS = [[{ width: 320, height: 568 }, 'celular mínimo'], [{ width: 390, 
 const pronto = p => p.locator('main.inicio').waitFor();
 // campo de dinheiro do Kit: os dígitos entram como centavos (Regras do app, Art. 15)
 const digitar = async (p, sel, digitos) => { await p.locator(sel).click(); await p.locator(sel).pressSequentially(digitos); await p.locator(sel).blur(); };
-const novoPelaBarra = async (p, tipo) => { await p.evaluate(() => irPara('novo')); await p.locator(`.kf-dlg [data-novo-tipo="${tipo}"]`).click(); await p.locator('#pe-doc').waitFor(); };
+// a hora é pedida antes do primeiro documento; os testes que não são sobre ela começam com a hora informada
+const comHora = p => p.evaluate(() => { if (!ajustes.hora) { ajustes.hora = 12000; salvarAjustes(); } });
+const novoPelaBarra = async (p, tipo) => { await comHora(p); await p.evaluate(() => irPara('novo')); await p.locator(`.kf-dlg [data-novo-tipo="${tipo}"]`).click(); await p.locator('#pe-doc').waitFor(); };
 const pe = p => p.evaluate(() => ({ rotulo: document.querySelector('#pe-doc [data-prox]').textContent.trim(), total: document.querySelector('#pe-doc .pe-total b').textContent.trim().replace(/\s/g, ' '), que: document.querySelector('#pe-doc .pe-total small').textContent.trim() }));
 const aqui = p => p.evaluate(() => getDoc(rota().id));
 
@@ -81,7 +83,8 @@ test('contas: subtotal, desconto, total, entrada e restante fecham no centavo; a
     o.ext = [extenso(143550), extenso(100), extenso(1), extenso(100000000), extenso(2000), extenso(101)];
     return o;
   });
-  assert.deepEqual(r.c1, { sub: 33750, desc: 1250, total: 32500, entrada: 13000, resto: 19500, pago: 0, falta: 32500 });
+  const { sub, desc, total, entrada, resto, pago, falta } = r.c1;
+  assert.deepEqual({ sub, desc, total, entrada, resto, pago, falta }, { sub: 33750, desc: 1250, total: 32500, entrada: 13000, resto: 19500, pago: 0, falta: 32500 });
   assert.deepEqual([r.cob1, r.cob2, r.cob3], [{ v: 13000, que: 'a entrada' }, { v: 8000, que: 'a entrada' }, { v: 19500, que: 'o restante' }]);
   assert.deepEqual([r.etapa1, r.c2.falta, r.etapa2, r.falta2], ['recebido', 0, 'aprovado', 1000], 'quitou, vira Recebido; mexeu no valor, volta a cobrar');
   assert.equal(r.quebrado.entrada + r.quebrado.resto, r.quebrado.total, 'entrada e restante somam o total');
@@ -92,9 +95,88 @@ test('contas: subtotal, desconto, total, entrada e restante fecham no centavo; a
   await a.fechar();
 });
 
+test('a hora como base: o caso da prima dá R$ 240 de mão de obra mais as idas; mínimo por ida, condição, desconto, cortesia e tempo real', async () => {
+  const a = await aparelho(amb, { antes: PDF_FALSO }); const p = a.page; await pronto(p);
+  const r = await p.evaluate(() => {
+    ajustes.hora = 12000; const o = {}, P = id => precos.find(x => x.id === id);
+    o.precos = ['p-quadro-1', 'p-quadro-9', 'p-aparelhos-1', 'p-quadro-8', 'p-visita-4'].map(id => precoDe(P(id)));
+    o.cortados = ['Visita técnica', 'Hora técnica', 'Localização de curto-circuito'].filter(n => precos.some(x => x.nome === n));
+    ajustes.hora = 15000; o.sobe = [precoDe(P('p-quadro-9')), precoDe(P('p-quadro-8'))]; ajustes.hora = 12000;
+    const prima = acertaDoc({ tipo: 'rel', minIda: 10000, linhas: [{ tipo: 'diag', nome: 'Diagnóstico do defeito', min: 90, pu: 12000 }, { pid: 'p-quadro-9', nome: 'Troca de disjuntor geral', q: 1, pu: 6000 }, { tipo: 'desl', nome: 'Deslocamento', q: 2, pu: 2000 }] });
+    o.prima = conta(prima); o.cliente = linhasCliente(prima).map(l => [l.nome, l.total]);
+    const peq = acertaDoc({ tipo: 'orc', minIda: 10000, linhas: [{ pid: 'p-quadro-1', nome: 'Troca de disjuntor de circuito', q: 1, pu: 4000 }, { tipo: 'desl', nome: 'Deslocamento', q: 1, pu: 2000 }, { tipo: 'mat', nome: 'Disjuntor', q: 1, pu: 3000 }] });
+    o.peq = conta(peq); o.peqCli = linhasCliente(peq).map(l => [l.nome, l.total]);
+    peq.descPct = 50; o.meio = conta(peq); peq.descPct = 100; o.cem = conta(peq);
+    prima.descPct = 100; prima.descNome = 'Desconto de família'; prima.etapa = 'enviado'; o.cortesia = [conta(prima).total, pagTxt(prima), proximo(prima).id, descTxt(prima)];
+    o.velho = acertaPreco({ id: 'p-tomadas-2', cat: 'c-tomadas', nome: 'Troca', un: 'un', preco: 4500 }); o.meu = acertaPreco({ id: 'abc', cat: 'c-x', nome: 'Meu', un: 'un', preco: 7700 });
+    o.tempo = [5, 20, 60, 90, 450].map(tempoTxt);
+    return o;
+  });
+  assert.deepEqual(r.precos, [4000, 6000, 12000, 150000, 45000], 'tempo típico vezes a hora; padrão de entrada e diária têm preço fixo');
+  assert.deepEqual(r.cortados, [], 'visita, hora técnica e localização de curto saíram do catálogo');
+  assert.deepEqual(r.sobe, [7500, 150000], 'a hora muda, o preço ligado acompanha e o fixo fica');
+  assert.deepEqual([r.prima.mao, r.prima.minimo, r.prima.desl, r.prima.total], [24000, 0, 4000, 28000], 'caso da prima: R$ 240 de mão de obra mais duas idas');
+  assert.deepEqual(r.cliente, [['Diagnóstico do defeito (1h30)', 18000], ['Troca de disjuntor geral', 6000], ['Deslocamento (2 idas)', 4000]]);
+  assert.deepEqual([r.peq.minimo, r.peq.mao, r.peq.desl, r.peq.mat, r.peq.total], [6000, 10000, 2000, 3000, 15000], 'o serviço de 20 minutos é completado até o mínimo por ida');
+  assert.deepEqual(r.peqCli, [['Troca de disjuntor de circuito', 4000], ['Atendimento mínimo', 6000], ['Deslocamento (1 ida)', 2000], ['Disjuntor', 3000]]);
+  assert.deepEqual([r.meio.desc, r.meio.total, r.cem.desc, r.cem.total], [6000, 9000, 12000, 3000], 'o desconto em porcentagem não incide sobre o material');
+  assert.deepEqual(r.cortesia, [0, 'Cortesia: nada a pagar.', 'concluir', 'Desconto de família (100%)']);
+  assert.deepEqual([r.velho.min, r.velho.fixo, r.meu.fixo, r.meu.preco], [20, false, true, 7700], 'preço de fábrica antigo ganha o tempo; o que a pessoa criou vira preço fixo');
+  assert.deepEqual(r.tempo, ['5 min', '20 min', '1 h', '1h30', '7h30']);
+  // pela tela: +, Relatório, a hora (pela conta do mês, uma vez), 1h30, duas idas e o disjuntor geral
+  await p.evaluate(() => { ajustes.hora = 0; });
+  await p.click('#kf-nav-novo'); await p.locator('.kf-dlg [data-novo-tipo="rel"]').click(); await p.locator('#hr-v').waitFor();
+  await p.click('.kf-dlg [data-hm="conta"]'); await digitar(p, '#hr-t', '600000'); await digitar(p, '#hr-c', '120000'); await p.fill('#hr-h', '60');
+  assert.match(await p.locator('#hr-r').innerText(), /R\$\s120,00/, '(6.000 + 1.200) / 60 horas');
+  await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor();
+  assert.deepEqual(await p.evaluate(() => [ajustes.hora, ajustes.hHoras]), [12000, 60]);
+  await p.click('#pe-doc [data-prox]'); await p.locator('.kf-dlg [data-diag="90"]').waitFor();
+  await p.click('.kf-dlg [data-diag="90"]'); await p.click('.kf-dlg [data-ida="1"]'); await p.click('.kf-dlg [data-ida="1"]');
+  await p.click('.kf-dlg [data-cat="c-quadro"]'); await p.click('.kf-dlg [data-soma="p-quadro-9"]');
+  await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.deepEqual(await pe(p), { rotulo: 'Enviar', total: 'R$ 280,00', que: 'Total' });
+  assert.match(await p.locator('#conteudo dl.resumo').innerText(), /Mão de obra\s+R\$\s240,00\s+Deslocamento\s+R\$\s40,00\s+Total\s+R\$\s280,00/);
+  assert.match(await p.locator('#conteudo .itens').innerText(), /1h30 × R\$\s120,00 a hora[\s\S]*2 idas × R\$\s20,00/);
+  // condição num toque, na linha
+  await p.locator('#conteudo .itens .item', { hasText: 'disjuntor geral' }).click(); await p.locator('#ln-cs').waitFor();
+  await p.click('.kf-dlg [data-cond="2"]'); assert.match(await p.locator('#ln-cs').innerText(), /Muito difícil soma 50%: R\$\s90,00 cada/);
+  await p.fill('#ln-m', 'Quadro antigo'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.equal((await pe(p)).total, 'R$ 310,00');
+  assert.deepEqual(await p.evaluate(() => { const l = getDoc(rota().id).linhas.find(x => x.pid === 'p-quadro-9'); return [l.base, l.cond, l.pu]; }), [6000, 2, 9000]);
+  // desconto de 100%: o cliente vê o valor cheio e a linha do desconto; o documento vira cortesia
+  await p.click('#conteudo [data-j="desc"]'); await p.fill('#cd-dn', 'Desconto de família'); await p.click('.kf-dlg [data-dp="100"]'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.equal((await pe(p)).total, 'R$ 0,00');
+  const pdf = (await p.evaluate(async () => { await montarPDF(getDoc(rota().id)); return window.__pdf.t.join('\n') + '\n---\n' + mensagem(getDoc(rota().id)); })).replace(/[\u00a0\u202f]/g, ' ');
+  for (const t of ['Diagnóstico do defeito (1h30)', 'Troca de disjuntor geral', 'Quadro antigo', 'Deslocamento (2 idas)', 'Valor do serviço', 'R$ 310,00', 'Desconto de família (100%)', 'Cortesia: nada a pagar.']) assert.ok(pdf.includes(t), `o documento do cliente sem "${t}"`);
+  for (const t of ['a hora', '120,00', 'PAGUE COM PIX', 'Muito difícil', 'difícil']) assert.ok(!pdf.includes(t), `o cliente não deve ver "${t}"`);
+  // tempo real: um toque; com três anotações, a média aparece no item
+  await p.click('#conteudo [data-j="tempo"]'); await p.click('.kf-dlg [data-igual]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.deepEqual(await p.evaluate(() => { const x = precos.find(y => y.id === 'p-quadro-9'); const o = [x.reais, getDoc(rota().id).tempoOk]; x.reais = [30, 45, 45]; o.push(mediaReal(x)); return o; }), [[30], true, 40]);
+  // cortesia: Enviar e Concluir, sem Receber
+  await p.click('#pe-doc [data-prox]'); await p.fill('#ev-nome', 'Prima'); await p.click('.kf-dlg [data-ja]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.equal((await pe(p)).rotulo, 'Concluir'); await p.click('#pe-doc [data-prox]');
+  assert.ok(await esperar(async () => (await pe(p)).rotulo === 'Ver o PDF')); assert.equal((await aqui(p)).etapa, 'recebido');
+  // deslocamento por quilômetro e mínimo por ida, num orçamento novo
+  await p.evaluate(() => { ajustes.deslModo = 'km'; ajustes.deslKm = 200; ajustes.minIda = 10000; });
+  await novoPelaBarra(p, 'orc'); await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-ida="1"]'); await p.locator('#ln-k').waitFor();
+  await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#ln-k', 'aria-invalid'), 'true');
+  await p.fill('#ln-k', '16'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-cat="c-quadro"]'); await p.click('.kf-dlg [data-soma="p-quadro-9"]'); await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.match(await p.locator('#conteudo .itens').innerText(), /Atendimento mínimo\s+Completa R\$\s100,00 por ida\s+R\$\s40,00/);
+  assert.equal((await pe(p)).total, 'R$ 132,00', '60 + 40 do mínimo + 16 km × R$ 2,00');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
 test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entrada, Enviar pede o nome, Aprovou, Receber em duas vezes', async () => {
   const a = await aparelho(amb); const p = a.page; await pronto(p);
-  await p.click('#kf-nav-novo'); await p.locator('.kf-dlg [data-novo-tipo="orc"]').click(); await p.locator('#pe-doc').waitFor();
+  await p.click('#kf-nav-novo'); await p.locator('.kf-dlg [data-novo-tipo="orc"]').click();
+  // a hora é pedida uma vez, antes do primeiro documento
+  await p.locator('#hr-v').waitFor(); assert.equal(await semCampoEmFoco(p), true);
+  await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#hr-v', 'aria-invalid'), 'true', 'sem a hora, o documento não começa');
+  await digitar(p, '#hr-v', '12000'); assert.match(await p.locator('#hr-ex').innerText(), /troca de tomada \(20 min\), R\$\s40,00/);
+  await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor();
+  assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('eletricafacil.ajustes')).hora), 12000);
   assert.equal(await semCampoEmFoco(p), true, 'nenhum campo é selecionado sozinho');
   assert.deepEqual(await pe(p), { rotulo: 'Somar serviço', total: 'R$ 0,00', que: 'Total' });
   // somar: blocos por categoria, cada toque soma um, o − tira um, a busca acha pelo nome
@@ -109,23 +191,25 @@ test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entr
   await p.fill('#so-q', 'chuveiro'); await p.click('.kf-dlg [data-soma="p-aparelhos-1"]');
   await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   assert.equal(await p.locator('#conteudo .itens .item').count(), 2);
-  assert.deepEqual(await pe(p), { rotulo: 'Enviar', total: 'R$ 295,00', que: 'Total' });
+  assert.deepEqual(await pe(p), { rotulo: 'Enviar', total: 'R$ 300,00', que: 'Total' });
   // a linha: quantidade no passo a passo e preço em centavos ("1290" = R$ 12,90)
   await p.locator('#conteudo .itens .item').first().click(); await p.locator('#ln-p').waitFor();
   assert.equal(await semCampoEmFoco(p), true);
   await digitar(p, '#ln-p', '1290'); assert.match(await p.inputValue('#ln-p'), /R\$\s12,90/);
   await p.click('.kf-dlg [data-kf-passo="1"]'); await p.click('.kf-dlg [data-salvar]');
-  assert.equal((await pe(p)).total, 'R$ 166,60', '4 × 12,90 + 115,00');
-  assert.equal(await p.evaluate(() => precos.find(x => x.id === 'p-tomadas-1').preco), 6000, 'mudar a linha não muda a lista de preços');
-  // desconto: não passa do subtotal
-  await p.click('#conteudo [data-j="desc"]'); await p.locator('#cd-d').waitFor();
-  await digitar(p, '#cd-d', '99999999'); await p.click('.kf-dlg [data-salvar]');
-  assert.equal(await p.getAttribute('#cd-d', 'aria-invalid'), 'true'); assert.equal((await aqui(p)).desc, 0);
-  await digitar(p, '#cd-d', '660'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
-  assert.equal((await pe(p)).total, 'R$ 160,00');
+  assert.equal((await pe(p)).total, 'R$ 171,60', '4 × 12,90 + 120,00');
+  assert.equal(await p.evaluate(() => precoDe(precos.find(x => x.id === 'p-tomadas-1'))), 6000, 'mudar a linha não muda a lista de preços');
+  // desconto: em porcentagem, de 0 a 100, com nome
+  await p.click('#conteudo [data-j="desc"]'); await p.locator('#cd-dp').waitFor();
+  await p.fill('#cd-dp', '150'); await p.click('.kf-dlg [data-salvar]');
+  assert.equal(await p.getAttribute('#cd-dp', 'aria-invalid'), 'true'); assert.equal((await aqui(p)).descPct, 0);
+  await p.fill('#cd-dn', 'Desconto de amigo'); await p.click('.kf-dlg [data-dp="25"]');
+  assert.match(await p.locator('.kf-dlg .resumo').innerText(), /Valor do serviço\s+R\$\s171,60[\s\S]*Desconto de amigo \(25%\)\s+− R\$\s42,90[\s\S]*Total\s+R\$\s128,70/);
+  await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.equal((await pe(p)).total, 'R$ 128,70');
   // pagamento com entrada
   await p.click('#conteudo [data-j="pag"]'); await p.click('.kf-dlg [data-pag="entrada"]'); await p.click('.kf-dlg [data-ep="40"]');
-  assert.match(await p.locator('.kf-dlg [role="status"]').innerText(), /Entrada de 40% \(R\$\s64,00\) na aprovação e R\$\s96,00 na conclusão/);
+  assert.match(await p.locator('.kf-dlg [role="status"]').innerText(), /Entrada de 40% \(R\$\s51,48\) na aprovação e R\$\s77,22 na conclusão/);
   await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   // enviar: o nome do cliente só é pedido aqui
   await p.click('#pe-doc [data-prox="enviar"]'); await p.locator('#ev-nome').waitFor();
@@ -142,24 +226,24 @@ test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entr
   // receber: primeiro a entrada, depois o restante; valor maior que o que falta é recusado
   await p.evaluate(() => { document.querySelector('.kf-toast').hidden = true; });
   await p.click('#pe-doc [data-prox="receber"]'); await p.locator('#rc-v').waitFor();
-  assert.match(await p.inputValue('#rc-v'), /R\$\s64,00/, 'o valor sugerido é a entrada');
+  assert.match(await p.inputValue('#rc-v'), /R\$\s51,48/, 'o valor sugerido é a entrada');
   await digitar(p, '#rc-v', '99999'); await p.click('.kf-dlg [data-recebi]');
   assert.equal(await p.getAttribute('#rc-v', 'aria-invalid'), 'true'); assert.equal((await aqui(p)).pagos.length, 0);
-  await digitar(p, '#rc-v', '6400'); await p.click('.kf-dlg [data-recebi]');
+  await digitar(p, '#rc-v', '5148'); await p.click('.kf-dlg [data-recebi]');
   assert.ok(await esperar(async () => (await aqui(p)).pagos.length === 1));
-  assert.deepEqual(await pe(p).then(x => [x.rotulo, x.que, x.total]), ['Receber', 'Falta', 'R$ 96,00']);
+  assert.deepEqual(await pe(p).then(x => [x.rotulo, x.que, x.total]), ['Receber', 'Falta', 'R$ 77,22']);
   await p.evaluate(() => { document.querySelector('.kf-toast').hidden = true; });
   await p.click('#pe-doc [data-prox="receber"]'); await p.locator('#rc-v').waitFor();
-  assert.match(await p.inputValue('#rc-v'), /R\$\s96,00/);
+  assert.match(await p.inputValue('#rc-v'), /R\$\s77,22/);
   await p.click('.kf-dlg [data-meio="Dinheiro"]'); await p.click('.kf-dlg [data-recebi]');
   assert.ok(await esperar(async () => (await aqui(p)).etapa === 'recebido'));
-  assert.deepEqual((await aqui(p)).pagos.map(x => [x.v, x.meio]), [[6400, 'Pix'], [9600, 'Dinheiro']]);
+  assert.deepEqual((await aqui(p)).pagos.map(x => [x.v, x.meio]), [[5148, 'Pix'], [7722, 'Dinheiro']]);
   assert.equal((await pe(p)).rotulo, 'Enviar recibo');
   // recibo: um por pagamento
   await p.evaluate(() => { document.querySelector('.kf-toast').hidden = true; });
   await p.click('#pe-doc [data-prox="recibo"]'); await p.locator('.kf-dlg [data-pg]').first().waitFor();
   assert.equal(await p.locator('.kf-dlg [data-pg]').count(), 2);
-  assert.match(await p.evaluate(() => { const d = getDoc(rota().id); return mensagemRecibo(d, d.pagos[0]); }), /Olá, Mariana![\s\S]*Recebi R\$\s64,00 \(pix\)/);
+  assert.match(await p.evaluate(() => { const d = getDoc(rota().id); return mensagemRecibo(d, d.pagos[0]); }), /Olá, Mariana![\s\S]*Recebi R\$\s51,48 \(pix\)/);
   await fecharJanela(p);
   // voltar uma etapa tira os recebimentos, e Desfazer devolve
   await p.click('#pe-doc [data-menu]'); await p.click('.kf-dlg [data-m="volta"]');
@@ -168,7 +252,7 @@ test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entr
   assert.deepEqual(await aqui(p).then(d => [d.etapa, d.pagos.length]), ['recebido', 2]);
   // o Início: nada em andamento, e o recebido do mês
   await p.evaluate(() => ir('/', true));
-  assert.match(await p.locator('.painel').innerText(), /Recebido neste mês\s+R\$\s160,00/);
+  assert.match(await p.locator('.painel').innerText(), /Recebido neste mês\s+R\$\s128,70/);
   assert.equal(await p.locator('#conteudo .docs .doc').count(), 0);
   await p.evaluate(() => ir('/docs', true)); assert.equal(await p.locator('#dc-lista .doc').count(), 1);
   await p.fill('#dc-q', 'ninguém'); assert.equal(await p.locator('#dc-lista .doc').count(), 0);
@@ -212,14 +296,27 @@ test('Preços: blocos em grade, um por categoria; mudar preço em centavos; pre�
   const grade = await p.evaluate(() => [...document.querySelectorAll('#conteudo .blocos .bloco')].slice(0, 2).map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.width), Math.round(r.height), !!b.querySelector('svg.pic')]; }));
   assert.equal(grade[0][0], grade[1][0], 'os blocos ficam lado a lado, em grade'); assert.ok(grade[0][1] > 130 && grade[0][2] > 130 && grade[0][3], 'blocos grandes, com pictograma');
   await p.click('#conteudo [data-cat="c-quadro"]'); await p.locator('#conteudo [data-preco]').first().waitFor();
-  assert.equal(await p.locator('#conteudo [data-preco]').count(), 8);
+  assert.equal(await p.locator('#conteudo [data-preco]').count(), 9);
+  assert.match(await p.locator('#conteudo .hora-pn').innerText(), /HORA DE EXEMPLO|Hora de exemplo/i);
+  assert.match(await p.locator('#conteudo [data-preco="p-quadro-9"]').innerText(), /Troca de disjuntor geral\s+30 min · por unidade\s+R\$\s60,00/);
+  // o item guarda o tempo: mudar o preço reescreve o tempo, e a ligação com a hora continua
   await p.click('#conteudo [data-preco="p-quadro-1"]'); await p.locator('#pr-p').waitFor();
-  assert.equal(await semCampoEmFoco(p), true);
+  assert.equal(await semCampoEmFoco(p), true); assert.match(await p.inputValue('#pr-p'), /R\$\s40,00/);
+  await digitar(p, '#pr-p', '7000'); await p.click('.kf-dlg [data-salvar]');
+  assert.deepEqual(await p.evaluate(() => { const x = precos.find(y => y.id === 'p-quadro-1'); return [x.min, x.fixo, precoDe(x)]; }), [35, false, 7000], 'R$ 70,00 a R$ 120,00 a hora são 35 min');
+  // a hora muda pelo painel: os preços ligados a ela acompanham
+  await p.click('#conteudo [data-hora]'); await p.locator('#hr-v').waitFor(); await digitar(p, '#hr-v', '15000'); await p.click('.kf-dlg [data-salvar]');
+  assert.match(await p.locator('#conteudo [data-preco="p-quadro-9"]').innerText(), /R\$\s75,00/);
+  assert.match(await p.locator('#conteudo [data-preco="p-quadro-8"]').innerText(), /Preço fixo[\s\S]*R\$\s1\.500,00/, 'o preço fixo não muda com a hora');
+  await p.evaluate(() => { ajustes.hora = 12000; salvarAjustes(); redesenhar(); });
+  // com a chave desligada, o preço é fixo, em centavos ("8550" = R$ 85,50)
+  await p.click('#conteudo [data-preco="p-quadro-1"]'); await p.locator('#pr-seg').waitFor(); await p.evaluate(() => document.querySelector('#pr-seg').click());
+  await p.locator('#pr-t').waitFor({ state: 'detached' });
   await digitar(p, '#pr-p', '8550'); assert.match(await p.inputValue('#pr-p'), /R\$\s85,50/); await p.click('.kf-dlg [data-salvar]');
-  assert.equal(await p.evaluate(() => precos.find(x => x.id === 'p-quadro-1').preco), 8550);
+  assert.deepEqual(await p.evaluate(() => { const x = precos.find(y => y.id === 'p-quadro-1'); return [x.fixo, precoDe(x)]; }), [true, 8550]);
   await p.click('#conteudo [data-novo-preco]'); await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#pr-n', 'aria-invalid'), 'true');
   await p.fill('#pr-n', 'Instalação de IDR'); await digitar(p, '#pr-p', '16000'); await p.click('.kf-dlg [data-salvar]');
-  assert.deepEqual(await p.evaluate(() => { const L = precos.filter(x => x.cat === 'c-quadro'); return [L.length, L[L.length - 1].nome, L[L.length - 1].preco]; }), [9, 'Instalação de IDR', 16000], 'o preço novo entra no fim da lista');
+  assert.deepEqual(await p.evaluate(() => { const L = precos.filter(x => x.cat === 'c-quadro'); return [L.length, L[L.length - 1].nome, precoDe(L[L.length - 1]), L[L.length - 1].min]; }), [10, 'Instalação de IDR', 16000, 80], 'o preço novo entra no fim da lista');
   // categoria nova, com ícone escolhido
   await p.click('.barra-app [data-voltar]'); await p.click('#conteudo [data-nova-cat]'); await p.locator('#ct-n').waitFor();
   await p.fill('#ct-n', 'Ar-condicionado'); await p.click('.kf-dlg [data-ic="ar"]'); await p.click('.kf-dlg [data-salvar]');
@@ -258,7 +355,7 @@ test('documentos: o PDF do orçamento e do relatório, o recibo, o código do Pi
   const a = await aparelho(amb, { antes: PDF_FALSO }); const p = a.page; await pronto(p);
   const r = await p.evaluate(async () => {
     Object.assign(ajustes, { nome: 'Carlos Pereira', fone: '11987654321', cidade: 'São Paulo', pix: 'carlos@exemplo.com.br' }); salvarAjustes();
-    const d = criarExemplo(); d.exemplo = false; d.num = 7; d.desc = 3500; d.etapa = 'enviado'; d.enviadoEm = new Date('2026-11-20T12:00').getTime();
+    const d = criarExemplo(); d.exemplo = false; d.num = 7; d.desc = 4000; d.etapa = 'enviado'; d.enviadoEm = new Date('2026-11-20T12:00').getTime();
     const o = {};
     await montarPDF(d); o.orc = window.__pdf.t.join('\n');
     const rel = acertaDoc({ ...clone(d), tipo: 'rel', id: 'r1', num: 8, feito: new Date('2026-11-18T12:00').getTime() }); docs.push(rel);
@@ -270,7 +367,7 @@ test('documentos: o PDF do orçamento e do relatório, o recibo, o código do Pi
     o.icones = [/M13\.500 13\.500h3\.200/.test(IC.qr), Object.keys(IC).some(k => /pix/i.test(k))];
     return o;
   });
-  for (const t of ['ORÇAMENTO', 'Nº 0007', '20/11/2026', 'Carlos Pereira', '(11) 98765-4321', 'Mariana Souza', 'Reforma elétrica da cozinha', 'Ponto novo de tomada com fiação', '6 pontos', 'Subtotal', '- R$ 35,00', 'TOTAL', 'R$ 1.100,00', 'Entrada de 50% (R$ 550,00) na aprovação e R$ 550,00 na conclusão do serviço.', 'Este orçamento vale até 05/12/2026.', 'PAGUE COM PIX', 'R$ 550,00', 'De acordo: Mariana Souza', 'Material por conta do cliente.'])
+  for (const t of ['ORÇAMENTO', 'Nº 0007', '20/11/2026', 'Carlos Pereira', '(11) 98765-4321', 'Mariana Souza', 'Reforma elétrica da cozinha', 'Ponto novo de tomada com fiação', '6 pontos', 'Valor do serviço', '- R$ 40,00', 'TOTAL', 'R$ 1.100,00', 'Entrada de 50% (R$ 550,00) na aprovação e R$ 550,00 na conclusão do serviço.', 'Este orçamento vale até 05/12/2026.', 'PAGUE COM PIX', 'R$ 550,00', 'De acordo: Mariana Souza', 'Material por conta do cliente.'])
     assert.ok(r.orc.replace(/ /g, ' ').includes(t), `o PDF do orçamento sem "${t}"`);
   for (const t of ['RELATÓRIO DE SERVIÇO', 'Nº 0008', 'Executado em 18/11/2026', 'Pagamento à vista.', 'R$ 1.100,00']) assert.ok(r.rel.replace(/ /g, ' ').includes(t), `o PDF do relatório sem "${t}"`);
   assert.ok(!/vale até|De acordo/.test(r.rel), 'o relatório não tem validade nem "de acordo"');
@@ -309,9 +406,9 @@ test('sincronização: arquivo novo na nuvem (o da versão 3 não é tocado), co
   assert.deepEqual(await A.page.evaluate(() => docs.map(d => d.cliente.nome).sort()), ['Cliente do A', 'Cliente do B']);
   assert.deepEqual(await A.page.evaluate(() => docs.map(d => d.num).sort()), [1, 2], 'números repetidos são refeitos');
   // um preço mudado no A e um documento excluído no A chegam ao B
-  await A.page.evaluate(id => { precos.find(x => x.id === 'p-visita-1').preco = 14000; salvarPrecos(); docs = docs.filter(d => d.id !== id); salvarDocs(); return SY.agora({ quiet: true }); }, idA);
+  await A.page.evaluate(id => { precos.find(x => x.id === 'p-visita-4').preco = 14000; salvarPrecos(); docs = docs.filter(d => d.id !== id); salvarDocs(); return SY.agora({ quiet: true }); }, idA);
   await B.page.evaluate(() => SY.agora({ quiet: true }));
-  assert.deepEqual(await B.page.evaluate(() => [precos.find(x => x.id === 'p-visita-1').preco, docs.map(d => d.cliente.nome)]), [14000, ['Cliente do B']]);
+  assert.deepEqual(await B.page.evaluate(() => [precos.find(x => x.id === 'p-visita-4').preco, docs.map(d => d.cliente.nome)]), [14000, ['Cliente do B']]);
   assert.deepEqual([...A.erros, ...B.erros], []);
   await A.fechar(); await B.fechar();
 });
@@ -321,7 +418,12 @@ test('Ajustes: as oito guias comuns e as do app; os dados dos documentos, a chav
   await p.evaluate(() => { location.hash = '#/ajustes'; }); await p.locator('[data-kf-aj]').waitFor();
   const guias = await guiasAjustes(p);
   assert.deepEqual(guias.comuns, GUIAS_COMUNS);
-  assert.deepEqual(guias.produto, ['Pix', 'Documento novo', 'Raio e apresentação']);
+  assert.deepEqual(guias.produto, ['Cobrança', 'Pix', 'Documento novo', 'Raio e apresentação']);
+  // Cobrança: deslocamento nas duas formas, mínimo por ida e as porcentagens da condição
+  await p.evaluate(() => KitFacil.ajustes.abrir('cobranca')); await p.click('[data-aj-dm="km"]'); await p.locator('#aj-deslKm').waitFor();
+  await digitar(p, '#aj-deslKm', '250'); await digitar(p, '#aj-minIda', '10000'); await p.fill('#aj-cond1', '30'); await p.locator('#aj-cond1').blur();
+  assert.deepEqual(await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('eletricafacil.ajustes')); return [s.deslModo, s.deslKm, s.minIda, s.cond1, s.cond2]; }), ['km', 250, 10000, 30, 50]);
+  await p.evaluate(() => history.back()); await p.waitForTimeout(200);
   await p.evaluate(() => KitFacil.ajustes.abrir('conta')); await p.fill('#aj-nome', 'Carlos Pereira'); await p.fill('#aj-fone', '11987654321'); await p.locator('#aj-fone').blur();
   assert.deepEqual(await p.evaluate(() => [ajustes.nome, document.querySelector('#aj-fone').value, JSON.parse(localStorage.getItem('eletricafacil.ajustes')).nome]), ['Carlos Pereira', '(11) 98765-4321', 'Carlos Pereira']);
   await p.evaluate(() => KitFacil.ajustes.abrir('pix')); await p.fill('#aj-pix', ' Carlos@Exemplo.com.br '); await p.locator('#aj-pix').blur();

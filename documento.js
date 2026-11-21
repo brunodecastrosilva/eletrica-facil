@@ -1,4 +1,4 @@
-/* Elétrica Fácil 4 · os documentos que saem do app: orçamento e relatório em PDF, recibo, mensagem de WhatsApp,
+/* Elétrica Fácil 5 · os documentos que saem do app: orçamento e relatório em PDF, recibo, mensagem de WhatsApp,
    código do Pix e cópia de segurança. Tudo é feito no aparelho; só sai quando a pessoa compartilha. */
 'use strict';
 
@@ -142,11 +142,14 @@ async function montarPDF(d) {
     y += 12;
   };
   cabe(22); cabTabela();
-  d.linhas.forEach(l => {
-    const L = quebra(l.nome, wD, 10), h = L.length * lh(10) + 3.2;
+  // o cliente vê preço fechado por serviço; o tempo só aparece no diagnóstico (linhasCliente, em motor.js)
+  linhasCliente(d, c).forEach(l => {
+    const L = quebra(l.nome, wD, 10), S = l.sub ? quebra(l.sub, wD, 8.6) : [], h = L.length * lh(10) + S.length * lh(8.6) + 3.2;
     if (cabe(h)) cabTabela();
     L.forEach((t, k) => txt(t, M + 2.5, y + k * lh(10), { tam: 10 }));
-    txt(`${l.q} ${unTxt(l.q, l.un)}`, xQ, y, { tam: 10, lado: 'right' }); txt(BRL(l.pu), xU, y, { tam: 10, cor: PC.apoio, lado: 'right' }); txt(BRL(totalLinha(l)), xT, y, { tam: 10, forte: true, lado: 'right' });
+    S.forEach((t, k) => txt(t, M + 2.5, y + L.length * lh(10) + k * lh(8.6), { tam: 8.6, cor: PC.apoio }));
+    if (l.qtd) { txt(l.qtd, xQ, y, { tam: 10, lado: 'right' }); txt(l.pu, xU, y, { tam: 10, cor: PC.apoio, lado: 'right' }); }
+    txt(BRL(l.total), xT, y, { tam: 10, forte: true, lado: 'right' });
     y += h - 1.6;
     doc.setDrawColor(...PC.linha); doc.setLineWidth(0.2); doc.line(M, y - 2.2, M + CW, y - 2.2);
     y += 2.2;
@@ -158,7 +161,7 @@ async function montarPDF(d) {
   const tx = M + CW - 84;
   cabe((c.desc ? 12 : 0) + (c.pago ? 12 : 0) + 16);
   const lin = (r, v) => { txt(r, tx, y, { tam: 10, cor: PC.apoio }); txt(v, xT, y, { tam: 10, lado: 'right' }); y += 6; };
-  if (c.desc) { lin('Subtotal', BRL(c.sub)); lin('Desconto', '- ' + BRL(c.desc)); }
+  if (c.desc) { lin('Valor do serviço', BRL(c.sub)); lin(descTxt(d).slice(0, 34), '- ' + BRL(c.desc)); }
   doc.setFillColor(...PC.volt); doc.roundedRect(tx - 4, y - 5.2, 88, 11, 1.8, 1.8, 'F');
   txt('TOTAL', tx, y + 1.8, { tam: 9, forte: true }); txt(BRL(c.total), xT, y + 2.2, { tam: 14, forte: true, lado: 'right' });
   y += 12.5;
@@ -263,9 +266,9 @@ const assinatura = () => [ajustes.nome, ajustes.empresa && ajustes.empresa !== a
 function mensagem(d) {
   const c = conta(d), rel = d.tipo === 'rel', cob = cobrarAgora(d, c), nome = primeiroNome(d.cliente.nome);
   const L = [`Olá${nome ? ', ' + nome : ''}!`, rel ? `Segue o relatório do serviço${d.feito ? ' executado em ' + dataBR(d.feito) : ''}${d.titulo ? ': ' + d.titulo : ''}.` : `Segue o orçamento${d.titulo ? ' de ' + d.titulo : ''}.`, ''];
-  d.linhas.forEach(l => L.push(`• ${l.q} ${unTxt(l.q, l.un)} · ${l.nome}: ${BRL(totalLinha(l))}`));
+  linhasCliente(d, c).forEach(l => L.push(`• ${l.qtd ? l.qtd + ' · ' : ''}${l.nome}: ${BRL(l.total)}`));
   L.push('');
-  if (c.desc) L.push(`Subtotal: ${BRL(c.sub)}`, `Desconto: - ${BRL(c.desc)}`);
+  if (c.desc) L.push(`Valor do serviço: ${BRL(c.sub)}`, `${descTxt(d)}: - ${BRL(c.desc)}`);
   L.push(`*Total: ${BRL(c.total)}*`, pagTxt(d, c));
   if (!rel) L.push(`Válido até ${dataBR(validoAte(d))}.`);
   if (d.garantia > 0) L.push(`Garantia: ${plural(d.garantia, 'dia', 'dias')}.`);

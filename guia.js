@@ -1,4 +1,4 @@
-/* Elétrica Fácil 4 · roteiro do guia: um só, do começo ao fim, na ordem de uso (Código, Arts. 77 a 80).
+/* Elétrica Fácil 5 · roteiro do guia: um só, do começo ao fim, na ordem de uso (Código, Arts. 77 a 80).
    Cada passo faz a função de verdade, numa demonstração que não grava nada (casca.js troca os dados e devolve no fim).
    Só o envio (PDF e WhatsApp) é mostrado sem tocar: ele abriria outro app do aparelho.
    Cada passo se põe no lugar sozinho, porque a pessoa pode voltar um passo. */
@@ -11,6 +11,8 @@ async function gPelaBarra(m, id, sel) { if (!gVisivel($(sel))) { const b = $(`#k
 async function gSomar(m) { await gNoDoc(m); if (!gVisivel($('#so-q'))) await m.tocar('#conteudo [data-somar]', { depois: 600 }); return m.acha('#so-q'); }
 
 const GUIA = [
+  { t: 'Primeiro, a sua hora', d: 'Ela é a base dos preços. Cada serviço guarda um tempo, e o preço é o tempo vezes a sua hora.',
+    acao: async m => { await gPelaBarra(m, 'precos', '#conteudo .hora-pn'); await m.apontar('#conteudo .hora-pn', 1900); } },
   { t: 'Comece pelo +', d: 'O + cria o documento. Orçamento é para antes do serviço; relatório, para cobrar o que já foi feito.',
     acao: async m => {
       if (rota().nome !== 'inicio') { ir('/', true); await m.espera(300); }
@@ -32,9 +34,14 @@ const GUIA = [
       await m.tocar('.kf-dlg [data-soma="p-aparelhos-1"]', { depois: 500 });
       await m.fechar(); await m.apontar('#conteudo .itens', 1500);
     } },
-  { t: 'Mude a quantidade ou o preço', d: 'Toque numa linha para mudar. A mudança vale só neste documento.',
+  { t: 'Defeito desconhecido? Cobre pelo tempo', d: 'O diagnóstico entra pelo tempo que levou. O deslocamento é uma linha própria, por ida.',
     acao: async m => {
-      await gNoDoc(m); await m.tocar('#conteudo .itens .item', { depois: 600 });
+      await gSomar(m); await m.tocar('.kf-dlg [data-diag="60"]', { depois: 500 }); await m.tocar('.kf-dlg [data-ida="1"]', { depois: 500 });
+      await m.apontar('#so-conta', 1300); await m.fechar(); await m.apontar('#conteudo .itens', 1500);
+    } },
+  { t: 'Mude a quantidade ou o preço', d: 'Toque numa linha para mudar. Ali também fica a condição: normal, difícil ou muito difícil.',
+    acao: async m => {
+      await gNoDoc(m); await m.tocar('#conteudo .itens .item:nth-child(2)', { depois: 600 });
       await m.apontar('.kf-dlg .kf-quantidade', 1200); await m.tocar('.kf-dlg [data-kf-passo="1"]', { depois: 400 });
       await m.tocar('.kf-dlg [data-salvar]', { depois: 600 });
     } },

@@ -2,7 +2,7 @@
 
 Orçamento de serviços de elétrica, do pedido ao recibo, direto no celular, no tablet ou no computador.
 
-Versão **4.0.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **5.0.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md). Na 4.0.0 o app recomeçou enxuto, por decisão do Bruno: faz uma coisa só,
@@ -39,6 +39,33 @@ os da família; o fluxo, o desenho das telas e os ícones são do eletricista.
 
 Saíram na 4.0.0, com a aprovação do Bruno: conquistas e lâmpadas, Obra (levar, comprar, estoque e ferramentas),
 deslocamento, adicionais, impostos, cartão com taxa, ambientes, composição de material e o relatório técnico em blocos.
+
+## A hora como base (versão 5)
+
+O app serve para **orçar** (saber quanto cobrar) e **passar** (entregar uma proposta com cara de profissional). Na versão 5
+os preços saem da hora de quem usa.
+
+- **A sua hora.** Pedida uma vez, antes do primeiro documento. Dois caminhos: digitar o valor ou "Descobrir minha hora"
+  (quanto quer tirar por mês, mais os custos, dividido pelas horas cobradas). Fica no alto de Preços e em Ajustes, Cobrança.
+- **Cada serviço guarda o tempo típico.** O preço é o tempo vezes a hora. Mudar o preço reescreve o tempo. Com a chave
+  "Seguir a minha hora" desligada, o preço é fixo. Material e diária têm preço fixo.
+- **Diagnóstico por tempo e deslocamento por ida**, no alto de Somar serviço. O deslocamento é fixo por ida ou por
+  quilômetro (Ajustes, Cobrança).
+- **Mínimo por ida.** Se a mão de obra fica abaixo do mínimo vezes o número de idas, entra a linha "Atendimento mínimo".
+  Começa desligado; o valor fica em Ajustes, Cobrança, e vale para os documentos novos.
+- **Condição do serviço.** Na linha: Normal, Difícil (+25%) ou Muito difícil (+50%), com as porcentagens em Ajustes.
+- **Desconto em porcentagem**, com nome, até 100% (cortesia: o documento é concluído sem cobrança). Não incide sobre material.
+- **Tempo real.** Depois do serviço, um toque; com três anotações, o app sugere acertar o tempo da tabela.
+- **O cliente não vê horas.** O PDF e a mensagem saem com preço fechado por serviço; o tempo só aparece no diagnóstico.
+- Saíram do catálogo "Visita técnica", "Hora técnica" e "Localização de curto-circuito" (aprovação do Bruno, 21/11/2026).
+
+**Da 4 para a 5.** Documentos e ajustes continuam. Na tabela de preços, os itens de fábrica passam a seguir o tempo típico
+de fábrica (o preço que a pessoa tinha mudado neles não é mantido); os itens que a pessoa criou viram preço fixo, com o
+valor que tinham. Os tempos de fábrica são um ponto de partida, a corrigir linha a linha ou pelo tempo real anotado.
+
+As contas (`conta`, em `motor.js`): mão de obra, deslocamento e material somam separados; o mínimo por ida completa a mão
+de obra; o desconto em porcentagem incide sobre mão de obra e deslocamento. O valor do mínimo é guardado no documento
+quando ele é criado, e a linha guarda o preço do dia: documento já feito não muda quando a hora muda.
 
 ## Como usar
 
