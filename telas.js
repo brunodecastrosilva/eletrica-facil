@@ -114,8 +114,9 @@ function itensDoc(d, c) {
   if (!d.linhas.length) return '';
   const minimo = c.minimo ? `<div class="item minimo"><span class="it-q" aria-hidden="true">${IC.raio}</span><span class="it-tx"><b>Atendimento mínimo</b><small>Completa ${BRL(d.minIda)} por ida</small></span><b class="it-v num">${BRL(c.minimo)}</b></div>` : '';
   if (!d.comodos.length) return `<div class="cx itens">${d.linhas.map(itemDoc).join('')}${minimo}</div>`;
-  return gruposDoc(d).map(g => { const L = d.linhas.filter(l => grupoDe(d, l) === g), m = g === 'Geral' ? minimo : ''; if (!L.length && !m) return '';
-    return `<h3 class="sec-g"><span>${esc(g)}</span><b class="num">${BRL(soma(L.map(totalLinha)) + (m ? c.minimo : 0))}</b></h3><div class="cx itens">${L.map(itemDoc).join('')}${m}</div>`; }).join('');
+  return gruposDoc(d).map(g => { const L = d.linhas.filter(l => grupoDe(d, l) === g), m = g === 'Geral' ? minimo : '', ehCom = d.comodos.includes(g); if (!L.length && !m && !ehCom) return '';
+    const nome = ehCom ? `<button type="button" class="sec-g-bt" data-cmd="${esc(g)}" aria-label="${esc(g)}: renomear ou apagar"><span>${esc(g)}</span>${IC.lapis}</button>` : `<span>${esc(g)}</span>`;
+    return `<h3 class="sec-g">${nome}<b class="num">${BRL(soma(L.map(totalLinha)) + (m ? c.minimo : 0))}</b></h3>${L.length || m ? `<div class="cx itens">${L.map(itemDoc).join('')}${m}</div>` : `<p class="kf-ajuda">Nenhum serviço neste cômodo.</p>`}`; }).join('');
 }
 const itemDoc = l => `<button type="button" class="item" data-linha="${esc(l.id)}"><span class="it-q num" aria-hidden="true">${l.tipo === 'diag' ? tempoTxt(l.min) : l.q}</span><span class="it-tx"><b>${esc(l.nome)}</b><small>${esc(subLinha(l))}</small></span><b class="it-v num">${BRL(totalLinha(l))}</b></button>`;
 // serviços da tabela que seguem a hora: são os que podem ter o tempo real anotado
@@ -182,6 +183,7 @@ TELAS.doc = {
       if (t.closest('[data-somar]')) return janelaSomar(d);
       if (t.closest('[data-levantar]')) return janelaComodo(d, nome => janelaSomar(d, nome));
       let b;
+      if ((b = t.closest('[data-cmd]'))) return janelaCmd(d, b.dataset.cmd);
       if ((b = t.closest('[data-linha]'))) return janelaLinha(d, d.linhas.find(l => l.id === b.dataset.linha));
       if ((b = t.closest('[data-j]'))) return b.dataset.j === 'cliente' ? janelaCliente(d) : b.dataset.j === 'tempo' ? janelaTempo(d) : b.dataset.j === 'mats' ? janelaMats(d) : janelaCond(d, b.dataset.j);
       if ((b = t.closest('[data-recibo]'))) return janelaRecibo(d, b.dataset.recibo);
@@ -281,6 +283,7 @@ function janelaLinha(d, l, tipoNovo = '', com = '') {
       ${campo('ln-u', 'Unidade', `<select id="ln-u" class="kf-entrada">${UNIDADES.filter(u => u[0] !== 'ida').map(([k, n]) => `<option value="${k}"${k === x.un ? ' selected' : ''}>${n}</option>`).join('')}</select>`)}
       ${campo('ln-p', 'Preço de cada', campoDinheiro('ln-p', x.cond ? x.base : x.pu))}
       ${tipo === 'mat' ? '' : `<div class="kf-campo"><span class="kf-rotulo">Condição do serviço</span><div id="ln-cd">${segCond()}</div><p class="kf-ajuda" id="ln-cs" role="status"></p></div>
+      ${d.comodos.length && tipo !== 'mat' ? campo('ln-cm', 'Cômodo', selCom(d, 'ln-cm', l ? l.com : com)) : ''}
       ${campo('ln-m', 'Motivo, se quiser mostrar ao cliente', entrada('ln-m', x.motivo || '', 'placeholder="Ex.: Forro baixo e fiação antiga"'))}`}`;
   janela({ titulo: tipo === 'diag' ? 'Diagnóstico por tempo' : tipo === 'desl' ? 'Deslocamento' : nova ? 'Linha avulsa' : 'Linha do documento',
     sub: tipo === 'diag' ? 'Para o defeito que você ainda não conhece: cobre pelo tempo.' : tipo === 'desl' ? 'Uma linha própria do documento, por ida.' : nova ? 'Um serviço ou material que não está nos seus preços.' : 'Vale só neste documento. Para mudar sempre, vá em Preços.',
@@ -299,6 +302,7 @@ function janelaLinha(d, l, tipoNovo = '', com = '') {
           const nome = $('#ln-n', j).value.trim(), base = lerDinheiro($('#ln-p', j));
           if (!nome) { KitFacil.apontar($('#ln-n', j)); return aviso('Escreva a descrição da linha.'); }
           v = { nome, q, un: $('#ln-u', j).value, pu: tipo === 'mat' ? base : Math.round(base * (100 + condPct(cond)) / 100) };
+          if (tipo !== 'mat' && $('#ln-cm', j)) v.com = $('#ln-cm', j).value;
           if (tipo !== 'mat') Object.assign(v, { base, cond, motivo: $('#ln-m', j).value.trim() });
         }
         if (nova) d.linhas.push(acertaLinha({ id: uid(), pid: '', tipo, com, ...v })); else Object.assign(l, acertaLinha({ ...l, ...v }));
@@ -454,16 +458,40 @@ function janelaSomar(d, com0, aba0) {
       });
     } });
 }
+const selCom = (d, id, atual) => `<select id="${id}" class="kf-entrada">${[...d.comodos.map(c => [c, c]), ['', 'Geral, sem cômodo']].map(([v, n]) => `<option value="${esc(v)}"${v === (atual || '') ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
+// O cômodo: renomear (vale para todas as linhas e materiais dele) ou apagar com o que tem dentro, com Desfazer.
+function janelaCmd(d, nome) {
+  const nL = d.linhas.filter(l => l.com === nome).length, nM = soma(d.mats.filter(m => m.com === nome).map(m => m.q));
+  janela({ titulo: nome, contexto: 'Cômodo · ' + nomeDoc(d), sub: `${plural(nL, 'linha', 'linhas')} e ${plural(nM, 'peça contada', 'peças contadas')}.`,
+    corpo: campo('cmd-n', 'Nome do cômodo', entrada('cmd-n', nome, 'maxlength="36"'), 'O nome novo vale para tudo o que está nele, no documento, no PDF e na mensagem.'),
+    pe: '<button type="button" class="kf-btn kf-perigo" data-apagar>Apagar cômodo</button><button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
+    aoMontar: j => {
+      $('[data-salvar]', j).onclick = () => {
+        const novo = $('#cmd-n', j).value.trim().slice(0, 36);
+        if (!novo) { KitFacil.apontar($('#cmd-n', j)); return aviso('Escreva o nome do cômodo.'); }
+        if (novo !== nome && d.comodos.includes(novo)) { KitFacil.apontar($('#cmd-n', j)); return aviso(`Já existe um cômodo chamado ${novo}.`); }
+        if (novo !== nome) { d.comodos[d.comodos.indexOf(nome)] = novo; d.linhas.forEach(l => { if (l.com === nome) l.com = novo; }); d.mats.forEach(m => { if (m.com === nome) m.com = novo; }); mudouDoc(d); }
+        fecharJanela(); redesenhar();
+      };
+      $('[data-apagar]', j).onclick = () => confirmar(`Apagar ${nome}?`, `${nL || nM ? `Saem junto ${plural(nL, 'linha', 'linhas')} e ${plural(nM, 'peça contada', 'peças contadas')}.` : 'O cômodo está vazio.'}`, 'Apagar cômodo', () => {
+        const antes = { comodos: clone(d.comodos), linhas: clone(d.linhas), mats: clone(d.mats) };
+        d.comodos = d.comodos.filter(c => c !== nome); d.linhas = d.linhas.filter(l => l.com !== nome); d.mats = d.mats.filter(m => m.com !== nome);
+        mudouDoc(d); redesenhar();
+        aviso(`${nome} apagado.`, { label: 'Desfazer', run: () => { Object.assign(d, clone(antes)); mudouDoc(d); redesenhar(); } });
+      }, { desfaz: 'Dá para desfazer logo depois.' });
+    } });
+}
 const artigo = nome => /^(sala|cozinha|varanda|garagem|área|lavanderia|suíte|copa|despensa)/i.test(nome) ? 'a' : 'o';
 // o material contado: quantidade e complemento ("20 A, curva C"); complementos diferentes ficam em linhas separadas
 function janelaMat(d, m, depois) {
   janela({ titulo: m.nome, sub: m.quem === 'cli' ? 'O cliente compra.' : 'Eu levo.', contexto: m.com || nomeDoc(d),
     corpo: `<div class="kf-campo"><span class="kf-rotulo" id="mt-ql">Quantidade</span>${KitFacil.ui.quantidade({ id: 'mt-q', valor: m.q, min: 1, max: 9999, rotulo: 'quantidade', attrs: 'aria-labelledby="mt-ql"' })}</div>
+      ${d.comodos.length ? campo('mt-cm', 'Cômodo', selCom(d, 'mt-cm', m.com)) : ''}
       ${campo('mt-c', 'Complemento', entrada('mt-c', m.comp, 'placeholder="Ex.: 20 A, curva C" maxlength="60"'), 'Opcional. Sai na lista e, se for para o orçamento, no documento.')}`,
     pe: '<button type="button" class="kf-btn kf-perigo" data-tirar>Remover</button><button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
     aoFechar: () => depois(),
     aoMontar: j => {
-      $('[data-salvar]', j).onclick = () => { m.q = Math.max(1, Math.min(9999, parseInt($('#mt-q', j).value, 10) || 1)); m.comp = $('#mt-c', j).value.trim().slice(0, 60); mudouDoc(d); fecharJanela(); };
+      $('[data-salvar]', j).onclick = () => { m.q = Math.max(1, Math.min(9999, parseInt($('#mt-q', j).value, 10) || 1)); m.comp = $('#mt-c', j).value.trim().slice(0, 60); if ($('#mt-cm', j)) m.com = $('#mt-cm', j).value; mudouDoc(d); fecharJanela(); };
       $('[data-tirar]', j).onclick = () => { d.mats.splice(d.mats.indexOf(m), 1); mudouDoc(d); fecharJanela(); aviso('Material removido.'); };
     } });
 }

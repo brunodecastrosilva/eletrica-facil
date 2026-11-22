@@ -58,6 +58,7 @@ for (const tema of ['light', 'dark']) {
     await p.locator('#pe-doc').waitFor(); await fechar(p);
     await p.click('#conteudo [data-j="mats"]'); await p.locator('.kf-dlg [data-por]').waitFor(); await varrer(p, `Lista de materiais (${nome})`); await fechar(p);
     await varrer(p, `orçamento por cômodo (${nome})`);
+    await p.click('#conteudo [data-cmd="Sala"]'); await p.locator('#cmd-n').waitFor(); await varrer(p, `janela do cômodo (${nome})`); await fechar(p);
     // o orçamento de exemplo, etapa por etapa
     await p.evaluate(() => { Object.assign(ajustes, { nome: 'Carlos Pereira', fone: '11988887777', pix: 'carlos@exemplo.com.br', cidade: 'São Paulo' }); salvarAjustes(); criarExemplo(); });
     await p.locator('#conteudo .itens .item').first().waitFor(); await varrer(p, `orçamento de exemplo (${nome})`);

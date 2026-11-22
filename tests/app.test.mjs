@@ -189,15 +189,29 @@ test('levantamento por cômodo: a visita do apartamento de dois quartos dá R$ 6
   assert.equal((await pe(p)).total, 'R$ 680,00');
   assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('#conteudo .sec-g')].map(h => h.innerText.replace(/\s+/g, ' ').trim())),
     ['Sala R$ 300,00', 'Quarto 1 R$ 120,00', 'Quarto 2 R$ 120,00', 'Banheiro R$ 120,00', 'Geral R$ 20,00']);
-  // a lista de materiais: a soma do que foi contado, no total e por cômodo
+  // o cômodo: renomear vale para todas as linhas; uma linha muda de cômodo pela janela dela; apagar leva o que tem dentro, com Desfazer
+  await p.click('#conteudo [data-cmd="Quarto 2"]'); await p.locator('#cmd-n').waitFor(); await p.fill('#cmd-n', 'Sala'); await p.click('.kf-dlg [data-salvar]');
+  assert.equal(await p.getAttribute('#cmd-n', 'aria-invalid'), 'true', 'nome repetido não vale');
+  await p.fill('#cmd-n', 'Quarto de hóspedes'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.deepEqual(await p.evaluate(() => { const d = getDoc(rota().id); return [d.comodos, d.linhas.filter(l => l.com === 'Quarto de hóspedes').length, d.mats.filter(m => m.com === 'Quarto de hóspedes').length]; }), [['Sala', 'Quarto 1', 'Quarto de hóspedes', 'Banheiro'], 2, 2]);
+  await p.locator('#conteudo .itens .item', { hasText: 'luminária' }).click(); await p.locator('#ln-cm').waitFor({ state: 'attached' });
+  await p.evaluate(() => { const e = document.querySelector('#ln-cm'); e.value = 'Quarto 1'; e.dispatchEvent(new Event('change', { bubbles: true })); }); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('#conteudo .sec-g')].map(h => h.innerText.replace(/\s+/g, ' ').trim())),
+    ['Sala R$ 120,00', 'Quarto 1 R$ 300,00', 'Quarto de hóspedes R$ 120,00', 'Banheiro R$ 120,00', 'Geral R$ 20,00']);
+  await p.click('#conteudo [data-cmd="Banheiro"]'); await p.click('.kf-dlg [data-apagar]'); await p.click('.kf-dlg [data-kf-ok]');
+  assert.ok(await esperar(async () => (await pe(p)).total === 'R$ 560,00'), 'o chuveiro sai junto com o Banheiro');
+  await p.locator('.kf-toast .kf-toast-acao').click();
+  assert.ok(await esperar(async () => (await pe(p)).total === 'R$ 680,00'), 'Desfazer devolve o Banheiro');
+  assert.equal(await p.evaluate(() => getDoc(rota().id).comodos.join('|')), 'Sala|Quarto 1|Quarto de hóspedes|Banheiro');
   await p.click('#conteudo [data-j="mats"]'); await p.locator('.kf-dlg [data-por]').waitFor();
   assert.match(await p.locator('#ml-corpo').innerText(), /Eu levo\s+R\$\s156,00[\s\S]*Tomada 10 A\s+6 un\.\s+R\$\s108,00[\s\S]*Interruptor simples\s+3 un\.\s+R\$\s48,00/);
-  await p.click('.kf-dlg [data-pc="1"]'); assert.equal(await p.locator('#ml-corpo h4.sec-g').count(), 3, 'Sala, Quarto 1 e Quarto 2');
+  await p.click('.kf-dlg [data-pc="1"]'); assert.equal(await p.locator('#ml-corpo h4.sec-g').count(), 3, 'Sala, Quarto 1 e Quarto de hóspedes');
+  assert.match(await p.locator('#ml-corpo').innerText(), /Quarto de hóspedes/);
   await p.click('.kf-dlg [data-ok]'); assert.equal(await p.getAttribute('.kf-dlg [data-ok] >> nth=0', 'aria-pressed'), 'true', 'marcar o que já comprou');
   await p.click('.kf-dlg [data-por]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   assert.equal((await pe(p)).total, 'R$ 836,00', 'R$ 680 + R$ 156 do material');
   const txt = (await p.evaluate(async () => { const d = getDoc(rota().id); await montarPDF(d); return window.__pdf.t.join('\n') + '\n---\n' + mensagem(d); })).replace(/[  ]/g, ' ');
-  for (const x of ['SALA · R$ 300,00', 'QUARTO 1 · R$ 120,00', 'BANHEIRO · R$ 120,00', 'GERAL · R$ 20,00', 'MATERIAL · R$ 156,00', '*Sala* · R$ 300,00', 'Tomada 10 A']) assert.ok(txt.includes(x), `sem "${x}"`);
+  for (const x of ['SALA · R$ 120,00', 'QUARTO 1 · R$ 300,00', 'QUARTO DE HÓSPEDES · R$ 120,00', 'BANHEIRO · R$ 120,00', 'GERAL · R$ 20,00', 'MATERIAL · R$ 156,00', '*Sala* · R$ 120,00', '*Quarto de hóspedes* · R$ 120,00', 'Tomada 10 A']) assert.ok(txt.includes(x), `sem "${x}"`);
   // quem não usa cômodos não vê diferença: o mesmo documento sem cômodos sai sem grupos
   assert.equal(await p.evaluate(() => { const d = clone(getDoc(rota().id)); d.comodos = []; return linhasCliente(d).every(l => l.grupo === ''); }), true);
   assert.deepEqual(a.erros, []);

@@ -30,8 +30,8 @@ os da família; o fluxo, o desenho das telas e os ícones são do eletricista.
   documentos em andamento.
 - **Documentos.** Todos os orçamentos e relatórios, com busca e filtro.
 - **Preços.** Um bloco por categoria, em grade. Toque no bloco para mudar um preço, cadastrar outro ou editar a
-  categoria (nome e ícone). Dá para criar e excluir categorias. O catálogo de fábrica tem 9 categorias e 65 itens de
-  eletricista predial de baixa tensão, com preços ilustrativos (Regras do app, Art. 9º).
+  categoria (nome e ícone). Dá para criar e excluir categorias. O catálogo de fábrica tem 9 categorias, 53 serviços (com tempo
+  típico) e 22 materiais de eletricista predial de baixa tensão, com tempos e preços ilustrativos (Regras do app, Art. 9º).
 - **O raio.** De tempos em tempos um raio rasga a tela, sozinho, com ou sem toque. É enfeite: não recebe toque, não
   cai com alguém digitando nem com janela aberta, respeita o movimento reduzido e pode ser desligado em Ajustes.
 - **Da família:** apresentação de quatro telas, guia único (o app faz cada passo na tela), sincronização entre
@@ -78,6 +78,8 @@ quando ele é criado, e a linha guarda o preço do dia: documento já feito não
 - **Lista de materiais**, só para quem usa o app: no total ou por cômodo, com caixa de marcar. "Neste orçamento, o
   material: Eu levo | O cliente compra" é o padrão; a exceção se conta direto na outra parte. Mudar o padrão leva
   para lá o material que estava no padrão antigo. "Pôr no orçamento" soma só "Eu levo"; a lista do cliente sai sem preços.
+- **Editar o cômodo**: toque no nome do cômodo, no orçamento, para renomear (vale para tudo o que está nele) ou apagar
+  (sai junto o que está nele, com Desfazer). A linha e o material contado mudam de cômodo pela janela deles.
 - **O cliente vê os cômodos**: PDF e mensagem agrupados, com o subtotal de cada cômodo; diagnóstico, deslocamento e
   atendimento mínimo em "Geral"; o material num grupo próprio. Sem cômodos, nada muda.
 
@@ -146,7 +148,8 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 - **Ícones (Art. 57):** desenhados para o app, em dois jogos com o mesmo traço. Os de linha seguem a grade de 24, traço
   de 2 e pontas redondas. Os pictogramas das categorias usam a grade de 48, em dois tons (contorno, área tingida e
   detalhe cheio). Onde há Pix, o ícone é um QR code (Regras do app, Art. 12).
-- **Ajustes (Art. 62):** as oito guias comuns e três do app: Pix, Documento novo e Raio e apresentação. Os dados que
+- **Ajustes (Art. 62):** as oito guias comuns e quatro do app: Cobrança, Pix, Documento novo e Raio e
+  apresentação. Os dados que
   saem nos documentos ficam como extra de Conta e perfil.
 - **Referências de design.** Princípios tirados de apps premiados e onde entram: a informação que importa fica na
   frente (Flighty, Apple Design Award 2023): o Início abre com o que há para receber; mostrar só o passo atual
@@ -172,8 +175,9 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 | `comum/` | Kit Fácil 0.9.0, igual nos quatro repositórios (não se altera aqui) |
 | `tests/` | testes do app e varredura de acessibilidade (axe, WCAG 2.2 AA, claro e escuro) |
 
-As contas ficam em `motor.js` (`conta`, `cobrarAgora`, `proximo`): o total é a soma das linhas menos o desconto, que
-não passa do subtotal; a entrada é a porcentagem do total, arredondada no centavo, e o restante é o total menos a
+As contas ficam em `motor.js` (`conta`, `cobrarAgora`, `proximo`): mão de obra, deslocamento e material somam
+separados, o mínimo por ida completa a mão de obra e o desconto em porcentagem não incide sobre material (ver "A hora
+como base"); o material contado no levantamento fica fora do total até "Pôr no orçamento"; a entrada é a porcentagem do total, arredondada no centavo, e o restante é o total menos a
 entrada; o que falta é o total menos o que já entrou. A etapa acompanha o que falta (`acertaEtapa`, em `telas.js`).
 
 ## Serviços externos e configuração

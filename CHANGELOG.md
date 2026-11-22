@@ -13,7 +13,8 @@ Na visita técnica, o orçamento se faz cômodo por cômodo, e o material sai nu
 - Ação e objeto no cadastro: o nome se monta sozinho e o filtro acha rápido.
 - O cliente vê o orçamento separado por cômodo.
 
-Também: "Repetir o cômodo" copia serviços e materiais para um cômodo vazio; o cômodo repetido ganha número (Quarto 1,
+Também: toque no nome do cômodo, no orçamento, para renomear ou apagar (com Desfazer); a linha e o material contado
+mudam de cômodo pela janela deles; "Repetir o cômodo" copia serviços e materiais para um cômodo vazio; o cômodo repetido ganha número (Quarto 1,
 Quarto 2); complemento curto na linha do material ("20 A, curva C"), em linha separada; material que não está na lista
 entra pela busca, com preço opcional; "Pôr no orçamento" soma só a parte "Eu levo"; a lista do cliente sai pelo
 WhatsApp, sem preços; o PDF e a mensagem saem agrupados por cômodo, com o subtotal de cada um, e o material num grupo

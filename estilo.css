@@ -340,3 +340,5 @@ body:not(.kf-com-guia)[data-tela="doc"] .kf-toast,body:not(.kf-com-guia)[data-te
 .mt-ok[aria-pressed="true"] .mt-cx{background:var(--forte);color:var(--forte-tinta);box-shadow:none}
 .mt-ok[aria-pressed="true"] .so-tx b{text-decoration:line-through}
 .mt-cx .kf-i{width:18px;height:18px}
+.sec-g-bt{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:-8px 0;padding:0 4px;border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit}
+.sec-g-bt .kf-i{width:18px;height:18px;opacity:.75}
