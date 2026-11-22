@@ -165,8 +165,10 @@ async function montarPDF(d) {
   // totais
   y += 1.5;
   const tx = M + CW - 84;
-  cabe((c.desc ? 12 : 0) + (c.pago ? 12 : 0) + 16);
+  cabe(12 + (c.desl ? 6 : 0) + (c.desc ? 12 : 0) + (c.pago ? 12 : 0) + 16);
   const lin = (r, v) => { txt(r, tx, y, { tam: 10, cor: PC.apoio }); txt(v, xT, y, { tam: 10, lado: 'right' }); y += 6; };
+  // CDC, art. 40: mão de obra e material discriminados
+  lin('Mão de obra', BRL(c.mao)); if (c.desl) lin('Deslocamento', BRL(c.desl)); lin('Material', c.mat ? BRL(c.mat) : 'não incluído');
   if (c.desc) { lin('Valor do serviço', BRL(c.sub)); lin(descTxt(d).slice(0, 34), '- ' + BRL(c.desc)); }
   doc.setFillColor(...PC.volt); doc.roundedRect(tx - 4, y - 5.2, 88, 11, 1.8, 1.8, 'F');
   txt('TOTAL', tx, y + 1.8, { tam: 9, forte: true }); txt(BRL(c.total), xT, y + 2.2, { tam: 14, forte: true, lado: 'right' });
@@ -183,8 +185,9 @@ async function montarPDF(d) {
     y += 3.4;
   };
   bloco('Pagamento', pagTxt(d, c));
-  if (!rel) bloco('Validade', `Este orçamento vale até ${dataBR(validoAte(d))}.`);
-  if (d.garantia > 0) bloco('Garantia', `${plural(d.garantia, 'dia', 'dias')} para o serviço executado, a contar da conclusão. Não cobre mau uso nem alterações feitas por terceiros.`);
+  if (!rel && prazoTxt(d)) bloco('Prazo do serviço', prazoTxt(d));
+  if (!rel) bloco('Validade', `Este orçamento vale até ${dataBR(validoAte(d))}. Aprovado pelo cliente, o orçamento obriga as duas partes e só muda por nova negociação (CDC, art. 40, § 2º).`);
+  bloco('Garantia', `${garantiaTxt(d)} Não é defeito do serviço o dano causado por mau uso ou por alteração feita por terceiros na instalação (CDC, art. 14, § 3º, II).`);
   if (d.obs.trim()) bloco('Observações', d.obs);
 
   // Pix: QR code e copia e cola do que cobrar agora
@@ -277,8 +280,10 @@ function mensagem(d) {
   L.push('');
   if (c.desc) L.push(`Valor do serviço: ${BRL(c.sub)}`, `${descTxt(d)}: - ${BRL(c.desc)}`);
   L.push(`*Total: ${BRL(c.total)}*`, pagTxt(d, c));
-  if (!rel) L.push(`Válido até ${dataBR(validoAte(d))}.`);
-  if (d.garantia > 0) L.push(`Garantia: ${plural(d.garantia, 'dia', 'dias')}.`);
+  L.splice(L.indexOf(`*Total: ${BRL(c.total)}*`), 0, `Mão de obra: ${BRL(c.mao)}${c.desl ? ` · Deslocamento: ${BRL(c.desl)}` : ''} · Material: ${c.mat ? BRL(c.mat) : 'não incluído'}`);
+  if (!rel && prazoTxt(d)) L.push(prazoTxt(d));
+  if (!rel) L.push(`Válido até ${dataBR(validoAte(d))}. Aprovado, obriga as duas partes e só muda por nova negociação (CDC, art. 40, § 2º).`);
+  L.push(`Garantia: 90 dias, da lei (CDC, art. 26, II)${d.garAd ? `, mais ${garAdTxt(d.garAd)} de garantia contratual` : ''}.`);
   if (d.obs.trim()) L.push('', d.obs.trim());
   if (ajustes.pix && cob.v > 0) L.push('', `Pix (${cob.que}, ${BRL(cob.v)}): ${ajustes.pix}`);
   const a = assinatura(); if (a.length) L.push('', a.join(' · '));

@@ -3,6 +3,21 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.1.1 · 2026-11-22
+
+O documento fica conforme o Código de Defesa do Consumidor.
+
+- Garantia conforme a lei: os 90 dias do Código de Defesa do Consumidor saem sempre no documento; você escolhe só a garantia a mais.
+- O orçamento traz o início e o término previstos do serviço, como pede a lei.
+- O documento começa pelo cliente: nome, telefone e endereço do serviço.
+
+Também: a validade de fábrica passa a 10 dias (CDC, art. 40, § 1º); o PDF e a mensagem discriminam mão de obra e
+material ("não incluído" quando não há) e dizem que o orçamento aprovado obriga as duas partes (art. 40, § 2º); a
+exclusão de mau uso e de alteração por terceiros passa a citar a lei (art. 14, § 3º, II) em vez de reduzir a garantia;
+garantia antiga menor que 90 dias sobe para a da lei, e a maior vira o menor adicional que a cobre; o orçamento só é
+enviado com o início e o prazo; textos de campo vazio dizem o que vai nele, sem "opcional" nem "se quiser". O cliente
+obrigatório na criação é exceção ao Código do Projeto Fácil, Art. 64-D (ver o README).
+
 ## 5.1.0 · 2026-11-21
 
 Na visita técnica, o orçamento se faz cômodo por cômodo, e o material sai numa lista de compras.

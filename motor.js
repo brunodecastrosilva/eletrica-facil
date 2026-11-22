@@ -2,7 +2,7 @@
    O app faz uma coisa: orçar serviços de elétrica e fechar a cobrança (enviar, aprovar, receber, recibo).
    Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito. */
 'use strict';
-const VERSAO = '5.1.0';
+const VERSAO = '5.1.1';
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 
 /* ================= utilidades ================= */
@@ -127,7 +127,7 @@ const FORMATO = '4';
 })();
 
 const DEF = { nome: '', empresa: '', fone: '', email: '', doc: '', registro: '', cidade: '', pix: '', logo: '', logoProp: 1,
-  validade: 15, garantia: 90, pag: 'vista', entradaPct: 50, obs: '', seq: 0, raio: true, usos: {},
+  validade: 10, garAd: 0, pag: 'vista', entradaPct: 50, obs: '', seq: 0, raio: true, usos: {},
   // a hora é a base dos preços (0 = ainda não informada); os três números de "Descobrir minha hora"; deslocamento, mínimo por ida e condição
   hora: 0, hTirar: 0, hCustos: 0, hHoras: 0, deslModo: 'fixo', deslIda: 2000, deslKm: 200, minIda: 0, cond1: 25, cond2: 50, tab: 0 };
 const ETAPAS = { orc: ['rascunho', 'enviado', 'aprovado', 'recebido'], rel: ['rascunho', 'enviado', 'recebido'] };
@@ -154,6 +154,25 @@ function acertaLinha(l) {
 // material contado no levantamento: fica fora do total até "Pôr no orçamento"; quem: 'eu' (eu levo) ou 'cli' (o cliente compra)
 const acertaMat = m => ({ id: idOk(m.id) || uid(), pid: idOk(m.pid), nome: txt(m.nome).slice(0, 80) || 'Material', un: UNIDADES.some(u => u[0] === m.un) ? m.un : 'un',
   q: Math.max(1, Math.min(9999, Math.round(num(m.q, 1)))), pu: Math.max(0, Math.round(num(m.pu))), comp: txt(m.comp).slice(0, 60), quem: m.quem === 'cli' ? 'cli' : 'eu', com: txt(m.com).slice(0, 40), ok: !!m.ok });
+// Garantia (CDC): a legal, de 90 dias para reclamar de vício em serviço durável (art. 26, II), vale sempre, independe de
+// termo e não pode ser excluída nem reduzida (arts. 24, 25 e 51, I). O eletricista só escolhe uma garantia contratual
+// ADICIONAL, complementar à legal, dada por escrito no documento (art. 50). garAd = meses a mais: 0, 3, 6 ou 12.
+// Dado antigo (garantia em dias, que podia ser menor que 90): nunca se reduz o que foi prometido ao cliente; abaixo de 90
+// dias sobe para a legal, acima dela vira o menor adicional que cobre o que passava de 90.
+const GAR_AD = [[0, 'Nenhuma além da lei'], [3, '+3 meses'], [6, '+6 meses'], [12, '+1 ano']];
+function garAdDe(x) {
+  if (x.garAd !== undefined) return GAR_AD.some(g => g[0] === +x.garAd) ? +x.garAd : 0;
+  const extra = Math.round(num(x.garantia, 90)) - 90; if (extra <= 0) return 0;
+  return (GAR_AD.find(g => g[0] * 30 >= extra) || GAR_AD[GAR_AD.length - 1])[0];
+}
+const GAR_LEI = 'Garantia legal de 90 dias para reclamar de defeito no serviço, contados do término do serviço (Código de Defesa do Consumidor, art. 26, II). Ela vale sempre e não pode ser excluída nem reduzida.';
+const garAdTxt = m => m === 12 ? '1 ano' : `${m} meses`;
+const garCurta = d => d.garAd ? `90 dias da lei + ${garAdTxt(d.garAd)}` : '90 dias, da lei';
+// prazo do serviço (CDC, art. 40): início previsto e quantos dias leva; o término é o último dia
+const fimPrevisto = d => d.inicio && d.dias ? d.inicio + (d.dias - 1) * 86400000 : null;
+const prazoTxt = d => d.inicio && d.dias ? `Início previsto em ${dataBR(d.inicio)} e término até ${dataBR(fimPrevisto(d))} (${plural(d.dias, 'dia', 'dias')} de serviço).` : '';
+// os dados do cliente que fazem o documento nascer: nome, telefone e endereço do serviço
+const clienteOk = c => !!c && txt(c.nome).trim().length >= 2 && String(c.fone || '').replace(/\D/g, '').length >= 10 && txt(c.end).trim().length >= 3;
 function acertaDoc(d) {
   d = d && typeof d === 'object' ? d : {};
   const tipo = d.tipo === 'rel' ? 'rel' : 'orc', c = d.cliente && typeof d.cliente === 'object' ? d.cliente : {};
@@ -162,7 +181,8 @@ function acertaDoc(d) {
     cliente: { nome: txt(c.nome), fone: txt(c.fone), end: txt(c.end), doc: txt(c.doc) }, titulo: txt(d.titulo),
     linhas: (Array.isArray(d.linhas) ? d.linhas : []).filter(l => l && typeof l === 'object').map(acertaLinha),
     desc: Math.max(0, Math.round(num(d.desc))), descPct: Math.max(0, Math.min(100, Math.round(num(d.descPct)))), descNome: txt(d.descNome).slice(0, 60), minIda: Math.max(0, Math.round(num(d.minIda))), tempoOk: !!d.tempoOk, pag: tipo === 'orc' && d.pag === 'entrada' ? 'entrada' : d.pag === 'combinar' ? 'combinar' : 'vista',
-    entradaPct: [30, 40, 50, 60, 70].includes(d.entradaPct) ? d.entradaPct : 50, validade: Math.max(1, Math.min(365, Math.round(num(d.validade, 15)))), garantia: Math.max(0, Math.min(3650, Math.round(num(d.garantia, 90)))),
+    entradaPct: [30, 40, 50, 60, 70].includes(d.entradaPct) ? d.entradaPct : 50, validade: Math.max(1, Math.min(365, Math.round(num(d.validade, 10)))), garAd: garAdDe(d),
+    inicio: num(d.inicio) || null, dias: Math.max(0, Math.min(365, Math.round(num(d.dias)))),
     feito: num(d.feito) || null, obs: txt(d.obs),
     comodos: (Array.isArray(d.comodos) ? d.comodos : []).map(c => txt(c).slice(0, 40)).filter((c, i, a) => c && a.indexOf(c) === i).slice(0, 40),
     mats: (Array.isArray(d.mats) ? d.mats : []).filter(m => m && typeof m === 'object').map(acertaMat).slice(0, 500), quem: d.quem === 'cli' ? 'cli' : 'eu',
@@ -182,7 +202,7 @@ const acertaCat = c => ({ id: idOk(c.id) || uid(), nome: txt(c.nome) || 'Categor
 function acertaAjustes(a) {
   const o = { ...DEF, ...(a && typeof a === 'object' ? a : {}) };
   ['nome', 'empresa', 'fone', 'email', 'doc', 'registro', 'cidade', 'pix', 'logo', 'obs'].forEach(k => { o[k] = txt(o[k]); });
-  o.validade = Math.max(1, Math.min(365, Math.round(num(o.validade, 15)))); o.garantia = Math.max(0, Math.min(3650, Math.round(num(o.garantia, 90))));
+  o.validade = Math.max(1, Math.min(365, Math.round(num(o.validade, 10)))); o.garAd = garAdDe(a && typeof a === 'object' && a.garAd === undefined && a.garantia !== undefined ? { garantia: a.garantia } : o); delete o.garantia;
   o.pag = ['vista', 'entrada', 'combinar'].includes(o.pag) ? o.pag : 'vista'; o.entradaPct = [30, 40, 50, 60, 70].includes(o.entradaPct) ? o.entradaPct : 50;
   o.seq = Math.max(0, Math.round(num(o.seq))); o.raio = o.raio !== false;
   ['hora', 'hTirar', 'hCustos', 'hHoras', 'deslIda', 'deslKm', 'minIda', 'tab'].forEach(k => { o[k] = Math.max(0, Math.min(99999999, Math.round(num(o[k])))); });
@@ -227,7 +247,11 @@ if (ajustes.tab < 6) {
 docs = (Array.isArray(docs) ? docs : []).map(acertaDoc);
 
 /* ================= Kit Fácil: moldura, tema e sincronização ================= */
-const NOVIDADES = [{ versao: '5.1.0', itens: [
+const NOVIDADES = [{ versao: '5.1.1', itens: [
+  'Garantia conforme a lei: os 90 dias do Código de Defesa do Consumidor saem sempre no documento; você escolhe só a garantia a mais.',
+  'O orçamento traz o início e o término previstos do serviço, como pede a lei.',
+  'O documento começa pelo cliente: nome, telefone e endereço do serviço.',
+] }, { versao: '5.1.0', itens: [
   'Levantamento por cômodo: na visita, some o que há para fazer, cômodo por cômodo.',
   'Conte o material no cômodo e saia com a lista de compras.',
   'Lista de materiais com o que você leva e o que o cliente compra.',
@@ -452,7 +476,7 @@ function pagTxt(d, c = conta(d)) {
   return d.tipo === 'rel' ? 'Pagamento à vista.' : 'Pagamento à vista, na conclusão do serviço.';
 }
 const pagCurto = d => d.pag === 'entrada' ? `Entrada de ${d.entradaPct}%` : d.pag === 'combinar' ? 'A combinar' : 'À vista';
-const garantiaTxt = d => d.garantia > 0 ? `${plural(d.garantia, 'dia', 'dias')} para o serviço executado` : 'Sem garantia informada';
+const garantiaTxt = d => d.garAd ? `${GAR_LEI} Além dela, garantia contratual de ${garAdTxt(d.garAd)}, dada por este documento e somada à legal (art. 50).` : GAR_LEI;
 // o próximo passo de cada documento: é o botão do pé
 function proximo(d) {
   if (d.etapa === 'recusado') return { id: 'reabrir', rotulo: 'Reabrir', frase: 'O cliente recusou. Reabra para mudar e enviar de novo.' };
@@ -474,10 +498,12 @@ function painel() {
     aprovados: L.filter(d => d.tipo === 'orc' && d.etapa === 'aprovado').length,
     recebidoMes: soma(L.flatMap(d => d.pagos.filter(p => p.em >= ini.getTime()).map(p => p.v))) };
 }
-function novoDocumento(tipo) {
+function novoDocumento(tipo, cliente) {
   // a hora é pedida uma vez, antes do primeiro documento: sem ela não há preço certo (Código, Art. 64-D)
   if (!ajustes.hora) return janelaHora(() => novoDocumento(tipo), 'Antes do primeiro documento');
-  const d = acertaDoc({ id: uid(), tipo, num: 0, minIda: ajustes.minIda, validade: ajustes.validade, garantia: ajustes.garantia, pag: tipo === 'orc' ? ajustes.pag : (ajustes.pag === 'combinar' ? 'combinar' : 'vista'), entradaPct: ajustes.entradaPct, obs: ajustes.obs, feito: tipo === 'rel' ? Date.now() : null, criado: Date.now(), mudou: Date.now() });
+  // o cliente vem antes de tudo: sem nome, telefone e endereço do serviço o documento não nasce (exceção ao Art. 64-D)
+  if (!clienteOk(cliente)) return janelaNovoCliente(tipo, c => novoDocumento(tipo, c));
+  const d = acertaDoc({ id: uid(), tipo, num: 0, cliente, minIda: ajustes.minIda, validade: ajustes.validade, garAd: ajustes.garAd, pag: tipo === 'orc' ? ajustes.pag : (ajustes.pag === 'combinar' ? 'combinar' : 'vista'), entradaPct: ajustes.entradaPct, obs: ajustes.obs, feito: tipo === 'rel' ? Date.now() : null, criado: Date.now(), mudou: Date.now() });
   d.num = ++ajustes.seq; salvarAjustes();
   docs.unshift(d); salvarDocs();
   ir('/d/' + d.id);
@@ -489,7 +515,7 @@ function criarExemplo() {
   const lin = (n, q) => { const p = P(n); return { id: uid(), pid: p.id, nome: p.nome, un: p.un, q, pu: precoDe(p) }; };
   const d = acertaDoc({ id: 'exemplo', tipo: 'orc', exemplo: true, cliente: { nome: 'Mariana Souza', fone: '(11) 98888-7777', end: 'Rua das Acácias, 120' }, titulo: 'Reforma elétrica da cozinha',
     linhas: [lin('Ponto novo de tomada com fiação', 6), lin('Instalação de luminária ou plafon', 3), lin('Instalação de DR', 1), lin('Instalação de chuveiro elétrico', 1)],
-    pag: 'entrada', entradaPct: 50, validade: ajustes.validade, garantia: ajustes.garantia, obs: 'Material por conta do cliente.', criado: Date.now(), mudou: Date.now() });
+    pag: 'entrada', entradaPct: 50, validade: ajustes.validade, garAd: ajustes.garAd, inicio: Date.now() + 7 * 86400000, dias: 2, obs: 'Material por conta do cliente.', criado: Date.now(), mudou: Date.now() });
   docs.unshift(d); salvarDocs(); ir('/d/' + d.id);
   return d;
 }

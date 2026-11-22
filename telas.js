@@ -135,8 +135,8 @@ TELAS.doc = {
         <p class="tr-frase" role="status">${esc(px.frase)}</p>
       </section>
       <section class="cx" aria-label="Cliente e serviço">
-        ${lin('data-j="cliente"', IC.pessoa, 'Cliente', d.cliente.nome ? [d.cliente.nome, d.cliente.fone ? fone(d.cliente.fone) : ''].filter(Boolean).join(' · ') : 'Só é preciso na hora de enviar', !d.cliente.nome)}
-        ${lin('data-j="titulo"', IC.lapis, rel ? 'Serviço executado' : 'Serviço', d.titulo || 'Dê um nome, se quiser', !d.titulo)}
+        ${lin('data-j="cliente"', IC.pessoa, 'Cliente', clienteOk(d.cliente) ? [d.cliente.nome, d.cliente.end].join(' · ') : 'Nome, telefone e endereço do serviço', !clienteOk(d.cliente))}
+        ${lin('data-j="titulo"', IC.lapis, rel ? 'Serviço executado' : 'Serviço', d.titulo || 'Nome do serviço (ex.: reforma da cozinha)', !d.titulo)}
       </section>
       <section aria-labelledby="dc-it">
         <h2 class="sec" id="dc-it">${rel ? 'O que foi feito' : 'Serviços'}${d.linhas.length ? ` <span class="sec-n">· ${d.linhas.length}</span>` : ''}</h2>
@@ -150,21 +150,22 @@ TELAS.doc = {
         <div class="cx">
           ${lin('data-j="pag"', IC.dinheiro, 'Pagamento', pagCurto(d))}
           ${rel ? lin('data-j="feito"', IC.dia, 'Serviço feito em', d.feito ? dataBR(d.feito) : 'Escolha o dia', !d.feito) : lin('data-j="validade"', IC.relogio, 'Validade', `${plural(d.validade, 'dia', 'dias')} · até ${dataCurta(validoAte(d))}`)}
-          ${lin('data-j="garantia"', IC.escudo, 'Garantia', d.garantia ? plural(d.garantia, 'dia', 'dias') : 'Sem garantia', !d.garantia)}
+          ${rel ? '' : lin('data-j="prazo"', IC.dia, 'Prazo do serviço', d.inicio && d.dias ? `${dataCurta(d.inicio)} a ${dataCurta(fimPrevisto(d))} · ${plural(d.dias, 'dia', 'dias')}` : 'Início e quantos dias leva', !(d.inicio && d.dias))}
+          ${lin('data-j="garantia"', IC.escudo, 'Garantia', garCurta(d))}
           ${lin('data-j="desc"', IC.desconto, 'Desconto', c.desc ? `${d.descPct ? d.descPct + '% · ' : ''}${BRL(c.desc)}` : 'Sem desconto', !c.desc)}
           ${lin('data-j="obs"', IC.nota, 'Observações', obs || 'Nenhuma', !obs)}
         </div>
       </section>
       <section aria-label="Valores">
         <dl class="resumo">
-          ${c.desl || c.mat ? resumo('Mão de obra', BRL(c.mao)) + (c.desl ? resumo('Deslocamento', BRL(c.desl)) : '') + (c.mat ? resumo('Material', BRL(c.mat)) : '') : ''}
+          ${resumo('Mão de obra', BRL(c.mao)) + (c.desl ? resumo('Deslocamento', BRL(c.desl)) : '') + resumo('Material', c.mat ? BRL(c.mat) : 'não incluído')}
           ${c.desc ? resumo('Valor do serviço', BRL(c.sub)) + resumo(esc(descTxt(d)), '− ' + BRL(c.desc)) : ''}
           ${resumo('Total', BRL(c.total), true)}
           ${d.pag === 'entrada' && !c.pago ? resumo(`Entrada de ${d.entradaPct}%`, BRL(c.entrada)) + resumo('Na conclusão', BRL(c.resto)) : ''}
           ${c.pago ? resumo('Já recebido', BRL(c.pago)) + resumo('Falta receber', BRL(c.falta)) : ''}
         </dl>
       </section>
-      ${anotaveis(d).length && (rel || ['aprovado', 'recebido'].includes(d.etapa)) ? `<section aria-labelledby="dc-tr"><h2 class="sec" id="dc-tr">Depois do serviço</h2><div class="cx">${lin('data-j="tempo"', IC.relogio, 'Tempo real', d.tempoOk ? 'Anotado' : 'Anotar, para a tabela ter os seus tempos', !d.tempoOk)}</div></section>` : ''}
+      ${anotaveis(d).length && (rel || ['aprovado', 'recebido'].includes(d.etapa)) ? `<section aria-labelledby="dc-tr"><h2 class="sec" id="dc-tr">Depois do serviço</h2><div class="cx">${lin('data-j="tempo"', IC.relogio, 'Tempo real', d.tempoOk ? 'Anotado' : 'Anotar quanto tempo levou', !d.tempoOk)}</div></section>` : ''}
       ${d.pagos.length ? `<section aria-labelledby="dc-pg"><h2 class="sec" id="dc-pg">Recebimentos</h2><div class="cx">${d.pagos.map(p => `<div class="pago"><span class="lin-ic">${IC.certo}</span><span class="lin-tx"><small>${dataBR(p.em)} · ${esc(p.meio)}</small><b class="num">${BRL(p.v)}</b></span><button type="button" class="kf-btn kf-sec kf-p" data-recibo="${esc(p.id)}">Recibo</button></div>`).join('')}</div></section>` : ''}
     </main>
     <div class="pe-tela" id="pe-doc">
@@ -195,7 +196,12 @@ TELAS.doc = {
 // o botão do pé: o próximo passo do documento
 function avancar(d, passo) {
   if (passo === 'somar') return janelaSomar(d);
-  if (passo === 'enviar') return janelaEnviar(d);
+  if (passo === 'enviar') {
+    // a lei pede o cliente identificado e, no orçamento, as datas de início e término (CDC, art. 40)
+    if (!clienteOk(d.cliente)) { aviso('Antes de enviar, complete o nome, o telefone e o endereço do cliente.'); return janelaCliente(d); }
+    if (d.tipo === 'orc' && !(d.inicio && d.dias)) { aviso('Antes de enviar, escolha o início e quantos dias o serviço leva.'); return janelaCond(d, 'prazo'); }
+    return janelaEnviar(d);
+  }
   if (passo === 'receber') return janelaReceber(d);
   if (passo === 'recibo') return janelaRecibo(d);
   if (passo === 'pdf') return gerarPDF(null, () => montarPDF(d), nomeArquivo(TIPO[d.tipo].arquivo, d));
@@ -213,17 +219,32 @@ function marcarEnviado(d) {
 }
 
 /* ---------- janelas do documento ---------- */
-function janelaCliente(d) {
-  const c = d.cliente;
-  janela({ titulo: 'Cliente', sub: 'O nome sai no documento. O resto é opcional.',
-    corpo: `${campo('cl-nome', 'Nome', entrada('cl-nome', c.nome, 'autocapitalize="words" placeholder="Ex.: Mariana Souza"'))}
-      ${campo('cl-fone', 'WhatsApp', entrada('cl-fone', c.fone ? fone(c.fone) : '', 'inputmode="tel" placeholder="(11) 90000-0000"'))}
-      ${campo('cl-end', 'Endereço do serviço', entrada('cl-end', c.end, 'placeholder="Rua, número e bairro"'))}
-      ${campo('cl-doc', 'CPF ou CNPJ', entrada('cl-doc', c.doc ? cpfCnpj(c.doc) : '', 'inputmode="numeric" placeholder="Sai no recibo"'))}`,
-    pe: '<button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
-    aoMontar: j => { $('[data-salvar]', j).onclick = () => { d.cliente = { nome: $('#cl-nome', j).value.trim(), fone: $('#cl-fone', j).value.trim(), end: $('#cl-end', j).value.trim(), doc: $('#cl-doc', j).value.trim() }; tocarDoc(d); fecharJanela(); redesenhar(); }; } });
+// Os dados do cliente: nome, telefone e endereço do serviço são pedidos antes de tudo (exceção do Elétrica ao Art. 64-D
+// do Código: o orçamento é um documento com valor de contrato, e sem cliente identificado ele não serve à lei).
+const camposCliente = c => `${campo('cl-nome', 'Nome do cliente', entrada('cl-nome', c.nome, 'autocapitalize="words" placeholder="Ex.: Mariana Souza"'))}
+      ${campo('cl-fone', 'Telefone (WhatsApp)', entrada('cl-fone', c.fone ? fone(c.fone) : '', 'inputmode="tel" placeholder="(11) 90000-0000"'))}
+      ${campo('cl-end', 'Endereço do serviço', entrada('cl-end', c.end, 'placeholder="Rua, número, bairro e cidade"'))}
+      ${campo('cl-doc', 'CPF ou CNPJ', entrada('cl-doc', c.doc ? cpfCnpj(c.doc) : '', 'inputmode="numeric" placeholder="Sai no recibo"'))}`;
+function lerCliente(j) {
+  const c = { nome: $('#cl-nome', j).value.trim(), fone: $('#cl-fone', j).value.trim(), end: $('#cl-end', j).value.trim(), doc: $('#cl-doc', j).value.trim() };
+  const falta = [[c.nome.length < 2, '#cl-nome', 'o nome'], [c.fone.replace(/\D/g, '').length < 10, '#cl-fone', 'o telefone com DDD'], [c.end.length < 3, '#cl-end', 'o endereço do serviço']].filter(x => x[0]);
+  falta.forEach(x => KitFacil.apontar($(x[1], j)));
+  if (falta.length) { aviso(`Falta ${falta.map(x => x[2]).join(', ').replace(/, ([^,]*)$/, ' e $1')}.`); return null; }
+  return c;
 }
-const VAL_OP = [[7, '7 dias'], [15, '15 dias'], [30, '30 dias'], [60, '60 dias']], GAR_OP = [[0, 'Sem'], [30, '30 dias'], [90, '90 dias'], [180, '180 dias'], [365, '1 ano']];
+function janelaNovoCliente(tipo, depois) {
+  janela({ titulo: tipo === 'rel' ? 'Para quem é o relatório?' : 'Para quem é o orçamento?', sub: 'Nome, telefone e endereço do serviço saem no documento.',
+    corpo: camposCliente({}), pe: '<button type="button" class="kf-btn kf-pri" data-salvar>Começar</button>',
+    aoMontar: j => { $('[data-salvar]', j).onclick = () => { const c = lerCliente(j); if (!c) return; fecharJanela(true); depois(c); }; } });
+}
+function janelaCliente(d) {
+  janela({ titulo: 'Cliente', sub: 'Nome, telefone e endereço do serviço saem no documento.',
+    corpo: camposCliente(d.cliente),
+    pe: '<button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
+    aoMontar: j => { $('[data-salvar]', j).onclick = () => { const c = lerCliente(j); if (!c) return; d.cliente = c; tocarDoc(d); fecharJanela(); redesenhar(); }; } });
+}
+const VAL_OP = [[10, '10 dias'], [15, '15 dias'], [30, '30 dias'], [60, '60 dias']], PRAZO_OP = [[1, '1 dia'], [2, '2 dias'], [3, '3 dias'], [5, '5 dias'], [10, '10 dias']];
+const blocoGarantia = (sel, attr) => `<p class="kf-ajuda">${esc(GAR_LEI)}</p><div class="kf-campo"><span class="kf-rotulo">Garantia a mais, por sua conta</span><div class="escolhas">${GAR_AD.map(([k, l]) => KitFacil.ui.escolha({ rotulo: l, on: sel === k, attrs: `${attr}="${k}"` })).join('')}</div></div>`;
 function janelaCond(d, qual) {
   const rel = d.tipo === 'rel';
   const corpo = () => {
@@ -233,7 +254,12 @@ function janelaCond(d, qual) {
       ${d.pag === 'entrada' ? `<div class="kf-campo"><span class="kf-rotulo">Quanto de entrada</span>${segmento('Quanto de entrada', 'ep', [30, 40, 50, 60, 70].map(n => [n, n + '%']), d.entradaPct)}</div>` : ''}
       <p class="kf-ajuda" role="status">${esc(pagTxt(d, c))}</p>`;
     if (qual === 'validade') return `<div class="kf-campo"><span class="kf-rotulo">O orçamento vale por</span>${segmento('Validade', 'val', VAL_OP, d.validade)}</div><p class="kf-ajuda" role="status">Vale até ${dataBR(validoAte(d))}.</p>`;
-    if (qual === 'garantia') return `<div class="kf-campo"><span class="kf-rotulo">Garantia do serviço</span><div class="escolhas">${GAR_OP.map(([k, l]) => KitFacil.ui.escolha({ rotulo: l, on: d.garantia === k, attrs: `data-gar="${k}"` })).join('')}</div></div><p class="kf-ajuda" role="status">${esc(garantiaTxt(d))}.</p>`;
+    if (qual === 'prazo') { const outro = d.dias && !PRAZO_OP.some(o => o[0] === d.dias);
+      return `${campo('cd-i', 'Início previsto', `<input id="cd-i" class="kf-entrada" type="date" value="${d.inicio ? dataISO(d.inicio) : ''}" min="${dataISO()}">`)}
+      <div class="kf-campo"><span class="kf-rotulo">Quantos dias de serviço</span>${segmento('Quantos dias de serviço', 'pz', [...PRAZO_OP, ['x', 'Outro']], outro ? 'x' : d.dias)}</div>
+      ${outro || d.diasOutro ? campo('cd-pzn', 'Número de dias', `<input id="cd-pzn" class="kf-entrada" type="text" inputmode="numeric" maxlength="3" value="${d.dias || ''}" placeholder="Ex.: 20">`) : ''}
+      <p class="kf-ajuda" role="status">${d.inicio && d.dias ? esc(prazoTxt(d)) : 'O orçamento só é enviado com o início e o prazo: a lei pede as datas de início e término (CDC, art. 40).'}</p>`; }
+    if (qual === 'garantia') return blocoGarantia(d.garAd, 'data-gar');
     if (qual === 'feito') return campo('cd-f', 'Dia em que o serviço foi feito', `<input id="cd-f" class="kf-entrada" type="date" value="${dataISO(d.feito || Date.now())}" max="${dataISO()}">`);
     if (qual === 'desc') return `${campo('cd-dn', 'Nome que aparece no documento', entrada('cd-dn', d.descNome, 'placeholder="Ex.: Desconto de família"'))}
       <div class="kf-campo"><span class="kf-rotulo">Quanto</span>${segmento('Quanto de desconto', 'dp', [[0, 'Sem'], [10, '10%'], [25, '25%'], [50, '50%'], [100, '100%']], d.descPct)}</div>
@@ -242,7 +268,7 @@ function janelaCond(d, qual) {
       <p class="kf-ajuda" role="status">${d.descPct === 100 ? 'Com 100%, o documento sai como cortesia e não pede pagamento.' : c.mat ? 'O desconto não incide sobre o material.' : 'O cliente vê o valor cheio e a linha do desconto.'}</p>`;
     return campo('cd-o', 'Observações', `<textarea id="cd-o" class="kf-entrada" rows="5" placeholder="Ex.: Material por conta do cliente.">${esc(d.obs)}</textarea>`, 'Saem no fim do documento.');
   };
-  const T = { titulo: rel ? 'Serviço executado' : 'Serviço', pag: 'Pagamento', validade: 'Validade', garantia: 'Garantia', feito: 'Dia do serviço', desc: 'Desconto', obs: 'Observações' };
+  const T = { titulo: rel ? 'Serviço executado' : 'Serviço', pag: 'Pagamento', validade: 'Validade', prazo: 'Prazo do serviço', garantia: 'Garantia', feito: 'Dia do serviço', desc: 'Desconto', obs: 'Observações' };
   const comSalvar = ['titulo', 'desc', 'obs'].includes(qual);
   janela({ titulo: T[qual], corpo: `<div id="cd-corpo" class="pilha">${corpo()}</div>`, pe: comSalvar ? '<button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>' : '',
     aoFechar: () => redesenhar(),
@@ -253,7 +279,8 @@ function janelaCond(d, qual) {
         if ((b = t.closest('[data-pag]'))) d.pag = b.dataset.pag;
         else if ((b = t.closest('[data-ep]'))) d.entradaPct = +b.dataset.ep;
         else if ((b = t.closest('[data-val]'))) d.validade = +b.dataset.val;
-        else if ((b = t.closest('[data-gar]'))) d.garantia = +b.dataset.gar;
+        else if ((b = t.closest('[data-gar]'))) d.garAd = +b.dataset.gar;
+        else if ((b = t.closest('[data-pz]'))) { if (b.dataset.pz === 'x') { d.diasOutro = true; d.dias = 0; } else { delete d.diasOutro; d.dias = +b.dataset.pz; } }
         else if ((b = t.closest('[data-dp]'))) { d.descNome = $('#cd-dn', j).value.trim(); d.descPct = +b.dataset.dp; d.desc = 0; }
         else if (t.closest('[data-salvar]')) {
           if (qual === 'titulo') d.titulo = $('#cd-t', j).value.trim();
@@ -263,7 +290,8 @@ function janelaCond(d, qual) {
         } else return;
         mudouDoc(d); refaz();
       });
-      j.addEventListener('change', e => { if (e.target.id === 'cd-f') { const v = deISO(e.target.value); if (v) { d.feito = v; tocarDoc(d); } } });
+      j.addEventListener('change', e => { if (e.target.id === 'cd-f') { const v = deISO(e.target.value); if (v) { d.feito = v; tocarDoc(d); } } if (e.target.id === 'cd-i') { const v = deISO(e.target.value); if (v) { d.inicio = v; tocarDoc(d); refaz(); } } });
+      j.addEventListener('input', e => { if (e.target.id === 'cd-pzn') { d.dias = Math.max(0, Math.min(365, parseInt(e.target.value, 10) || 0)); tocarDoc(d); const st = $('[role="status"]', j); if (st) st.textContent = d.inicio && d.dias ? prazoTxt(d) : 'Escolha o início e quantos dias leva.'; } });
     } });
 }
 function janelaLinha(d, l, tipoNovo = '', com = '') {
@@ -284,7 +312,7 @@ function janelaLinha(d, l, tipoNovo = '', com = '') {
       ${campo('ln-p', 'Preço de cada', campoDinheiro('ln-p', x.cond ? x.base : x.pu))}
       ${tipo === 'mat' ? '' : `<div class="kf-campo"><span class="kf-rotulo">Condição do serviço</span><div id="ln-cd">${segCond()}</div><p class="kf-ajuda" id="ln-cs" role="status"></p></div>
       ${d.comodos.length && tipo !== 'mat' ? campo('ln-cm', 'Cômodo', selCom(d, 'ln-cm', l ? l.com : com)) : ''}
-      ${campo('ln-m', 'Motivo, se quiser mostrar ao cliente', entrada('ln-m', x.motivo || '', 'placeholder="Ex.: Forro baixo e fiação antiga"'))}`}`;
+      ${campo('ln-m', 'Motivo para o cliente', entrada('ln-m', x.motivo || '', 'placeholder="Ex.: forro baixo"'))}`}`;
   janela({ titulo: tipo === 'diag' ? 'Diagnóstico por tempo' : tipo === 'desl' ? 'Deslocamento' : nova ? 'Linha avulsa' : 'Linha do documento',
     sub: tipo === 'diag' ? 'Para o defeito que você ainda não conhece: cobre pelo tempo.' : tipo === 'desl' ? 'Uma linha própria do documento, por ida.' : nova ? 'Um serviço ou material que não está nos seus preços.' : 'Vale só neste documento. Para mudar sempre, vá em Preços.',
     corpo, pe: `${nova ? '' : '<button type="button" class="kf-btn kf-perigo" data-tirar>Remover</button>'}<button type="button" class="kf-btn kf-pri" data-salvar>${nova ? 'Somar' : 'Salvar'}</button>`,
@@ -366,7 +394,7 @@ function janelaSomar(d, com0, aba0) {
   const topo = () => `${d.comodos.length ? `<div class="chips" role="group" aria-label="Cômodo">${d.comodos.map(c => `<button type="button" class="chip" data-com="${esc(c)}" aria-pressed="${c === com}">${esc(c)}</button>`).join('')}<button type="button" class="chip" data-com-novo>+ Cômodo</button></div>` : ''}
     ${segmento('Somar', 'aba', [['serv', 'Serviços'], ['mat', 'Materiais']], aba)}
     ${fonte() ? `<button type="button" class="kf-btn kf-sec" data-repetir>Repetir ${artigo(fonte())} ${esc(fonte())}</button>` : ''}`;
-  const matLin = m => `<div class="so-lin tem"><button type="button" class="so-tx mt-nome" data-mt="${esc(m.id)}"><b>${esc(m.nome)}</b><small>${esc([m.comp, m.quem !== d.quem ? (m.quem === 'cli' ? 'o cliente compra' : 'eu levo') : ''].filter(Boolean).join(' · ') || 'Toque para um complemento')}</small></button>
+  const matLin = m => `<div class="so-lin tem"><button type="button" class="so-tx mt-nome" data-mt="${esc(m.id)}"><b>${esc(m.nome)}</b><small>${esc([m.comp, m.quem !== d.quem ? (m.quem === 'cli' ? 'o cliente compra' : 'eu levo') : ''].filter(Boolean).join(' · ') || 'Complemento (ex.: 20 A, curva C)')}</small></button>
       <button type="button" class="so-bt" data-mtm="${esc(m.id)}" aria-label="Tirar um: ${esc(m.nome)}">${IC.menos}</button><b class="so-n num" aria-label="${m.q} contados">${m.q}</b>
       <button type="button" class="so-bt mais" data-mtp="${esc(m.id)}" aria-label="Somar um: ${esc(m.nome)}">${IC.soma}</button></div>`;
   const corpoMat = () => {
@@ -487,7 +515,7 @@ function janelaMat(d, m, depois) {
   janela({ titulo: m.nome, sub: m.quem === 'cli' ? 'O cliente compra.' : 'Eu levo.', contexto: m.com || nomeDoc(d),
     corpo: `<div class="kf-campo"><span class="kf-rotulo" id="mt-ql">Quantidade</span>${KitFacil.ui.quantidade({ id: 'mt-q', valor: m.q, min: 1, max: 9999, rotulo: 'quantidade', attrs: 'aria-labelledby="mt-ql"' })}</div>
       ${d.comodos.length ? campo('mt-cm', 'Cômodo', selCom(d, 'mt-cm', m.com)) : ''}
-      ${campo('mt-c', 'Complemento', entrada('mt-c', m.comp, 'placeholder="Ex.: 20 A, curva C" maxlength="60"'), 'Opcional. Sai na lista e, se for para o orçamento, no documento.')}`,
+      ${campo('mt-c', 'Complemento', entrada('mt-c', m.comp, 'placeholder="Ex.: 20 A, curva C" maxlength="60"'), 'Sai na lista e, se for para o orçamento, no documento.')}`,
     pe: '<button type="button" class="kf-btn kf-perigo" data-tirar>Remover</button><button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
     aoFechar: () => depois(),
     aoMontar: j => {
@@ -495,12 +523,12 @@ function janelaMat(d, m, depois) {
       $('[data-tirar]', j).onclick = () => { d.mats.splice(d.mats.indexOf(m), 1); mudouDoc(d); fecharJanela(); aviso('Material removido.'); };
     } });
 }
-// material que não estava na lista: entra no catálogo de materiais, com preço opcional
+// material que não estava na lista: entra no catálogo de materiais; o preço só conta quando o eletricista leva
 function janelaMatNovo(nome, depois) {
   janela({ titulo: 'Material novo', sub: 'Não estava na lista. Fica guardado para as próximas visitas.',
     corpo: `${campo('mn-n', 'Nome', entrada('mn-n', nome, 'maxlength="80"'))}
       ${campo('mn-u', 'Contado por', `<select id="mn-u" class="kf-entrada">${UNIDADES.filter(u => !['h', 'ida', 'dia'].includes(u[0])).map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select>`)}
-      ${campo('mn-p', 'Preço', campoDinheiro('mn-p', 0), 'Opcional. Só conta se você levar o material.')}`,
+      ${campo('mn-p', 'Preço', campoDinheiro('mn-p', 0), 'Preço de cada, para quando você levar o material.')}`,
     pe: '<button type="button" class="kf-btn kf-pri" data-salvar>Salvar e contar 1</button>',
     aoMontar: j => { $('[data-salvar]', j).onclick = () => {
       const n = $('#mn-n', j).value.trim(); if (!n) { KitFacil.apontar($('#mn-n', j)); return aviso('Escreva o nome do material.'); }
@@ -546,7 +574,7 @@ function janelaEnviar(d) {
   const c = conta(d), rel = d.tipo === 'rel';
   janela({ titulo: rel ? 'Enviar relatório' : 'Enviar orçamento', sub: `${nomeDoc(d)} · ${BRL(c.total)}`,
     corpo: `${campo('ev-nome', 'Nome do cliente', entrada('ev-nome', d.cliente.nome, 'autocapitalize="words" placeholder="Ex.: Mariana Souza"'))}
-      ${campo('ev-fone', 'WhatsApp do cliente', entrada('ev-fone', d.cliente.fone ? fone(d.cliente.fone) : '', 'inputmode="tel" placeholder="(11) 90000-0000"'), 'Opcional. Com ele, a mensagem já abre na conversa certa.')}
+      ${campo('ev-fone', 'WhatsApp do cliente', entrada('ev-fone', d.cliente.fone ? fone(d.cliente.fone) : '', 'inputmode="tel" placeholder="(11) 90000-0000"'), 'A mensagem abre direto na conversa do cliente.')}
       <div class="envios">
         <button type="button" class="kf-btn kf-pri" data-pdf>${IC.pdf}Enviar PDF</button>
         <button type="button" class="kf-btn kf-sec" data-whats>${IC.conversa}Mensagem no WhatsApp</button>
@@ -704,8 +732,8 @@ function janelaPreco(c, p) {
   let outro = false;
   const objs = () => [...new Set([...(OBJETOS[c.id] || []), ...precos.filter(y => y.cat === c.id && y.obj).map(y => y.obj), ...(x.obj ? [x.obj] : [])])];
   const media = mediaReal(x), arred = v => Math.max(5, Math.min(6000, Math.round(v * 60 / HORA() / 5) * 5));
-  const corpo = () => `${mat ? '' : `${campo('pr-a', 'Ação', `<select id="pr-a" class="kf-entrada"><option value="">Sem ação</option>${ACOES.map(([k, n]) => `<option value="${k}"${k === x.acao ? ' selected' : ''}>${n}</option>`).join('')}</select>`, 'Opcional.')}
-        ${campo('pr-o', 'Objeto', `<select id="pr-o" class="kf-entrada"><option value="">Sem objeto</option>${objs().map(o => `<option value="${esc(o)}"${o === x.obj && !outro ? ' selected' : ''}>${esc(o)}</option>`).join('')}<option value="\u0001"${outro ? ' selected' : ''}>Outro objeto…</option></select>`, 'Opcional. Com ação e objeto, o nome se monta sozinho.')}
+  const corpo = () => `${mat ? '' : `${campo('pr-a', 'Ação', `<select id="pr-a" class="kf-entrada"><option value="">Sem ação</option>${ACOES.map(([k, n]) => `<option value="${k}"${k === x.acao ? ' selected' : ''}>${n}</option>`).join('')}</select>`, 'O que se faz: instalação, troca, manutenção…')}
+        ${campo('pr-o', 'Objeto', `<select id="pr-o" class="kf-entrada"><option value="">Sem objeto</option>${objs().map(o => `<option value="${esc(o)}"${o === x.obj && !outro ? ' selected' : ''}>${esc(o)}</option>`).join('')}<option value="\u0001"${outro ? ' selected' : ''}>Outro objeto…</option></select>`, 'Em que se mexe. Com ação e objeto, o nome se monta sozinho.')}
         ${outro ? campo('pr-on', 'Nome do objeto', entrada('pr-on', x.obj, 'placeholder="Ex.: tomada USB" maxlength="60"')) : ''}`}
       ${campo('pr-n', mat ? 'Nome do material' : 'Nome do serviço', entrada('pr-n', x.nome, 'placeholder="Ex.: Instalação de tomada"'), mat ? '' : 'Pode mudar o nome montado.')}
       ${campo('pr-u', 'Cobrado por', `<select id="pr-u" class="kf-entrada">${UNIDADES.filter(u => u[0] !== 'ida').map(([k, n]) => `<option value="${k}"${k === x.un ? ' selected' : ''}>${n}</option>`).join('')}</select>`)}

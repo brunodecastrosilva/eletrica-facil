@@ -17,7 +17,9 @@ const pronto = p => p.locator('main.inicio').waitFor();
 const digitar = async (p, sel, digitos) => { await p.locator(sel).click(); await p.locator(sel).pressSequentially(digitos); await p.locator(sel).blur(); };
 // a hora é pedida antes do primeiro documento; os testes que não são sobre ela começam com a hora informada
 const comHora = p => p.evaluate(() => { if (!ajustes.hora) { ajustes.hora = 12000; salvarAjustes(); } });
-const novoPelaBarra = async (p, tipo) => { await comHora(p); await p.evaluate(() => irPara('novo')); await p.locator(`.kf-dlg [data-novo-tipo="${tipo}"]`).click(); await p.locator('#pe-doc').waitFor(); };
+// o documento nasce com o cliente: nome, telefone e endereço do serviço
+const cliente = async (p, nome = 'Mariana Souza') => { await p.locator('#cl-nome').waitFor(); await p.fill('#cl-nome', nome); await p.fill('#cl-fone', '11988887777'); await p.fill('#cl-end', 'Rua das Acácias, 120'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor(); };
+const novoPelaBarra = async (p, tipo) => { await comHora(p); await p.evaluate(() => irPara('novo')); await p.locator(`.kf-dlg [data-novo-tipo="${tipo}"]`).click(); await cliente(p); };
 const pe = p => p.evaluate(() => ({ rotulo: document.querySelector('#pe-doc [data-prox]').textContent.trim(), total: document.querySelector('#pe-doc .pe-total b').textContent.trim().replace(/\s/g, ' '), que: document.querySelector('#pe-doc .pe-total small').textContent.trim() }));
 const aqui = p => p.evaluate(() => getDoc(rota().id));
 
@@ -128,14 +130,14 @@ test('a hora como base: o caso da prima dá R$ 240 de mão de obra mais as idas;
   await p.click('#kf-nav-novo'); await p.locator('.kf-dlg [data-novo-tipo="rel"]').click(); await p.locator('#hr-v').waitFor();
   await p.click('.kf-dlg [data-hm="conta"]'); await digitar(p, '#hr-t', '600000'); await digitar(p, '#hr-c', '120000'); await p.fill('#hr-h', '60');
   assert.match(await p.locator('#hr-r').innerText(), /R\$\s120,00/, '(6.000 + 1.200) / 60 horas');
-  await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor();
+  await p.click('.kf-dlg [data-salvar]'); await cliente(p, 'Prima');
   assert.deepEqual(await p.evaluate(() => [ajustes.hora, ajustes.hHoras]), [12000, 60]);
   await p.click('#pe-doc [data-prox]'); await p.locator('.kf-dlg [data-diag="90"]').waitFor();
   await p.click('.kf-dlg [data-diag="90"]'); await p.click('.kf-dlg [data-ida="1"]'); await p.click('.kf-dlg [data-ida="1"]');
   await p.click('.kf-dlg [data-cat="c-quadro"]'); await p.click('.kf-dlg [data-soma="p-quadro-9"]');
   await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   assert.deepEqual(await pe(p), { rotulo: 'Enviar', total: 'R$ 280,00', que: 'Total' });
-  assert.match(await p.locator('#conteudo dl.resumo').innerText(), /Mão de obra\s+R\$\s240,00\s+Deslocamento\s+R\$\s40,00\s+Total\s+R\$\s280,00/);
+  assert.match(await p.locator('#conteudo dl.resumo').innerText(), /Mão de obra\s+R\$\s240,00\s+Deslocamento\s+R\$\s40,00\s+Material\s+não incluído\s+Total\s+R\$\s280,00/);
   assert.match(await p.locator('#conteudo .itens').innerText(), /1h30 × R\$\s120,00 a hora[\s\S]*2 idas × R\$\s20,00/);
   // condição num toque, na linha
   await p.locator('#conteudo .itens .item', { hasText: 'disjuntor geral' }).click(); await p.locator('#ln-cs').waitFor();
@@ -164,6 +166,40 @@ test('a hora como base: o caso da prima dá R$ 240 de mão de obra mais as idas;
   await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-cat="c-quadro"]'); await p.click('.kf-dlg [data-soma="p-quadro-9"]'); await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   assert.match(await p.locator('#conteudo .itens').innerText(), /Atendimento mínimo\s+Completa R\$\s100,00 por ida\s+R\$\s40,00/);
   assert.equal((await pe(p)).total, 'R$ 132,00', '60 + 40 do mínimo + 16 km × R$ 2,00');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('lei: garantia de 90 dias sempre (só a adicional se escolhe), dados antigos abaixo de 90 sobem, validade de 10 dias, prazo para enviar, cliente obrigatório', async () => {
+  const a = await aparelho(amb, { antes: PDF_FALSO }); const p = a.page; await pronto(p);
+  const r = await p.evaluate(() => ({
+    velhos: [0, 30, 90, 180, 365, 3650].map(g => acertaDoc({ tipo: 'orc', garantia: g }).garAd),
+    aj: acertaAjustes({ garantia: 180 }).garAd, padrao: [acertaAjustes({}).validade, acertaAjustes({}).garAd, acertaDoc({ tipo: 'orc' }).validade],
+    txt0: garantiaTxt(acertaDoc({ tipo: 'orc', garAd: 0 })), txt6: garantiaTxt(acertaDoc({ tipo: 'orc', garAd: 6 })), curta: [garCurta({ garAd: 0 }), garCurta({ garAd: 12 })],
+    invalido: acertaDoc({ tipo: 'orc', garAd: 1 }).garAd,
+    ok: [clienteOk({ nome: 'Ana', fone: '(85) 98888-7777', end: 'Rua A, 1' }), clienteOk({ nome: 'Ana', fone: '9888', end: 'Rua A' }), clienteOk({ nome: '', fone: '85988887777', end: 'Rua A' })],
+    prazo: prazoTxt({ inicio: new Date(2026, 11, 1, 12).getTime(), dias: 3 }) }));
+  assert.deepEqual(r.velhos, [0, 0, 0, 3, 12, 12], 'garantia antiga: abaixo de 90 vira a da lei; acima, o menor adicional que cobre');
+  assert.equal(r.aj, 3); assert.deepEqual(r.padrao, [10, 0, 10]);
+  assert.match(r.txt0, /^Garantia legal de 90 dias[\s\S]*art\. 26, II[\s\S]*não pode ser excluída nem reduzida\.$/);
+  assert.match(r.txt6, /garantia contratual de 6 meses[\s\S]*somada à legal \(art\. 50\)/);
+  assert.deepEqual(r.curta, ['90 dias, da lei', '90 dias da lei + 1 ano']); assert.equal(r.invalido, 0);
+  assert.deepEqual(r.ok, [true, false, false]);
+  assert.equal(r.prazo, 'Início previsto em 01/12/2026 e término até 03/12/2026 (3 dias de serviço).');
+  // a janela da garantia: a lei aparece sempre; as escolhas são só a mais
+  await novoPelaBarra(p, 'orc');
+  assert.match(await p.locator('#conteudo [data-j="garantia"]').innerText(), /90 dias, da lei/);
+  assert.match(await p.locator('#conteudo [data-j="prazo"]').innerText(), /Início e quantos dias leva/);
+  await p.click('#conteudo [data-j="garantia"]'); await p.locator('.kf-dlg [data-gar="6"]').waitFor();
+  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.kf-dlg [data-gar]')].map(b => b.textContent.trim())), ['Nenhuma além da lei', '+3 meses', '+6 meses', '+1 ano']);
+  await p.click('.kf-dlg [data-gar="6"]'); await fecharJanela(p);
+  assert.equal((await aqui(p)).garAd, 6);
+  // o cliente fica no documento e é conferido de novo ao salvar
+  await p.click('#conteudo [data-j="cliente"]'); await p.fill('#cl-fone', '123'); await p.click('.kf-dlg [data-salvar]');
+  assert.equal(await p.getAttribute('#cl-fone', 'aria-invalid'), 'true');
+  // textos: nenhum campo vazio diz que é opcional nem usa "se quiser"
+  const telas = await p.evaluate(() => document.body.innerText);
+  assert.ok(!/opcional|se quiser|só é preciso/i.test(telas), 'texto de opcional na tela');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
@@ -301,7 +337,12 @@ test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entr
   await p.locator('#hr-v').waitFor(); assert.equal(await semCampoEmFoco(p), true);
   await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#hr-v', 'aria-invalid'), 'true', 'sem a hora, o documento não começa');
   await digitar(p, '#hr-v', '12000'); assert.match(await p.locator('#hr-ex').innerText(), /troca de tomada \(20 min\), R\$\s40,00/);
-  await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor();
+  await p.click('.kf-dlg [data-salvar]');
+  // o cliente vem antes de tudo: sem nome, telefone e endereço o documento não nasce
+  await p.locator('#cl-nome').waitFor(); await p.click('.kf-dlg [data-salvar]');
+  for (const c of ['#cl-nome', '#cl-fone', '#cl-end']) assert.equal(await p.getAttribute(c, 'aria-invalid'), 'true', `${c} apontado`);
+  assert.equal(await p.evaluate(() => docs.filter(d => !d.exemplo).length), 0, 'sem cliente, nenhum documento');
+  await cliente(p);
   assert.equal(await p.evaluate(() => JSON.parse(localStorage.getItem('eletricafacil.ajustes')).hora), 12000);
   assert.equal(await semCampoEmFoco(p), true, 'nenhum campo é selecionado sozinho');
   assert.deepEqual(await pe(p), { rotulo: 'Somar serviço', total: 'R$ 0,00', que: 'Total' });
@@ -337,12 +378,17 @@ test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entr
   await p.click('#conteudo [data-j="pag"]'); await p.click('.kf-dlg [data-pag="entrada"]'); await p.click('.kf-dlg [data-ep="40"]');
   assert.match(await p.locator('.kf-dlg [role="status"]').innerText(), /Entrada de 40% \(R\$\s51,48\) na aprovação e R\$\s77,22 na conclusão/);
   await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
-  // enviar: o nome do cliente só é pedido aqui
+  // enviar: sem o início e o prazo do serviço, o orçamento não sai (CDC, art. 40)
+  await p.click('#pe-doc [data-prox="enviar"]'); await p.locator('#cd-i').waitFor({ state: 'attached' });
+  assert.equal((await aqui(p)).etapa, 'rascunho');
+  await p.evaluate(() => { const e = document.querySelector('#cd-i'); e.value = new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10); e.dispatchEvent(new Event('change', { bubbles: true })); });
+  await p.click('.kf-dlg [data-pz="2"]');
+  assert.match(await p.locator('.kf-dlg [role="status"]').innerText(), /Início previsto em \d\d\/\d\d\/\d{4} e término até \d\d\/\d\d\/\d{4} \(2 dias de serviço\)/);
+  await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   await p.click('#pe-doc [data-prox="enviar"]'); await p.locator('#ev-nome').waitFor();
   assert.equal(await semCampoEmFoco(p), true);
+  assert.equal(await p.inputValue('#ev-nome'), 'Mariana Souza', 'o nome do cliente já vem do começo');
   await p.click('.kf-dlg [data-ja]');
-  assert.equal(await p.getAttribute('#ev-nome', 'aria-invalid'), 'true', 'sem nome, o campo é apontado'); assert.equal((await aqui(p)).etapa, 'rascunho');
-  await p.fill('#ev-nome', 'Mariana Souza'); await p.fill('#ev-fone', '(11) 98888-7777'); await p.click('.kf-dlg [data-ja]');
   assert.ok(await esperar(async () => (await aqui(p)).etapa === 'enviado'));
   assert.equal((await pe(p)).rotulo, 'Aprovou');
   assert.match(await p.evaluate(() => linkWhats(getDoc(rota().id).cliente.fone, 'oi')), /^https:\/\/wa\.me\/5511988887777\?text=oi$/);
@@ -405,12 +451,12 @@ test('relatório: cobra o que já foi feito; três etapas, sem entrada e sem Apr
   assert.equal((await pe(p)).rotulo, 'Receber', 'no relatório, depois de enviar vem receber');
   assert.match(await p.evaluate(() => mensagem(getDoc(rota().id))), /Olá, João![\s\S]*relatório do serviço executado em[\s\S]*• 1 un\. · Troca da fiação do banheiro: R\$\s350,00[\s\S]*\*Total: R\$\s350,00\*[\s\S]*Pagamento à vista\./);
   assert.equal(await p.evaluate(() => painel().receber), 35000, 'relatório enviado entra em Para receber');
-  // documento novo que ficou vazio some ao sair, e o número volta
+  // documento novo só com o cliente não some ao sair: o nome, o telefone e o endereço já foram escritos
   const antes = await p.evaluate(() => [docs.length, ajustes.seq]);
-  await p.evaluate(() => { fecharJanela(true); ir('/', true); irPara('novo'); }); await p.locator('.kf-dlg [data-novo-tipo="orc"]').click(); await p.locator('#pe-doc').waitFor();
+  await p.evaluate(() => { fecharJanela(true); ir('/', true); irPara('novo'); }); await p.locator('.kf-dlg [data-novo-tipo="orc"]').click(); await cliente(p);
   assert.equal(await p.evaluate(() => ajustes.seq), antes[1] + 1);
   await p.click('.barra-app [data-voltar]'); await pronto(p);
-  assert.deepEqual(await p.evaluate(() => [docs.length, ajustes.seq]), antes);
+  assert.deepEqual(await p.evaluate(() => [docs.length, ajustes.seq]), [antes[0] + 1, antes[1] + 1]);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
@@ -493,8 +539,13 @@ test('documentos: o PDF do orçamento e do relatório, o recibo, o código do Pi
     o.icones = [/M13\.500 13\.500h3\.200/.test(IC.qr), Object.keys(IC).some(k => /pix/i.test(k))];
     return o;
   });
-  for (const t of ['ORÇAMENTO', 'Nº 0007', '20/11/2026', 'Carlos Pereira', '(11) 98765-4321', 'Mariana Souza', 'Reforma elétrica da cozinha', 'Ponto novo de tomada com fiação', '6 pontos', 'Valor do serviço', '- R$ 40,00', 'TOTAL', 'R$ 1.100,00', 'Entrada de 50% (R$ 550,00) na aprovação e R$ 550,00 na conclusão do serviço.', 'Este orçamento vale até 05/12/2026.', 'PAGUE COM PIX', 'R$ 550,00', 'De acordo: Mariana Souza', 'Material por conta do cliente.'])
+  for (const t of ['ORÇAMENTO', 'Nº 0007', '20/11/2026', 'Carlos Pereira', '(11) 98765-4321', 'Mariana Souza', 'Reforma elétrica da cozinha', 'Ponto novo de tomada com fiação', '6 pontos', 'Valor do serviço', '- R$ 40,00', 'TOTAL', 'R$ 1.100,00', 'Entrada de 50% (R$ 550,00) na aprovação e R$ 550,00 na conclusão do serviço.', 'Este orçamento vale até 30/11/2026.', 'PAGUE COM PIX', 'R$ 550,00', 'De acordo: Mariana Souza', 'Material por conta do cliente.'])
     assert.ok(r.orc.replace(/ /g, ' ').includes(t), `o PDF do orçamento sem "${t}"`);
+  // CDC: garantia legal sempre, datas de início e término, mão de obra e material discriminados, o orçamento obriga (art. 40, § 2º)
+  const orcTx = r.orc.replace(/[\u00a0\u202f]/g, ' ').replace(/\s+/g, ' ');
+  for (const t of ['Garantia legal de 90 dias', 'art. 26, II', 'Início previsto em', 'Mão de obra', 'Material', 'não incluído', 'obriga as duas partes', 'art. 40, § 2º', 'art. 14, § 3º, II']) assert.ok(orcTx.includes(t), `o PDF do orçamento sem "${t}"`);
+  assert.ok(!/Sem garantia|Não cobre/.test(orcTx), 'nada de garantia menor que a da lei');
+  assert.ok(r.rel.replace(/\s+/g, ' ').includes('Garantia legal de 90 dias'), 'o relatório também traz a garantia da lei');
   for (const t of ['RELATÓRIO DE SERVIÇO', 'Nº 0008', 'Executado em 18/11/2026', 'Pagamento à vista.', 'R$ 1.100,00']) assert.ok(r.rel.replace(/ /g, ' ').includes(t), `o PDF do relatório sem "${t}"`);
   assert.ok(!/vale até|De acordo/.test(r.rel), 'o relatório não tem validade nem "de acordo"');
   for (const t of ['RECIBO', 'R$ 550,00', 'quinhentos e cinquenta reais', 'Recebi de Mariana Souza', 'Forma de pagamento: Pix.', 'São Paulo, 21 de novembro de 2026.']) assert.ok(r.rec.replace(/ /g, ' ').includes(t), `o recibo sem "${t}"`);
@@ -555,9 +606,9 @@ test('Ajustes: as oito guias comuns e as do app; os dados dos documentos, a chav
   await p.evaluate(() => KitFacil.ajustes.abrir('pix')); await p.fill('#aj-pix', ' Carlos@Exemplo.com.br '); await p.locator('#aj-pix').blur();
   assert.equal(await p.evaluate(() => ajustes.pix), 'carlos@exemplo.com.br', 'a chave fica do jeito que o Banco Central espera');
   await p.evaluate(() => KitFacil.ajustes.abrir('padrao')); await p.click('[data-aj-val="30"]'); await p.click('[data-aj-pag="entrada"]'); await p.click('[data-aj-ep="30"]'); await p.click('[data-aj-gar="0"]');
-  assert.deepEqual(await p.evaluate(() => [ajustes.validade, ajustes.pag, ajustes.entradaPct, ajustes.garantia]), [30, 'entrada', 30, 0]);
+  assert.deepEqual(await p.evaluate(() => [ajustes.validade, ajustes.pag, ajustes.entradaPct, ajustes.garAd]), [30, 'entrada', 30, 0]);
   await novoPelaBarra(p, 'orc');
-  assert.deepEqual(await aqui(p).then(d => [d.validade, d.pag, d.entradaPct, d.garantia]), [30, 'entrada', 30, 0], 'o documento novo começa com o padrão');
+  assert.deepEqual(await aqui(p).then(d => [d.validade, d.pag, d.entradaPct, d.garAd]), [30, 'entrada', 30, 0], 'o documento novo começa com o padrão');
   await p.evaluate(() => { ir('/ajustes', true); KitFacil.ajustes.abrir('raio'); });
   await p.locator('#aj-raio').evaluate(el => el.click());
   assert.deepEqual(await p.evaluate(() => [ajustes.raio, Raio.ligado()]), [false, false]);

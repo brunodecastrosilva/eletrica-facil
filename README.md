@@ -2,7 +2,7 @@
 
 Orçamento de serviços de elétrica, do pedido ao recibo, direto no celular, no tablet ou no computador.
 
-Versão **5.1.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **5.1.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md). Na 4.0.0 o app recomeçou enxuto, por decisão do Bruno: faz uma coisa só,
@@ -87,6 +87,16 @@ Dados: o documento ganha `comodos`, `mats` e `quem`; a linha ganha `com` (e `com
 e `obj`. **Da 5.0 para a 5.1** documentos, ajustes e a hora não mudam. No catálogo, os itens de fábrica ganham ação e
 objeto; "Instalação de tomada ou interruptor", "Troca de tomada ou interruptor" e os três materiais "com placa" mudam
 de nome só se o nome ainda for o de fábrica; entram 2 serviços e 10 materiais novos.
+
+## Conforme a lei (versão 5.1.1)
+
+- **Garantia (CDC, arts. 24, 25, 26, II, 50 e 51, I):** a garantia legal de 90 dias para reclamar de defeito no serviço
+  sai sempre no documento, com o texto da lei. O eletricista só escolhe uma garantia contratual a mais: nenhuma, +3
+  meses, +6 meses ou +1 ano (`garAd`, em meses). Garantia antiga menor que 90 dias sobe para a legal.
+- **Orçamento prévio (CDC, art. 40):** mão de obra e material discriminados; condições de pagamento; início previsto e
+  quantos dias leva (término calculado), obrigatórios para enviar; validade de fábrica de 10 dias (§ 1º); a linha "o
+  orçamento aprovado obriga as duas partes e só muda por nova negociação" (§ 2º).
+- **Cliente:** nome, telefone e endereço do serviço pedidos antes de tudo (exceção ao Art. 64-D, abaixo).
 
 ## Como usar
 
@@ -223,6 +233,12 @@ O Anexo I do Código ainda lista as cores da versão 3 do Elétrica Fácil. Prop
 cores (destaque e começar: `#0B1128` com letra `#FFD21F` no claro; `#FFD21F` com letra `#0B1128` no escuro).
 
 ## Exceções ao padrão
+
+- **Cliente antes de tudo (Código, Art. 64-D):** o Código manda pedir o dado só quando ele se torna indispensável (no
+  Elétrica, o nome do cliente ao gerar a proposta). Por decisão do Bruno (22/11/2026), nome, telefone e endereço do
+  serviço são pedidos ao criar o orçamento ou o relatório, e sem eles o documento não nasce. Motivo: o orçamento prévio
+  do CDC (art. 40) é um documento com valor de contrato entre o eletricista e um cliente identificado, e o endereço é
+  onde o serviço acontece. Registrado também no CHANGELOG (5.1.1); a levar ao Painel do Integrador (Código, Art. 5º).
 
 - **Lista de escolha e calendário do Kit perto do pé de uma janela:** o Kit só rola quando a lista passa do fim da
   janela do navegador; dentro de uma janela do app, a lista pode ficar atrás do rodapé. O app completa: depois de

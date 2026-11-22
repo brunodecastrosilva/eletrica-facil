@@ -107,7 +107,7 @@ function resumosAjustes() {
   return {
     cobranca: `${s.hora ? BRL(s.hora) + ' a hora' : 'Hora ainda não informada'} · ${s.deslModo === 'km' ? BRL(s.deslKm) + ' por km' : BRL(s.deslIda) + ' por ida'} · ${s.minIda ? 'mínimo de ' + BRL(s.minIda) : 'sem mínimo por ida'}`,
     pix: s.pix || 'Nenhuma chave cadastrada',
-    padrao: `Validade de ${plural(s.validade, 'dia', 'dias')} · ${s.garantia ? 'garantia de ' + plural(s.garantia, 'dia', 'dias') : 'sem garantia'} · ${s.pag === 'entrada' ? `entrada de ${s.entradaPct}%` : s.pag === 'combinar' ? 'pagamento a combinar' : 'à vista'}`,
+    padrao: `Validade de ${plural(s.validade, 'dia', 'dias')} · garantia de ${garCurta(s)} · ${s.pag === 'entrada' ? `entrada de ${s.entradaPct}%` : s.pag === 'combinar' ? 'pagamento a combinar' : 'à vista'}`,
     raio: Raio.ligado() ? 'Raio ligado' : 'Raio desligado',
   };
 }
@@ -130,16 +130,16 @@ TELAS.ajustes = {
           conta: bloco('Seus dados nos documentos', `<p class="kf-ajuda">Saem no alto dos orçamentos, dos relatórios e dos recibos.</p>
             <div class="logo-lin">
               <button type="button" class="logo-bt" data-logo aria-label="Escolher logotipo">${s.logo ? `<img src="${esc(s.logo)}" alt="Seu logotipo">` : IC.imagem}</button>
-              <div class="logo-tx"><b>Logotipo</b><small>Opcional. Sem ele, o documento sai com o raio do app.</small></div>
+              <div class="logo-tx"><b>Logotipo</b><small>Sem logotipo, o documento sai com o raio do app.</small></div>
               <input type="file" id="aj-logo" accept="image/*" hidden>
             </div>
             ${s.logo ? '<button type="button" class="kf-btn kf-perigo kf-p" data-logo-tira>Remover logotipo</button>' : ''}
             ${f('nome', 'Seu nome', 'Ex.: Carlos Pereira', 'autocapitalize="words"')}
-            ${f('empresa', 'Nome da empresa', 'Opcional', 'autocapitalize="words"')}
+            ${f('empresa', 'Nome da empresa', 'Ex.: Silva Elétrica', 'autocapitalize="words"')}
             ${f('fone', 'WhatsApp', '(11) 90000-0000', 'inputmode="tel"')}
-            ${f('email', 'E-mail', 'Opcional', 'autocapitalize="off" inputmode="email"')}
-            ${f('doc', 'CPF ou CNPJ', 'Opcional. Sai no recibo', 'inputmode="numeric"')}
-            ${f('registro', 'Registro profissional', 'Opcional. CREA, CFT ou NR-10')}
+            ${f('email', 'E-mail', 'Ex.: voce@email.com', 'autocapitalize="off" inputmode="email"')}
+            ${f('doc', 'CPF ou CNPJ', 'Sai no recibo', 'inputmode="numeric"')}
+            ${f('registro', 'Registro profissional', 'CREA, CFT ou NR-10')}
             ${f('cidade', 'Cidade', 'Ex.: São Paulo', 'autocapitalize="words"')}`),
         },
         produto: [
@@ -149,7 +149,7 @@ TELAS.ajustes = {
             + bloco('Deslocamento', `<p class="kf-ajuda">Sai numa linha própria do documento, por ida.</p>
               <div class="kf-campo"><span class="kf-rotulo">Como você cobra</span>${segmento('Como você cobra o deslocamento', 'aj-dm', [['fixo', 'Fixo por ida'], ['km', 'Por quilômetro']], s.deslModo)}</div>
               ${s.deslModo === 'km' ? campo('aj-deslKm', 'Valor por km', campoDinheiro('aj-deslKm', s.deslKm, 'data-ajd="deslKm"'), 'Você informa a distância, ida e volta, em cada documento.') : campo('aj-deslIda', 'Valor por ida', campoDinheiro('aj-deslIda', s.deslIda, 'data-ajd="deslIda"'))}`)
-            + bloco('Mínimo por ida', `${campo('aj-minIda', 'Mão de obra mínima por ida', campoDinheiro('aj-minIda', s.minIda, 'data-ajd="minIda"'), 'Se os serviços somarem menos, entra a linha "Atendimento mínimo" com a diferença. Em branco, não há mínimo. Vale para os documentos novos.')}`)
+            + bloco('Mínimo por ida', `${campo('aj-minIda', 'Mão de obra mínima por ida', campoDinheiro('aj-minIda', s.minIda, 'data-ajd="minIda"'), 'Se os serviços somarem menos, entra a linha "Atendimento mínimo" com a diferença. Com R$ 0,00, não há mínimo. Vale para os documentos novos.')}`)
             + bloco('Condição do serviço', `<p class="kf-ajuda">Quanto somar ao preço quando o serviço é mais difícil que o normal. Você escolhe em cada linha.</p>
               ${campo('aj-cond1', 'Difícil, em %', `<input id="aj-cond1" class="kf-entrada" data-ajn="cond1" type="text" inputmode="numeric" maxlength="3" value="${s.cond1}">`)}
               ${campo('aj-cond2', 'Muito difícil, em %', `<input id="aj-cond2" class="kf-entrada" data-ajn="cond2" type="text" inputmode="numeric" maxlength="3" value="${s.cond2}">`)}`) },
@@ -157,7 +157,7 @@ TELAS.ajustes = {
             ${f('pix', 'Chave Pix', 'CPF, celular, e-mail ou chave aleatória', 'autocapitalize="off" spellcheck="false"')}`) },
           { id: 'padrao', titulo: 'Documento novo', icone: ICONES_AJ.padrao, resumo: S.padrao, html: bloco('Como começa todo documento novo', `<p class="kf-ajuda">Dá para mudar em cada documento.</p>
             <div class="kf-campo"><span class="kf-rotulo">Validade do orçamento</span>${segmento('Validade do orçamento', 'aj-val', VAL_OP, s.validade)}</div>
-            <div class="kf-campo"><span class="kf-rotulo">Garantia do serviço</span><div class="escolhas">${GAR_OP.map(([k, l]) => KitFacil.ui.escolha({ rotulo: l, on: s.garantia === k, attrs: `data-aj-gar="${k}"` })).join('')}</div></div>
+            ${blocoGarantia(s.garAd, 'data-aj-gar')}
             <div class="kf-campo"><span class="kf-rotulo">Pagamento</span>${segmento('Pagamento', 'aj-pag', [['vista', 'À vista'], ['entrada', 'Entrada'], ['combinar', 'A combinar']], s.pag)}</div>
             ${s.pag === 'entrada' ? `<div class="kf-campo"><span class="kf-rotulo">Quanto de entrada</span>${segmento('Quanto de entrada', 'aj-ep', [30, 40, 50, 60, 70].map(n => [n, n + '%']), s.entradaPct)}</div>` : ''}
             ${campo('aj-obs', 'Observações que sempre vão no documento', `<textarea id="aj-obs" class="kf-entrada" data-aj="obs" rows="4" placeholder="Ex.: Não inclui reparos de alvenaria, gesso ou pintura.">${esc(s.obs)}</textarea>`)}`) },
@@ -192,7 +192,7 @@ TELAS.ajustes = {
     v.addEventListener('click', e => {
       const t2 = e.target; let b;
       if ((b = t2.closest('[data-aj-val]'))) ajustes.validade = +b.dataset.ajVal;
-      else if ((b = t2.closest('[data-aj-gar]'))) ajustes.garantia = +b.dataset.ajGar;
+      else if ((b = t2.closest('[data-aj-gar]'))) ajustes.garAd = +b.dataset.ajGar;
       else if ((b = t2.closest('[data-aj-pag]'))) ajustes.pag = b.dataset.ajPag;
       else if ((b = t2.closest('[data-aj-dm]'))) ajustes.deslModo = b.dataset.ajDm === 'km' ? 'km' : 'fixo';
       else if ((b = t2.closest('[data-aj-ep]'))) ajustes.entradaPct = +b.dataset.ajEp;

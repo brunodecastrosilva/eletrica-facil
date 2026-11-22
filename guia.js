@@ -18,7 +18,13 @@ const GUIA = [
       if (rota().nome !== 'inicio') { ir('/', true); await m.espera(300); }
       const b = $('#kf-nav-novo'), t = $('#kf-trilho-novo');
       await m.tocar(gVisivel(b) ? b : t, { depois: 600 }); await m.apontar('.kf-dlg .opcoes', 1500);
-      await m.tocar('.kf-dlg [data-novo-tipo="orc"]', { depois: 700 }); await m.acha('#pe-doc');
+      await m.tocar('.kf-dlg [data-novo-tipo="orc"]', { depois: 900 });
+    } },
+  { t: 'Primeiro, o cliente', d: 'Nome, telefone e endereço do serviço. Saem no documento e deixam o orçamento valendo como manda a lei.',
+    acao: async m => {
+      if (!$('#cl-nome')) { fecharJanela(true); ir('/', true); await m.espera(300); novoDocumento('orc'); await m.espera(900); }
+      await m.digitar('#cl-nome', 'Mariana Souza'); await m.digitar('#cl-fone', '11988887777'); await m.digitar('#cl-end', 'Rua das Acácias, 120');
+      await m.tocar('.kf-dlg [data-salvar]', { depois: 700 }); await m.acha('#pe-doc');
     } },
   { t: 'Some os serviços', d: 'Toque em Somar serviço. Os seus preços aparecem em blocos. Cada toque no + soma um.',
     acao: async m => {
@@ -52,7 +58,13 @@ const GUIA = [
       await gNoDoc(m); await m.tocar('#conteudo [data-j="pag"]', { depois: 600 });
       await m.tocar('.kf-dlg [data-pag="entrada"]', { depois: 600 }); await m.apontar('.kf-dlg [role="status"]', 1500); await m.fechar();
     } },
-  { t: 'Envie ao cliente', d: 'O botão do pé é sempre o próximo passo. O nome do cliente só é pedido aqui.',
+  { t: 'Combine o prazo', d: 'O orçamento diz quando o serviço começa e quantos dias leva. A lei pede as datas de início e término.',
+    acao: async m => {
+      await gNoDoc(m); await m.tocar('#conteudo [data-j="prazo"]', { depois: 700 });
+      const d = getDoc(rota().id); if (d && !d.inicio) { d.inicio = Date.now() + 3 * 864e5; tocarDoc(d); }
+      await m.tocar('.kf-dlg [data-pz="2"]', { depois: 600 }); await m.apontar('.kf-dlg [role="status"]', 1500); fecharJanela(true); await m.espera(400);
+    } },
+  { t: 'Envie ao cliente', d: 'O botão do pé é sempre o próximo passo. O documento sai com o cliente, o prazo e a garantia da lei.',
     acao: async m => {
       await gNoDoc(m); await m.apontar('#pe-doc .pe-in', 1300);
       await m.tocar('#pe-doc [data-prox="enviar"]', { depois: 600 }); await m.digitar('#ev-nome', 'Mariana Souza');

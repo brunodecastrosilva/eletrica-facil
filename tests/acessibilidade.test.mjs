@@ -41,7 +41,8 @@ for (const tema of ['light', 'dark']) {
     await p.evaluate(() => { ir('/', true); irPara('novo'); }); await p.locator('.kf-dlg [data-novo-tipo]').first().waitFor(); await varrer(p, `Novo documento (${nome})`);
     await p.click('.kf-dlg [data-novo-tipo="orc"]'); await p.locator('#hr-v').waitFor(); await varrer(p, `janela da hora (${nome})`);
     await p.click('.kf-dlg [data-hm="conta"]'); await p.locator('#hr-h').waitFor(); await varrer(p, `janela da hora, pela conta (${nome})`); await p.click('.kf-dlg [data-hm="digitar"]');
-    await p.locator('#hr-v').click(); await p.locator('#hr-v').pressSequentially('12000'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor(); await varrer(p, `orçamento em branco (${nome})`);
+    await p.locator('#hr-v').click(); await p.locator('#hr-v').pressSequentially('12000'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#cl-nome').waitFor(); await varrer(p, `janela do cliente novo (${nome})`);
+    await p.fill('#cl-nome', 'Mariana Souza'); await p.fill('#cl-fone', '11988887777'); await p.fill('#cl-end', 'Rua das Acácias, 120'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor(); await varrer(p, `orçamento em branco (${nome})`);
     await p.click('#conteudo [data-somar]'); await p.locator('.kf-dlg .blocos').waitFor(); await varrer(p, `Somar, categorias (${nome})`);
     await p.click('.kf-dlg [data-diag="60"]'); await p.click('.kf-dlg [data-ida="1"]'); await varrer(p, `Somar, com diagnóstico e ida (${nome})`);
     await p.click('.kf-dlg [data-diag="x"]'); await p.locator('.kf-dlg #ln-n').waitFor(); await varrer(p, `janela do diagnóstico (${nome})`); await fechar(p);
@@ -64,9 +65,11 @@ for (const tema of ['light', 'dark']) {
     await p.locator('#conteudo .itens .item').first().waitFor(); await varrer(p, `orçamento de exemplo (${nome})`);
     await p.locator('#conteudo .itens .item').first().click(); await p.locator('#ln-p').waitFor(); await varrer(p, `linha do documento (${nome})`); await fechar(p);
     await p.click('#conteudo [data-j="cliente"]'); await p.locator('#cl-nome').waitFor(); await varrer(p, `janela Cliente (${nome})`); await fechar(p);
-    for (const j of ['titulo', 'pag', 'validade', 'garantia', 'desc', 'obs']) { await p.click(`#conteudo [data-j="${j}"]`); await p.locator('.kf-dlg #cd-corpo').waitFor(); await varrer(p, `janela ${j} (${nome})`); await fechar(p); }
+    for (const j of ['titulo', 'pag', 'validade', 'prazo', 'garantia', 'desc', 'obs']) { await p.click(`#conteudo [data-j="${j}"]`); await p.locator('.kf-dlg #cd-corpo').waitFor(); await varrer(p, `janela ${j} (${nome})`); await fechar(p); }
     await p.evaluate(() => { const d = getDoc('exemplo'); d.cliente.nome = ''; tocarDoc(d); redesenhar(); });
-    await p.click('#pe-doc [data-prox="enviar"]'); await p.locator('#ev-nome').waitFor(); await p.click('.kf-dlg [data-ja]'); await varrer(p, `Enviar, com o nome apontado (${nome})`); await fechar(p); await semAviso(p);
+    await p.click('#pe-doc [data-prox="enviar"]'); await p.locator('#cl-nome').waitFor(); await p.click('.kf-dlg [data-salvar]'); await varrer(p, `Cliente, com o nome apontado (${nome})`);
+    await p.fill('#cl-nome', 'Mariana Souza'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' }); await semAviso(p);
+    await p.click('#pe-doc [data-prox="enviar"]'); await p.locator('#ev-nome').waitFor(); await varrer(p, `Enviar (${nome})`); await fechar(p); await semAviso(p);
     await p.click('#pe-doc [data-menu]'); await p.locator('.kf-dlg .opcoes').waitFor(); await varrer(p, `Mais opções (${nome})`); await fechar(p);
     await p.evaluate(() => { const d = getDoc('exemplo'); d.cliente.nome = 'Mariana Souza'; d.etapa = 'enviado'; tocarDoc(d); redesenhar(); }); await varrer(p, `orçamento enviado (${nome})`);
     await p.evaluate(() => { const d = getDoc('exemplo'); d.etapa = 'recusado'; tocarDoc(d); redesenhar(); }); await varrer(p, `orçamento recusado (${nome})`);
