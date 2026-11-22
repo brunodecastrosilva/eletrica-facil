@@ -2,7 +2,7 @@
    Ideias trazidas de apps premiados em design, e como entram aqui:
    - a informação que importa fica na frente e o resto sai do caminho (Flighty): o Início abre com o que há para receber;
    - mostrar só o passo atual (Crouton): no documento, o botão do pé é sempre o próximo passo, e só ele;
-   - tema e paleta coesos, dados claros (Tide Guide): amarelo e azul-noite em tudo, números grandes numa fonte só;
+   - tema e paleta coesos, dados claros (Tide Guide): fundo neutro e o amarelo só no destaque, números grandes numa fonte só;
    - uso simples e intuitivo, começo fácil (Moonlitt): somar um serviço é um toque num bloco;
    - nada só pela cor, letra e contraste que aguentam (Guitar Wiz): toda etapa tem nome escrito, não só cor. */
 'use strict';
@@ -123,54 +123,77 @@ const itemDoc = l => `<button type="button" class="item" data-linha="${esc(l.id)
 const anotaveis = d => d.linhas.filter(l => !l.tipo && l.pid).map(l => precos.find(p => p.id === l.pid)).filter((p, i, a) => p && !p.fixo && a.indexOf(p) === i);
 const mediaReal = p => p.reais.length ? Math.max(5, Math.round(soma(p.reais) / p.reais.length / 5) * 5) : 0;
 const seletorTempo = (id, atual, max, passo) => { const L = new Set([atual]); for (let m = passo; m <= max; m += passo) L.add(m); return `<select id="${id}" class="kf-entrada">${[...L].sort((a, b) => a - b).map(m => `<option value="${m}"${m === atual ? ' selected' : ''}>${tempoTxt(m)}</option>`).join('')}</select>`; };
+/* ---------- a tela do documento (5.2): o painel fica no alto, e cada cômodo é um cartão que se desliza ---------- */
+let vistaLista = false;                 // "Ver em lista": todos os cômodos de uma vez (vale até fechar o app)
+const rolCar = new Map(), subAnt = new Map();   // onde o carrossel estava e os subtotais da última vez, por documento
+let animEnvio = '';                     // o documento que acabou de sair: o disjuntor arma ao lado do total
+const reduzMov = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// o código do cartão, como o circuito no quadro: C1, C2…; G para Geral e M para Material
+const codCom = (d, g) => d.comodos.includes(g) ? 'C' + (d.comodos.indexOf(g) + 1) : g === 'Geral' ? 'G' : g === 'Material' ? 'M' : '';
+const noCom = g => `n${artigo(g)} ${g}`;
+const condLinha = (d, c) => { const rel = d.tipo === 'rel';
+  return [pagCurto(d), rel ? (d.feito ? `feito em ${dataCurta(d.feito)}` : 'falta o dia do serviço') : `válido até ${dataCurta(validoAte(d))}`,
+    rel ? '' : d.inicio && d.dias ? `início ${dataCurta(d.inicio)}, ${plural(d.dias, 'dia', 'dias')}` : 'falta o prazo',
+    `garantia de ${garCurta(d)}`, c.desc ? `desconto de ${BRL(c.desc)}` : ''].filter(Boolean).join(' · '); };
+const DISJUNTOR = '<svg class="dj" viewBox="0 0 34 48" aria-hidden="true" focusable="false"><rect class="dj-cx" x="2" y="2" width="30" height="44" rx="5"/><rect class="dj-al" x="11" y="23" width="12" height="18" rx="3"/></svg>';
+function painelDoc(d, c, px) {
+  const E = ETAPAS[d.tipo], i = E.indexOf(d.etapa), falta = c.pago && c.falta, enviado = d.etapa !== 'rascunho';
+  const partes = [['mao', 'Mão de obra', c.mao], ['desl', 'Deslocamento', c.desl], ['mat', 'Material', c.mat]];
+  const leg = partes.filter(([k, , v]) => k !== 'desl' || v).map(([k, n, v]) => `<div class="m-${k}"><dt>${n}</dt><dd class="num">${k === 'mat' && !v ? 'não incluído' : BRL(v)}</dd></div>`).join('');
+  const extra = [c.desc ? `${esc(descTxt(d))}: − ${BRL(c.desc)}` : '', d.pag === 'entrada' && !c.pago ? `Entrada de ${d.entradaPct}%: ${BRL(c.entrada)} · na conclusão: ${BRL(c.resto)}` : '', c.pago ? `Já recebido: ${BRL(c.pago)}` : ''].filter(Boolean);
+  const trilha = !enviado ? '' : d.etapa === 'recusado' ? `<p class="tr-recusa">${IC.recusa}<b>Recusado pelo cliente</b></p>`
+    : `<ol class="tr-passos pnl-trilha" aria-label="Etapas do documento">${E.map((e, k) => `<li class="${k < i ? 'feito' : k === i ? 'atual' : ''}"${k === i ? ' aria-current="step"' : ''}><span>${NOME_ETAPA[e]}</span></li>`).join('')}</ol>`;
+  return `<section class="pnl" id="pnl" aria-label="Resumo d${artigo(TIPO[d.tipo].nome)} ${TIPO[d.tipo].nome.toLowerCase()}">
+    <button type="button" class="pnl-cli" data-j="cliente">${IC.pessoa}<span>${clienteOk(d.cliente) ? `<b>${esc(d.cliente.nome)}</b> · ${esc(d.cliente.end)}` : '<b class="fraco">Nome, telefone e endereço do serviço</b>'}</span>${IC.seta}</button>
+    ${trilha}
+    <div class="pnl-tot">${enviado && d.etapa !== 'recusado' ? DISJUNTOR : ''}<div class="pnl-t"><small>${falta ? 'Falta receber' : 'Total'}</small><b class="num" id="pnl-total">${BRL(falta ? c.falta : c.total)}</b></div>
+      ${d.comodos.length ? `<button type="button" class="pnl-vista" data-vista>${IC.docs}<span>${vistaLista ? 'Ver em cartões' : 'Ver em lista'}</span></button>` : ''}</div>
+    ${c.sub ? `<div class="pnl-med" aria-hidden="true">${partes.filter(x => x[2] > 0).map(([k, , v]) => `<span class="m-${k}" data-v="${v}"></span>`).join('')}</div>` : ''}
+    <dl class="pnl-leg">${leg}</dl>
+    ${extra.length ? `<p class="pnl-extra num">${extra.join(' · ')}</p>` : ''}
+    <button type="button" class="pnl-cond" data-cond aria-label="Condições: ${esc(condLinha(d, c))}"><span>${esc(condLinha(d, c))}</span>${IC.seta}</button>
+    <p class="${enviado ? 'tr-frase' : 'kf-so-leitor'}" role="status">${esc(px.frase)}</p>
+  </section>`;
+}
+const minimoDoc = (d, c) => c.minimo ? `<div class="item minimo"><span class="it-q" aria-hidden="true">${IC.raio}</span><span class="it-tx"><b>Atendimento mínimo</b><small>Completa ${BRL(d.minIda)} por ida</small></span><b class="it-v num">${BRL(c.minimo)}</b></div>` : '';
+function cartaoGrupo(d, c, g) {
+  const L = d.linhas.filter(l => grupoDe(d, l) === g), ehCom = d.comodos.includes(g), m = g === 'Geral' ? minimoDoc(d, c) : '';
+  const nMat = ehCom ? soma(d.mats.filter(x => x.com === g).map(x => x.q)) : 0;
+  const nome = ehCom ? `<button type="button" class="sec-g-bt" data-cmd="${esc(g)}" aria-label="${esc(g)}: renomear ou apagar"><span>${esc(g)}</span>${IC.lapis}</button>` : `<span>${esc(g)}</span>`;
+  const somar = ehCom ? `<button type="button" class="cr-somar" data-somar-com="${esc(g)}">${IC.soma}<span>Somar ${esc(noCom(g))}</span></button>`
+    : g === 'Geral' ? `<button type="button" class="cr-somar" data-somar-com="">${IC.soma}<span>Diagnóstico e idas</span></button>` : '';
+  const vazio = ehCom ? 'Nenhum serviço neste cômodo.' : g === 'Geral' ? 'Diagnóstico, deslocamento e o que não é de um cômodo.' : '';
+  return `<article class="cr" data-g="${esc(g)}"><h3 class="sec-g" data-cod="${codCom(d, g)}">${nome}<b class="num cr-sub">${BRL(soma(L.map(totalLinha)) + (m ? c.minimo : 0))}</b></h3>
+    ${L.length || m ? `<div class="cx itens">${L.map(itemDoc).join('')}${m}</div>` : `<p class="kf-ajuda cr-vazio">${vazio}</p>`}
+    ${nMat ? `<button type="button" class="cr-mat" data-mats-com>${IC.caixa}<span>${plural(nMat, 'peça contada', 'peças contadas')}</span>${IC.seta}</button>` : ''}
+    ${somar}</article>`;
+}
+function servicosDoc(d, c) {
+  const rel = d.tipo === 'rel', n = d.linhas.length, cab = `<span class="sec-n">· ${n}</span>`;
+  if (!d.comodos.length) return `<section aria-labelledby="dc-it"><article class="cr cr-un"><h2 class="sec" id="dc-it">${rel ? 'O que foi feito' : 'Serviços'}${n ? ' ' + cab : ''}</h2>
+      ${itensDoc(d, c) || `<p class="kf-ajuda cr-vazio">Some os serviços da sua tabela. Cada toque no + soma um.</p>`}
+      <button type="button" class="cr-somar" data-somar>${IC.soma}<span>Somar serviço</span></button></article>
+      <button type="button" class="kf-btn kf-link cr-separar" data-levantar>Separar por cômodo</button></section>`;
+  if (vistaLista) return `<section aria-labelledby="dc-it"><h2 class="sec" id="dc-it">Todos os cômodos${n ? ' ' + cab : ''}</h2>
+      ${itensDoc(d, c)}${KitFacil.ui.adicionar({ rotulo: 'Somar serviço', attrs: 'data-somar' })}${KitFacil.ui.adicionar({ rotulo: 'Cômodo', attrs: 'data-levantar' })}</section>`;
+  const G = gruposDoc(d).filter(g => g !== 'Material' || d.linhas.some(l => grupoDe(d, l) === g));
+  return `<section class="crs" aria-labelledby="dc-it"><div class="crs-cab"><h2 class="sec" id="dc-it">Cômodos <span class="sec-n">· ${d.comodos.length} e Geral</span></h2><span class="crs-dica" aria-hidden="true">deslize</span></div>
+    <div class="crs-fila" id="dc-car">${G.map(g => cartaoGrupo(d, c, g)).join('')}<button type="button" class="cr-novo" data-levantar>${IC.soma}<span>Cômodo</span></button></div>
+    <div class="crs-pontos" aria-hidden="true">${G.concat('+').map((g, k) => `<i${k ? '' : ' class="on"'}></i>`).join('')}</div></section>`;
+}
 TELAS.doc = {
   html(r) {
-    const d = getDoc(r.id), c = conta(d), px = proximo(d), E = ETAPAS[d.tipo], i = E.indexOf(d.etapa), rel = d.tipo === 'rel';
-    const obs = d.obs.trim().split('\n')[0];
-    const resumo = (rot, v, forte) => `<div${forte ? ' class="forte"' : ''}><dt>${rot}</dt><dd class="num">${v}</dd></div>`;
+    const d = getDoc(r.id), c = conta(d), px = proximo(d), rel = d.tipo === 'rel';
     return `${barraInterna(TIPO[d.tipo].nome, numTxt(d))}
     <main class="tela doc-tela" id="conteudo">
-      <section class="trilha" aria-label="Etapas do documento">
-        ${d.etapa === 'recusado' ? `<p class="tr-recusa">${IC.recusa}<b>Recusado pelo cliente</b></p>` : `<ol class="tr-passos">${E.map((e, k) => `<li class="${k < i ? 'feito' : k === i ? 'atual' : ''}"${k === i ? ' aria-current="step"' : ''}><i aria-hidden="true">${k < i ? IC.certo : ''}</i><span>${NOME_ETAPA[e]}</span></li>`).join('')}</ol>`}
-        <p class="tr-frase" role="status">${esc(px.frase)}</p>
-      </section>
-      <section class="cx" aria-label="Cliente e serviço">
-        ${lin('data-j="cliente"', IC.pessoa, 'Cliente', clienteOk(d.cliente) ? [d.cliente.nome, d.cliente.end].join(' · ') : 'Nome, telefone e endereço do serviço', !clienteOk(d.cliente))}
-        ${lin('data-j="titulo"', IC.lapis, rel ? 'Serviço executado' : 'Serviço', d.titulo || 'Nome do serviço (ex.: reforma da cozinha)', !d.titulo)}
-      </section>
-      <section aria-labelledby="dc-it">
-        <h2 class="sec" id="dc-it">${rel ? 'O que foi feito' : 'Serviços'}${d.linhas.length ? ` <span class="sec-n">· ${d.linhas.length}</span>` : ''}</h2>
-        ${itensDoc(d, c)}
-        ${KitFacil.ui.adicionar({ rotulo: 'Somar serviço', attrs: 'data-somar' })}
-        ${d.comodos.length ? '' : KitFacil.ui.adicionar({ rotulo: 'Levantar por cômodo', attrs: 'data-levantar' })}
-        ${d.mats.length ? `<div class="cx">${lin('data-j="mats"', IC.caixa, 'Lista de materiais · só para você', `${plural(listaMats(d).length, 'item', 'itens')} · ${plural(soma(d.mats.map(m => m.q)), 'peça', 'peças')}`)}</div>` : ''}
-      </section>
-      <section aria-labelledby="dc-co">
-        <h2 class="sec" id="dc-co">Condições</h2>
-        <div class="cx">
-          ${lin('data-j="pag"', IC.dinheiro, 'Pagamento', pagCurto(d))}
-          ${rel ? lin('data-j="feito"', IC.dia, 'Serviço feito em', d.feito ? dataBR(d.feito) : 'Escolha o dia', !d.feito) : lin('data-j="validade"', IC.relogio, 'Validade', `${plural(d.validade, 'dia', 'dias')} · até ${dataCurta(validoAte(d))}`)}
-          ${rel ? '' : lin('data-j="prazo"', IC.dia, 'Prazo do serviço', d.inicio && d.dias ? `${dataCurta(d.inicio)} a ${dataCurta(fimPrevisto(d))} · ${plural(d.dias, 'dia', 'dias')}` : 'Início e quantos dias leva', !(d.inicio && d.dias))}
-          ${lin('data-j="garantia"', IC.escudo, 'Garantia', garCurta(d))}
-          ${lin('data-j="desc"', IC.desconto, 'Desconto', c.desc ? `${d.descPct ? d.descPct + '% · ' : ''}${BRL(c.desc)}` : 'Sem desconto', !c.desc)}
-          ${lin('data-j="obs"', IC.nota, 'Observações', obs || 'Nenhuma', !obs)}
-        </div>
-      </section>
-      <section aria-label="Valores">
-        <dl class="resumo">
-          ${resumo('Mão de obra', BRL(c.mao)) + (c.desl ? resumo('Deslocamento', BRL(c.desl)) : '') + resumo('Material', c.mat ? BRL(c.mat) : 'não incluído')}
-          ${c.desc ? resumo('Valor do serviço', BRL(c.sub)) + resumo(esc(descTxt(d)), '− ' + BRL(c.desc)) : ''}
-          ${resumo('Total', BRL(c.total), true)}
-          ${d.pag === 'entrada' && !c.pago ? resumo(`Entrada de ${d.entradaPct}%`, BRL(c.entrada)) + resumo('Na conclusão', BRL(c.resto)) : ''}
-          ${c.pago ? resumo('Já recebido', BRL(c.pago)) + resumo('Falta receber', BRL(c.falta)) : ''}
-        </dl>
-      </section>
+      ${painelDoc(d, c, px)}
+      ${servicosDoc(d, c)}
+      ${d.mats.length ? `<div class="cx">${lin('data-j="mats"', IC.caixa, 'Lista de materiais · só para você', `${plural(listaMats(d).length, 'item', 'itens')} · ${plural(soma(d.mats.map(m => m.q)), 'peça', 'peças')}`)}</div>` : ''}
       ${anotaveis(d).length && (rel || ['aprovado', 'recebido'].includes(d.etapa)) ? `<section aria-labelledby="dc-tr"><h2 class="sec" id="dc-tr">Depois do serviço</h2><div class="cx">${lin('data-j="tempo"', IC.relogio, 'Tempo real', d.tempoOk ? 'Anotado' : 'Anotar quanto tempo levou', !d.tempoOk)}</div></section>` : ''}
       ${d.pagos.length ? `<section aria-labelledby="dc-pg"><h2 class="sec" id="dc-pg">Recebimentos</h2><div class="cx">${d.pagos.map(p => `<div class="pago"><span class="lin-ic">${IC.certo}</span><span class="lin-tx"><small>${dataBR(p.em)} · ${esc(p.meio)}</small><b class="num">${BRL(p.v)}</b></span><button type="button" class="kf-btn kf-sec kf-p" data-recibo="${esc(p.id)}">Recibo</button></div>`).join('')}</div></section>` : ''}
     </main>
     <div class="pe-tela" id="pe-doc">
       <div class="pe-in">
-        <div class="pe-total"><small>${c.pago && c.falta ? 'Falta' : 'Total'}</small><b class="num">${BRL(c.pago && c.falta ? c.falta : c.total)}</b></div>
         <button type="button" class="bt-ic contorno" data-menu aria-label="Mais opções">${IC.mais}</button>
         <button type="button" class="kf-btn kf-pri pe-prox" data-prox="${px.id}">${esc(px.rotulo)}</button>
       </div>
@@ -181,9 +204,13 @@ TELAS.doc = {
     el.addEventListener('click', e => {
       const t = e.target;
       if (t.closest('[data-voltar]')) return voltar('/');
+      let b;
+      if ((b = t.closest('[data-somar-com]'))) return janelaSomar(d, b.dataset.somarCom);
       if (t.closest('[data-somar]')) return janelaSomar(d);
       if (t.closest('[data-levantar]')) return janelaComodo(d, nome => janelaSomar(d, nome));
-      let b;
+      if (t.closest('[data-vista]')) { vistaLista = !vistaLista; return redesenhar(); }
+      if (t.closest('[data-cond]')) return janelaCondicoes(d);
+      if (t.closest('[data-mats-com]')) return janelaMats(d);
       if ((b = t.closest('[data-cmd]'))) return janelaCmd(d, b.dataset.cmd);
       if ((b = t.closest('[data-linha]'))) return janelaLinha(d, d.linhas.find(l => l.id === b.dataset.linha));
       if ((b = t.closest('[data-j]'))) return b.dataset.j === 'cliente' ? janelaCliente(d) : b.dataset.j === 'tempo' ? janelaTempo(d) : b.dataset.j === 'mats' ? janelaMats(d) : janelaCond(d, b.dataset.j);
@@ -191,8 +218,47 @@ TELAS.doc = {
       if (t.closest('[data-menu]')) return janelaMenu(d);
       if ((b = t.closest('[data-prox]'))) return avancar(d, b.dataset.prox);
     });
+    $$('.pnl-med span', el).forEach(s => { s.style.flexGrow = s.dataset.v; });
+    // o carrossel volta para onde estava, e os pontinhos acompanham o cartão à vista
+    const fila = $('#dc-car', el), pts = $$('.crs-pontos i', el);
+    const marca = () => { const w = fila.firstElementChild ? fila.firstElementChild.offsetWidth + 12 : 1, k = Math.min(pts.length - 1, Math.round(fila.scrollLeft / w)); pts.forEach((p, n) => p.classList.toggle('on', n === k)); };
+    if (fila) { fila.scrollLeft = rolCar.get(d.id) || 0; marca(); fila.addEventListener('scroll', () => { rolCar.set(d.id, fila.scrollLeft); marca(); }, { passive: true }); }
+    // animação 1: o disjuntor arma quando o documento sai (900 ms); com movimento reduzido, nada se mexe
+    if (animEnvio === d.id) {
+      animEnvio = ''; const pn = $('#pnl', el);
+      if (pn && !reduzMov()) { pn.classList.add('arma'); setTimeout(() => { try { navigator.vibrate && navigator.vibrate(12); } catch (_) { /* sem vibração */ } }, 420); setTimeout(() => pn.classList.remove('arma'), 950); }
+    }
+    // animação 2: a faísca corre pelo cartão em que o valor subiu (480 ms)
+    const agora = {}; $$('.cr[data-g]', el).forEach(a => { agora[a.dataset.g] = $('.cr-sub', a).textContent; });
+    const antes = subAnt.get(d.id); subAnt.set(d.id, agora);
+    if (antes && fila) {
+      const subiu = Object.keys(agora).find(g => valorTxt(agora[g]) > valorTxt(antes[g] || '0'));
+      const a = subiu !== undefined && $(`.cr[data-g="${CSS.escape(subiu)}"]`, el);
+      if (a) {
+        const x = a.offsetLeft - fila.offsetLeft - 16;
+        if (x < fila.scrollLeft || x + a.offsetWidth > fila.scrollLeft + fila.clientWidth) { fila.scrollTo({ left: Math.max(0, x), behavior: reduzMov() ? 'auto' : 'smooth' }); }
+        if (!reduzMov()) { a.classList.add('faisca'); setTimeout(() => a.classList.remove('faisca'), 520); }
+      }
+    }
   },
 };
+// o texto "R$ 1.234,56" em centavos, para comparar subtotais
+const valorTxt = s => +String(s).replace(/\D/g, '') || 0;
+// as condições numa janela: cada linha abre a sua
+function janelaCondicoes(d) {
+  const c = conta(d), rel = d.tipo === 'rel', obs = d.obs.trim().split('\n')[0];
+  janela({ titulo: 'Condições', contexto: nomeDoc(d),
+    corpo: `<div class="cx">
+      ${lin('data-j="titulo"', IC.lapis, rel ? 'Serviço executado' : 'Serviço', d.titulo || 'Nome do serviço (ex.: reforma da cozinha)', !d.titulo)}
+      ${lin('data-j="pag"', IC.dinheiro, 'Pagamento', pagCurto(d))}
+      ${rel ? lin('data-j="feito"', IC.dia, 'Serviço feito em', d.feito ? dataBR(d.feito) : 'Escolha o dia', !d.feito) : lin('data-j="validade"', IC.relogio, 'Validade', `${plural(d.validade, 'dia', 'dias')} · até ${dataCurta(validoAte(d))}`)}
+      ${rel ? '' : lin('data-j="prazo"', IC.dia, 'Prazo do serviço', d.inicio && d.dias ? `${dataCurta(d.inicio)} a ${dataCurta(fimPrevisto(d))} · ${plural(d.dias, 'dia', 'dias')}` : 'Início e quantos dias leva', !(d.inicio && d.dias))}
+      ${lin('data-j="garantia"', IC.escudo, 'Garantia', garCurta(d))}
+      ${lin('data-j="desc"', IC.desconto, 'Desconto', c.desc ? `${d.descPct ? d.descPct + '% · ' : ''}${BRL(c.desc)}` : 'Sem desconto', !c.desc)}
+      ${lin('data-j="obs"', IC.nota, 'Observações', obs || 'Nenhuma', !obs)}
+    </div>`,
+    aoMontar: j => j.addEventListener('click', e => { const b = e.target.closest('[data-j]'); if (!b) return; fecharJanela(true); janelaCond(d, b.dataset.j); }) });
+}
 // o botão do pé: o próximo passo do documento
 function avancar(d, passo) {
   if (passo === 'somar') return janelaSomar(d);
@@ -214,7 +280,7 @@ function avancar(d, passo) {
 }
 function marcarEnviado(d) {
   if (d.etapa !== 'rascunho') return;
-  d.etapa = 'enviado'; d.enviadoEm = Date.now(); tocarDoc(d); redesenhar();
+  d.etapa = 'enviado'; d.enviadoEm = Date.now(); animEnvio = d.id; tocarDoc(d); redesenhar();
   aviso('Marcado como enviado.', { label: 'Desfazer', run: () => { d.etapa = 'rascunho'; d.enviadoEm = null; tocarDoc(d); redesenhar(); } });
 }
 

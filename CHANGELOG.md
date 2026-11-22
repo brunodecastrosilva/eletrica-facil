@@ -3,6 +3,22 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.2.0 · 2026-11-22
+
+Cara nova, em todas as telas, no claro e no escuro.
+
+- Cara nova: fundo neutro e o amarelo só no que importa, no claro e no escuro.
+- No documento, o total fica sempre no alto, com a divisão entre mão de obra, deslocamento e material.
+- Cada cômodo é um cartão: deslize para o lado ou toque em Ver em lista.
+
+Também: o painel do documento traz o cliente, o total, a barra da divisão e as condições numa linha só (um toque abre
+todas, inclusive o nome do serviço); a trilha das etapas só aparece depois de enviar; o pé tem uma ação só, grande, e os
+três pontinhos. Duas animações do ofício: ao enviar, um disjuntor arma ao lado do total (900 ms); ao somar, uma faísca
+corre pelo cartão do cômodo até o subtotal (480 ms). Com movimento reduzido, as duas viram troca direta. Sem cômodos, o
+documento mostra um cartão só, com "Separar por cômodo". Os cartões levam o código do circuito (C1, C2…, G de Geral).
+Os pictogramas das categorias passam a ser só de linha; as janelas têm a cor da tela; a barra de cima e a de baixo
+ficam neutras, e o item atual da navegação ganha uma pílula amarela com contorno. Os dados não mudam.
+
 ## 5.1.1 · 2026-11-22
 
 O documento fica conforme o Código de Defesa do Consumidor.

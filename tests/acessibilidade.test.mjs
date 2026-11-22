@@ -60,12 +60,14 @@ for (const tema of ['light', 'dark']) {
     await p.click('#conteudo [data-j="mats"]'); await p.locator('.kf-dlg [data-por]').waitFor(); await varrer(p, `Lista de materiais (${nome})`); await fechar(p);
     await varrer(p, `orçamento por cômodo (${nome})`);
     await p.click('#conteudo [data-cmd="Sala"]'); await p.locator('#cmd-n').waitFor(); await varrer(p, `janela do cômodo (${nome})`); await fechar(p);
+    await p.click('#conteudo [data-vista]'); await p.locator('#conteudo .sec-g-bt').first().waitFor(); await varrer(p, `orçamento por cômodo, em lista (${nome})`); await p.click('#conteudo [data-vista]'); await p.locator('#dc-car').waitFor();
     // o orçamento de exemplo, etapa por etapa
     await p.evaluate(() => { Object.assign(ajustes, { nome: 'Carlos Pereira', fone: '11988887777', pix: 'carlos@exemplo.com.br', cidade: 'São Paulo' }); salvarAjustes(); criarExemplo(); });
     await p.locator('#conteudo .itens .item').first().waitFor(); await varrer(p, `orçamento de exemplo (${nome})`);
     await p.locator('#conteudo .itens .item').first().click(); await p.locator('#ln-p').waitFor(); await varrer(p, `linha do documento (${nome})`); await fechar(p);
     await p.click('#conteudo [data-j="cliente"]'); await p.locator('#cl-nome').waitFor(); await varrer(p, `janela Cliente (${nome})`); await fechar(p);
-    for (const j of ['titulo', 'pag', 'validade', 'prazo', 'garantia', 'desc', 'obs']) { await p.click(`#conteudo [data-j="${j}"]`); await p.locator('.kf-dlg #cd-corpo').waitFor(); await varrer(p, `janela ${j} (${nome})`); await fechar(p); }
+    await p.click('#conteudo [data-cond]'); await p.locator('.kf-dlg [data-j="pag"]').waitFor(); await varrer(p, `janela Condições (${nome})`); await fechar(p);
+    for (const j of ['titulo', 'pag', 'validade', 'prazo', 'garantia', 'desc', 'obs']) { await p.click('#conteudo [data-cond]'); await p.click(`.kf-dlg [data-j="${j}"]`); await p.locator('.kf-dlg #cd-corpo').waitFor(); await varrer(p, `janela ${j} (${nome})`); await fechar(p); }
     await p.evaluate(() => { const d = getDoc('exemplo'); d.cliente.nome = ''; tocarDoc(d); redesenhar(); });
     await p.click('#pe-doc [data-prox="enviar"]'); await p.locator('#cl-nome').waitFor(); await p.click('.kf-dlg [data-salvar]'); await varrer(p, `Cliente, com o nome apontado (${nome})`);
     await p.fill('#cl-nome', 'Mariana Souza'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' }); await semAviso(p);
@@ -81,7 +83,7 @@ for (const tema of ['light', 'dark']) {
     await p.evaluate(() => { const d = getDoc('exemplo'); d.pagos.push({ id: 'z', v: conta(d).falta, em: Date.now(), meio: 'Dinheiro' }); mudouDoc(d); redesenhar(); }); await varrer(p, `orçamento recebido (${nome})`);
     // relatório, com o dia do serviço no calendário do Kit
     await p.evaluate(() => { const d = getDoc('exemplo'); d.tipo = 'rel'; d.etapa = 'rascunho'; d.pagos = []; d.pag = 'vista'; d.feito = Date.now(); tocarDoc(d); redesenhar(); }); await varrer(p, `relatório (${nome})`);
-    await p.click('#conteudo [data-j="feito"]'); await p.locator('.kf-dlg #cd-corpo').waitFor(); await varrer(p, `janela do dia do serviço (${nome})`); await fechar(p);
+    await p.click('#conteudo [data-cond]'); await p.click('.kf-dlg [data-j="feito"]'); await p.locator('.kf-dlg #cd-corpo').waitFor(); await varrer(p, `janela do dia do serviço (${nome})`); await fechar(p);
     // telas principais com dados
     await p.evaluate(() => { const d = getDoc('exemplo'); d.tipo = 'orc'; d.etapa = 'aprovado'; tocarDoc(d); ir('/', true); }); await varrer(p, `Início, com documento (${nome})`);
     await p.evaluate(() => ir('/docs', true)); await varrer(p, `Documentos (${nome})`);

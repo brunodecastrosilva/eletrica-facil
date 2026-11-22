@@ -2,7 +2,7 @@
 
 Orçamento de serviços de elétrica, do pedido ao recibo, direto no celular, no tablet ou no computador.
 
-Versão **5.1.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **5.2.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md). Na 4.0.0 o app recomeçou enxuto, por decisão do Bruno: faz uma coisa só,
@@ -13,7 +13,7 @@ os da família; o fluxo, o desenho das telas e os ícones são do eletricista.
 
 - **Dois documentos.** O **orçamento**, antes do serviço: o cliente aprova e você executa. O **relatório**, depois do
   serviço: para cobrar o que já foi feito.
-- **Um caminho só, com o próximo passo no pé da tela.** Orçamento: Rascunho → Enviado → Aprovado → Recebido.
+- **Um caminho só, com o próximo passo no pé da tela.** Orçamento: Rascunho → Enviado → Aprovado → Recebido (a trilha aparece no painel depois de enviar).
   Relatório: Rascunho → Enviado → Recebido. O botão do pé muda sozinho: Somar serviço, Enviar, Aprovou, Receber e
   Enviar recibo. Os três pontinhos guardam o resto: ver o PDF, duplicar, voltar uma etapa, o cliente recusou e excluir.
 - **Somar serviço.** A sua lista de preços abre em blocos por categoria, com ícone. Cada toque no + soma um; o − tira
@@ -21,7 +21,7 @@ os da família; o fluxo, o desenho das telas e os ícones são do eletricista.
 - **Linha do documento.** Toque na linha para mudar a descrição, a quantidade, a unidade e o preço só naquele documento.
 - **Condições.** Pagamento (à vista, entrada de 30% a 70% ou a combinar), validade do orçamento, dia do serviço (no
   relatório), garantia, desconto e observações.
-- **Enviar.** O nome do cliente só é pedido aqui. O documento sai em PDF (com o seu nome, o logotipo e o QR code do
+- **Enviar.** O cliente vem do começo do documento. O documento sai em PDF (com o seu nome, o logotipo e o QR code do
   Pix) ou como mensagem de WhatsApp.
 - **Receber.** QR code do Pix com o valor (a entrada primeiro; depois, o que falta) e Pix copia e cola. O pagamento
   pode entrar em partes; quando quita, o documento vira Recebido. Cada pagamento tem o seu **recibo**, em PDF (com o
@@ -98,6 +98,20 @@ de nome só se o nome ainda for o de fábrica; entram 2 serviços e 10 materiais
   orçamento aprovado obriga as duas partes e só muda por nova negociação" (§ 2º).
 - **Cliente:** nome, telefone e endereço do serviço pedidos antes de tudo (exceção ao Art. 64-D, abaixo).
 
+## A cara nova (versão 5.2)
+
+- **Painel fixo no alto do documento:** o cliente, o total grande, uma barra com a divisão entre mão de obra,
+  deslocamento e material (com os valores escritos ao lado) e as condições numa linha só. Tocar na linha abre a janela
+  **Condições** (serviço, pagamento, validade ou dia do serviço, prazo, garantia, desconto e observações). Em tela baixa
+  (até 700 px de altura) o painel rola junto, para sobrar espaço.
+- **Um cartão por cômodo**, que se desliza para o lado, com o código do circuito (C1, C2…), o subtotal, as linhas, as peças
+  contadas e "Somar na Sala". Depois vêm Geral (diagnóstico, deslocamento, atendimento mínimo), Material (quando posto no
+  orçamento) e "+ Cômodo". **Ver em lista**, no painel, mostra todos os cômodos de uma vez. Sem cômodos, um cartão só, com
+  "Separar por cômodo".
+- **Uma ação só no pé**, amarela, e os três pontinhos. A trilha das etapas só aparece depois de enviar.
+- **Animações do ofício** (`telas.js`, `estilo.css`): ao enviar, o disjuntor arma ao lado do total (900 ms); ao somar, uma
+  faísca corre pelo cartão em que o valor subiu, até o subtotal (480 ms). Com movimento reduzido, nada se mexe.
+
 ## Como usar
 
 Abra o endereço em qualquer navegador, no celular, no tablet ou no computador. Para instalar:
@@ -146,18 +160,19 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 
 ## Interface
 
-- **Identidade (Código, Art. 56):** amarelo de alta tensão (`#FFD21F`) na frente, azul-noite (`#0B1128`) para ler e
-  agir, branco para o que se toca. No tema claro a página é amarela; no escuro, a página é azul-noite e o amarelo fica
-  na barra de cima, no painel, nos blocos e nos botões. Títulos e números grandes em Red Hat Display; o texto em
-  Atkinson Hyperlegible.
-- **Botões cheios (Art. 66):** destaque e começar usam o mesmo par, azul-noite com letra amarela no claro e amarelo com
-  letra azul-noite no escuro (contraste acima de 12:1). Vermelho só para excluir.
+- **Identidade (Código, Art. 56):** fundo neutro (`#F4F3EF` no claro, `#141518` no escuro), superfícies brancas ou
+  grafite e tinta quase preta; o amarelo de alta tensão (`#FFD21F`) só no destaque: a ação principal, o item atual da
+  navegação, o total aceso e o disjuntor. O que marca estado (chave, dia escolhido, chip escolhido, trilha) usa a tinta
+  no claro e o amarelo no escuro, para ter contraste. Janelas da cor da tela. Títulos e números grandes em Red Hat
+  Display; o texto em Atkinson Hyperlegible.
+- **Botões cheios (Art. 66):** amarelo com letra `#16171A` e uma borda de baixo mais escura, que afunda no toque
+  (contraste acima de 12:1). Vermelho só para excluir.
 - **Navegação (Art. 60):** Início, Documentos, o documento novo no centro, Preços e Mais (guia, exemplo e Ajustes).
-- **Telas internas (Art. 64, parágrafo único):** o documento e a categoria de preços têm, no pé, uma doca azul-noite com
-  o total, os três pontinhos e a ação da tela.
+- **Telas internas (Art. 64, parágrafo único):** o documento e a categoria de preços têm, no pé, uma faixa da cor da tela
+  com os três pontinhos e a ação da tela; no documento o total fica no painel do alto.
 - **Ícones (Art. 57):** desenhados para o app, em dois jogos com o mesmo traço. Os de linha seguem a grade de 24, traço
-  de 2 e pontas redondas. Os pictogramas das categorias usam a grade de 48, em dois tons (contorno, área tingida e
-  detalhe cheio). Onde há Pix, o ícone é um QR code (Regras do app, Art. 12).
+  de 2 e pontas redondas. Os pictogramas das categorias usam a grade de 48, só de linha, com detalhe cheio (a área
+  tingida saiu na 5.2). Onde há Pix, o ícone é um QR code (Regras do app, Art. 12).
 - **Ajustes (Art. 62):** as oito guias comuns e quatro do app: Cobrança, Pix, Documento novo e Raio e
   apresentação. Os dados que
   saem nos documentos ficam como extra de Conta e perfil.
@@ -225,12 +240,13 @@ digital (SRI), baixados só quando a função é usada (Código, Art. 21).
 - **Guia nas telas internas:** a janela do guia fica acima do lugar da barra de baixo, mesmo quando a tela não tem a
   barra; o conteúdo aparecia nessa fresta. Só nelas o app fecha a fresta com a cor da página (`estilo.css`). Proposta
   para o Integrador: a janela do guia descer até o pé quando a tela não tem barra de baixo.
-- **Cores das peças por lugar:** a página é amarela e as caixas são brancas, então a cor da linha fina do Kit
-  (`--kf-line`) muda dentro das caixas, das janelas, da barra de cima e da navegação, trocando só as variáveis de cor
-  nesses lugares (`estilo.css`). Não muda medida nem comportamento.
+- **Cores do destaque nas peças do Kit:** o Kit usa `--kf-accent` tanto para o botão cheio quanto para o que marca estado
+  (chave ligada, dia escolhido). No claro, amarelo sobre branco não dá 3:1; então `--kf-accent` é a tinta, e o app pinta
+  o botão cheio e o de começar de amarelo (`estilo.css`). Não muda medida nem comportamento. Proposta para o Integrador:
+  o Kit separar a cor do botão cheio da cor de estado.
 
-O Anexo I do Código ainda lista as cores da versão 3 do Elétrica Fácil. Proposta para o Integrador: atualizar o par de
-cores (destaque e começar: `#0B1128` com letra `#FFD21F` no claro; `#FFD21F` com letra `#0B1128` no escuro).
+O Anexo I do Código ainda lista as cores da versão 3 do Elétrica Fácil. Proposta para o Integrador: atualizar as cores
+(fundo `#F4F3EF` e `#141518`; destaque e começar `#FFD21F` com letra `#16171A` nos dois temas).
 
 ## Exceções ao padrão
 

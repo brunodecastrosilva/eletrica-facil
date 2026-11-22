@@ -2,7 +2,7 @@
    O app faz uma coisa: orçar serviços de elétrica e fechar a cobrança (enviar, aprovar, receber, recibo).
    Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito. */
 'use strict';
-const VERSAO = '5.1.1';
+const VERSAO = '5.2.0';
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 
 /* ================= utilidades ================= */
@@ -247,7 +247,11 @@ if (ajustes.tab < 6) {
 docs = (Array.isArray(docs) ? docs : []).map(acertaDoc);
 
 /* ================= Kit Fácil: moldura, tema e sincronização ================= */
-const NOVIDADES = [{ versao: '5.1.1', itens: [
+const NOVIDADES = [{ versao: '5.2.0', itens: [
+  'Cara nova: fundo neutro e o amarelo só no que importa, no claro e no escuro.',
+  'No documento, o total fica sempre no alto, com a divisão entre mão de obra, deslocamento e material.',
+  'Cada cômodo é um cartão: deslize para o lado ou toque em Ver em lista.',
+] }, { versao: '5.1.1', itens: [
   'Garantia conforme a lei: os 90 dias do Código de Defesa do Consumidor saem sempre no documento; você escolhe só a garantia a mais.',
   'O orçamento traz o início e o término previstos do serviço, como pede a lei.',
   'O documento começa pelo cliente: nome, telefone e endereço do serviço.',
@@ -289,7 +293,7 @@ KitFacil.iniciar({
     'Os documentos em PDF são feitos aqui no aparelho. Eles só saem quando você compartilha, pelo WhatsApp, por e-mail ou por outro app.',
   ],
 });
-KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#FFD21F', escuro: '#FFD21F' } });
+KitFacil.tema.iniciar({ chave: 'eletricafacil.pref', cores: { claro: '#F4F3EF', escuro: '#141518' } });
 KitFacil.campo.ligar();
 const canon = KitFacil.canon;
 const SY = KitFacil.sync.criar({

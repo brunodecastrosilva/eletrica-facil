@@ -46,21 +46,21 @@ const GUIA = [
       await m.apontar('#so-conta', 1300); await m.fechar(); await m.apontar('#conteudo .itens', 1500);
     } },
   { t: 'Na visita, levante por cômodo', d: 'Escolha o cômodo e some o que há para fazer. Conte também o material: a lista de compras sai pronta.',
-    acao: async m => { await gNoDoc(m); await m.apontar('#conteudo [data-levantar], #conteudo .sec-g', 1900); } },
+    acao: async m => { await gNoDoc(m); await m.apontar('#conteudo [data-levantar], #conteudo .crs', 1900); } },
   { t: 'Mude a quantidade ou o preço', d: 'Toque numa linha para mudar. Ali também fica a condição: normal, difícil ou muito difícil.',
     acao: async m => {
       await gNoDoc(m); await m.tocar('#conteudo .itens .item:nth-child(2)', { depois: 600 });
       await m.apontar('.kf-dlg .kf-quantidade', 1200); await m.tocar('.kf-dlg [data-kf-passo="1"]', { depois: 400 });
       await m.tocar('.kf-dlg [data-salvar]', { depois: 600 });
     } },
-  { t: 'Combine o pagamento', d: 'À vista, com entrada ou a combinar. Validade, garantia, desconto e observações ficam logo abaixo.',
+  { t: 'Combine o pagamento', d: 'À vista, com entrada ou a combinar. A linha das condições, no painel, guarda também validade, garantia e desconto.',
     acao: async m => {
-      await gNoDoc(m); await m.tocar('#conteudo [data-j="pag"]', { depois: 600 });
+      await gNoDoc(m); await m.tocar('#conteudo [data-cond]', { depois: 600 }); await m.tocar('.kf-dlg [data-j="pag"]', { depois: 600 });
       await m.tocar('.kf-dlg [data-pag="entrada"]', { depois: 600 }); await m.apontar('.kf-dlg [role="status"]', 1500); await m.fechar();
     } },
   { t: 'Combine o prazo', d: 'O orçamento diz quando o serviço começa e quantos dias leva. A lei pede as datas de início e término.',
     acao: async m => {
-      await gNoDoc(m); await m.tocar('#conteudo [data-j="prazo"]', { depois: 700 });
+      await gNoDoc(m); await m.tocar('#conteudo [data-cond]', { depois: 600 }); await m.tocar('.kf-dlg [data-j="prazo"]', { depois: 700 });
       const d = getDoc(rota().id); if (d && !d.inicio) { d.inicio = Date.now() + 3 * 864e5; tocarDoc(d); }
       await m.tocar('.kf-dlg [data-pz="2"]', { depois: 600 }); await m.apontar('.kf-dlg [role="status"]', 1500); fecharJanela(true); await m.espera(400);
     } },
@@ -71,16 +71,16 @@ const GUIA = [
       await m.apontar('.kf-dlg .envios', 1700); await m.tocar('.kf-dlg [data-ja]', { depois: 800 });
     } },
   { t: 'O cliente aprovou', d: 'Quando ele responder, toque em Aprovou. Se ele recusar, a opção fica nos três pontinhos.',
-    acao: async m => { await gNoDoc(m); await m.apontar('#conteudo .trilha', 1300); await m.tocar('#pe-doc [data-prox="aprovou"]', { depois: 800 }); } },
+    acao: async m => { await gNoDoc(m); await m.apontar('#conteudo .pnl-trilha', 1300); await m.tocar('#pe-doc [data-prox="aprovou"]', { depois: 800 }); } },
   { t: 'Receba por Pix', d: 'Em Receber, o QR code já sai com o valor. Depois, registre o que entrou.',
     acao: async m => {
       await gNoDoc(m); await m.tocar('#pe-doc [data-prox="receber"]', { depois: 700 });
       await m.apontar('#rc-pix', 1500, { opcional: true, prazo: 900 }); await m.apontar('#rc-v', 1200);
       await m.tocar('.kf-dlg [data-recebi]', { depois: 800 });
     } },
-  { t: 'Mande o recibo', d: 'O pé mostra o que ainda falta. Cada pagamento tem o seu recibo, em PDF ou em mensagem.',
+  { t: 'Mande o recibo', d: 'O painel mostra o que ainda falta. Cada pagamento tem o seu recibo, em PDF ou em mensagem.',
     acao: async m => {
-      await gNoDoc(m); await m.apontar('#pe-doc .pe-total', 1300);
+      await gNoDoc(m); await m.apontar('#pnl .pnl-t', 1300);
       await m.tocar('#conteudo [data-recibo]', { depois: 600 }); await m.apontar('.kf-dlg .envios', 1500); await m.fechar();
     } },
   { t: 'Acompanhe no Início', d: 'O Início mostra quanto há para receber e os documentos em andamento.',

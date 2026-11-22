@@ -221,8 +221,9 @@ function aberturaAbrir({ rever = false } = {}) {
   const blocos = () => { const q = soma(n), v = soma(n.map((x, i) => x * DEMO[i][2])); return `<div class="ab-cena ab-somar"><div class="blocos p">${DEMO.map(([ic, nome], i) => `<button type="button" class="bloco" data-ab-soma="${i}"><span class="bl-ic">${PIC[ic]}</span><b class="bl-nome">${nome}</b>${n[i] ? `<span class="bl-selo num">${n[i]}</span>` : ''}</button>`).join('')}</div>
     <p class="ab-conta" role="status"><span>${plural(q, 'serviço', 'serviços')}</span><b class="num">${BRL(v)}</b></p></div>`; };
   const PASSOS = [['Rascunho', 'Enviar'], ['Enviado', 'Aprovou'], ['Aprovado', 'Receber'], ['Recebido', 'Enviar recibo']];
-  const passos = `<div class="ab-cena ab-passos"><ol class="tr-passos" role="img" aria-label="${PASSOS.map(x => `${x[0]}: ${x[1]}`).join('; ')}.">${PASSOS.map((x, i) => `<li class="${i < 2 ? 'feito' : i === 2 ? 'atual' : ''}"><i aria-hidden="true">${i < 2 ? IC.certo : ''}</i><span>${x[0]}</span></li>`).join('')}</ol>
-      <div class="ab-pe" aria-hidden="true"><div class="pe-total"><small>Total</small><b class="num">${BRL(143500)}</b></div><span class="kf-btn kf-pri">Receber</span></div></div>`;
+  const passos = `<div class="ab-cena ab-passos"><div class="pnl ab-pnl" role="img" aria-label="${PASSOS.map(x => `${x[0]}: ${x[1]}`).join('; ')}."><ol class="tr-passos pnl-trilha" aria-hidden="true">${PASSOS.map((x, i) => `<li class="${i < 2 ? 'feito' : i === 2 ? 'atual' : ''}"><span>${x[0]}</span></li>`).join('')}</ol>
+      <div class="pnl-tot" aria-hidden="true">${DISJUNTOR}<div class="pnl-t"><small>Total</small><b class="num">${BRL(143500)}</b></div></div></div>
+      <div class="ab-pe" aria-hidden="true"><span class="bt-ic contorno">${IC.mais}</span><span class="kf-btn kf-pri">Receber</span></div></div>`;
   const dois = `<div class="ab-cena ab-dois" role="img" aria-label="Orçamento, antes do serviço. Relatório, depois do serviço."><div class="ab-papel"><span class="op-ic">${IC.docs}</span><b>Orçamento</b><small>Antes do serviço</small></div><div class="ab-papel"><span class="op-ic">${IC.recibo}</span><b>Relatório</b><small>Depois do serviço</small></div></div>`;
   const marca = '<div class="ab-cena ab-marca"><span class="ab-halo" aria-hidden="true"></span><img src="icons/icon-192.png" alt="" width="132" height="132"></div>';
   const telas = [

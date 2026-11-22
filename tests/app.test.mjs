@@ -20,7 +20,9 @@ const comHora = p => p.evaluate(() => { if (!ajustes.hora) { ajustes.hora = 1200
 // o documento nasce com o cliente: nome, telefone e endereço do serviço
 const cliente = async (p, nome = 'Mariana Souza') => { await p.locator('#cl-nome').waitFor(); await p.fill('#cl-nome', nome); await p.fill('#cl-fone', '11988887777'); await p.fill('#cl-end', 'Rua das Acácias, 120'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor(); };
 const novoPelaBarra = async (p, tipo) => { await comHora(p); await p.evaluate(() => irPara('novo')); await p.locator(`.kf-dlg [data-novo-tipo="${tipo}"]`).click(); await cliente(p); };
-const pe = p => p.evaluate(() => ({ rotulo: document.querySelector('#pe-doc [data-prox]').textContent.trim(), total: document.querySelector('#pe-doc .pe-total b').textContent.trim().replace(/\s/g, ' '), que: document.querySelector('#pe-doc .pe-total small').textContent.trim() }));
+const pe = p => p.evaluate(() => ({ rotulo: document.querySelector('#pe-doc [data-prox]').textContent.trim(), total: document.querySelector('#pnl-total').textContent.trim().replace(/\s/g, ' '), que: document.querySelector('#pnl .pnl-t small').textContent.trim() }));
+// as condições ficam numa linha do painel; cada uma abre a sua janela
+const cond = async (p, j) => { await p.click('#conteudo [data-cond]'); await p.click(`.kf-dlg [data-j="${j}"]`); };
 const aqui = p => p.evaluate(() => getDoc(rota().id));
 
 test('abre sem erros em celular, tablet e computador, sem rolagem lateral; topo, navegação e nomes inteiros', async () => {
@@ -137,7 +139,7 @@ test('a hora como base: o caso da prima dá R$ 240 de mão de obra mais as idas;
   await p.click('.kf-dlg [data-cat="c-quadro"]'); await p.click('.kf-dlg [data-soma="p-quadro-9"]');
   await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   assert.deepEqual(await pe(p), { rotulo: 'Enviar', total: 'R$ 280,00', que: 'Total' });
-  assert.match(await p.locator('#conteudo dl.resumo').innerText(), /Mão de obra\s+R\$\s240,00\s+Deslocamento\s+R\$\s40,00\s+Material\s+não incluído\s+Total\s+R\$\s280,00/);
+  assert.match(await p.locator('#pnl').innerText(), /Total\s+R\$\s280,00[\s\S]*Mão de obra\s+R\$\s240,00\s+Deslocamento\s+R\$\s40,00\s+Material\s+não incluído/i);
   assert.match(await p.locator('#conteudo .itens').innerText(), /1h30 × R\$\s120,00 a hora[\s\S]*2 idas × R\$\s20,00/);
   // condição num toque, na linha
   await p.locator('#conteudo .itens .item', { hasText: 'disjuntor geral' }).click(); await p.locator('#ln-cs').waitFor();
@@ -146,7 +148,7 @@ test('a hora como base: o caso da prima dá R$ 240 de mão de obra mais as idas;
   assert.equal((await pe(p)).total, 'R$ 310,00');
   assert.deepEqual(await p.evaluate(() => { const l = getDoc(rota().id).linhas.find(x => x.pid === 'p-quadro-9'); return [l.base, l.cond, l.pu]; }), [6000, 2, 9000]);
   // desconto de 100%: o cliente vê o valor cheio e a linha do desconto; o documento vira cortesia
-  await p.click('#conteudo [data-j="desc"]'); await p.fill('#cd-dn', 'Desconto de família'); await p.click('.kf-dlg [data-dp="100"]'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  await cond(p, 'desc'); await p.fill('#cd-dn', 'Desconto de família'); await p.click('.kf-dlg [data-dp="100"]'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   assert.equal((await pe(p)).total, 'R$ 0,00');
   const pdf = (await p.evaluate(async () => { await montarPDF(getDoc(rota().id)); return window.__pdf.t.join('\n') + '\n---\n' + mensagem(getDoc(rota().id)); })).replace(/[\u00a0\u202f]/g, ' ');
   for (const t of ['Diagnóstico do defeito (1h30)', 'Troca de disjuntor geral', 'Quadro antigo', 'Deslocamento (2 idas)', 'Valor do serviço', 'R$ 310,00', 'Desconto de família (100%)', 'Cortesia: nada a pagar.']) assert.ok(pdf.includes(t), `o documento do cliente sem "${t}"`);
@@ -188,9 +190,10 @@ test('lei: garantia de 90 dias sempre (só a adicional se escolhe), dados antigo
   assert.equal(r.prazo, 'Início previsto em 01/12/2026 e término até 03/12/2026 (3 dias de serviço).');
   // a janela da garantia: a lei aparece sempre; as escolhas são só a mais
   await novoPelaBarra(p, 'orc');
-  assert.match(await p.locator('#conteudo [data-j="garantia"]').innerText(), /90 dias, da lei/);
-  assert.match(await p.locator('#conteudo [data-j="prazo"]').innerText(), /Início e quantos dias leva/);
-  await p.click('#conteudo [data-j="garantia"]'); await p.locator('.kf-dlg [data-gar="6"]').waitFor();
+  assert.match(await p.locator('#conteudo [data-cond]').innerText(), /garantia de 90 dias, da lei/);
+  assert.match(await p.locator('#conteudo [data-cond]').innerText(), /falta o prazo/);
+  await p.click('#conteudo [data-cond]'); assert.match(await p.locator('.kf-dlg [data-j="prazo"]').innerText(), /Início e quantos dias leva/); await fecharJanela(p);
+  await cond(p, 'garantia'); await p.locator('.kf-dlg [data-gar="6"]').waitFor();
   assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.kf-dlg [data-gar]')].map(b => b.textContent.trim())), ['Nenhuma além da lei', '+3 meses', '+6 meses', '+1 ano']);
   await p.click('.kf-dlg [data-gar="6"]'); await fecharJanela(p);
   assert.equal((await aqui(p)).garAd, 6);
@@ -200,6 +203,37 @@ test('lei: garantia de 90 dias sempre (só a adicional se escolhe), dados antigo
   // textos: nenhum campo vazio diz que é opcional nem usa "se quiser"
   const telas = await p.evaluate(() => document.body.innerText);
   assert.ok(!/opcional|se quiser|só é preciso/i.test(telas), 'texto de opcional na tela');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('5.2: painel fixo, um cartão por cômodo, Ver em lista, trilha só depois de enviar; disjuntor e faísca, parados com movimento reduzido', async () => {
+  const a = await aparelho(amb); const p = a.page; await pronto(p);
+  await novoPelaBarra(p, 'orc');
+  // sem cômodos: um cartão só, "Separar por cômodo" e nada de trilha antes de enviar
+  assert.equal(await p.locator('#conteudo .cr').count(), 1); assert.equal((await p.locator('#conteudo [data-levantar]').innerText()).trim(), 'Separar por cômodo');
+  assert.equal(await p.locator('#conteudo .tr-passos').count(), 0); assert.equal(await p.locator('#conteudo [data-vista]').count(), 0);
+  await p.click('#conteudo [data-levantar]'); await p.click('.kf-dlg [data-cm="Sala"]'); await p.locator('.kf-dlg [data-com="Sala"]').waitFor();
+  await p.click('.kf-dlg [data-cat="c-tomadas"]'); await p.click('.kf-dlg [data-soma="p-tomadas-2"]'); await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  // o cartão da Sala leva o código do circuito; a faísca corre nele, que foi onde o valor subiu
+  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('#dc-car .sec-g')].map(h => h.dataset.cod)), ['C1', 'G']);
+  await p.locator('#dc-car .cr[data-g="Sala"].faisca').waitFor({ timeout: 400 });
+  assert.match(await p.locator('#pnl').innerText(), /R\$\s40,00/);
+  // Ver em lista: todos os cômodos de uma vez, e volta aos cartões
+  await p.click('#conteudo [data-vista]'); assert.equal(await p.locator('#dc-car').count(), 0); assert.match(await p.locator('#conteudo .sec-g').first().innerText(), /Sala\s+R\$\s40,00/);
+  await p.click('#conteudo [data-vista]'); await p.locator('#dc-car').waitFor();
+  // com movimento reduzido, somar não acende nada
+  await p.emulateMedia({ reducedMotion: 'reduce' });
+  await p.click('#conteudo [data-somar-com="Sala"]'); await p.click('.kf-dlg [data-soma="p-tomadas-2"]'); await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  assert.equal(await p.locator('#dc-car .faisca').count(), 0); assert.match(await p.locator('#pnl').innerText(), /R\$\s80,00/);
+  // ao enviar: a trilha aparece no painel; o disjuntor arma só sem movimento reduzido
+  await p.evaluate(() => { const d = getDoc(rota().id); d.inicio = Date.now() + 864e5; d.dias = 1; tocarDoc(d); redesenhar(); });
+  await p.click('#pe-doc [data-prox="enviar"]'); await p.click('.kf-dlg [data-ja]'); await p.locator('#conteudo .tr-passos').waitFor();
+  assert.equal(await p.locator('#pnl.arma').count(), 0, 'com movimento reduzido, o disjuntor não se mexe'); assert.equal(await p.locator('#pnl .dj').count(), 1);
+  await p.locator('.kf-toast .kf-toast-acao').click(); await p.locator('#conteudo .tr-passos').waitFor({ state: 'detached' });
+  await p.emulateMedia({ reducedMotion: 'no-preference' });
+  await p.click('#pe-doc [data-prox="enviar"]'); await p.click('.kf-dlg [data-ja]'); await p.locator('#pnl.arma').waitFor({ timeout: 600 });
+  assert.ok(await esperar(async () => (await p.locator('#pnl.arma').count()) === 0), 'a animação termina sozinha');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
@@ -367,7 +401,7 @@ test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entr
   assert.equal((await pe(p)).total, 'R$ 171,60', '4 × 12,90 + 120,00');
   assert.equal(await p.evaluate(() => precoDe(precos.find(x => x.id === 'p-tomadas-1'))), 6000, 'mudar a linha não muda a lista de preços');
   // desconto: em porcentagem, de 0 a 100, com nome
-  await p.click('#conteudo [data-j="desc"]'); await p.locator('#cd-dp').waitFor();
+  await cond(p, 'desc'); await p.locator('#cd-dp').waitFor();
   await p.fill('#cd-dp', '150'); await p.click('.kf-dlg [data-salvar]');
   assert.equal(await p.getAttribute('#cd-dp', 'aria-invalid'), 'true'); assert.equal((await aqui(p)).descPct, 0);
   await p.fill('#cd-dn', 'Desconto de amigo'); await p.click('.kf-dlg [data-dp="25"]');
@@ -375,7 +409,7 @@ test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entr
   await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   assert.equal((await pe(p)).total, 'R$ 128,70');
   // pagamento com entrada
-  await p.click('#conteudo [data-j="pag"]'); await p.click('.kf-dlg [data-pag="entrada"]'); await p.click('.kf-dlg [data-ep="40"]');
+  await cond(p, 'pag'); await p.click('.kf-dlg [data-pag="entrada"]'); await p.click('.kf-dlg [data-ep="40"]');
   assert.match(await p.locator('.kf-dlg [role="status"]').innerText(), /Entrada de 40% \(R\$\s51,48\) na aprovação e R\$\s77,22 na conclusão/);
   await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   // enviar: sem o início e o prazo do serviço, o orçamento não sai (CDC, art. 40)
@@ -403,7 +437,7 @@ test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entr
   assert.equal(await p.getAttribute('#rc-v', 'aria-invalid'), 'true'); assert.equal((await aqui(p)).pagos.length, 0);
   await digitar(p, '#rc-v', '5148'); await p.click('.kf-dlg [data-recebi]');
   assert.ok(await esperar(async () => (await aqui(p)).pagos.length === 1));
-  assert.deepEqual(await pe(p).then(x => [x.rotulo, x.que, x.total]), ['Receber', 'Falta', 'R$ 77,22']);
+  assert.deepEqual(await pe(p).then(x => [x.rotulo, x.que, x.total]), ['Receber', 'Falta receber', 'R$ 77,22']);
   await p.evaluate(() => { document.querySelector('.kf-toast').hidden = true; });
   await p.click('#pe-doc [data-prox="receber"]'); await p.locator('#rc-v').waitFor();
   assert.match(await p.inputValue('#rc-v'), /R\$\s77,22/);
@@ -436,10 +470,11 @@ test('orçamento, do + ao recibo: somar em blocos, mudar a linha, desconto, entr
 test('relatório: cobra o que já foi feito; três etapas, sem entrada e sem Aprovou; linha avulsa; documento vazio some ao sair', async () => {
   const a = await aparelho(amb); const p = a.page; await pronto(p);
   await novoPelaBarra(p, 'rel');
-  assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('#conteudo .tr-passos li span')].map(e => e.textContent)), ['Rascunho', 'Enviado', 'Recebido']);
-  assert.equal(await p.locator('#conteudo [data-j="feito"]').count(), 1); assert.equal(await p.locator('#conteudo [data-j="validade"]').count(), 0);
-  await p.click('#conteudo [data-j="pag"]'); assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.kf-dlg [data-pag]')].map(b => b.dataset.pag)), ['vista', 'combinar']); await fecharJanela(p);
-  await p.click('#conteudo [data-j="feito"]'); await p.locator('.kf-dlg').waitFor();
+  assert.deepEqual(await p.evaluate(() => ETAPAS.rel.map(e => NOME_ETAPA[e])), ['Rascunho', 'Enviado', 'Recebido']);
+  assert.equal(await p.locator('#conteudo .tr-passos').count(), 0, 'a trilha das etapas só aparece depois de enviar');
+  await p.click('#conteudo [data-cond]'); assert.equal(await p.locator('.kf-dlg [data-j="feito"]').count(), 1); assert.equal(await p.locator('.kf-dlg [data-j="validade"]').count(), 0); await fecharJanela(p);
+  await cond(p, 'pag'); assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.kf-dlg [data-pag]')].map(b => b.dataset.pag)), ['vista', 'combinar']); await fecharJanela(p);
+  await cond(p, 'feito'); await p.locator('.kf-dlg').waitFor();
   assert.equal(await p.locator('.kf-dlg input[type="date"]:not([hidden])').count(), 0, 'o calendário é o do Kit, não o do sistema'); await fecharJanela(p);
   await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-avulsa]'); await p.locator('#ln-n').waitFor();
   await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#ln-n', 'aria-invalid'), 'true');
