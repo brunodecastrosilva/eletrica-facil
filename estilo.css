@@ -323,3 +323,20 @@ body:not(.kf-com-guia)[data-tela="doc"] .kf-toast,body:not(.kf-com-guia)[data-te
 .tp-real{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--kf-r-cartao);background:var(--sup-2)}
 .item.minimo .it-q{background:var(--sup-2);color:var(--tinta)}
 .item.minimo .it-q .kf-i{width:18px;height:18px}
+
+/* versão 5.1: levantamento por cômodo e lista de materiais */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px;margin:0 -2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:44px;padding:0 16px;border-radius:99px;border:0;background:var(--sup);color:var(--tinta);font-weight:700;font-size:15px;white-space:nowrap;box-shadow:inset 0 0 0 1.5px var(--linha-forte, var(--apoio))}
+.chip[aria-pressed="true"]{background:var(--forte);color:var(--forte-tinta);box-shadow:none}
+.sec-g{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:6px 2px 0;font-family:var(--kf-font-display);font-weight:800;font-size:16px}
+.sec-g .num{font-size:15px}
+.cm-grade{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mt-nome{border:0;background:transparent;padding:0;color:inherit;text-align:left;font:inherit;min-height:44px;justify-content:center}
+.mt-ok{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:9px 14px;border:0;background:transparent;color:inherit;text-align:left;font:inherit}
+.mt-ok + .mt-ok{border-top:1px solid var(--linha)}
+.mt-ok .num{font-family:var(--kf-font-display);font-weight:800;white-space:nowrap}
+.mt-cx{width:26px;height:26px;flex:none;border-radius:8px;box-shadow:inset 0 0 0 2px var(--apoio);display:grid;place-items:center}
+.mt-ok[aria-pressed="true"] .mt-cx{background:var(--forte);color:var(--forte-tinta);box-shadow:none}
+.mt-ok[aria-pressed="true"] .so-tx b{text-decoration:line-through}
+.mt-cx .kf-i{width:18px;height:18px}

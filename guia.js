@@ -39,6 +39,8 @@ const GUIA = [
       await gSomar(m); await m.tocar('.kf-dlg [data-diag="60"]', { depois: 500 }); await m.tocar('.kf-dlg [data-ida="1"]', { depois: 500 });
       await m.apontar('#so-conta', 1300); await m.fechar(); await m.apontar('#conteudo .itens', 1500);
     } },
+  { t: 'Na visita, levante por cômodo', d: 'Escolha o cômodo e some o que há para fazer. Conte também o material: a lista de compras sai pronta.',
+    acao: async m => { await gNoDoc(m); await m.apontar('#conteudo [data-levantar], #conteudo .sec-g', 1900); } },
   { t: 'Mude a quantidade ou o preço', d: 'Toque numa linha para mudar. Ali também fica a condição: normal, difícil ou muito difícil.',
     acao: async m => {
       await gNoDoc(m); await m.tocar('#conteudo .itens .item:nth-child(2)', { depois: 600 });

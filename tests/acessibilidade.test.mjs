@@ -49,6 +49,15 @@ for (const tema of ['light', 'dark']) {
     await p.click('#conteudo [data-somar]'); await p.locator('.kf-dlg .blocos').waitFor();
     await p.click('.kf-dlg [data-cat="c-tomadas"]'); await p.click('.kf-dlg [data-soma="p-tomadas-1"]'); await varrer(p, `Somar, dentro da categoria (${nome})`);
     await p.fill('#so-q', 'tomada'); await varrer(p, `Somar, busca (${nome})`); await fechar(p);
+    // levantamento por cômodo, materiais contados e a lista de materiais
+    await p.click('#conteudo [data-levantar]'); await p.locator('.kf-dlg [data-cm="Sala"]').waitFor(); await varrer(p, `Qual cômodo (${nome})`);
+    await p.click('.kf-dlg [data-cm="Sala"]'); await p.locator('.kf-dlg [data-com="Sala"]').waitFor(); await varrer(p, `Somar, no cômodo (${nome})`);
+    await p.click('.kf-dlg [data-cat="c-tomadas"]'); await p.locator('.kf-dlg [data-acf]').first().waitFor(); await varrer(p, `Somar, filtro pela ação (${nome})`);
+    await p.click('.kf-dlg [data-aba="mat"]'); await p.click('.kf-dlg [data-mts="p-materiais-5"]'); await varrer(p, `Somar, materiais (${nome})`);
+    await p.locator('.kf-dlg [data-mt]').first().click(); await p.locator('#mt-c').waitFor(); await varrer(p, `material contado (${nome})`); await fechar(p);
+    await p.locator('#pe-doc').waitFor(); await fechar(p);
+    await p.click('#conteudo [data-j="mats"]'); await p.locator('.kf-dlg [data-por]').waitFor(); await varrer(p, `Lista de materiais (${nome})`); await fechar(p);
+    await varrer(p, `orçamento por cômodo (${nome})`);
     // o orçamento de exemplo, etapa por etapa
     await p.evaluate(() => { Object.assign(ajustes, { nome: 'Carlos Pereira', fone: '11988887777', pix: 'carlos@exemplo.com.br', cidade: 'São Paulo' }); salvarAjustes(); criarExemplo(); });
     await p.locator('#conteudo .itens .item').first().waitFor(); await varrer(p, `orçamento de exemplo (${nome})`);

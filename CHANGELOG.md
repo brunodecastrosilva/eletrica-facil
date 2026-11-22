@@ -3,6 +3,25 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.1.0 · 2026-11-21
+
+Na visita técnica, o orçamento se faz cômodo por cômodo, e o material sai numa lista de compras.
+
+- Levantamento por cômodo: na visita, some o que há para fazer, cômodo por cômodo.
+- Conte o material no cômodo e saia com a lista de compras.
+- Lista de materiais com o que você leva e o que o cliente compra.
+- Ação e objeto no cadastro: o nome se monta sozinho e o filtro acha rápido.
+- O cliente vê o orçamento separado por cômodo.
+
+Também: "Repetir o cômodo" copia serviços e materiais para um cômodo vazio; o cômodo repetido ganha número (Quarto 1,
+Quarto 2); complemento curto na linha do material ("20 A, curva C"), em linha separada; material que não está na lista
+entra pela busca, com preço opcional; "Pôr no orçamento" soma só a parte "Eu levo"; a lista do cliente sai pelo
+WhatsApp, sem preços; o PDF e a mensagem saem agrupados por cômodo, com o subtotal de cada um, e o material num grupo
+próprio. Em Somar serviço, o bloco Materiais saiu da grade de serviços: o material é contado na aba Materiais. No
+catálogo de fábrica, "tomada ou interruptor" virou dois itens na instalação e na troca, os materiais perderam o "com
+placa" no nome e entraram 10 materiais novos. Da 5.0 para a 5.1, documentos, ajustes e a hora não mudam; no catálogo, só
+muda o que ainda estava como saiu de fábrica.
+
 ## 5.0.0 · 2026-11-21
 
 A hora de quem usa vira a base dos preços. O app passa a ajudar a saber quanto cobrar, e não só a apresentar o orçamento.

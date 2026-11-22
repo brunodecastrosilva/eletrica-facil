@@ -33,6 +33,7 @@ const IC = {
   relogio: ic('<circle cx="12" cy="12" r="8.500"/><path d="M12 7v5.300l3.300 2"/>'),
   dia: ic('<rect x="3.500" y="5" width="17" height="15.500" rx="2"/><path d="M3.500 9.500h17M8 3v4M16 3v4"/>'),
   escudo: ic('<path d="M12 3.500 19 6v5.500c0 4.200-2.800 7.600-7 9-4.200-1.400-7-4.800-7-9V6z"/><path d="M9 12l2.200 2.200 3.800-4.200"/>'),
+  caixa: ic('<path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/>'),
   nota: ic('<path d="M4.500 6.500h15M4.500 11h15M4.500 15.500h9"/>'),
   desconto: ic('<path d="M18.500 5.500 5.500 18.500"/><circle cx="7.500" cy="7.500" r="2.500"/><circle cx="16.500" cy="16.500" r="2.500"/>'),
   dinheiro: ic('<rect x="2.500" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.700"/><path d="M6 9.500v5M18 9.500v5"/>'),

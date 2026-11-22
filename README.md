@@ -2,7 +2,7 @@
 
 Orçamento de serviços de elétrica, do pedido ao recibo, direto no celular, no tablet ou no computador.
 
-Versão **5.0.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **5.1.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md). Na 4.0.0 o app recomeçou enxuto, por decisão do Bruno: faz uma coisa só,
@@ -66,6 +66,25 @@ valor que tinham. Os tempos de fábrica são um ponto de partida, a corrigir lin
 As contas (`conta`, em `motor.js`): mão de obra, deslocamento e material somam separados; o mínimo por ida completa a mão
 de obra; o desconto em porcentagem incide sobre mão de obra e deslocamento. O valor do mínimo é guardado no documento
 quando ele é criado, e a linha guarda o preço do dia: documento já feito não muda quando a hora muda.
+
+## Levantamento por cômodo e lista de materiais (versão 5.1)
+
+- **Ação e objeto no cadastro**, opcionais ("Troca" + "tomada 10 A" = "Troca de tomada 10 A", editável). Em Somar
+  serviço, dentro da categoria, uma fila de ações filtra a lista ("Todas" vem marcada); a busca acha também pelo objeto.
+- **Levantar por cômodo**, no orçamento: escolhe o cômodo (ou escreve outro nome) e soma dentro dele. Cômodo repetido
+  ganha número. "Repetir o <cômodo>" copia serviços e materiais para um cômodo vazio. Não é outro documento nem etapa.
+- **Materiais contados**, na aba Materiais de Somar serviço, como os serviços: por cômodo, com complemento opcional e
+  material novo pela busca. Ficam fora do total até "Pôr no orçamento".
+- **Lista de materiais**, só para quem usa o app: no total ou por cômodo, com caixa de marcar. "Neste orçamento, o
+  material: Eu levo | O cliente compra" é o padrão; a exceção se conta direto na outra parte. Mudar o padrão leva
+  para lá o material que estava no padrão antigo. "Pôr no orçamento" soma só "Eu levo"; a lista do cliente sai sem preços.
+- **O cliente vê os cômodos**: PDF e mensagem agrupados, com o subtotal de cada cômodo; diagnóstico, deslocamento e
+  atendimento mínimo em "Geral"; o material num grupo próprio. Sem cômodos, nada muda.
+
+Dados: o documento ganha `comodos`, `mats` e `quem`; a linha ganha `com` (e `comp` no material); o preço ganha `acao`
+e `obj`. **Da 5.0 para a 5.1** documentos, ajustes e a hora não mudam. No catálogo, os itens de fábrica ganham ação e
+objeto; "Instalação de tomada ou interruptor", "Troca de tomada ou interruptor" e os três materiais "com placa" mudam
+de nome só se o nome ainda for o de fábrica; entram 2 serviços e 10 materiais novos.
 
 ## Como usar
 

@@ -143,7 +143,13 @@ async function montarPDF(d) {
   };
   cabe(22); cabTabela();
   // o cliente vê preço fechado por serviço; o tempo só aparece no diagnóstico (linhasCliente, em motor.js)
-  linhasCliente(d, c).forEach(l => {
+  // com cômodos, cada grupo abre com o nome e o subtotal (Sala · R$ 300,00)
+  const LC = linhasCliente(d, c), TG = totaisGrupo(LC); let gAtual = null;
+  LC.forEach(l => {
+    if (l.grupo && l.grupo !== gAtual) {
+      gAtual = l.grupo; if (cabe(14)) cabTabela();
+      y += 2; txt(`${l.grupo.toUpperCase()} · ${BRL(TG[l.grupo])}`, M + 2.5, y, { tam: 9.4, forte: true }); y += 6;
+    }
     const L = quebra(l.nome, wD, 10), S = l.sub ? quebra(l.sub, wD, 8.6) : [], h = L.length * lh(10) + S.length * lh(8.6) + 3.2;
     if (cabe(h)) cabTabela();
     L.forEach((t, k) => txt(t, M + 2.5, y + k * lh(10), { tam: 10 }));
@@ -266,7 +272,8 @@ const assinatura = () => [ajustes.nome, ajustes.empresa && ajustes.empresa !== a
 function mensagem(d) {
   const c = conta(d), rel = d.tipo === 'rel', cob = cobrarAgora(d, c), nome = primeiroNome(d.cliente.nome);
   const L = [`Olá${nome ? ', ' + nome : ''}!`, rel ? `Segue o relatório do serviço${d.feito ? ' executado em ' + dataBR(d.feito) : ''}${d.titulo ? ': ' + d.titulo : ''}.` : `Segue o orçamento${d.titulo ? ' de ' + d.titulo : ''}.`, ''];
-  linhasCliente(d, c).forEach(l => L.push(`• ${l.qtd ? l.qtd + ' · ' : ''}${l.nome}: ${BRL(l.total)}`));
+  const LC = linhasCliente(d, c), TG = totaisGrupo(LC); let g0 = null;
+  LC.forEach(l => { if (l.grupo && l.grupo !== g0) { g0 = l.grupo; L.push('', `*${l.grupo}* · ${BRL(TG[l.grupo])}`); } L.push(`• ${l.qtd ? l.qtd + ' · ' : ''}${l.nome}${l.sub ? ` (${l.sub})` : ''}: ${BRL(l.total)}`); });
   L.push('');
   if (c.desc) L.push(`Valor do serviço: ${BRL(c.sub)}`, `${descTxt(d)}: - ${BRL(c.desc)}`);
   L.push(`*Total: ${BRL(c.total)}*`, pagTxt(d, c));
