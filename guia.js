@@ -8,7 +8,7 @@ const gDoc = () => docs.find(d => !d.exemplo);
 // põe o documento da demonstração na tela, sem dedo, quando o passo recomeça depois de um "voltar"
 async function gNoDoc(m) { const d = gDoc(); if (d && (rota().nome !== 'doc' || rota().id !== d.id)) { ir('/d/' + d.id, true); await m.espera(300); } return m.acha('#pe-doc'); }
 async function gPelaBarra(m, id, sel) { if (!gVisivel($(sel))) { const b = $(`#kf-nav-${id}`), t = $(`#kf-trilho-${id}`); await m.tocar(gVisivel(b) ? b : t, { depois: 520 }); } return m.acha(sel); }
-async function gSomar(m) { await gNoDoc(m); if (!gVisivel($('#so-q'))) await m.tocar('#conteudo [data-somar]', { depois: 600 }); return m.acha('#so-q'); }
+async function gSomar(m) { await gNoDoc(m); if (!gVisivel($('#so-q'))) await m.tocar('#conteudo [data-somar], #pe-doc [data-prox="somar"]', { depois: 600 }); return m.acha('#so-q'); }
 
 const GUIA = [
   { t: 'Primeiro, a sua hora', d: 'Ela é a base dos preços. Cada serviço guarda um tempo, e o preço é o tempo vezes a sua hora.',
@@ -88,9 +88,9 @@ const GUIA = [
       if (rota().nome !== 'inicio') { ir('/', true); await m.espera(350); }
       await m.apontar('#conteudo .painel', 1700); await m.apontar('#conteudo .docs .doc', 1300);
     } },
-  { t: 'Ajuste os seus preços', d: 'Em Preços, toque num bloco e mude o valor. Dá para criar as suas categorias.',
+  { t: 'Ajuste os seus preços', d: 'Em Preços fica a sua tabela. Filtre pela categoria, toque na linha e mude o valor.',
     acao: async m => {
-      await gPelaBarra(m, 'precos', '#conteudo .blocos'); await m.tocar('#conteudo [data-cat="c-iluminacao"]', { depois: 600 });
+      await gPelaBarra(m, 'precos', '#conteudo .prc-sec'); await m.tocar('#conteudo [data-fcat="c-iluminacao"]', { depois: 600 });
       await m.tocar('#conteudo [data-preco="p-iluminacao-1"]', { depois: 600 }); await m.apontar('#pr-p', 1500); await m.fechar();
     } },
   { t: 'Seu nome e seu Pix', d: 'Em Mais, Ajustes: os seus dados saem nos documentos, e a chave Pix faz o QR code.',

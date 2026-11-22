@@ -42,9 +42,9 @@ TELAS.inicio = {
     const linha = (r, v) => `<div><dt>${r}</dt><dd class="num">${v}</dd></div>`;
     return `${barraTopo()}
     <main class="tela inicio" id="conteudo">
-      ${KitFacil.ui.cabecalho({ titulo: 'Início', sub: nome ? `Olá, ${esc(nome)}. Veja o que falta enviar e receber.` : 'O que falta enviar, aprovar e receber.', criar: { rotulo: 'Novo documento', attrs: 'data-novo' } })}
+      ${KitFacil.ui.cabecalho({ titulo: 'Início', sub: nome ? `Olá, ${esc(nome)}. Veja o que falta enviar e receber.` : 'O que falta enviar, aprovar e receber.' })}
       <section class="painel" aria-label="Resumo">
-        <svg class="pn-raio" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.500 1.500 3.800 13.600h6.900l-1.100 8.900 10.600-13h-7.100z"/></svg>
+        <span class="pn-raio" aria-hidden="true">${IC.raio}</span>
         <span class="pn-rot">Para receber</span>
         <b class="pn-num num">${BRL(P.receber)}</b>
         <span class="pn-sub">${P.nReceber ? `de ${plural(P.nReceber, 'documento', 'documentos')}` : 'Nada para receber agora.'}</span>
@@ -57,7 +57,7 @@ TELAS.inicio = {
       <section aria-labelledby="in-and">
         <h2 class="sec" id="in-and">Em andamento${abertos.length ? ` <span class="sec-n">· ${abertos.length}</span>` : ''}</h2>
         ${abertos.length ? listaDocs(abertos) : KitFacil.ui.vazio({ titulo: L.length ? 'Tudo em dia' : 'Nenhum documento ainda', icone: IC.raio,
-          texto: L.length ? 'Nenhum documento esperando por você. Os recebidos ficam em Documentos.' : 'Toque em Novo documento para fazer o primeiro orçamento. Leva um minuto.',
+          texto: L.length ? 'Nenhum documento esperando por você. Os recebidos ficam em Documentos.' : 'Toque no + da barra de baixo para fazer o primeiro orçamento. Leva um minuto.',
           acao: L.length ? '' : '<button type="button" class="kf-btn kf-sec" data-exemplo>Abrir um exemplo</button>' })}
       </section>
     </main>`;
@@ -65,7 +65,6 @@ TELAS.inicio = {
   ligar(el) {
     el.addEventListener('click', e => {
       if (abrirDoc(el, e)) return;
-      if (e.target.closest('[data-novo]')) return janelaNovo();
       if (e.target.closest('[data-exemplo]')) return criarExemplo();
     });
   },
@@ -147,7 +146,7 @@ function painelDoc(d, c, px) {
     <button type="button" class="pnl-cli" data-j="cliente">${IC.pessoa}<span>${clienteOk(d.cliente) ? `<b>${esc(d.cliente.nome)}</b> · ${esc(d.cliente.end)}` : '<b class="fraco">Nome, telefone e endereço do serviço</b>'}</span>${IC.seta}</button>
     ${trilha}
     <div class="pnl-tot">${enviado && d.etapa !== 'recusado' ? DISJUNTOR : ''}<div class="pnl-t"><small>${falta ? 'Falta receber' : 'Total'}</small><b class="num" id="pnl-total">${BRL(falta ? c.falta : c.total)}</b></div>
-      ${d.comodos.length ? `<button type="button" class="pnl-vista" data-vista>${IC.docs}<span>${vistaLista ? 'Ver em cartões' : 'Ver em lista'}</span></button>` : ''}</div>
+      ${d.comodos.length ? `<button type="button" class="pnl-vista" data-vista>${IC.lista}<span>${vistaLista ? 'Ver em cartões' : 'Ver em lista'}</span></button>` : ''}</div>
     ${c.sub ? `<div class="pnl-med" aria-hidden="true">${partes.filter(x => x[2] > 0).map(([k, , v]) => `<span class="m-${k}" data-v="${v}"></span>`).join('')}</div>` : ''}
     <dl class="pnl-leg">${leg}</dl>
     ${extra.length ? `<p class="pnl-extra num">${extra.join(' · ')}</p>` : ''}
@@ -172,7 +171,7 @@ function servicosDoc(d, c) {
   const rel = d.tipo === 'rel', n = d.linhas.length, cab = `<span class="sec-n">· ${n}</span>`;
   if (!d.comodos.length) return `<section aria-labelledby="dc-it"><article class="cr cr-un"><h2 class="sec" id="dc-it">${rel ? 'O que foi feito' : 'Serviços'}${n ? ' ' + cab : ''}</h2>
       ${itensDoc(d, c) || `<p class="kf-ajuda cr-vazio">Some os serviços da sua tabela. Cada toque no + soma um.</p>`}
-      <button type="button" class="cr-somar" data-somar>${IC.soma}<span>Somar serviço</span></button></article>
+      ${proximo(d).id === 'somar' ? '' : `<button type="button" class="cr-somar" data-somar>${IC.soma}<span>Somar serviço</span></button>`}</article>
       <button type="button" class="kf-btn kf-link cr-separar" data-levantar>Separar por cômodo</button></section>`;
   if (vistaLista) return `<section aria-labelledby="dc-it"><h2 class="sec" id="dc-it">Todos os cômodos${n ? ' ' + cab : ''}</h2>
       ${itensDoc(d, c)}${KitFacil.ui.adicionar({ rotulo: 'Somar serviço', attrs: 'data-somar' })}${KitFacil.ui.adicionar({ rotulo: 'Cômodo', attrs: 'data-levantar' })}</section>`;
@@ -744,52 +743,58 @@ function janelaMenu(d) {
     }) });
 }
 
-/* ================= Preços: um bloco por categoria (Código, Art. 71: 1. categoria, 2. item) ================= */
+/* ================= Preços: a tabela (5.2.1). A hora, a busca, o filtro por categoria e as linhas por categoria ================= */
+let filtroPreco = 'todas', buscaPreco = '';
+const linhaPreco = p => `<button type="button" class="item prc-lin" data-preco="${esc(p.id)}" data-busca="${esc(dobra(`${p.nome} ${p.obj || ''} ${p.acao || ''}`))}"><span class="it-tx"><b>${esc(p.nome)}</b><small>${p.fixo ? '<span class="prc-fixo">fixo</span>' : tempoTxt(p.min)} · por ${unNome(p.un)}</small></span><b class="it-v num">${BRL(precoDe(p))}</b>${IC.seta}</button>`;
+const secaoPreco = c => { const L = precos.filter(p => p.cat === c.id);
+  return `<section class="prc-sec" data-sec="${esc(c.id)}" aria-labelledby="ps-${esc(c.id)}"><h2 class="sec prc-tit"><span id="ps-${esc(c.id)}">${esc(c.nome)} <span class="sec-n">· ${L.length}</span></span><button type="button" class="bt-ic prc-ed" data-editar-cat="${esc(c.id)}" aria-label="Editar a categoria ${esc(c.nome)}">${IC.lapis}</button></h2>
+    <div class="cx itens">${L.map(linhaPreco).join('')}<button type="button" class="prc-add" data-novo-preco="${esc(c.id)}">${IC.soma}<span>Novo ${c.id === CAT_MATERIAL ? 'material' : 'preço'} em ${esc(c.nome)}</span></button></div></section>`; };
+// a ordem: serviços primeiro, o material na sua seção, no fim
+const catsOrdem = () => [...cats.filter(c => c.id !== CAT_MATERIAL), ...cats.filter(c => c.id === CAT_MATERIAL)];
 TELAS.precos = {
   html() {
+    const C = catsOrdem(); if (filtroPreco !== 'todas' && !cats.some(c => c.id === filtroPreco)) filtroPreco = 'todas';
     return `${barraTopo()}
-    <main class="tela" id="conteudo">
-      ${KitFacil.ui.cabecalho({ titulo: 'Preços', sub: 'A sua hora e a sua lista, em blocos. Toque num bloco para ver e mudar.' })}
+    <main class="tela prc-tela" id="conteudo">
+      ${KitFacil.ui.cabecalho({ titulo: 'Preços', sub: 'A sua tabela: o tempo típico e o preço de cada serviço.' })}
       ${painelHora()}
-      <div class="blocos">
-        ${cats.map(c => { const n = precos.filter(p => p.cat === c.id).length; return `<button type="button" class="bloco" data-cat="${esc(c.id)}"><span class="bl-ic">${picDe(c.icone)}</span><b class="bl-nome">${esc(c.nome)}</b><small class="bl-n">${plural(n, 'preço', 'preços')}</small></button>`; }).join('')}
-        <button type="button" class="bloco novo" data-nova-cat><span class="bl-ic">${IC.soma}</span><b class="bl-nome">Nova categoria</b><small class="bl-n">Monte o seu bloco</small></button>
-      </div>
+      <div class="busca"><span class="busca-ic">${IC.busca}</span><input id="pr-q" class="kf-entrada" type="search" value="${esc(buscaPreco)}" placeholder="Buscar serviço ou material" aria-label="Buscar na tabela de preços"></div>
+      <div class="chips" role="group" aria-label="Filtrar por categoria">${[['todas', 'Todas'], ...C.map(c => [c.id, c.nome])].map(([id, n]) => `<button type="button" class="chip" data-fcat="${esc(id)}" aria-pressed="${filtroPreco === id}">${esc(n)}</button>`).join('')}</div>
+      <p class="kf-so-leitor" role="status" id="pr-st"></p>
+      <div id="pr-lista">${C.map(secaoPreco).join('')}</div>
+      <p class="kf-ajuda prc-nada" id="pr-nada" hidden>Nenhum item com esse nome. Confira a escrita ou escolha Todas.</p>
+      ${KitFacil.ui.adicionar({ rotulo: 'Nova categoria', attrs: 'data-nova-cat' })}
       <p class="kf-ajuda nota-pe">Os tempos e os preços que vêm com o app são só um ponto de partida. Ajuste para os seus.</p>
     </main>`;
   },
   ligar(el) {
-    el.addEventListener('click', e => {
-      if (e.target.closest('[data-hora]')) return janelaHora();
-      const b = e.target.closest('[data-cat]'); if (b) return ir('/precos/' + b.dataset.cat);
-      if (e.target.closest('[data-nova-cat]')) janelaCat(null);
-    });
-  },
-};
-TELAS.cat = {
-  html(r) {
-    const c = cats.find(x => x.id === r.id), L = precos.filter(p => p.cat === c.id);
-    return `${barraInterna(c.nome, 'Preços')}
-    <main class="tela doc-tela" id="conteudo">
-      <header class="cat-cab"><span class="bl-ic g">${picDe(c.icone)}</span><div><h2 class="cat-nome">${esc(c.nome)}</h2><p class="kf-ajuda">${L.length ? `${plural(L.length, 'preço', 'preços')}. Toque para mudar o tempo ou o preço.` : 'Nenhum preço ainda.'}</p></div></header>
-      ${c.id === CAT_MATERIAL ? '' : painelHora()}
-      ${L.length ? `<div class="cx itens">${L.map(p => `<button type="button" class="item" data-preco="${esc(p.id)}"><span class="it-tx"><b>${esc(p.nome)}</b><small>${p.fixo ? 'Preço fixo' : tempoTxt(p.min)} · por ${unNome(p.un)}</small></span><b class="it-v num">${BRL(precoDe(p))}</b>${IC.seta}</button>`).join('')}</div>` : ''}
-      ${KitFacil.ui.adicionar({ rotulo: 'Novo preço', attrs: 'data-novo-preco' })}
-    </main>
-    <div class="pe-tela"><div class="pe-in"><button type="button" class="kf-btn kf-sec pe-prox" data-editar-cat>${IC.lapis}Editar categoria</button></div></div>`;
-  },
-  ligar(el, r) {
-    const c = cats.find(x => x.id === r.id);
+    // filtrar sem redesenhar: a busca não perde o foco nem o teclado
+    const filtrar = () => {
+      const q = dobra(buscaPreco); let n = 0;
+      $$('.prc-sec', el).forEach(s => {
+        const naCat = filtroPreco === 'todas' || s.dataset.sec === filtroPreco; let vis = 0;
+        $$('.prc-lin', s).forEach(b => { const ok = naCat && (!q || b.dataset.busca.includes(q)); b.hidden = !ok; if (ok) vis++; });
+        $('.prc-add', s).hidden = !!q; s.hidden = !naCat || (!!q && !vis); n += vis;
+      });
+      $$('[data-fcat]', el).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.fcat === filtroPreco)));
+      $('#pr-nada', el).hidden = !(q && !n);
+      $('#pr-st', el).textContent = q || filtroPreco !== 'todas' ? plural(n, 'item na tabela', 'itens na tabela') : '';
+    };
+    filtrar();
+    $('#pr-q', el).addEventListener('input', e => { buscaPreco = e.target.value; filtrar(); });
     el.addEventListener('click', e => {
       const t = e.target; let b;
-      if (t.closest('[data-voltar]')) return voltar('/precos');
       if (t.closest('[data-hora]')) return janelaHora();
-      if ((b = t.closest('[data-preco]'))) return janelaPreco(c, precos.find(p => p.id === b.dataset.preco));
-      if (t.closest('[data-novo-preco]')) return janelaPreco(c, null);
-      if (t.closest('[data-editar-cat]')) return janelaCat(c);
+      if ((b = t.closest('[data-fcat]'))) { filtroPreco = b.dataset.fcat; return filtrar(); }
+      if ((b = t.closest('[data-preco]'))) { const p = precos.find(x => x.id === b.dataset.preco); return janelaPreco(cats.find(c => c.id === p.cat), p); }
+      if ((b = t.closest('[data-novo-preco]'))) return janelaPreco(cats.find(c => c.id === b.dataset.novoPreco), null);
+      if ((b = t.closest('[data-editar-cat]'))) return janelaCat(cats.find(c => c.id === b.dataset.editarCat));
+      if (t.closest('[data-nova-cat]')) janelaCat(null);
     });
   },
 };
+// o endereço antigo de uma categoria abre a tabela já filtrada nela
+TELAS.cat = { html(r) { filtroPreco = r.id; return TELAS.precos.html(); }, ligar(el) { TELAS.precos.ligar(el); } };
 // O item guarda o tempo típico; o preço é o tempo vezes a hora. Mudar o preço reescreve o tempo, e a ligação com a hora
 // continua. Com a chave desligada, o preço é fixo. Material é sempre preço fixo.
 function janelaPreco(c, p) {
@@ -890,14 +895,14 @@ function janelaCat(c) {
   const grade = () => Object.keys(PIC).map(k => `<button type="button" class="ic-op" data-ic="${k}" aria-pressed="${k === icone}" aria-label="${esc(PIC_NOMES[k])}">${PIC[k]}</button>`).join('');
   janela({ titulo: nova ? 'Nova categoria' : 'Editar categoria',
     corpo: `${campo('ct-n', 'Nome da categoria', entrada('ct-n', c ? c.nome : '', 'placeholder="Ex.: Ar-condicionado"'))}
-      <div class="kf-campo"><span class="kf-rotulo" id="ct-il">Ícone do bloco</span><div class="ic-grade" id="ct-ic" role="group" aria-labelledby="ct-il">${grade()}</div></div>`,
+      <div class="kf-campo"><span class="kf-rotulo" id="ct-il">Ícone da categoria em Somar serviço</span><div class="ic-grade" id="ct-ic" role="group" aria-labelledby="ct-il">${grade()}</div></div>`,
     pe: `${nova ? '' : '<button type="button" class="kf-btn kf-perigo" data-tirar>Excluir</button>'}<button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>`,
     aoMontar: j => {
       j.addEventListener('click', e => { const b = e.target.closest('[data-ic]'); if (!b) return; icone = b.dataset.ic; $('#ct-ic', j).innerHTML = grade(); $(`[data-ic="${icone}"]`, j)?.focus({ preventScroll: true }); });
       $('[data-salvar]', j).onclick = () => {
         const nome = $('#ct-n', j).value.trim();
         if (!nome) { KitFacil.apontar($('#ct-n', j)); return aviso('Escreva o nome da categoria.'); }
-        if (nova) { const n = { id: 'c-' + uid(), nome, icone }; cats.push(n); salvarPrecos(); fecharJanela(true); ir('/precos/' + n.id); return aviso('Categoria criada. Cadastre os preços dela.'); }
+        if (nova) { const n = { id: 'c-' + uid(), nome, icone }; cats.push(n); salvarPrecos(); fecharJanela(true); filtroPreco = n.id; redesenhar(); return aviso('Categoria criada. Cadastre os preços dela.'); }
         c.nome = nome; c.icone = icone; salvarPrecos(); fecharJanela(); redesenhar();
       };
       $('[data-tirar]', j)?.addEventListener('click', () => {

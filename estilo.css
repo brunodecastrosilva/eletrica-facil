@@ -102,7 +102,8 @@ ol{padding:0;list-style:none}
 
 /* ---------- Início: o painel com o que há para receber ---------- */
 .painel{position:relative;overflow:hidden;border-radius:var(--kf-r-lg);padding:22px 22px 10px;background:var(--painel);color:var(--painel-tinta);box-shadow:var(--sombra);gap:0!important}
-.pn-raio{position:absolute;right:18px;top:18px;width:34px;height:34px;fill:var(--am);stroke:var(--am-borda);stroke-width:1;pointer-events:none}
+.pn-raio{position:absolute;right:18px;top:18px;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:var(--am);color:#16171A;pointer-events:none}
+.pn-raio .kf-i{width:20px;height:20px}
 .pn-rot{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--painel-apoio)}
 .pn-num{display:block;font-family:var(--kf-font-display);font-weight:900;font-size:clamp(36px,11.5vw,50px);line-height:1.08;letter-spacing:-.035em;color:var(--painel-num);margin-top:2px}
 .pn-sub{font-size:15px;color:var(--painel-apoio)}
@@ -219,10 +220,7 @@ body:not(.kf-com-guia)[data-tela="doc"] .kf-toast,body:not(.kf-com-guia)[data-te
 .envios{display:flex;flex-direction:column;gap:10px}
 
 /* ---------- Preços: um bloco por categoria, com pictograma ---------- */
-.pic{width:100%;height:100%;display:block}
-.pt-l{fill:none;stroke:currentColor;stroke-width:2.7;stroke-linecap:round;stroke-linejoin:round}
-.pt-f{display:none}
-.pt-s{fill:currentColor;stroke:none}
+.kf-i.pic{width:56%;height:56%;display:block}
 .blocos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (min-width:600px){.blocos{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .bloco{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:14px;min-height:164px;padding:16px;border:0;border-radius:24px;background:var(--sup);color:var(--tinta);text-align:left;box-shadow:var(--sombra);transition:transform .16s ease-out}
@@ -444,3 +442,18 @@ h3.sec-g[data-cod]::before{content:attr(data-cod);min-width:34px;height:28px;pad
 @keyframes fs-acende{0%,60%{background:transparent}70%,90%{background:var(--am);color:#16171A}100%{background:transparent}}
 @media (prefers-reduced-motion:reduce){.pnl.arma *,.cr.faisca,.cr.faisca::before,.cr.faisca::after,.cr.faisca *{animation:none!important}.crs-pontos i{transition:none}}
 @media (min-width:600px){.cr{width:min(46%,340px)}}
+
+/* ---------- versão 5.2.1: Preços em tabela, agrupada por categoria ---------- */
+.prc-sec{gap:6px!important}
+.prc-sec[hidden],.prc-lin[hidden],.prc-add[hidden]{display:none!important}
+.prc-tit{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 0}
+.prc-ed{width:44px;height:44px;margin:-8px -10px -8px 0;color:var(--apoio)}
+.prc-ed .kf-i{width:18px;height:18px}
+.prc-lin{min-height:58px;padding-top:9px;padding-bottom:9px}
+.prc-lin .it-tx b{font-weight:600}
+.prc-lin .it-tx small{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.prc-lin > .kf-i{width:16px;height:16px;color:var(--apoio);margin-left:2px}
+.prc-fixo{display:inline-block;padding:0 6px;border-radius:6px;box-shadow:inset 0 0 0 1px var(--linha-2);font-size:12px;font-weight:700;line-height:18px;color:var(--tinta);text-transform:lowercase}
+.prc-add{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:0 16px;border:0;border-top:1px solid var(--linha);background:transparent;color:var(--tinta);font-weight:700;font-size:15px;text-align:left}
+.prc-add .kf-i{width:18px;height:18px;color:var(--apoio)}
+@media (hover:hover){.prc-add:hover{background:var(--kf-accent-soft)}}

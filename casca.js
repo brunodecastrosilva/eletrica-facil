@@ -112,12 +112,6 @@ function resumosAjustes() {
   };
 }
 function pintarResumos() { const S = resumosAjustes(); for (const k in S) KitFacil.ajustes.resumo(k, S[k]); }
-const ICONES_AJ = {
-  cobranca: '<circle cx="12" cy="12" r="8.500"/><path d="M12 7v5.300l3.300 2"/>',
-  pix: '<rect x="3.500" y="3.500" width="7" height="7" rx="1.500"/><rect x="13.500" y="3.500" width="7" height="7" rx="1.500"/><rect x="3.500" y="13.500" width="7" height="7" rx="1.500"/><path d="M13.500 13.500h3.200v3.200h-3.200z"/><path d="M20.500 17.200v3.300h-3.300"/>',
-  padrao: '<path d="M8 3.500h7.500L19 7v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5.500a2 2 0 0 1 2-2z"/><path d="M15 3.500V7.500h4"/><path d="M12.500 10.500v6M9.500 13.500h6"/>',
-  raio: '<path d="M13.500 2.500 4.500 13.500h6l-1 8 9-11.500h-6z"/>',
-};
 TELAS.ajustes = {
   html() {
     const s = ajustes, S = resumosAjustes();

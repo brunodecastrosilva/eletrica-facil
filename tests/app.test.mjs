@@ -162,10 +162,10 @@ test('a hora como base: o caso da prima dá R$ 240 de mão de obra mais as idas;
   assert.ok(await esperar(async () => (await pe(p)).rotulo === 'Ver o PDF')); assert.equal((await aqui(p)).etapa, 'recebido');
   // deslocamento por quilômetro e mínimo por ida, num orçamento novo
   await p.evaluate(() => { ajustes.deslModo = 'km'; ajustes.deslKm = 200; ajustes.minIda = 10000; });
-  await novoPelaBarra(p, 'orc'); await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-ida="1"]'); await p.locator('#ln-k').waitFor();
+  await novoPelaBarra(p, 'orc'); await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.click('.kf-dlg [data-ida="1"]'); await p.locator('#ln-k').waitFor();
   await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#ln-k', 'aria-invalid'), 'true');
   await p.fill('#ln-k', '16'); await p.click('.kf-dlg [data-salvar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
-  await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-cat="c-quadro"]'); await p.click('.kf-dlg [data-soma="p-quadro-9"]'); await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
+  await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.click('.kf-dlg [data-cat="c-quadro"]'); await p.click('.kf-dlg [data-soma="p-quadro-9"]'); await p.click('.kf-dlg [data-kf-fechar]'); await p.locator('.kf-dlg').waitFor({ state: 'detached' });
   assert.match(await p.locator('#conteudo .itens').innerText(), /Atendimento mínimo\s+Completa R\$\s100,00 por ida\s+R\$\s40,00/);
   assert.equal((await pe(p)).total, 'R$ 132,00', '60 + 40 do mínimo + 16 km × R$ 2,00');
   assert.deepEqual(a.erros, []);
@@ -291,7 +291,7 @@ test('levantamento por cômodo: a visita do apartamento de dois quartos dá R$ 6
 test('materiais: caso misto (eu levo e o cliente compra no mesmo orçamento), complemento em linha separada, material novo pela busca', async () => {
   const a = await aparelho(amb, { antes: PDF_FALSO }); const p = a.page; await pronto(p);
   await novoPelaBarra(p, 'orc');
-  await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-aba="mat"]');
+  await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.click('.kf-dlg [data-aba="mat"]');
   await p.click('.kf-dlg [data-mts="p-materiais-5"]'); await p.click('.kf-dlg [data-mts="p-materiais-5"]');
   // a exceção: o chuveiro que o cliente compra, cadastrado na hora pela busca
   await p.click('.kf-dlg [data-qc="cli"]'); await p.fill('#so-q', 'Chuveiro'); await p.click('.kf-dlg [data-mnovo]');
@@ -322,12 +322,12 @@ test('materiais: caso misto (eu levo e o cliente compra no mesmo orçamento), co
   await p.evaluate(() => janelaMats(getDoc(rota().id))); await p.click('.kf-dlg [data-qm="cli"]');
   assert.deepEqual(await p.evaluate(() => [...new Set(getDoc(rota().id).mats.map(m => m.quem))]), ['cli']);
   // o cadastro: ação e objeto montam o nome
-  await fecharJanela(p); await p.evaluate(() => ir('/precos/c-tomadas', true)); await p.locator('#conteudo [data-novo-preco], #conteudo .kf-add').first().click();
+  await fecharJanela(p); await p.evaluate(() => ir('/precos/c-tomadas', true)); await p.locator('#conteudo [data-novo-preco="c-tomadas"]').click();
   const escolher = (sel, v) => p.evaluate(([sel, v]) => { const e = document.querySelector(sel); e.value = v; e.dispatchEvent(new Event('change', { bubbles: true })); }, [sel, v]);
   await p.locator('#pr-a').waitFor({ state: 'attached' }); await escolher('#pr-a', 'troca'); await p.waitForTimeout(100); await escolher('#pr-o', 'tomada 20 A'); await p.waitForTimeout(100);
   assert.equal(await p.inputValue('#pr-n'), 'Troca de tomada 20 A');
   // o filtro pela ação em Somar
-  await p.evaluate(() => fecharJanela(true)); await novoPelaBarra(p, 'orc'); await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-cat="c-tomadas"]');
+  await p.evaluate(() => fecharJanela(true)); await novoPelaBarra(p, 'orc'); await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.click('.kf-dlg [data-cat="c-tomadas"]');
   await p.click('.kf-dlg [data-acf="troca"]');
   assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.kf-dlg .so-lin .so-tx b')].map(b => b.textContent)), ['Troca de tomada 10 A', 'Troca de interruptor simples', 'Troca de espelho ou placa']);
   assert.deepEqual(a.erros, []);
@@ -476,7 +476,7 @@ test('relatório: cobra o que já foi feito; três etapas, sem entrada e sem Apr
   await cond(p, 'pag'); assert.deepEqual(await p.evaluate(() => [...document.querySelectorAll('.kf-dlg [data-pag]')].map(b => b.dataset.pag)), ['vista', 'combinar']); await fecharJanela(p);
   await cond(p, 'feito'); await p.locator('.kf-dlg').waitFor();
   assert.equal(await p.locator('.kf-dlg input[type="date"]:not([hidden])').count(), 0, 'o calendário é o do Kit, não o do sistema'); await fecharJanela(p);
-  await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-avulsa]'); await p.locator('#ln-n').waitFor();
+  await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.click('.kf-dlg [data-avulsa]'); await p.locator('#ln-n').waitFor();
   await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#ln-n', 'aria-invalid'), 'true');
   await p.fill('#ln-n', 'Troca da fiação do banheiro'); await digitar(p, '#ln-p', '35000'); await p.click('.kf-dlg [data-salvar]');
   await p.locator('#conteudo .itens .item').waitFor();
@@ -496,14 +496,19 @@ test('relatório: cobra o que já foi feito; três etapas, sem entrada e sem Apr
   await a.fechar();
 });
 
-test('Preços: blocos em grade, um por categoria; mudar preço em centavos; preço e categoria novos; excluir com Desfazer', async () => {
+test('Preços: tabela por categoria, com busca e filtro; mudar preço em centavos; preço e categoria novos; excluir com Desfazer', async () => {
   const a = await aparelho(amb); const p = a.page; await pronto(p);
-  await p.evaluate(() => ir('/precos', true)); await p.locator('#conteudo .blocos').waitFor();
-  assert.equal(await p.locator('#conteudo .blocos .bloco').count(), 10, 'nove categorias de fábrica e o bloco de criar');
-  const grade = await p.evaluate(() => [...document.querySelectorAll('#conteudo .blocos .bloco')].slice(0, 2).map(b => { const r = b.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.width), Math.round(r.height), !!b.querySelector('svg.pic')]; }));
-  assert.equal(grade[0][0], grade[1][0], 'os blocos ficam lado a lado, em grade'); assert.ok(grade[0][1] > 130 && grade[0][2] > 130 && grade[0][3], 'blocos grandes, com pictograma');
-  await p.click('#conteudo [data-cat="c-quadro"]'); await p.locator('#conteudo [data-preco]').first().waitFor();
-  assert.equal(await p.locator('#conteudo [data-preco]').count(), 9);
+  await p.evaluate(() => ir('/precos', true)); await p.locator('#conteudo .prc-sec').first().waitFor();
+  // a tabela: uma seção por categoria (o material por último), todas as linhas à vista, sem ícone de categoria
+  assert.equal(await p.locator('#conteudo .prc-sec').count(), 9); assert.equal(await p.locator('#conteudo .prc-sec svg.pic').count(), 0);
+  assert.equal(await p.evaluate(() => document.querySelector('#conteudo .prc-sec:last-of-type').dataset.sec), 'c-materiais');
+  assert.equal(await p.locator('#conteudo [data-preco]:visible').count(), await p.evaluate(() => precos.length));
+  assert.match(await p.locator('#conteudo [data-preco="p-materiais-1"]').innerText(), /fixo\s*· por metro/, 'o preço fixo se diz por escrito');
+  // a busca acha sem acento; o filtro mostra uma categoria; Todas volta
+  await p.fill('#pr-q', 'disjuntor geral'); assert.equal(await p.locator('#conteudo [data-preco]:visible').count(), 1); assert.match(await p.locator('#pr-st').innerText(), /1 item/);
+  await p.fill('#pr-q', 'xyz'); await p.locator('#pr-nada').waitFor(); await p.fill('#pr-q', '');
+  await p.click('#conteudo [data-fcat="c-quadro"]'); assert.equal(await p.locator('#conteudo [data-preco]:visible').count(), 9);
+  assert.equal(await p.getAttribute('#conteudo [data-fcat="c-quadro"]', 'aria-pressed'), 'true');
   assert.match(await p.locator('#conteudo .hora-pn').innerText(), /HORA DE EXEMPLO|Hora de exemplo/i);
   assert.match(await p.locator('#conteudo [data-preco="p-quadro-9"]').innerText(), /Troca de disjuntor geral\s+30 min · por unidade\s+R\$\s60,00/);
   // o item guarda o tempo: mudar o preço reescreve o tempo, e a ligação com a hora continua
@@ -514,26 +519,26 @@ test('Preços: blocos em grade, um por categoria; mudar preço em centavos; pre�
   // a hora muda pelo painel: os preços ligados a ela acompanham
   await p.click('#conteudo [data-hora]'); await p.locator('#hr-v').waitFor(); await digitar(p, '#hr-v', '15000'); await p.click('.kf-dlg [data-salvar]');
   assert.match(await p.locator('#conteudo [data-preco="p-quadro-9"]').innerText(), /R\$\s75,00/);
-  assert.match(await p.locator('#conteudo [data-preco="p-quadro-8"]').innerText(), /Preço fixo[\s\S]*R\$\s1\.500,00/, 'o preço fixo não muda com a hora');
+  assert.match(await p.locator('#conteudo [data-preco="p-quadro-8"]').innerText(), /fixo[\s\S]*R\$\s1\.500,00/, 'o preço fixo não muda com a hora');
   await p.evaluate(() => { ajustes.hora = 12000; salvarAjustes(); redesenhar(); });
   // com a chave desligada, o preço é fixo, em centavos ("8550" = R$ 85,50)
   await p.click('#conteudo [data-preco="p-quadro-1"]'); await p.locator('#pr-seg').waitFor(); await p.evaluate(() => document.querySelector('#pr-seg').click());
   await p.locator('#pr-t').waitFor({ state: 'detached' });
   await digitar(p, '#pr-p', '8550'); assert.match(await p.inputValue('#pr-p'), /R\$\s85,50/); await p.click('.kf-dlg [data-salvar]');
   assert.deepEqual(await p.evaluate(() => { const x = precos.find(y => y.id === 'p-quadro-1'); return [x.fixo, precoDe(x)]; }), [true, 8550]);
-  await p.click('#conteudo [data-novo-preco]'); await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#pr-n', 'aria-invalid'), 'true');
+  await p.click('#conteudo [data-novo-preco="c-quadro"]'); await p.click('.kf-dlg [data-salvar]'); assert.equal(await p.getAttribute('#pr-n', 'aria-invalid'), 'true');
   await p.fill('#pr-n', 'Instalação de IDR'); await digitar(p, '#pr-p', '16000'); await p.click('.kf-dlg [data-salvar]');
   assert.deepEqual(await p.evaluate(() => { const L = precos.filter(x => x.cat === 'c-quadro'); return [L.length, L[L.length - 1].nome, precoDe(L[L.length - 1]), L[L.length - 1].min]; }), [10, 'Instalação de IDR', 16000, 80], 'o preço novo entra no fim da lista');
   // categoria nova, com ícone escolhido
-  await p.click('.barra-app [data-voltar]'); await p.click('#conteudo [data-nova-cat]'); await p.locator('#ct-n').waitFor();
+  await p.click('#conteudo [data-nova-cat]'); await p.locator('#ct-n').waitFor();
   await p.fill('#ct-n', 'Ar-condicionado'); await p.click('.kf-dlg [data-ic="ar"]'); await p.click('.kf-dlg [data-salvar]');
-  await p.locator('#conteudo [data-novo-preco]').waitFor();
-  assert.deepEqual(await p.evaluate(() => { const c = cats[cats.length - 1]; return [cats.length, c.nome, c.icone, rota().id === c.id]; }), [10, 'Ar-condicionado', 'ar', true]);
-  await p.click('#conteudo [data-novo-preco]'); await p.fill('#pr-n', 'Limpeza de split'); await digitar(p, '#pr-p', '18000'); await p.click('.kf-dlg [data-salvar]');
-  await p.locator('#conteudo [data-preco]').waitFor();
+  await p.locator('#conteudo .prc-sec:not([hidden]) [data-novo-preco]').waitFor();
+  assert.deepEqual(await p.evaluate(() => { const c = cats[cats.length - 1]; return [cats.length, c.nome, c.icone, filtroPreco === c.id]; }), [10, 'Ar-condicionado', 'ar', true], 'a categoria nova já vem filtrada');
+  await p.click('#conteudo .prc-sec:not([hidden]) [data-novo-preco]'); await p.fill('#pr-n', 'Limpeza de split'); await digitar(p, '#pr-p', '18000'); await p.click('.kf-dlg [data-salvar]');
+  await p.locator('#conteudo [data-preco]:visible').first().waitFor();
   // excluir a categoria leva os preços dela; Desfazer devolve tudo
   await p.evaluate(() => { document.querySelector('.kf-toast').hidden = true; });
-  await p.click('[data-editar-cat]'); await p.click('.kf-dlg [data-tirar]');
+  await p.click('#conteudo .prc-sec:not([hidden]) [data-editar-cat]'); await p.click('.kf-dlg [data-tirar]');
   assert.match(await p.locator('.kf-dlg').innerText(), /O preço dela também sai da sua lista[\s\S]*Dá para desfazer logo depois/);
   await p.click('.kf-dlg [data-kf-ok]');
   assert.ok(await esperar(() => p.evaluate(() => rota().nome === 'precos')));
@@ -541,7 +546,7 @@ test('Preços: blocos em grade, um por categoria; mudar preço em centavos; pre�
   await p.click('.kf-toast .kf-toast-acao');
   assert.deepEqual(await p.evaluate(() => [cats.length, precos.some(x => x.nome === 'Limpeza de split')]), [10, true]);
   // o preço novo vale para os documentos seguintes
-  await novoPelaBarra(p, 'orc'); await p.click('#conteudo [data-somar]'); await p.click('.kf-dlg [data-cat="c-quadro"]'); await p.click('.kf-dlg [data-soma="p-quadro-1"]');
+  await novoPelaBarra(p, 'orc'); await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.click('.kf-dlg [data-cat="c-quadro"]'); await p.click('.kf-dlg [data-soma="p-quadro-1"]');
   assert.equal((await aqui(p)).linhas[0].pu, 8550);
   assert.equal(await p.evaluate(() => ajustes.usos['p-quadro-1']), 1, 'o que você usa sobe para Mais usados');
   assert.deepEqual(a.erros, []);
@@ -571,7 +576,7 @@ test('documentos: o PDF do orçamento e do relatório, o recibo, o código do Pi
     await montarRecibo(d, pg); o.rec = window.__pdf.t.join('\n');
     o.pix = codigoPix(55000); ajustes.pix = ''; o.semPix = codigoPix(55000); ajustes.pix = 'carlos@exemplo.com.br';
     o.arq = [nomeArquivo('Orcamento', d), nomeArquivo('Recibo', rel)];
-    o.icones = [/M13\.500 13\.500h3\.200/.test(IC.qr), Object.keys(IC).some(k => /pix/i.test(k))];
+    o.icones = [/<rect width="5" height="5" x="3" y="3" rx="1"\/>/.test(IC.qr), Object.keys(IC).some(k => /pix/i.test(k))];
     return o;
   });
   for (const t of ['ORÇAMENTO', 'Nº 0007', '20/11/2026', 'Carlos Pereira', '(11) 98765-4321', 'Mariana Souza', 'Reforma elétrica da cozinha', 'Ponto novo de tomada com fiação', '6 pontos', 'Valor do serviço', '- R$ 40,00', 'TOTAL', 'R$ 1.100,00', 'Entrada de 50% (R$ 550,00) na aprovação e R$ 550,00 na conclusão do serviço.', 'Este orçamento vale até 30/11/2026.', 'PAGUE COM PIX', 'R$ 550,00', 'De acordo: Mariana Souza', 'Material por conta do cliente.'])

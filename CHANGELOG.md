@@ -3,6 +3,21 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.2.1 · 2026-11-22
+
+Refino da cara nova.
+
+- Preços virou uma tabela: busque, filtre pela categoria e veja todos os preços de uma vez.
+- Ícones novos e mais claros em todo o app.
+- Uma ação só em cada lugar: o + da barra de baixo cria o documento.
+
+Também: na tabela, cada linha traz o nome, o tempo típico (ou "fixo", escrito, quando o preço não segue a hora), o preço
+e a seta para editar; cada categoria termina com a linha de adicionar e tem o lápis para editar a categoria; o material
+fica na sua seção, no fim. Saíram o botão flutuante "Novo documento" do Início (repetia o + da barra e cobria o cartão em
+andamento) e o "Somar serviço" do cartão quando o pé já diz "Somar serviço". Os ícones do app passam a ser todos da
+Lucide (licença ISC), copiados para o repositório em `icones/lucide`, sem CDN; as categorias, em Somar serviço, também.
+O ícone do app não mudou. Os dados não mudam.
+
 ## 5.2.0 · 2026-11-22
 
 Cara nova, em todas as telas, no claro e no escuro.

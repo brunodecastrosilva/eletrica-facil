@@ -43,11 +43,11 @@ for (const tema of ['light', 'dark']) {
     await p.click('.kf-dlg [data-hm="conta"]'); await p.locator('#hr-h').waitFor(); await varrer(p, `janela da hora, pela conta (${nome})`); await p.click('.kf-dlg [data-hm="digitar"]');
     await p.locator('#hr-v').click(); await p.locator('#hr-v').pressSequentially('12000'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#cl-nome').waitFor(); await varrer(p, `janela do cliente novo (${nome})`);
     await p.fill('#cl-nome', 'Mariana Souza'); await p.fill('#cl-fone', '11988887777'); await p.fill('#cl-end', 'Rua das Acácias, 120'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor(); await varrer(p, `orçamento em branco (${nome})`);
-    await p.click('#conteudo [data-somar]'); await p.locator('.kf-dlg .blocos').waitFor(); await varrer(p, `Somar, categorias (${nome})`);
+    await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.locator('.kf-dlg .blocos').waitFor(); await varrer(p, `Somar, categorias (${nome})`);
     await p.click('.kf-dlg [data-diag="60"]'); await p.click('.kf-dlg [data-ida="1"]'); await varrer(p, `Somar, com diagnóstico e ida (${nome})`);
     await p.click('.kf-dlg [data-diag="x"]'); await p.locator('.kf-dlg #ln-n').waitFor(); await varrer(p, `janela do diagnóstico (${nome})`); await fechar(p);
     await p.locator('#conteudo .itens .item', { hasText: 'Deslocamento' }).click(); await p.locator('#ln-q').waitFor(); await varrer(p, `janela do deslocamento (${nome})`); await fechar(p);
-    await p.click('#conteudo [data-somar]'); await p.locator('.kf-dlg .blocos').waitFor();
+    await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.locator('.kf-dlg .blocos').waitFor();
     await p.click('.kf-dlg [data-cat="c-tomadas"]'); await p.click('.kf-dlg [data-soma="p-tomadas-1"]'); await varrer(p, `Somar, dentro da categoria (${nome})`);
     await p.fill('#so-q', 'tomada'); await varrer(p, `Somar, busca (${nome})`); await fechar(p);
     // levantamento por cômodo, materiais contados e a lista de materiais
@@ -89,7 +89,7 @@ for (const tema of ['light', 'dark']) {
     await p.evaluate(() => ir('/docs', true)); await varrer(p, `Documentos (${nome})`);
     await p.evaluate(() => ir('/precos', true)); await varrer(p, `Preços (${nome})`);
     await p.click('#conteudo [data-nova-cat]'); await p.locator('#ct-n').waitFor(); await varrer(p, `Nova categoria (${nome})`); await fechar(p);
-    await p.click('#conteudo [data-cat="c-quadro"]'); await p.locator('#conteudo [data-preco]').first().waitFor(); await varrer(p, `categoria de preços (${nome})`);
+    await p.click('#conteudo [data-fcat="c-quadro"]'); await p.fill('#pr-q', 'disjuntor'); await p.locator('#conteudo [data-preco]:visible').first().waitFor(); await varrer(p, `Preços filtrado e com busca (${nome})`); await p.fill('#pr-q', '');
     await p.click('#conteudo [data-preco="p-quadro-1"]'); await p.locator('#pr-p').waitFor(); await varrer(p, `janela Preço (${nome})`); await fechar(p);
     await p.evaluate(() => ir('/mais', true)); await varrer(p, `Mais (${nome})`);
     await p.evaluate(() => ir('/ajustes', true)); await p.locator('[data-kf-aj]').waitFor(); await varrer(p, `Ajustes (${nome})`);

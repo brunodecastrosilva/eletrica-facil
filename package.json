@@ -1,6 +1,6 @@
 {
   "name": "eletrica-facil",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "Elétrica Fácil: orçamento de serviços de elétrica, do pedido ao recibo. App web instalável (PWA) do Projeto Fácil.",
   "private": true,
   "type": "module",

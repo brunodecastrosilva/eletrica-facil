@@ -2,7 +2,7 @@
 
 Orçamento de serviços de elétrica, do pedido ao recibo, direto no celular, no tablet ou no computador.
 
-Versão **5.2.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **5.2.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md). Na 4.0.0 o app recomeçou enxuto, por decisão do Bruno: faz uma coisa só,
@@ -29,8 +29,10 @@ os da família; o fluxo, o desenho das telas e os ícones são do eletricista.
 - **Início.** Quanto há para receber, o que espera resposta, o que está aprovado para fazer, o recebido no mês e os
   documentos em andamento.
 - **Documentos.** Todos os orçamentos e relatórios, com busca e filtro.
-- **Preços.** Um bloco por categoria, em grade. Toque no bloco para mudar um preço, cadastrar outro ou editar a
-  categoria (nome e ícone). Dá para criar e excluir categorias. O catálogo de fábrica tem 9 categorias, 53 serviços (com tempo
+- **Preços.** Uma tabela (5.2.1): a sua hora no alto, a busca, os chips das categorias (com Todas) e as linhas agrupadas
+  por categoria: nome, tempo típico (ou "fixo"), preço e seta para editar. Cada categoria termina com a linha de adicionar
+  e tem o lápis para editar o nome e o ícone (usado em Somar serviço). O material fica na sua seção, no fim. Dá para criar
+  e excluir categorias. O catálogo de fábrica tem 9 categorias, 53 serviços (com tempo
   típico) e 22 materiais de eletricista predial de baixa tensão, com tempos e preços ilustrativos (Regras do app, Art. 9º).
 - **O raio.** De tempos em tempos um raio rasga a tela, sozinho, com ou sem toque. É enfeite: não recebe toque, não
   cai com alguém digitando nem com janela aberta, respeita o movimento reduzido e pode ser desligado em Ajustes.
@@ -170,9 +172,11 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 - **Navegação (Art. 60):** Início, Documentos, o documento novo no centro, Preços e Mais (guia, exemplo e Ajustes).
 - **Telas internas (Art. 64, parágrafo único):** o documento e a categoria de preços têm, no pé, uma faixa da cor da tela
   com os três pontinhos e a ação da tela; no documento o total fica no painel do alto.
-- **Ícones (Art. 57):** desenhados para o app, em dois jogos com o mesmo traço. Os de linha seguem a grade de 24, traço
-  de 2 e pontas redondas. Os pictogramas das categorias usam a grade de 48, só de linha, com detalhe cheio (a área
-  tingida saiu na 5.2). Onde há Pix, o ícone é um QR code (Regras do app, Art. 12).
+- **Ícones (Art. 57):** todos da [Lucide](https://lucide.dev) (licença ISC, em `icones/lucide/LICENSE`), grade de 24,
+  traço de 2 e pontas redondas. Os SVG usados ficam copiados em `icones/lucide`; `icones.js` é gerado deles por
+  `node ferramentas/icones.mjs` (sem CDN). Onde há Pix, o ícone é um QR code (Regras do app, Art. 12). O ícone do app
+  (o raio amarelo) é do app. Os ícones que vêm do Kit (nuvem, presente, balão, Mais e as guias comuns dos Ajustes)
+  ainda são os desenhados do Kit; ver "Peças do Kit passadas por cima".
 - **Ajustes (Art. 62):** as oito guias comuns e quatro do app: Cobrança, Pix, Documento novo e Raio e
   apresentação. Os dados que
   saem nos documentos ficam como extra de Conta e perfil.
@@ -189,7 +193,8 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 |---|---|
 | `index.html` | a página, a política de segurança de conteúdo e a ordem dos arquivos |
 | `estilo.css` | cores e peças do app; botões, campos, janelas e avisos são os do Kit |
-| `icones.js` | os ícones de linha e os pictogramas das categorias |
+| `icones.js` | os ícones (Lucide), gerado a partir de `icones/lucide` por `ferramentas/icones.mjs` |
+| `icones/lucide/` | os SVG da Lucide usados no app e a licença ISC |
 | `motor.js` | utilidades, catálogo de fábrica, dados, contas, sincronização, janelas e rotas |
 | `documento.js` | PDF do orçamento e do relatório, recibo, mensagem de WhatsApp, código do Pix e cópia de segurança |
 | `telas.js` | Início, Documentos, o documento e as suas janelas, Preços e Mais |
@@ -244,6 +249,10 @@ digital (SRI), baixados só quando a função é usada (Código, Art. 21).
   (chave ligada, dia escolhido). No claro, amarelo sobre branco não dá 3:1; então `--kf-accent` é a tinta, e o app pinta
   o botão cheio e o de começar de amarelo (`estilo.css`). Não muda medida nem comportamento. Proposta para o Integrador:
   o Kit separar a cor do botão cheio da cor de estado.
+
+- **Ícones do Kit:** a nuvem, o presente, o balão, o Mais da navegação e as guias comuns dos Ajustes são desenhados no
+  Kit (`comum/kit-facil.js`) e iguais nos quatro apps. O app não os troca, para não quebrar a família (Art. 3º).
+  Proposta para o Integrador: o Kit adotar a Lucide nesses ícones, nos quatro apps.
 
 O Anexo I do Código ainda lista as cores da versão 3 do Elétrica Fácil. Proposta para o Integrador: atualizar as cores
 (fundo `#F4F3EF` e `#141518`; destaque e começar `#FFD21F` com letra `#16171A` nos dois temas).

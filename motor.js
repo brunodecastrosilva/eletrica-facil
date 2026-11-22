@@ -2,7 +2,7 @@
    O app faz uma coisa: orçar serviços de elétrica e fechar a cobrança (enviar, aprovar, receber, recibo).
    Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito. */
 'use strict';
-const VERSAO = '5.2.0';
+const VERSAO = '5.2.1';
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 
 /* ================= utilidades ================= */
@@ -247,7 +247,11 @@ if (ajustes.tab < 6) {
 docs = (Array.isArray(docs) ? docs : []).map(acertaDoc);
 
 /* ================= Kit Fácil: moldura, tema e sincronização ================= */
-const NOVIDADES = [{ versao: '5.2.0', itens: [
+const NOVIDADES = [{ versao: '5.2.1', itens: [
+  'Preços virou uma tabela: busque, filtre pela categoria e veja todos os preços de uma vez.',
+  'Ícones novos e mais claros em todo o app.',
+  'Uma ação só em cada lugar: o + da barra de baixo cria o documento.',
+] }, { versao: '5.2.0', itens: [
   'Cara nova: fundo neutro e o amarelo só no que importa, no claro e no escuro.',
   'No documento, o total fica sempre no alto, com a divisão entre mão de obra, deslocamento e material.',
   'Cada cômodo é um cartão: deslize para o lado ou toque em Ver em lista.',
