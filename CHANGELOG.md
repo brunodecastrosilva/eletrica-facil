@@ -3,6 +3,42 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.3.1 · 2026-11-24
+
+Acertos depois das simulações de uso da 5.3.0, aprovados pelo Bruno.
+
+- O tempo agora se escolhe em rodas, horas e minutos, igual em todas as telas.
+- O aviso não cobre mais botões nem campos, e some quando você troca de tela.
+- Novo serviço mostra 8 objetos e "Ver todos"; a fila de categorias mostra que rola.
+- No tablet, o menu fica do lado, como no computador.
+- A seta de um documento volta a Documentos, se você veio de lá, ou ao Início.
+
+Também:
+
+- **Duração em rodas.** No Novo serviço, em Preços, no diagnóstico de Somar serviço, na janela do diagnóstico e em
+  "Quanto tempo levou": horas de 0 a 12 e minutos de 5 em 5, com o desenho e o comportamento do relógio do Kit (tocar
+  na hora, depois no minuto). Mostra "20 min", "1h30". Começa no tempo daquele serviço (no "Quanto tempo levou", no
+  último tempo anotado) ou em 30 min. Saíram as duas listas de botões de tempo, que eram diferentes entre si e não
+  tinham 20 min. Com o tempo já em 30 min, criar e somar um serviço novo de dentro de Somar serviço cai de 4 para 3
+  toques. O diagnóstico entra com um "+" (no último tempo usado, ou 30 min) e o tempo muda nas rodas, ao lado.
+- **Aviso.** Com uma janela ou a abertura na tela, o aviso procura um lugar que não cubra botão nem campo: o de antes,
+  logo acima da janela ou o alto da tela (casos: Seus dados e a hora na abertura, cliente faltando, Enviar com "Tempo
+  anotado"). Troca de tela, na navegação e na abertura, tira o aviso da tela anterior.
+- **Novo serviço.** 8 objetos à vista e "Ver todos (N)"; o objeto escolhido aparece mesmo se for dos outros. As filas
+  que rolam para o lado (categorias, cômodos, filtros) terminam em degradê do lado em que há mais.
+- **Depois de "Salvar e somar"**, Somar serviço volta com a busca limpa e sem abrir o teclado (Código, Arts. 16, IX,
+  e 68, § 5º).
+- **Seta do documento:** volta a Documentos se a pessoa veio de lá; de qualquer outro lugar (Mais, Preços, documento
+  novo), vai ao Início.
+- **Início:** saiu o raio de enfeite do cartão "Para receber", que parecia um botão.
+- **Tablet:** de 768 a 1023 px, o trilho lateral e o documento na largura da tela, como no computador.
+- **Carrossel de cômodos:** setas nos lados, só com mouse; no toque, continua "deslize".
+- **Textos:** "Foi no tempo da tabela" virou "Igual à tabela". Os rótulos do Início, do documento e da lista de
+  documentos ("Para receber", "Total", "Orçamento") saem sem caixa alta, como no Conta Fácil.
+
+Kit passado por cima (Art. 30-A, propostas para o Integrador no README): a posição do aviso e o trilho a partir de
+768 px.
+
 ## 5.3.0 · 2026-11-23
 
 Os preços passam a ser só do eletricista.

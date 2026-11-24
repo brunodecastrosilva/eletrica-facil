@@ -2,7 +2,7 @@
 
 Orçamento de serviços de elétrica, do pedido ao recibo, direto no celular, no tablet ou no computador.
 
-Versão **5.3.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **5.3.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md). Na 4.0.0 o app recomeçou enxuto, por decisão do Bruno: faz uma coisa só,
@@ -277,6 +277,17 @@ digital (SRI), baixados só quando a função é usada (Código, Art. 21).
   (chave ligada, dia escolhido). No claro, amarelo sobre branco não dá 3:1; então `--kf-accent` é a tinta, e o app pinta
   o botão cheio e o de começar de amarelo (`estilo.css`). Não muda medida nem comportamento. Proposta para o Integrador:
   o Kit separar a cor do botão cheio da cor de estado.
+
+- **Aviso que cobria botões e campos (5.3.1):** o Kit põe o aviso no pé e, com janela aberta, acima dos botões do pé
+  dela; em janela alta e na abertura ele cobria campos e botões. Com janela ou abertura na tela, o app procura o primeiro
+  lugar livre (o do Kit, logo acima da janela, o alto da tela) e, ao trocar de tela, tira o aviso da tela anterior
+  (`casca.js`, `posicionarAviso`). Proposta para o Integrador: o Kit fazer isso.
+- **Trilho no tablet (5.3.1):** o Kit liga o trilho lateral só a partir de 1024 px. De 768 a 1023 px o app aplica as
+  mesmas regras (cópia dos blocos `min-width:1024px` do Kit e do app, no fim do `estilo.css`). Proposta para o
+  Integrador: o Kit ligar o trilho a partir de 768 px.
+- **Duração em rodas (5.3.1):** o relógio do Kit marca a hora do dia (0 a 23, "Agora"). Para tempo de serviço o app
+  usa o mesmo desenho e o mesmo comportamento, com horas de 0 a 12, minutos de 5 em 5 e o texto "1h30" (`telas.js`,
+  `rodaTempo`). Proposta para o Integrador: o Kit ter o seletor de duração.
 
 - **Cadastro na abertura:** a abertura do Kit tem até quatro telas e o "Pular" dela fecha tudo. O cadastro (os seus
   dados e a sua hora, Código, Art. 75) vem como uma segunda abertura do Kit, logo depois da apresentação; na tela dos

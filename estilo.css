@@ -102,9 +102,7 @@ ol{padding:0;list-style:none}
 
 /* ---------- Início: o painel com o que há para receber ---------- */
 .painel{position:relative;overflow:hidden;border-radius:var(--kf-r-lg);padding:22px 22px 10px;background:var(--painel);color:var(--painel-tinta);box-shadow:var(--sombra);gap:0!important}
-.pn-raio{position:absolute;right:18px;top:18px;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:var(--am);color:#16171A;pointer-events:none}
-.pn-raio .kf-i{width:20px;height:20px}
-.pn-rot{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--painel-apoio)}
+.pn-rot{font-size:13.5px;font-weight:700;color:var(--painel-apoio)}
 .pn-num{display:block;font-family:var(--kf-font-display);font-weight:900;font-size:clamp(36px,11.5vw,50px);line-height:1.08;letter-spacing:-.035em;color:var(--painel-num);margin-top:2px}
 .pn-sub{font-size:15px;color:var(--painel-apoio)}
 .pn-lista{margin-top:16px;border-top:1px solid var(--painel-linha);position:relative}
@@ -118,7 +116,7 @@ ol{padding:0;list-style:none}
 .doc{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;border:0;border-radius:var(--kf-r-cartao);background:var(--sup);color:var(--tinta);padding:15px 16px 0;box-shadow:var(--sombra);transition:transform .16s ease-out}
 .doc:active{transform:scale(.985)}
 .doc-topo{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
-.doc-tipo{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--apoio)}
+.doc-tipo{font-size:13px;font-weight:700;color:var(--apoio)}
 .doc-etapa{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--sup-2);color:var(--tinta);white-space:nowrap}
 .doc-etapa.e-enviado{background:var(--e-env-f);color:var(--e-env)}
 .doc-etapa.e-aprovado{background:var(--e-apr-f);color:var(--e-apr)}
@@ -192,7 +190,7 @@ ol{padding:0;list-style:none}
 .pe-tela{position:fixed;left:0;right:0;bottom:0;z-index:25;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:var(--doca);border-top:1px solid var(--linha)}
 .pe-in{max-width:calc(var(--col) - 32px);margin:0 auto;display:flex;align-items:flex-end;gap:10px}
 .pe-total{display:flex;flex-direction:column;line-height:1.15;min-width:0;margin-right:auto;align-self:center}
-.pe-total small{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--apoio)}
+.pe-total small{font-size:13px;font-weight:700;color:var(--apoio)}
 .pe-total b{font-family:var(--kf-font-display);font-weight:900;font-size:21px;letter-spacing:-.02em;white-space:nowrap}
 .pe-in .bt-ic.contorno{width:58px;height:58px;border-radius:16px;box-shadow:inset 0 0 0 1.5px var(--linha-2)}
 .pe-prox{flex:1;min-width:118px;border-radius:16px}
@@ -362,7 +360,7 @@ body:not(.kf-com-guia)[data-tela="doc"] .kf-toast,body:not(.kf-com-guia)[data-te
 .pnl-cli > .kf-i:last-child,.pnl-cond > .kf-i{width:16px;height:16px;color:var(--apoio);flex:none}
 .pnl-tot{display:flex;align-items:center;gap:12px}
 .pnl-t{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start}
-.pnl-t small{font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--apoio)}
+.pnl-t small{font-size:13.5px;font-weight:800;color:var(--apoio)}
 .pnl-t b{font-family:var(--kf-font-display);font-weight:900;font-size:clamp(32px,10vw,40px);line-height:1.05;letter-spacing:-.02em;white-space:nowrap;padding:0 6px;margin-left:-6px;border-radius:8px}
 .pnl-vista{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 8px;margin-right:-8px;border:0;border-radius:12px;background:transparent;color:var(--apoio);font-weight:700;font-size:13.5px;flex:none;text-decoration:underline;text-underline-offset:3px}
 .pnl-vista .kf-i{width:18px;height:18px}
@@ -472,3 +470,75 @@ h3.sec-g[data-cod]::before{content:attr(data-cod);min-width:34px;height:28px;pad
 .ab-cad{margin-top:6px;text-align:left}
 .ab-cadastro .kf-ab-palco{justify-content:flex-start}
 .it-resumo{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 16px;border-radius:var(--kf-r-cartao);background:var(--sup-2)}
+
+/* ================= 5.3.1 ================= */
+/* duração em rodas: o relógio do Kit medindo tempo (horas 0 a 12, minutos de 5 em 5) */
+.roda .kf-esc-btn{font-variant-numeric:tabular-nums}
+.roda .kf-relogio{max-width:280px}
+.tp-roda{display:flex;align-items:flex-start;gap:10px}
+.tp-l .lin-tx{flex:1;min-width:0}
+.tp-roda .roda{flex:1;min-width:0}
+/* a fila de escolhas que rola para o lado termina em degradê enquanto há mais para ver (o app marca .fade-d e .fade-e) */
+.chips.fade-d{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 48px),transparent)}
+.chips.fade-e{-webkit-mask-image:linear-gradient(90deg,transparent,#000 48px);mask-image:linear-gradient(90deg,transparent,#000 48px)}
+.chips.fade-d.fade-e{-webkit-mask-image:linear-gradient(90deg,transparent,#000 48px,#000 calc(100% - 48px),transparent);mask-image:linear-gradient(90deg,transparent,#000 48px,#000 calc(100% - 48px),transparent)}
+/* setas do carrossel de cômodos: só com mouse (no toque, desliza) */
+.crs-palco{position:relative}
+.crs-seta{display:none}
+@media (pointer:fine){
+  .crs-dica{display:none}
+  .crs-seta{display:grid;place-items:center;position:absolute;top:50%;z-index:2;width:44px;height:44px;margin-top:-22px;border:0;border-radius:99px;background:var(--sup);color:var(--tinta);box-shadow:var(--sombra),inset 0 0 0 1.5px var(--linha-forte,var(--apoio));cursor:pointer}
+  .crs-seta.ant{left:-6px}.crs-seta.prox{right:-6px}
+  .crs-seta .kf-i{width:22px;height:22px}
+  .crs-seta[disabled]{display:none}
+  .crs-seta:hover{background:var(--sup-2)}
+  .crs-seta:focus-visible{outline:2.5px solid var(--kf-focus,var(--kf-accent));outline-offset:2px}
+}
+
+/* ================= 5.3.1 · tablet com o trilho (Art. 30-A) =================
+   O Kit liga o trilho lateral só a partir de 1024 px; no tablet (820 px) o documento ficava numa coluna estreita, com a
+   barra de baixo de celular. Aqui, de 768 a 1023 px, valem as mesmas regras que o Kit e o app usam a partir de 1024 px
+   (cópia gerada dos blocos "min-width:1024px" do comum/kit-facil.css e deste arquivo). Proposta para o Integrador: o Kit
+   ligar o trilho a partir de 768 px. A janela continua com a barrinha de puxar, que é do toque. */
+@media (min-width:768px) and (max-width:1023px){
+  /* --- */
+  .kf-nav{display:none!important}
+  /* --- */
+  body.kf-casca .kf-ov{padding-left:calc(var(--kf-trilho-w) + 24px)}
+  /* --- */
+  .kf-trilho{display:flex;flex-direction:column;gap:2px;position:fixed;inset:0 auto 0 0;width:var(--kf-trilho-w);padding:18px 14px 20px;background:var(--kf-nav-bg,var(--kf-surface));box-shadow:1px 0 0 var(--kf-line);z-index:20;overflow-y:auto;font-family:var(--kf-font)}
+    .kf-trilho .kf-marca{flex:none;padding:0 8px 18px}
+    .kf-trilho-it{display:flex;align-items:center;gap:12px;border:0;background:none;padding:10px 12px;min-height:var(--kf-alvo);border-radius:var(--kf-r-btn);color:var(--kf-nav-ink,var(--kf-muted));font:600 15.5px/1.2 var(--kf-font);text-align:left;cursor:pointer;width:100%;position:relative;text-decoration:none}
+    .kf-trilho-it > svg,.kf-trilho-it .kf-i{width:22px;height:22px;flex:none}
+    .kf-trilho-it:hover{background:var(--kf-nav-hover,var(--kf-surface-2));color:var(--kf-nav-on,var(--kf-ink))}
+    .kf-trilho-it[aria-current="page"],.kf-trilho-it[aria-selected="true"]{background:var(--kf-nav-atual-bg,var(--kf-accent-soft));color:var(--kf-nav-on,var(--kf-ink))}
+    .kf-trilho-it[aria-current="page"] > svg,.kf-trilho-it[aria-selected="true"] > svg{color:var(--kf-nav-atual,var(--kf-accent-texto,var(--kf-accent)))}
+    .kf-trilho-it[aria-disabled="true"]{opacity:.42}
+    .kf-trilho-it:focus-visible{outline:2.5px solid var(--kf-focus,var(--kf-accent));outline-offset:-2px}
+    body.kf-casca{padding-left:var(--kf-trilho-w)}
+    .kf-casca .kf-barra .kf-marca{visibility:hidden}
+  /* --- */
+  .kf-trilho-it.kf-trilho-ajustes{margin-top:auto}
+  /* --- */
+  .kf-toast,body:has(.kf-criar) .kf-toast{bottom:24px;left:calc(50% + var(--kf-trilho-w) / 2)}
+  /* --- */
+  .kf-guia-cartao{left:calc(var(--kf-trilho-w) + 16px)}
+  /* --- */
+  .kf-gv-player{left:calc(var(--kf-trilho-w) + 16px)}
+  /* --- */
+  .kf-trilho-fim{margin-top:auto;display:flex;flex-direction:column;gap:2px;padding-top:12px;border-top:1px solid var(--kf-nav-linha,var(--kf-line))}
+    .kf-trilho-it.kf-trilho-destaque{background:var(--kf-comecar);color:var(--kf-comecar-ink);margin:6px 0 10px}
+    .kf-trilho-it.kf-trilho-destaque > svg{color:var(--kf-comecar-ink)!important}
+    .kf-trilho-it.kf-trilho-destaque:hover{background:var(--kf-comecar);filter:brightness(1.06);color:var(--kf-comecar-ink)}
+    .kf-trilho-it .kf-nav-selo{position:static;margin-left:auto;box-shadow:none}
+  /* --- */
+  :root{--kf-pe-h:0px}
+    .kf-gu-doca{left:var(--kf-trilho-w);bottom:8px;padding-bottom:6px}
+    body.kf-com-guia{--kf-gu-h:142px;--kf-pe:calc(var(--kf-gu-h) + 8px)}
+    body.kf-com-guia .kf-trilho{z-index:94}
+  /* --- */
+  .pe-tela{left:var(--kf-trilho-w)}
+}
+/* documento sem cômodos: o cartão único ocupa a largura toda, também no tablet e no computador (a regra dos cartões do
+   carrossel, 46% a partir de 600 px, deixava o documento numa coluna estreita) */
+.cr.cr-un{width:auto}

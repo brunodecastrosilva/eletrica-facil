@@ -26,12 +26,12 @@ const GUIA = [
       await m.digitar('#cl-nome', 'Mariana Souza'); await m.digitar('#cl-fone', '11988887777'); await m.digitar('#cl-end', 'Rua das Acácias, 120');
       await m.tocar('.kf-dlg [data-salvar]', { depois: 700 }); await m.acha('#pe-doc');
     } },
-  { t: 'Crie o seu primeiro serviço', d: 'O app não traz preço de fábrica. Em Novo serviço, escolha o objeto e a ação, e diga quanto tempo leva.',
+  { t: 'Crie o seu primeiro serviço', d: 'O app não traz preço de fábrica. Em Novo serviço, escolha o objeto e a ação, e gire as rodas até o tempo que leva.',
     acao: async m => {
       await gSomar(m);
       if (!$('#it-corpo')) await m.tocar('.kf-dlg [data-novo-serv]', { depois: 700 });
       await m.tocar('.kf-dlg [data-it-obj="tomada 10 A"]', { depois: 600 }); await m.apontar('.kf-dlg [data-it-acao="instalacao"]', 1100);
-      await m.tocar('.kf-dlg [data-it-min="30"]', { depois: 600 }); await m.apontar('.kf-dlg [role="status"]', 1300);
+      await m.tocar('.kf-dlg #it-t', { depois: 700 }); await m.tocar('.kf-dlg [data-rm="40"]', { depois: 600 }); await m.apontar('.kf-dlg [role="status"]', 1300);
       await m.tocar('.kf-dlg [data-salvar]', { depois: 800 }); await m.acha('#so-q');
     } },
   { t: 'Da próxima vez, é um toque', d: 'O serviço ficou nos seus Preços. Cada toque no + soma um.',
@@ -43,13 +43,15 @@ const GUIA = [
   { t: 'Ou busque pelo nome', d: 'A busca acha nos seus Preços e sugere do banco do app o que você ainda não tem.', continua: true,
     acao: async m => {
       await gSomar(m); await m.digitar('#so-q', 'chuveiro');
-      await m.tocar('.kf-dlg [data-sug]', { depois: 700 }); await m.tocar('.kf-dlg [data-it-min="60"]', { depois: 500 });
+      await m.tocar('.kf-dlg [data-sug]', { depois: 700 }); await m.apontar('.kf-dlg #it-t', 900);
       await m.tocar('.kf-dlg [data-salvar]', { depois: 800 }); await m.acha('#so-q');
       await m.fechar(); await m.apontar('#conteudo .itens', 1500);
     } },
   { t: 'Defeito desconhecido? Cobre pelo tempo', d: 'O diagnóstico entra pelo tempo que levou. O deslocamento é uma linha própria, por ida.',
     acao: async m => {
-      await gSomar(m); await m.tocar('.kf-dlg [data-diag="60"]', { depois: 500 }); await m.tocar('.kf-dlg [data-ida="1"]', { depois: 500 });
+      await gSomar(m); await m.tocar('.kf-dlg [data-diag-mais]', { depois: 500 });
+      await m.tocar('.kf-dlg #so-dg', { depois: 600 }); await m.tocar('.kf-dlg [data-rh="1"]', { depois: 400 }); await m.tocar('.kf-dlg [data-rm="0"]', { depois: 500 });
+      await m.tocar('.kf-dlg [data-ida="1"]', { depois: 500 });
       await m.apontar('#so-conta', 1300); await m.fechar(); await m.apontar('#conteudo .itens', 1500);
     } },
   { t: 'Na visita, levante por cômodo', d: 'Escolha o cômodo e some o que há para fazer. Conte também o material: a lista de compras sai pronta.',

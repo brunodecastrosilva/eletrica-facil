@@ -44,7 +44,6 @@ TELAS.inicio = {
     <main class="tela inicio" id="conteudo">
       ${KitFacil.ui.cabecalho({ titulo: 'Início', sub: nome ? `Olá, ${esc(nome)}. Veja o que falta enviar e receber.` : 'O que falta enviar, aprovar e receber.' })}
       <section class="painel" aria-label="Resumo">
-        <span class="pn-raio" aria-hidden="true">${IC.raio}</span>
         <span class="pn-rot">Para receber</span>
         <b class="pn-num num">${BRL(P.receber)}</b>
         <span class="pn-sub">${P.nReceber ? `de ${plural(P.nReceber, 'documento', 'documentos')}` : 'Nada para receber agora.'}</span>
@@ -121,7 +120,58 @@ const itemDoc = l => `<button type="button" class="item" data-linha="${esc(l.id)
 // serviços da tabela que seguem a hora: são os que podem ter o tempo real anotado
 const anotaveis = d => d.linhas.filter(l => !l.tipo && l.pid).map(l => precos.find(p => p.id === l.pid)).filter((p, i, a) => p && !p.fixo && a.indexOf(p) === i);
 const mediaReal = p => p.reais.length ? Math.max(5, Math.round(soma(p.reais) / p.reais.length / 5) * 5) : 0;
-const seletorTempo = (id, atual, max, passo) => { const L = new Set([atual]); for (let m = passo; m <= max; m += passo) L.add(m); return `<select id="${id}" class="kf-entrada">${[...L].sort((a, b) => a - b).map(m => `<option value="${m}"${m === atual ? ' selected' : ''}>${tempoTxt(m)}</option>`).join('')}</select>`; };
+/* Duração em rodas (5.3.1): horas de 0 a 12 e minutos de 5 em 5, a mesma em todas as telas (Novo serviço, Preços, o
+   diagnóstico e "Quanto tempo levou"). Tem o desenho e o comportamento do relógio do Kit (botão que abre duas colunas;
+   tocar na hora troca a hora, tocar no minuto escolhe e fecha), mas mede tempo, não a hora do dia: sem "Agora", com o
+   texto "20 min" ou "1h30". O botão guarda os minutos no próprio valor (button.value) e avisa "change" ao escolher. */
+const RODA_MAX = 12 * 60 + 55;
+const rodaTempo = (id, min, rotulo) => { const v = Math.max(5, Math.min(RODA_MAX, Math.round((+min || 30) / 5) * 5));
+  return `<div class="kf-esc kf-data kf-hora roda"><button type="button" class="kf-esc-btn kf-data-btn" id="${id}" value="${v}" data-roda="${esc(rotulo)}" aria-expanded="false" aria-controls="${id}-cal"><span class="kf-esc-v">${tempoTxt(v)}</span>${IC.relogio}</button><div class="kf-cal kf-relogio roda-cal" id="${id}-cal" role="group" aria-label="${esc(rotulo)}" hidden></div></div>`; };
+(() => {
+  const montar = (btn, cx, hEsc) => {
+    const v = +btn.value, h = hEsc != null ? hEsc : Math.floor(v / 60), m = v % 60;
+    const op = (k, tx, sel, dis, at) => `<button type="button" role="option" class="kf-rel-op" ${at}="${k}" aria-selected="${sel}"${dis ? ' disabled' : ''}>${tx}</button>`;
+    cx.innerHTML = `<div class="kf-rel-cols"><div class="kf-rel-col" role="listbox" aria-label="Horas">${Array.from({ length: 13 }, (_, k) => op(k, k + ' h', k === h, false, 'data-rh')).join('')}</div>`
+      + `<div class="kf-rel-col" role="listbox" aria-label="Minutos">${Array.from({ length: 12 }, (_, k) => op(k * 5, (k * 5) + ' min', hEsc == null && k * 5 === m, h === 0 && k === 0, 'data-rm')).join('')}</div></div>`;
+    $$('.kf-rel-col', cx).forEach(col => { const s = $('[aria-selected="true"]', col); if (s) col.scrollTop = s.offsetTop - col.clientHeight / 2 + s.offsetHeight / 2; });
+  };
+  const pinta = btn => { $('.kf-esc-v', btn).textContent = tempoTxt(+btn.value); btn.setAttribute('aria-label', `${btn.dataset.roda}: ${tempoTxt(+btn.value)}`); };
+  // a hora troca o valor na hora; o "change" sai uma vez, quando as rodas fecham com um valor novo
+  const define = (btn, v) => { btn.value = String(Math.max(5, Math.min(RODA_MAX, v))); pinta(btn); btn.dispatchEvent(new Event('input', { bubbles: true })); };
+  const fecha = (w, foco) => {
+    const cx = $('.roda-cal', w), btn = $('.kf-esc-btn', w); if (!cx || cx.hidden) return;
+    btn.setAttribute('aria-expanded', 'false'); w.classList.remove('kf-aberta'); w._h = null;
+    if (+btn.value !== w._v0) btn.dispatchEvent(new Event('change', { bubbles: true }));
+    const fim = () => { cx.hidden = true; };
+    if (reduzMov()) fim(); else cx.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-6px)' }], { duration: KitFacil.movimento.ms, easing: KitFacil.movimento.css }).onfinish = fim;
+    if (foco) btn.focus({ preventScroll: true });
+  };
+  document.addEventListener('click', e => {
+    const w = e.target.closest && e.target.closest('.roda');
+    $$('.roda.kf-aberta').forEach(x => { if (x !== w) fecha(x, false); });
+    if (!w) return;
+    const btn = $('.kf-esc-btn', w), cx = $('.roda-cal', w);
+    if (e.target.closest('.kf-esc-btn')) {
+      e.preventDefault(); if (!cx.hidden) return fecha(w, true);
+      w._h = null; w._v0 = +btn.value; montar(btn, cx, null); cx.hidden = false; btn.setAttribute('aria-expanded', 'true'); w.classList.add('kf-aberta');
+      KitFacil.movimento.entrar(cx, { de: 'cima' }); montar(btn, cx, null);
+      ($('[data-rh][aria-selected="true"]', cx))?.focus({ preventScroll: true });
+      return;
+    }
+    const hb = e.target.closest('[data-rh]');
+    if (hb) { const h = +hb.dataset.rh, m = +btn.value % 60; w._h = h; define(btn, h * 60 + (h === 0 && m === 0 ? 5 : m)); montar(btn, cx, h); $('[data-rm][aria-selected="true"], [data-rm]:not([disabled])', cx)?.focus({ preventScroll: true }); return; }
+    const mb = e.target.closest('[data-rm]');
+    if (mb && !mb.disabled) { const h = w._h != null ? w._h : Math.floor(+btn.value / 60); define(btn, h * 60 + +mb.dataset.rm); fecha(w, true); }
+  });
+  document.addEventListener('keydown', e => {
+    const w = e.target.closest && e.target.closest('.roda.kf-aberta'); if (!w) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); return fecha(w, true); }
+    const b = e.target.closest('.kf-rel-op'); if (!b || (e.key !== 'ArrowDown' && e.key !== 'ArrowUp')) return;
+    e.preventDefault(); const ops = $$('.kf-rel-op:not([disabled])', b.parentNode), i = ops.indexOf(b);
+    ops[Math.max(0, Math.min(ops.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))]?.focus();
+  }, true);
+  document.addEventListener('focusout', e => { const w = e.target.closest && e.target.closest('.roda.kf-aberta'); if (w && e.relatedTarget && !w.contains(e.relatedTarget)) fecha(w, false); });
+})();
 /* ---------- a tela do documento (5.2): o painel fica no alto, e cada cômodo é um cartão que se desliza ---------- */
 let vistaLista = false;                 // "Ver em lista": todos os cômodos de uma vez (vale até fechar o app)
 const rolCar = new Map(), subAnt = new Map();   // onde o carrossel estava e os subtotais da última vez, por documento
@@ -177,7 +227,9 @@ function servicosDoc(d, c) {
       ${itensDoc(d, c)}${KitFacil.ui.adicionar({ rotulo: 'Somar serviço', attrs: 'data-somar' })}${KitFacil.ui.adicionar({ rotulo: 'Cômodo', attrs: 'data-levantar' })}</section>`;
   const G = gruposDoc(d).filter(g => g !== 'Material' || d.linhas.some(l => grupoDe(d, l) === g));
   return `<section class="crs" aria-labelledby="dc-it"><div class="crs-cab"><h2 class="sec" id="dc-it">Cômodos <span class="sec-n">· ${d.comodos.length} e Geral</span></h2><span class="crs-dica" aria-hidden="true">deslize</span></div>
+    <div class="crs-palco"><button type="button" class="crs-seta ant" data-crs="-1" aria-label="Cômodo anterior">${IC.voltar}</button>
     <div class="crs-fila" id="dc-car">${G.map(g => cartaoGrupo(d, c, g)).join('')}<button type="button" class="cr-novo" data-levantar>${IC.soma}<span>Cômodo</span></button></div>
+    <button type="button" class="crs-seta prox" data-crs="1" aria-label="Próximo cômodo">${IC.seta}</button></div>
     <div class="crs-pontos" aria-hidden="true">${G.concat('+').map((g, k) => `<i${k ? '' : ' class="on"'}></i>`).join('')}</div></section>`;
 }
 TELAS.doc = {
@@ -202,7 +254,7 @@ TELAS.doc = {
     const d = getDoc(r.id);
     el.addEventListener('click', e => {
       const t = e.target;
-      if (t.closest('[data-voltar]')) return voltar('/');
+      if (t.closest('[data-voltar]')) return sairDoc();
       let b;
       if ((b = t.closest('[data-somar-com]'))) return janelaSomar(d, b.dataset.somarCom);
       if (t.closest('[data-somar]')) return janelaSomar(d);
@@ -220,7 +272,10 @@ TELAS.doc = {
     $$('.pnl-med span', el).forEach(s => { s.style.flexGrow = s.dataset.v; });
     // o carrossel volta para onde estava, e os pontinhos acompanham o cartão à vista
     const fila = $('#dc-car', el), pts = $$('.crs-pontos i', el);
-    const marca = () => { const w = fila.firstElementChild ? fila.firstElementChild.offsetWidth + 12 : 1, k = Math.min(pts.length - 1, Math.round(fila.scrollLeft / w)); pts.forEach((p, n) => p.classList.toggle('on', n === k)); };
+    const marca = () => { const w = fila.firstElementChild ? fila.firstElementChild.offsetWidth + 12 : 1, k = Math.min(pts.length - 1, Math.round(fila.scrollLeft / w)); pts.forEach((p, n) => p.classList.toggle('on', n === k));
+      // as setas (só com mouse): somem no começo e no fim da fila
+      const a = $('.crs-seta.ant', el), z = $('.crs-seta.prox', el); if (a) a.disabled = fila.scrollLeft < 4; if (z) z.disabled = fila.scrollLeft + fila.clientWidth > fila.scrollWidth - 4; };
+    $$('[data-crs]', el).forEach(b => b.addEventListener('click', () => { const w = fila.firstElementChild ? fila.firstElementChild.offsetWidth + 12 : 300; fila.scrollBy({ left: +b.dataset.crs * w, behavior: reduzMov() ? 'auto' : 'smooth' }); }));
     if (fila) { fila.scrollLeft = rolCar.get(d.id) || 0; marca(); fila.addEventListener('scroll', () => { rolCar.set(d.id, fila.scrollLeft); marca(); }, { passive: true }); }
     // animação 1: o disjuntor arma quando o documento sai (900 ms); com movimento reduzido, nada se mexe
     if (animEnvio === d.id) {
@@ -370,7 +425,7 @@ function janelaLinha(d, l, tipoNovo = '', com = '', depois = null) {
   const segCond = () => segmento('Condição do serviço', 'cond', NOME_COND.map((n, k) => [k, n]), cond);
   const qtd = rot => `<div class="kf-campo"><span class="kf-rotulo" id="ln-ql">${rot}</span>${KitFacil.ui.quantidade({ id: 'ln-q', valor: x.q, min: 1, max: tipo === 'desl' ? 99 : 9999, rotulo: rot.toLowerCase(), attrs: 'aria-labelledby="ln-ql"' })}</div>`;
   const corpo = tipo === 'diag' ? `${campo('ln-n', 'Descrição', entrada('ln-n', x.nome))}
-      ${campo('ln-t', 'Tempo que levou', seletorTempo('ln-t', x.min, 600, 15), `${BRL(x.pu)} a hora. O cliente vê o tempo e o valor, não a sua hora.`)}`
+      ${campo('ln-t', 'Tempo que levou', rodaTempo('ln-t', x.min, 'Tempo que levou'), `${BRL(x.pu)} a hora. O cliente vê o tempo e o valor, não a sua hora.`)}`
     : tipo === 'desl' ? `${qtd('Idas ao local')}
       ${porKm ? campo('ln-k', 'Distância, ida e volta, em km', `<input id="ln-k" class="kf-entrada" type="text" inputmode="numeric" maxlength="4" value="${x.km || ''}" placeholder="Ex.: 16">`) + campo('ln-vk', 'Valor por km', campoDinheiro('ln-vk', x.vkm || ajustes.deslKm)) : campo('ln-p', 'Valor por ida', campoDinheiro('ln-p', x.pu))}`
     : `${campo('ln-n', 'Descrição', entrada('ln-n', x.nome, 'placeholder="Ex.: Instalação de tomada"'))}
@@ -466,8 +521,8 @@ function janelaSomar(d, com0, aba0) {
         ${n ? `<button type="button" class="so-bt" data-${dado}="-1" aria-label="Tirar uma: ${rot}">${IC.menos}</button><b class="so-n num" aria-label="${n}">${n}</b>` : ''}
         <button type="button" class="so-bt mais" data-${dado}="1" aria-label="Somar uma: ${rot}">${IC.soma}</button></div></div>`;
   const porTempo = () => { const g = diag(), i = desl(), y = dia(); return `<h3 class="sec">Por tempo, por ida e por dia</h3>
-      <div class="cx tp"><div class="tp-l"><span class="lin-ic">${IC.relogio}</span><span class="lin-tx"><b>Diagnóstico do defeito</b><small>${g ? `${tempoTxt(g.min)} × ${BRL(g.pu)} a hora` : 'Pelo tempo que levou'}</small></span>${g ? `<b class="num">${BRL(totalLinha(g))}</b>` : ''}</div>
-        ${segmento('Tempo do diagnóstico', 'diag', [[30, '30 min'], [60, '1 h'], [90, '1h30'], [120, '2 h'], ['x', 'Outro']], g ? ([30, 60, 90, 120].includes(g.min) ? g.min : 'x') : '')}</div>
+      <div class="cx tp"><div class="tp-l"><span class="lin-ic">${IC.relogio}</span><span class="lin-tx"><b>Diagnóstico do defeito</b><small>${g ? `${tempoTxt(g.min)} × ${BRL(g.pu)} a hora` : 'Pelo tempo que levou'}</small></span>${g ? `<b class="num">${BRL(totalLinha(g))}</b>` : `<button type="button" class="so-bt mais" data-diag-mais aria-label="Somar o diagnóstico, ${tempoTxt(ultimoDiag())}">${IC.soma}</button>`}</div>
+        ${g ? `<div class="tp-roda">${rodaTempo('so-dg', g.min, 'Tempo do diagnóstico')}<button type="button" class="so-bt" data-diag-tira aria-label="Tirar o diagnóstico">${IC.menos}</button></div>` : ''}</div>
       ${maisMenos('ida', i ? i.q : 0, 'Deslocamento', 0, i ? `${i.q} ${unTxt(i.q, 'ida')} · ${BRL(totalLinha(i))}` : ajustes.deslModo === 'km' ? (ajustes.deslKm ? `${BRL(ajustes.deslKm)} por km` : 'Por km, valor a definir') : ajustes.deslIda ? `${BRL(ajustes.deslIda)} por ida` : 'Por ida, valor a definir')}
       ${maisMenos('dia', y ? y.q : 0, 'Diária', 0, y ? `${plural(y.q, 'diária', 'diárias')} · ${BRL(totalLinha(y))}` : ajustes.diaria ? `${BRL(ajustes.diaria)} por dia` : 'Por dia, valor a definir')}`; };
   const conta2 = () => { if (aba === 'mat') { const n = soma(d.mats.map(m => m.q)); return n ? `${plural(n, 'peça contada', 'peças contadas')}. A lista fica no documento.` : 'Conte o material como conta o serviço.'; }
@@ -529,6 +584,7 @@ function janelaSomar(d, com0, aba0) {
     aoMontar: j => {
       const refaz = foco => { $('#so-corpo', j).innerHTML = corpo(); $('#so-conta', j).innerHTML = conta2(); const tt = $('.kf-dlg-titulo, h2', j); if (tt && com) tt.textContent = com; if (foco) $(foco, j)?.focus({ preventScroll: true }); };
       $('#so-q', j).addEventListener('input', e => { busca = e.target.value; refaz(); });
+      j.addEventListener('change', e => { if (e.target.id !== 'so-dg') return; const g = diag(); if (g) { g.min = +e.target.value; mudouDoc(d); refaz('#so-dg'); } });
       j.addEventListener('click', e => {
         const t = e.target; let b;
         if ((b = t.closest('[data-aba]'))) { aba = b.dataset.aba; return refaz(`[data-aba="${aba}"]`); }
@@ -558,12 +614,9 @@ function janelaSomar(d, com0, aba0) {
         if (t.closest('[data-novo-serv]')) return criar({ nome: busca.trim() });
         if ((b = t.closest('[data-sug]'))) { const [cat, acao, obj] = b.dataset.sug.split('|'); return criar({ cat, acao, obj }); }
         if (t.closest('[data-avulsa]')) { const c0 = com; sai(); return janelaLinha(d, null, '', d.comodos.length ? c0 : ''); }
-        if ((b = t.closest('[data-diag]'))) {
-          const v = b.dataset.diag, g = diag();
-          if (v === 'x') { sai(); return janelaLinha(d, g || null, 'diag'); }
-          if (g && g.min === +v) d.linhas.splice(d.linhas.indexOf(g), 1); else if (g) g.min = +v; else d.linhas.unshift(acertaLinha({ tipo: 'diag', nome: 'Diagnóstico do defeito', min: +v, pu: HORA() }));
-          mudouDoc(d); vibrar(); return refaz(`[data-diag="${v}"]`);
-        }
+        // o diagnóstico entra com o último tempo usado (ou 30 min); o tempo muda nas rodas, ao lado
+        if (t.closest('[data-diag-mais]')) { if (!diag()) d.linhas.unshift(acertaLinha({ tipo: 'diag', nome: 'Diagnóstico do defeito', min: ultimoDiag(), pu: HORA() })); mudouDoc(d); vibrar(); return refaz('#so-dg'); }
+        if (t.closest('[data-diag-tira]')) { const g = diag(); if (g) d.linhas.splice(d.linhas.indexOf(g), 1); mudouDoc(d); return refaz('[data-diag-mais]'); }
         if ((b = t.closest('[data-ida]'))) {
           const i = desl(), n = +b.dataset.ida;
           // sem valor de deslocamento (nenhum vem de fábrica) ou por km: a janela da linha pede o valor e guarda em Ajustes
@@ -590,6 +643,8 @@ function janelaSomar(d, com0, aba0) {
     } });
 }
 // soma um item dos seus Preços no documento (no cômodo, quando há)
+// o tempo do último diagnóstico anotado (no documento mudado por último), ou 30 min
+const ultimoDiag = () => { for (const d of [...docs].sort((a, b) => b.mudou - a.mudou)) { const g = d.linhas.find(l => l.tipo === 'diag'); if (g && g.min) return g.min; } return 30; };
 function somarItem(d, p, cm) {
   const v = precoDe(p), l = d.linhas.find(x => x.pid === p.id && x.pu === v && !x.cond && x.nome === p.nome && x.com === cm);
   if (l) l.q = Math.min(9999, l.q + 1); else d.linhas.push(acertaLinha({ pid: p.id, tipo: p.cat === CAT_MATERIAL ? 'mat' : '', nome: p.nome, un: p.un, q: 1, pu: v, com: cm }));
@@ -826,7 +881,7 @@ function janelaMenu(d) {
       }
       if (m === 'recusa') { d.etapa = 'recusado'; tocarDoc(d); redesenhar(); return aviso('Marcado como recusado.', { label: 'Desfazer', run: () => { d.etapa = 'enviado'; tocarDoc(d); redesenhar(); } }); }
       if (m === 'excluir') confirmar(`Excluir ${nomeDoc(d).toLowerCase()}?`, `${d.cliente.nome ? `O documento de ${d.cliente.nome}` : 'Este documento'} sai deste aparelho${SY.ligada() ? ' e dos outros aparelhos conectados' : ''}.`, 'Excluir documento', () => {
-        const i2 = docs.indexOf(d); docs.splice(i2, 1); salvarDocs(); voltar('/');
+        const i2 = docs.indexOf(d); docs.splice(i2, 1); salvarDocs(); sairDoc();
         aviso('Documento excluído.', { label: 'Desfazer', run: () => { docs.splice(Math.min(i2, docs.length), 0, d); d.mudou = Date.now(); salvarDocs(); redesenhar(); } });
       }, { desfaz: 'Dá para desfazer logo depois.' });
     }) });
@@ -890,7 +945,7 @@ TELAS.precos = {
 TELAS.cat = { html(r) { filtroPreco = r.id; return TELAS.precos.html(); }, ligar(el) { TELAS.precos.ligar(el); } };
 // as categorias para escolher: as suas (com o nome que você deu) e as do banco que você excluiu
 const catsEscolha = () => [...catsOrdem(), ...catsBanco().filter(b => !cats.some(c => c.id === b.id))];
-const TEMPOS = [15, 30, 45, 60, 90, 120, 180, 240];
+const OBJ_VISTOS = 8;
 /* Novo serviço (ou material) e a edição de um item dos seus Preços, numa janela só. Ordem: categoria, objeto (do banco
    ou outro), ação (a mais comum para o objeto já vem marcada; toque de novo para tirar), nome (montado, editável),
    unidade e o preço: pelo tempo (vezes a sua hora; o item segue a hora) ou em reais (preço fixo). Material só em reais.
@@ -903,14 +958,19 @@ function janelaItem(p, o = {}) {
   // escolhido pela busca ou pelo banco: categoria, objeto e ação já vêm prontos e ficam numa linha, com Mudar;
   // a janela abre no preço (Regras do app: o menor número de toques para criar e somar)
   let resumo = novo && !!o.obj && !o.nome;
-  let outro = false, mexeuAcao = !novo || o.acao !== undefined, tempoOutro = !novo && !p.fixo && !TEMPOS.includes(p.min), mexeuNome = !novo && x.nome !== nomeMontado(x.acao, x.obj);
+  // o tempo começa no tempo daquele serviço, ou em 30 min; só os 8 primeiros objetos aparecem até "Ver todos"
+  if (!x.min) x.min = 30;
+  let mexeuTempo = !novo && !p.fixo, todos = false, outro = false, mexeuAcao = !novo || o.acao !== undefined, mexeuNome = !novo && x.nome !== nomeMontado(x.acao, x.obj);
   if (novo && o.obj) { const ob = objetosDe(x.cat).find(y => y.nome === o.obj); if (ob) x.un = x.acao === 'ponto' && ob.un !== 'm' ? 'ponto' : ob.un; x.nome = nomeMontado(x.acao, x.obj); }
   if (novo && o.nome && !o.obj) { x.nome = o.nome; mexeuNome = true; }
   const objs = () => mat() ? objetosDe(CAT_MATERIAL).filter(b => !precos.some(y => y.cat === CAT_MATERIAL && dobra(y.nome) === dobra(b.nome) && y !== p)) : [...objetosDe(x.cat), ...[...new Set(precos.filter(y => y.cat === x.cat && y.obj).map(y => y.obj))].filter(n => !objetosDe(x.cat).some(b => b.nome === n)).map(n => ({ nome: n, un: 'un', acao: 'instalacao' }))];
   const media = mediaReal(x), arred = v => Math.max(5, Math.min(6000, Math.round(v * 60 / HORA() / 5) * 5));
   const montar = () => { if (!mexeuNome) x.nome = mat() ? maiuscula(x.obj) : nomeMontado(x.acao, x.obj); };
+  // 8 objetos à vista; o escolhido aparece mesmo se for dos outros
+  const objsVistos = () => { const L = objs(); if (todos || L.length <= OBJ_VISTOS) return L; const V = L.slice(0, OBJ_VISTOS); const e = L.find(b => b.nome === x.obj); return e && !V.includes(e) ? [...V, e] : V; };
+  const stTempo = () => `${tempoTxt(x.min)} × ${BRL(HORA())} a hora = <b class="num">${BRL(precoDe({ ...x, fixo: false }))}</b>. Mudou a hora, o preço acompanha.`;
   const corpo = () => `${resumo ? `<div class="it-resumo lin"><span class="lin-tx"><b>${esc(x.nome || maiuscula(x.obj))}</b><small>${esc((C0.find(c => c.id === x.cat) || {}).nome || '')}</small></span><button type="button" class="kf-btn kf-sec kf-p" data-it-mudar>Mudar</button></div>` : `<div class="kf-campo"><span class="kf-rotulo" id="it-cl">Categoria</span><div class="chips" role="group" aria-labelledby="it-cl">${C0.map(c => `<button type="button" class="chip" data-it-cat="${esc(c.id)}" aria-pressed="${c.id === x.cat}">${esc(c.nome)}</button>`).join('')}</div></div>
-      <div class="kf-campo"><span class="kf-rotulo" id="it-ol">${mat() ? 'Material' : 'Objeto'}</span><div class="escolhas" role="group" aria-labelledby="it-ol">${objs().map(b => KitFacil.ui.escolha({ rotulo: b.nome, on: !outro && b.nome === x.obj, attrs: `data-it-obj="${esc(b.nome)}"` })).join('')}${KitFacil.ui.escolha({ rotulo: mat() ? 'Outro material' : 'Outro objeto', on: outro, attrs: 'data-it-outro' })}</div></div>
+      <div class="kf-campo"><span class="kf-rotulo" id="it-ol">${mat() ? 'Material' : 'Objeto'}</span><div class="escolhas" role="group" aria-labelledby="it-ol">${objsVistos().map(b => KitFacil.ui.escolha({ rotulo: b.nome, on: !outro && b.nome === x.obj, attrs: `data-it-obj="${esc(b.nome)}"` })).join('')}${objs().length > OBJ_VISTOS && !todos ? KitFacil.ui.escolha({ rotulo: `Ver todos (${objs().length})`, on: false, attrs: 'data-it-todos' }) : ''}${KitFacil.ui.escolha({ rotulo: mat() ? 'Outro material' : 'Outro objeto', on: outro, attrs: 'data-it-outro' })}</div></div>
       ${outro ? campo('it-on', mat() ? 'Nome do material' : 'Nome do objeto', entrada('it-on', x.obj, `placeholder="${mat() ? 'Ex.: Cabo flexível 16 mm²' : 'Ex.: tomada de sobrepor dupla'}" maxlength="60"`)) : ''}
       ${mat() ? '' : `<div class="kf-campo"><span class="kf-rotulo" id="it-al">Ação</span><div class="escolhas" role="group" aria-labelledby="it-al">${ACOES.map(([k, n]) => KitFacil.ui.escolha({ rotulo: n, on: k === x.acao, attrs: `data-it-acao="${k}"` })).join('')}</div></div>`}
       ${campo('it-n', mat() ? 'Nome do material' : 'Nome do serviço', entrada('it-n', x.nome, 'placeholder="Escolha o objeto, ou escreva" maxlength="80"'), mat() ? '' : 'Se monta com o objeto e a ação. Pode mudar.')}`}
@@ -919,10 +979,9 @@ function janelaItem(p, o = {}) {
       ${mat() ? campo('it-p', 'Preço de cada', campoDinheiro('it-p', x.preco))
       : `<div class="kf-campo"><span class="kf-rotulo">Preço</span>${segmento('Como dar o preço', 'it-modo', [['tempo', 'Pelo tempo'], ['reais', 'Em reais']], x.modo)}</div>
         ${x.modo === 'reais' ? campo('it-p', 'Preço', campoDinheiro('it-p', x.preco), 'Preço fixo: não muda quando a sua hora muda.')
-        : `<div class="kf-campo"><span class="kf-rotulo" id="it-tl">Quanto tempo leva</span><div class="escolhas" role="group" aria-labelledby="it-tl">${TEMPOS.map(m => KitFacil.ui.escolha({ rotulo: tempoTxt(m), on: !tempoOutro && m === x.min, attrs: `data-it-min="${m}"` })).join('')}${KitFacil.ui.escolha({ rotulo: 'Outro', on: tempoOutro, attrs: 'data-it-min="x"' })}</div></div>
-          ${tempoOutro ? campo('it-t', 'Outro tempo', seletorTempo('it-t', x.min || 5, 720, 5)) : ''}
+        : `${campo('it-t', 'Quanto tempo leva', rodaTempo('it-t', x.min, 'Quanto tempo leva'))}
           ${media ? `<div class="tp-real"><span class="lin-tx"><b>O seu tempo real: ${tempoTxt(media)}</b><small>Média de ${plural(x.reais.length, 'serviço anotado', 'serviços anotados')}</small></span>${media !== x.min ? '<button type="button" class="kf-btn kf-sec kf-p" data-usar>Usar</button>' : ''}</div>` : ''}
-          <p class="kf-ajuda" role="status">${x.min ? `${tempoTxt(x.min)} × ${BRL(HORA())} a hora = <b class="num">${BRL(precoDe(x))}</b>. Mudou a hora, o preço acompanha.` : 'Escolha o tempo. O preço é o tempo vezes a sua hora.'}</p>`}`}`;
+          <p class="kf-ajuda" role="status" id="it-st">${stTempo()}</p>`}`}`;
   const salvarRot = o.aoSalvar ? 'Salvar e somar' : 'Salvar';
   janela({ titulo: novo ? (mat() ? 'Novo material' : 'Novo serviço') : mat() ? 'Material' : 'Serviço', contexto: o.doc ? nomeDoc(o.doc) : 'Preços', alta: true, aoFechar: o.aoFechar,
     corpo: `<div id="it-corpo" class="pilha">${corpo()}</div>`,
@@ -941,7 +1000,7 @@ function janelaItem(p, o = {}) {
       requestAnimationFrame(mostraCat);
       j.addEventListener('click', e => {
         const t = e.target; let b;
-        if ((b = t.closest('[data-it-cat]'))) { guarda(); if (b.dataset.itCat === x.cat) return; x.cat = b.dataset.itCat; x.obj = ''; outro = false; if (!mexeuNome) x.nome = ''; if (mat()) x.modo = 'reais'; if (!mexeuAcao) x.acao = ''; return refaz(`[data-it-cat="${CSS.escape(x.cat)}"]`); }
+        if ((b = t.closest('[data-it-cat]'))) { guarda(); if (b.dataset.itCat === x.cat) return; x.cat = b.dataset.itCat; x.obj = ''; outro = false; todos = false; if (!mexeuNome) x.nome = ''; if (mat()) x.modo = 'reais'; if (!mexeuAcao) x.acao = ''; return refaz(`[data-it-cat="${CSS.escape(x.cat)}"]`); }
         if ((b = t.closest('[data-it-obj]'))) {
           guarda(); outro = false; x.obj = b.dataset.itObj; const ob = objs().find(y => y.nome === x.obj);
           if (ob) { if (!mexeuAcao && !mat()) x.acao = ob.acao; x.un = !mat() && x.acao === 'ponto' && ob.un !== 'm' ? 'ponto' : ob.un; }
@@ -950,12 +1009,15 @@ function janelaItem(p, o = {}) {
         if (t.closest('[data-it-mudar]')) { guarda(); resumo = false; return refaz('[data-it-cat][aria-pressed="true"]'); }
         if (t.closest('[data-it-outro]')) { guarda(); outro = true; x.obj = ''; montar(); refaz(); return $('#it-on', j)?.focus(); }
         if ((b = t.closest('[data-it-acao]'))) { guarda(); const a = b.dataset.itAcao; x.acao = x.acao === a ? '' : a; mexeuAcao = true; if (x.acao === 'ponto' && x.un === 'un') x.un = 'ponto'; else if (x.acao !== 'ponto' && x.un === 'ponto') x.un = 'un'; montar(); return refaz(`[data-it-acao="${a}"]`); }
-        if ((b = t.closest('[data-it-modo]'))) { guarda(); const v = precoDe(x); x.modo = b.dataset.itModo; if (x.modo === 'reais' && !x.preco && x.min) x.preco = v; if (x.modo === 'tempo' && !x.min && x.preco) x.min = arred(x.preco); return refaz(`[data-it-modo="${x.modo}"]`); }
-        if ((b = t.closest('[data-it-min]'))) { guarda(); if (b.dataset.itMin === 'x') { tempoOutro = true; if (!x.min) x.min = 5; } else { tempoOutro = false; x.min = +b.dataset.itMin; } return refaz(`[data-it-min="${b.dataset.itMin}"]`); }
-        if (t.closest('[data-usar]')) { guarda(); x.min = media; tempoOutro = !TEMPOS.includes(media); return refaz(); }
+        if ((b = t.closest('[data-it-modo]'))) { guarda(); const v = precoDe(x); x.modo = b.dataset.itModo; if (x.modo === 'reais' && !x.preco && x.min) x.preco = v; if (x.modo === 'tempo' && !mexeuTempo && x.preco) x.min = arred(x.preco); return refaz(`[data-it-modo="${x.modo}"]`); }
+        if (t.closest('[data-it-todos]')) { guarda(); todos = true; return refaz(`[data-it-obj="${CSS.escape(objs()[OBJ_VISTOS].nome)}"]`); }
+        if (t.closest('[data-usar]')) { guarda(); x.min = media; mexeuTempo = true; return refaz('#it-t'); }
       });
+      // o preço acompanha as rodas já enquanto estão abertas (a hora tocada), sem redesenhar a janela
+      j.addEventListener('input', e => { if (e.target.id !== 'it-t') return; x.min = +e.target.value; mexeuTempo = true; const st = $('#it-st', j); if (st) st.innerHTML = stTempo(); });
       j.addEventListener('change', e => {
-        if (e.target.id === 'it-t') { guarda(); refaz('#it-t'); }
+        // o tempo nas rodas: só o preço se atualiza, sem redesenhar a janela
+        if (e.target.id === 'it-t') { x.min = +e.target.value; mexeuTempo = true; const st = $('#it-st', j); if (st) st.innerHTML = stTempo(); const u = $('[data-usar]', j); if (u) u.hidden = media === x.min; }
         else if (e.target.id === 'it-on') { guarda(); montar(); const n = $('#it-n', j); if (n && !mexeuNome) n.value = x.nome; }
       });
       $('[data-salvar]', j).onclick = () => {
@@ -963,7 +1025,6 @@ function janelaItem(p, o = {}) {
         if (!x.nome) { KitFacil.apontar($(outro ? '#it-on' : '#it-n', j)); return aviso(mat() ? 'Escolha o material ou escreva o nome.' : 'Escolha o objeto ou escreva o nome.'); }
         const fixo = mat() || x.modo === 'reais';
         if (fixo && !x.preco) { KitFacil.apontar($('#it-p', j)); return aviso('Escreva o preço.'); }
-        if (!fixo && !x.min) { KitFacil.apontar($('[data-it-min]', j)?.parentElement); return aviso('Escolha quanto tempo leva.'); }
         const igual = precos.find(y => y !== p && y.cat === x.cat && dobra(y.nome) === dobra(x.nome));
         if (igual) { KitFacil.apontar($('#it-n', j)); return aviso(`Você já tem "${igual.nome}" nos seus Preços.`); }
         // a categoria do banco que você tinha excluído volta, para o item ter onde ficar
@@ -1015,8 +1076,9 @@ function janelaTempo(d) {
   if (d.tempoOk) return aviso('O tempo deste documento já foi anotado.');
   const P = anotaveis(d);
   janela({ titulo: 'Quanto tempo levou?', sub: 'Não muda este documento. Serve para a sua tabela ficar com os seus tempos.', contexto: nomeDoc(d),
-    corpo: P.map((p, i) => campo('tr-' + i, esc(p.nome), seletorTempo('tr-' + i, p.min, 720, 5), `A tabela diz ${tempoTxt(p.min)}, cada.`)).join(''),
-    pe: '<button type="button" class="kf-btn kf-sec" data-igual>Foi no tempo da tabela</button><button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
+    // as rodas começam no último tempo anotado naquele serviço, ou no tempo da tabela
+    corpo: P.map((p, i) => campo('tr-' + i, esc(p.nome), rodaTempo('tr-' + i, p.reais.length ? p.reais[p.reais.length - 1] : p.min, `Tempo de ${p.nome}`), `A tabela diz ${tempoTxt(p.min)}, cada.`)).join(''),
+    pe: '<button type="button" class="kf-btn kf-sec" data-igual>Igual à tabela</button><button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
     aoMontar: j => j.addEventListener('click', e => {
       const igual = e.target.closest('[data-igual]'); if (!igual && !e.target.closest('[data-salvar]')) return;
       P.forEach((p, i) => { p.reais = [...p.reais, igual ? p.min : +$('#tr-' + i, j).value || p.min].slice(-5); });

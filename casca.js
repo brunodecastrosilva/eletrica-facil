@@ -2,6 +2,14 @@
 'use strict';
 
 /* ---------- desenhar a tela ---------- */
+let nomeAtual = '', dAntes = 0, docVeio = { de: '', empilhou: false, d: 0 };
+/* A seta do documento (5.3.1): volta a Documentos se a pessoa veio de lá; em qualquer outro caso, ao Início. Quando a
+   tela anterior do histórico é o próprio destino, volta pelo histórico (a lista fica onde estava). */
+function sairDoc() {
+  const dest = docVeio.de === 'docs' ? 'docs' : 'inicio', d = (history.state && history.state.d) || 0;
+  if ((docVeio.de === dest) && docVeio.empilhou && d === docVeio.d && d > 0) return history.back();
+  ir(dest === 'docs' ? '/docs' : '/', true);
+}
 const PRINCIPAIS = ['inicio', 'docs', 'precos', 'mais', 'ajustes'];
 const TITULOS = { inicio: 'Início', docs: 'Documentos', doc: 'Documento', precos: 'Preços', cat: 'Preços', mais: 'Mais', ajustes: 'Ajustes' };
 function desenhar(o = {}) {
@@ -13,6 +21,10 @@ function desenhar(o = {}) {
   }
   if ((r.nome === 'doc' && !getDoc(r.id)) || (r.nome === 'cat' && !cats.some(c => c.id === r.id))) { history.replaceState({ d: 0 }, '', r.nome === 'cat' ? '#/precos' : '#/'); r = rota(); }
   docAberto = r.nome === 'doc' ? r.id : null;
+  // trocou de tela: o aviso da tela anterior some; e o documento lembra de onde veio (a seta volta para lá ou para o Início)
+  const dAgora = (history.state && history.state.d) || 0;
+  if (r.chave !== chaveAtual) { esconderAviso(); if (r.nome === 'doc' && nomeAtual !== 'doc') docVeio = { de: nomeAtual, empilhou: dAgora > dAntes, d: dAgora }; }
+  nomeAtual = r.nome; dAntes = dAgora;
   const T = TELAS[r.nome];
   // a área da tela é trocada por uma nova a cada desenho: assim os toques ligados pela tela anterior não se acumulam
   const velho = $('#app'), app = velho.cloneNode(false);
@@ -83,6 +95,42 @@ document.addEventListener('click', e => {
     if (falta > 0) (corpo || window).scrollBy({ top: falta, behavior: semMovimento() ? 'auto' : 'smooth' });
   }, KitFacil.movimento.curto + 60);
 });
+
+/* ---------- aviso rápido: nunca cobre botão nem campo, e some ao trocar de tela (5.3.1; Art. 30-A) ----------
+   O Kit põe o aviso no pé da tela e, com uma janela aberta, acima dos botões do pé dela. Em janela alta e na abertura ele
+   cobria campos e botões. Aqui, com janela ou abertura na tela, o app procura o primeiro lugar livre: o do Kit, logo
+   acima da janela, e o alto da tela. Sem lugar livre, fica onde cobre menos. Proposta para o Integrador: o Kit fazer isso. */
+const ALVOS_AVISO = 'button,input:not([type="hidden"]),select,textarea,a[href],[role="button"],[tabindex]:not([tabindex="-1"])';
+function posicionarAviso() {
+  const t = $('.kf-toast'); if (!t || t.hidden) return;
+  t.style.top = ''; t.style.bottom = '';
+  const escopo = $('.kf-abertura') || $$('.kf-ov').pop(); if (!escopo) return;
+  const alto = (window.visualViewport && visualViewport.height) || innerHeight;
+  // a parte à vista de cada botão ou campo: recortada pelas áreas que rolam (o corpo da janela, as colunas das rodas)
+  const visto = e => { let r = e.getBoundingClientRect(), [l, tp, rt, bt] = [r.left, r.top, r.right, r.bottom];
+    for (let x = e.parentElement; x && x !== escopo.parentElement; x = x.parentElement) { const st = getComputedStyle(x); if (/(auto|scroll|hidden|clip)/.test(st.overflowX + st.overflowY)) { const c = x.getBoundingClientRect(); l = Math.max(l, c.left); tp = Math.max(tp, c.top); rt = Math.min(rt, c.right); bt = Math.min(bt, c.bottom); } }
+    return { left: l, top: tp, right: rt, bottom: bt, width: rt - l, height: bt - tp }; };
+  const A = $$(ALVOS_AVISO, escopo).filter(e => !t.contains(e) && e.getClientRects().length).map(visto).filter(r => r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < alto);
+  const r0 = t.getBoundingClientRect(), h = r0.height;
+  const cobre = y => A.reduce((n, r) => n + Math.max(0, Math.min(r0.right, r.right) - Math.max(r0.left, r.left)) * Math.max(0, Math.min(y + h, r.bottom) - Math.max(y, r.top)), 0);
+  const dlg = $('.kf-dlg', escopo), C = [r0.top];
+  if (dlg) { const y = dlg.getBoundingClientRect().top - h - 10; if (y >= 8) C.push(y); }
+  C.push(8);
+  let melhor = C[0], menor = Infinity;
+  for (const y of C) { const n = cobre(y); if (n < menor) { menor = n; melhor = y; } if (!n) break; }
+  if (melhor !== r0.top) { t.style.top = `calc(env(safe-area-inset-top, 0px) + ${Math.round(melhor)}px)`; t.style.bottom = 'auto'; }
+}
+/* a fila de escolhas que rola para o lado (categorias, cômodos, filtros) termina em degradê do lado em que há mais (5.3.1) */
+const marcarFila = f => { const mx = f.scrollWidth - f.clientWidth; f.classList.toggle('fade-d', mx > 2 && f.scrollLeft < mx - 2); f.classList.toggle('fade-e', mx > 2 && f.scrollLeft > 2); };
+document.addEventListener('scroll', e => { if (e.target.classList && e.target.classList.contains('chips')) marcarFila(e.target); }, { capture: true, passive: true });
+let avisoPend = 0;
+const vigiarAviso = () => { cancelAnimationFrame(avisoPend); avisoPend = requestAnimationFrame(() => { posicionarAviso(); $$('.chips').forEach(marcarFila); }); };
+const esconderAviso = () => $$('.kf-toast').forEach(e => { e.hidden = true; });
+// a janela que nasce se move por 600 ms: mede de novo quando ela para
+new MutationObserver(ms => { if (ms.some(m => m.target.classList && m.target.classList.contains('kf-toast') || [...m.addedNodes, ...m.removedNodes].some(n => n.nodeType === 1))) { vigiarAviso(); setTimeout(vigiarAviso, KitFacil.movimento.ms + 80); } })
+  .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+window.addEventListener('resize', vigiarAviso);
+if (window.visualViewport) visualViewport.addEventListener('resize', vigiarAviso);
 
 /* ---------- Ajustes: as oito guias do Kit e, depois, as do Elétrica Fácil (Código, Art. 62) ---------- */
 function lerLogo(arquivo) {
@@ -263,6 +311,9 @@ function aberturaCadastro(depois) {
   KitFacil.abertura.abrir({ telas, rotulo: 'Seus dados e a sua hora', fim: 'Começar', extra: { rotulo: 'Pular por agora' },
     aoMontar: el => {
       el.classList.add('ab-cadastro');
+      // trocou de tela na abertura: o aviso da tela anterior some
+      let titulo = '';
+      new MutationObserver(() => { const tt = $$('.kf-ab-t', el).map(x => x.textContent).join('|'); if (tt !== titulo) { if (titulo) esconderAviso(); titulo = tt; } }).observe(el, { childList: true, subtree: true });
       el.addEventListener('input', e => {
         if (e.target.matches('[data-el]')) lerEletricista(el, el0);
         else { lerHora(el); const r = $('#ab-hr', el); if (r) r.textContent = BRL(daConta()); }

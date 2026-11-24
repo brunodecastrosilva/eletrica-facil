@@ -2,7 +2,7 @@
    O app faz uma coisa: orçar serviços de elétrica e fechar a cobrança (enviar, aprovar, receber, recibo).
    Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito. */
 'use strict';
-const VERSAO = '5.3.0';
+const VERSAO = '5.3.1';
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 
 /* ================= utilidades ================= */
@@ -273,7 +273,13 @@ if (ajustes.tab < 7) {
 docs = (Array.isArray(docs) ? docs : []).map(acertaDoc);
 
 /* ================= Kit Fácil: moldura, tema e sincronização ================= */
-const NOVIDADES = [{ versao: '5.3.0', itens: [
+const NOVIDADES = [{ versao: '5.3.1', itens: [
+  'O tempo agora se escolhe em rodas, horas e minutos, igual em todas as telas.',
+  'O aviso não cobre mais botões nem campos, e some quando você troca de tela.',
+  'Novo serviço mostra 8 objetos e "Ver todos"; a fila de categorias mostra que rola.',
+  'No tablet, o menu fica do lado, como no computador.',
+  'A seta de um documento volta a Documentos, se você veio de lá, ou ao Início.',
+] }, { versao: '5.3.0', itens: [
   'Os preços agora são só seus: o app não traz nenhum preço nem tempo de fábrica.',
   'Novo serviço em poucos toques: escolha o objeto e a ação, e dê o preço em reais ou pelo tempo.',
   'O serviço que você cria no orçamento fica salvo nos seus Preços, para a próxima vez.',
