@@ -265,6 +265,8 @@ function avancar(d, passo) {
     // a lei pede o cliente identificado e, no orçamento, as datas de início e término (CDC, art. 40)
     if (!clienteOk(d.cliente)) { aviso('Antes de enviar, complete o nome, o telefone e o endereço do cliente.'); return janelaCliente(d); }
     if (d.tipo === 'orc' && !(d.inicio && d.dias)) { aviso('Antes de enviar, escolha o início e quantos dias o serviço leva.'); return janelaCond(d, 'prazo'); }
+    // os seus dados saem no documento: quem pulou e chegou aqui sem eles recebe o pedido agora
+    if (!d.exemplo && !dadosOk()) { aviso('Antes de enviar, complete o seu nome e o seu WhatsApp.'); return janelaDados(() => avancar(d, 'enviar')); }
     return janelaEnviar(d);
   }
   if (passo === 'receber') return janelaReceber(d);
@@ -284,8 +286,8 @@ function marcarEnviado(d) {
 }
 
 /* ---------- janelas do documento ---------- */
-// Os dados do cliente: nome, telefone e endereço do serviço são pedidos antes de tudo (exceção do Elétrica ao Art. 64-D
-// do Código: o orçamento é um documento com valor de contrato, e sem cliente identificado ele não serve à lei).
+// Os dados do cliente: nome, telefone e endereço do serviço são pedidos ao criar o documento, sem Pular (Código,
+// Art. 64-D, § 2º): o orçamento é um documento com valor de contrato, e sem cliente identificado ele não serve à lei.
 const camposCliente = c => `${campo('cl-nome', 'Nome do cliente', entrada('cl-nome', c.nome, 'autocapitalize="words" placeholder="Ex.: Mariana Souza"'))}
       ${campo('cl-fone', 'Telefone (WhatsApp)', entrada('cl-fone', c.fone ? fone(c.fone) : '', 'inputmode="tel" placeholder="(11) 90000-0000"'))}
       ${campo('cl-end', 'Endereço do serviço', entrada('cl-end', c.end, 'placeholder="Rua, número, bairro e cidade"'))}
@@ -359,7 +361,7 @@ function janelaCond(d, qual) {
       j.addEventListener('input', e => { if (e.target.id === 'cd-pzn') { d.dias = Math.max(0, Math.min(365, parseInt(e.target.value, 10) || 0)); tocarDoc(d); const st = $('[role="status"]', j); if (st) st.textContent = d.inicio && d.dias ? prazoTxt(d) : 'Escolha o início e quantos dias leva.'; } });
     } });
 }
-function janelaLinha(d, l, tipoNovo = '', com = '') {
+function janelaLinha(d, l, tipoNovo = '', com = '', depois = null) {
   const nova = !l, tipo = l ? l.tipo : tipoNovo;
   const x = l || (tipo === 'diag' ? { nome: 'Diagnóstico do defeito', min: 60, pu: HORA() } : tipo === 'desl' ? { nome: 'Deslocamento', q: 1, pu: ajustes.deslIda, km: 0, vkm: ajustes.deslKm } : { nome: '', un: 'un', q: 1, pu: 0, cond: 0, motivo: '' });
   const porKm = tipo === 'desl' && (l ? l.km > 0 : ajustes.deslModo === 'km');
@@ -378,8 +380,8 @@ function janelaLinha(d, l, tipoNovo = '', com = '') {
       ${tipo === 'mat' ? '' : `<div class="kf-campo"><span class="kf-rotulo">Condição do serviço</span><div id="ln-cd">${segCond()}</div><p class="kf-ajuda" id="ln-cs" role="status"></p></div>
       ${d.comodos.length && tipo !== 'mat' ? campo('ln-cm', 'Cômodo', selCom(d, 'ln-cm', l ? l.com : com)) : ''}
       ${campo('ln-m', 'Motivo para o cliente', entrada('ln-m', x.motivo || '', 'placeholder="Ex.: forro baixo"'))}`}`;
-  janela({ titulo: tipo === 'diag' ? 'Diagnóstico por tempo' : tipo === 'desl' ? 'Deslocamento' : nova ? 'Linha avulsa' : 'Linha do documento',
-    sub: tipo === 'diag' ? 'Para o defeito que você ainda não conhece: cobre pelo tempo.' : tipo === 'desl' ? 'Uma linha própria do documento, por ida.' : nova ? 'Um serviço ou material que não está nos seus preços.' : 'Vale só neste documento. Para mudar sempre, vá em Preços.',
+  janela({ titulo: tipo === 'diag' ? 'Diagnóstico por tempo' : tipo === 'desl' ? 'Deslocamento' : nova ? 'Linha só neste documento' : 'Linha do documento',
+    sub: tipo === 'diag' ? 'Para o defeito que você ainda não conhece: cobre pelo tempo.' : tipo === 'desl' ? (nova && !(porKm ? ajustes.deslKm : ajustes.deslIda) ? 'Uma linha própria, por ida. O valor fica guardado em Ajustes, Cobrança.' : 'Uma linha própria do documento, por ida.') : nova ? 'Vale só neste documento. Para guardar nos seus Preços, use Novo serviço.' : 'Vale só neste documento. Para mudar sempre, vá em Preços.',
     corpo, pe: `${nova ? '' : '<button type="button" class="kf-btn kf-perigo" data-tirar>Remover</button>'}<button type="button" class="kf-btn kf-pri" data-salvar>${nova ? 'Somar' : 'Salvar'}</button>`,
     aoMontar: j => {
       const cs = $('#ln-cs', j); if (cs) { cs.textContent = fraseCond(); $('#ln-p', j).addEventListener('input', () => { cs.textContent = fraseCond(); }); }
@@ -389,8 +391,8 @@ function janelaLinha(d, l, tipoNovo = '', com = '') {
         let v;
         if (tipo === 'diag') v = { nome: $('#ln-n', j).value.trim() || 'Diagnóstico do defeito', min: +$('#ln-t', j).value || 60, pu: x.pu };
         else if (tipo === 'desl') {
-          if (porKm) { const km = Math.max(0, parseInt($('#ln-k', j).value, 10) || 0), vkm = lerDinheiro($('#ln-vk', j)); if (!km) { KitFacil.apontar($('#ln-k', j)); return aviso('Escreva a distância, ida e volta.'); } v = { nome: x.nome, q, km, vkm, pu: Math.round(km * vkm) }; }
-          else v = { nome: x.nome, q, km: 0, pu: lerDinheiro($('#ln-p', j)) };
+          if (porKm) { const km = Math.max(0, parseInt($('#ln-k', j).value, 10) || 0), vkm = lerDinheiro($('#ln-vk', j)); if (!km) { KitFacil.apontar($('#ln-k', j)); return aviso('Escreva a distância, ida e volta.'); } if (!vkm) { KitFacil.apontar($('#ln-vk', j)); return aviso('Escreva o valor por km.'); } v = { nome: x.nome, q, km, vkm, pu: Math.round(km * vkm) }; if (!ajustes.deslKm) { ajustes.deslKm = vkm; salvarAjustes(); } }
+          else { v = { nome: x.nome, q, km: 0, pu: lerDinheiro($('#ln-p', j)) }; if (!v.pu) { KitFacil.apontar($('#ln-p', j)); return aviso('Escreva o valor por ida.'); } if (!ajustes.deslIda) { ajustes.deslIda = v.pu; salvarAjustes(); } }
         } else {
           const nome = $('#ln-n', j).value.trim(), base = lerDinheiro($('#ln-p', j));
           if (!nome) { KitFacil.apontar($('#ln-n', j)); return aviso('Escreva a descrição da linha.'); }
@@ -399,7 +401,7 @@ function janelaLinha(d, l, tipoNovo = '', com = '') {
           if (tipo !== 'mat') Object.assign(v, { base, cond, motivo: $('#ln-m', j).value.trim() });
         }
         if (nova) d.linhas.push(acertaLinha({ id: uid(), pid: '', tipo, com, ...v })); else Object.assign(l, acertaLinha({ ...l, ...v }));
-        mudouDoc(d); fecharJanela(); redesenhar();
+        mudouDoc(d); if (depois) { fecharJanela(true); depois(); } else { fecharJanela(); redesenhar(); }
       };
       $('[data-tirar]', j)?.addEventListener('click', () => {
         const i = d.linhas.indexOf(l); d.linhas.splice(i, 1); mudouDoc(d); fecharJanela(); redesenhar();
@@ -433,8 +435,16 @@ function janelaComodo(d, depois) {
       const nome = novoComodo(d, base); tocarDoc(d); fecharJanela(true); redesenhar(); depois(nome);
     }) });
 }
+// Somar serviço. Na primeira vez, antes do primeiro serviço, o app pede o que faltou na abertura: os seus dados, que saem
+// na proposta, e a sua hora (Código, Art. 64-D, § 1º). Depois, primeiro os serviços que você já salvou, com busca e filtro
+// pela ação; o que não existe nasce em "Novo serviço" (objeto, ação e preço) e fica salvo nos seus Preços. No fim, o que
+// se cobra por tempo, por ida e por dia: diagnóstico, deslocamento e diária.
 function janelaSomar(d, com0, aba0) {
-  let busca = '', cat = null, acf = '', aba = aba0 === 'mat' ? 'mat' : 'serv', quemC = d.quem;
+  if (!d.exemplo && !semSalvar) {
+    if (!dadosOk()) return janelaDados(() => janelaSomar(d, com0, aba0), 'Antes do primeiro serviço');
+    if (!ajustes.hora) return janelaHora(() => janelaSomar(d, com0, aba0), 'Antes do primeiro serviço');
+  }
+  let busca = '', acf = '', aba = aba0 === 'mat' ? 'mat' : 'serv', quemC = d.quem;
   let com = d.comodos.includes(com0) ? com0 : d.comodos.length ? d.comodos[d.comodos.length - 1] : '';
   const noCom = l => !d.comodos.length || l.com === com;
   const qtd = p => soma(d.linhas.filter(l => l.pid === p.id && noCom(l)).map(l => l.q));
@@ -442,64 +452,87 @@ function janelaSomar(d, com0, aba0) {
       ${n ? `<button type="button" class="so-bt" data-tira="${esc(p.id)}" aria-label="Tirar um: ${esc(p.nome)}">${IC.menos}</button><b class="so-n num" aria-label="${n} no documento">${n}</b>` : ''}
       <button type="button" class="so-bt mais" data-soma="${esc(p.id)}" aria-label="Somar um: ${esc(p.nome)}">${IC.soma}</button></div>`; };
   const lista = L => `<div class="so-lista">${L.map(linha).join('')}</div>`;
-  const servicos = () => precos.filter(p => p.cat !== CAT_MATERIAL), materiais = () => precos.filter(p => p.cat === CAT_MATERIAL);
-  const diag = () => d.linhas.find(l => l.tipo === 'diag'), desl = () => d.linhas.find(l => l.tipo === 'desl');
+  // os mais usados sobem para o alto de cada categoria
+  const ordem = L => [...L].sort((a, b) => (ajustes.usos[b.id] || 0) - (ajustes.usos[a.id] || 0) || a.nome.localeCompare(b.nome, 'pt-BR'));
+  const servicos = () => precos.filter(p => p.cat !== CAT_MATERIAL);
+  const agrupado = L => catsOrdem().filter(c => c.id !== CAT_MATERIAL).map(c => { const M = ordem(L.filter(p => p.cat === c.id)); return M.length ? `<h3 class="sec so-gr"><span class="bl-ic p" aria-hidden="true">${picDe(c.icone)}</span>${esc(c.nome)}</h3>${lista(M)}` : ''; }).join('');
+  const diag = () => d.linhas.find(l => l.tipo === 'diag'), desl = () => d.linhas.find(l => l.tipo === 'desl'), dia = () => d.linhas.find(l => l.pid === 'diaria' && noComG(l));
+  const noComG = l => !d.comodos.length || !l.com;
   const vazio = c => !d.linhas.some(l => l.com === c) && !d.mats.some(m => m.com === c);
   // para o cômodo vazio: repetir o último cômodo que já tem alguma coisa
   const fonte = () => com && vazio(com) ? [...d.comodos].reverse().find(c => c !== com && !vazio(c)) : '';
-  // o que não se cobra por serviço fica no alto: o diagnóstico, pelo tempo que levou, e o deslocamento, por ida
-  const porTempo = () => { const g = diag(), i = desl(); return `<h3 class="sec">Por tempo e por ida</h3>
+  // o que não se cobra por serviço fica junto: o diagnóstico, pelo tempo; o deslocamento, por ida; a diária, por dia
+  const maisMenos = (dado, n, rot, valor, sub) => `<div class="cx"><div class="so-lin${n ? ' tem' : ''}"><span class="so-tx"><b>${rot}</b><small>${sub}</small></span>
+        ${n ? `<button type="button" class="so-bt" data-${dado}="-1" aria-label="Tirar uma: ${rot}">${IC.menos}</button><b class="so-n num" aria-label="${n}">${n}</b>` : ''}
+        <button type="button" class="so-bt mais" data-${dado}="1" aria-label="Somar uma: ${rot}">${IC.soma}</button></div></div>`;
+  const porTempo = () => { const g = diag(), i = desl(), y = dia(); return `<h3 class="sec">Por tempo, por ida e por dia</h3>
       <div class="cx tp"><div class="tp-l"><span class="lin-ic">${IC.relogio}</span><span class="lin-tx"><b>Diagnóstico do defeito</b><small>${g ? `${tempoTxt(g.min)} × ${BRL(g.pu)} a hora` : 'Pelo tempo que levou'}</small></span>${g ? `<b class="num">${BRL(totalLinha(g))}</b>` : ''}</div>
         ${segmento('Tempo do diagnóstico', 'diag', [[30, '30 min'], [60, '1 h'], [90, '1h30'], [120, '2 h'], ['x', 'Outro']], g ? ([30, 60, 90, 120].includes(g.min) ? g.min : 'x') : '')}</div>
-      <div class="cx"><div class="so-lin${i ? ' tem' : ''}"><span class="so-tx"><b>Deslocamento</b><small>${i ? `${i.q} ${unTxt(i.q, 'ida')} · ${BRL(totalLinha(i))}` : ajustes.deslModo === 'km' ? `${BRL(ajustes.deslKm)} por km` : `${BRL(ajustes.deslIda)} por ida`}</small></span>
-        ${i ? `<button type="button" class="so-bt" data-ida="-1" aria-label="Tirar uma ida">${IC.menos}</button><b class="so-n num" aria-label="${plural(i.q, 'ida', 'idas')}">${i.q}</b>` : ''}
-        <button type="button" class="so-bt mais" data-ida="1" aria-label="Somar uma ida">${IC.soma}</button></div></div>`; };
+      ${maisMenos('ida', i ? i.q : 0, 'Deslocamento', 0, i ? `${i.q} ${unTxt(i.q, 'ida')} · ${BRL(totalLinha(i))}` : ajustes.deslModo === 'km' ? (ajustes.deslKm ? `${BRL(ajustes.deslKm)} por km` : 'Por km, valor a definir') : ajustes.deslIda ? `${BRL(ajustes.deslIda)} por ida` : 'Por ida, valor a definir')}
+      ${maisMenos('dia', y ? y.q : 0, 'Diária', 0, y ? `${plural(y.q, 'diária', 'diárias')} · ${BRL(totalLinha(y))}` : ajustes.diaria ? `${BRL(ajustes.diaria)} por dia` : 'Por dia, valor a definir')}`; };
   const conta2 = () => { if (aba === 'mat') { const n = soma(d.mats.map(m => m.q)); return n ? `${plural(n, 'peça contada', 'peças contadas')}. A lista fica no documento.` : 'Conte o material como conta o serviço.'; }
-    const c = conta(d), n = soma(d.linhas.map(l => l.q)); return d.linhas.length ? `${plural(n, 'item', 'itens')} no documento · <b class="num">${BRL(c.sub)}</b>` : 'Toque num bloco e some com o +.'; };
+    const c = conta(d), n = soma(d.linhas.map(l => l.q)); return d.linhas.length ? `${plural(n, 'item', 'itens')} no documento · <b class="num">${BRL(c.sub)}</b>` : servicos().length ? 'Toque no + para somar.' : 'Crie o seu primeiro serviço.'; };
   const topo = () => `${d.comodos.length ? `<div class="chips" role="group" aria-label="Cômodo">${d.comodos.map(c => `<button type="button" class="chip" data-com="${esc(c)}" aria-pressed="${c === com}">${esc(c)}</button>`).join('')}<button type="button" class="chip" data-com-novo>+ Cômodo</button></div>` : ''}
     ${segmento('Somar', 'aba', [['serv', 'Serviços'], ['mat', 'Materiais']], aba)}
     ${fonte() ? `<button type="button" class="kf-btn kf-sec" data-repetir>Repetir ${artigo(fonte())} ${esc(fonte())}</button>` : ''}`;
   const matLin = m => `<div class="so-lin tem"><button type="button" class="so-tx mt-nome" data-mt="${esc(m.id)}"><b>${esc(m.nome)}</b><small>${esc([m.comp, m.quem !== d.quem ? (m.quem === 'cli' ? 'o cliente compra' : 'eu levo') : ''].filter(Boolean).join(' · ') || 'Complemento (ex.: 20 A, curva C)')}</small></button>
       <button type="button" class="so-bt" data-mtm="${esc(m.id)}" aria-label="Tirar um: ${esc(m.nome)}">${IC.menos}</button><b class="so-n num" aria-label="${m.q} contados">${m.q}</b>
       <button type="button" class="so-bt mais" data-mtp="${esc(m.id)}" aria-label="Somar um: ${esc(m.nome)}">${IC.soma}</button></div>`;
+  // materiais: os que você já tem com preço e os do banco, sem preço (o preço é pedido quando o material vai para o orçamento)
+  const materiaisTodos = () => { const meus = precos.filter(p => p.cat === CAT_MATERIAL), tem = new Set(meus.map(p => dobra(p.nome)));
+    return [...meus.map(p => ({ k: 'p:' + p.id, nome: p.nome, un: p.un, p })), ...objetosDe(CAT_MATERIAL).filter(o => !tem.has(dobra(o.nome))).map(o => ({ k: 'b:' + o.nome, nome: o.nome, un: o.un }))]; };
   const corpoMat = () => {
     const q = dobra(busca), aqui = d.mats.filter(m => !d.comodos.length || m.com === com);
-    const T = materiais().filter(p => !q || dobra(p.nome).includes(q)).sort((a, b) => (ajustes.usos[b.id] || 0) - (ajustes.usos[a.id] || 0));
+    const T = materiaisTodos().filter(m => !q || dobra(m.nome).includes(q)).sort((a, b) => (ajustes.usos[b.p ? b.p.id : ''] || 0) - (ajustes.usos[a.p ? a.p.id : ''] || 0));
     return `<div class="kf-campo"><span class="kf-rotulo">Quem compra o que você contar agora</span>${segmento('Quem compra', 'qc', [['eu', 'Eu levo'], ['cli', 'O cliente compra']], quemC)}
         <p class="kf-ajuda">Neste orçamento: ${d.quem === 'cli' ? 'o cliente compra' : 'eu levo'}.${quemC !== d.quem ? ' Aqui é a exceção.' : ''}</p></div>
       ${aqui.length ? `<h3 class="sec">${d.comodos.length ? 'Neste cômodo' : 'Contados'}</h3><div class="so-lista">${aqui.map(matLin).join('')}</div>` : ''}
       <h3 class="sec">${q ? 'Materiais encontrados' : 'Todos os materiais'}</h3>
-      ${T.length ? `<div class="so-lista">${T.map(p => `<div class="so-lin"><span class="so-tx"><b>${esc(p.nome)}</b><small>${unNome(p.un)}</small></span><button type="button" class="so-bt mais" data-mts="${esc(p.id)}" aria-label="Contar um: ${esc(p.nome)}">${IC.soma}</button></div>`).join('')}</div>` : `<p class="kf-ajuda">Nenhum material com esse nome.</p>`}
-      ${q ? `<button type="button" class="kf-btn kf-sec" data-mnovo>Cadastrar "${esc(busca.trim())}" e contar 1</button>` : ''}`;
+      ${T.length ? `<div class="so-lista">${T.map(m => `<div class="so-lin"><span class="so-tx"><b>${esc(m.nome)}</b><small>${m.p ? `${BRL(m.p.preco)} por ${unNome(m.un)}` : `${maiuscula(unNome(m.un))} · sem preço ainda`}</small></span><button type="button" class="so-bt mais" data-mts="${esc(m.k)}" aria-label="Contar um: ${esc(m.nome)}">${IC.soma}</button></div>`).join('')}</div>` : `<p class="kf-ajuda">Nenhum material com esse nome.</p>`}
+      ${q ? `<button type="button" class="kf-btn kf-sec" data-mnovo>Contar "${esc(busca.trim())}"</button>` : ''}`;
   };
+  // sugestões do banco para o que foi buscado: objeto e ação que ainda não estão nos seus Preços
+  const sugestoes = q => {
+    const P = q.split(/\s+/).filter(Boolean), meus = new Set(servicos().map(p => dobra(p.nome))), S = [];
+    BANCO.filter(b => 'c-' + b[0] !== CAT_MATERIAL).forEach(b => objetosDe('c-' + b[0]).forEach(o => {
+      [o.acao, ...ACOES.map(a => a[0]).filter(a => a !== o.acao)].forEach((a, k) => { const n = nomeMontado(a, o.nome), dn = dobra(n); if (!meus.has(dn) && P.every(w => dn.includes(w))) S.push({ cat: 'c-' + b[0], acao: a, obj: o.nome, nome: n, k }); });
+    }));
+    return S.sort((x, y) => x.k - y.k).slice(0, 5);
+  };
+  const novoBt = rot => KitFacil.ui.adicionar({ rotulo: rot, attrs: 'data-novo-serv' });
   const corpo = () => {
     if (aba === 'mat') return topo() + corpoMat();
-    const q = dobra(busca);
-    if (q) { const L = servicos().filter(p => dobra(p.nome).includes(q) || dobra(p.obj).includes(q)); return topo() + (L.length ? lista(L) : `<p class="kf-ajuda">Nada com esse nome nos seus preços.</p>${KitFacil.ui.adicionar({ rotulo: 'Somar como linha avulsa', attrs: 'data-avulsa' })}`); }
-    if (cat) {
-      const c = cats.find(x => x.id === cat), L0 = precos.filter(p => p.cat === cat), A = ACOES.filter(a => L0.some(p => p.acao === a[0])), L = acf ? L0.filter(p => p.acao === acf) : L0;
-      return `${topo()}<button type="button" class="so-volta" data-cats>${IC.voltar}<span>Categorias</span></button><h3 class="so-cat"><span class="bl-ic p">${picDe(c.icone)}</span>${esc(c.nome)}</h3>
-        ${A.length > 1 ? `<div class="chips" role="group" aria-label="Filtrar pela ação"><button type="button" class="chip" data-acf="" aria-pressed="${!acf}">Todas</button>${A.map(a => `<button type="button" class="chip" data-acf="${a[0]}" aria-pressed="${acf === a[0]}">${a[1]}</button>`).join('')}</div>` : ''}
-        ${L.length ? lista(L) : '<p class="kf-ajuda">Esta categoria ainda não tem preços. Cadastre em Preços.</p>'}`;
+    const q = dobra(busca), S = servicos();
+    if (q) {
+      const P = q.split(/\s+/).filter(Boolean), L = ordem(S.filter(p => { const t = dobra(`${p.nome} ${p.obj}`); return P.every(w => t.includes(w)); })), G = sugestoes(q);
+      return `${topo()}${L.length ? `<h3 class="sec">Nos seus preços</h3>${lista(L)}` : ''}
+        ${G.length ? `<h3 class="sec">Criar a partir do banco</h3><div class="so-lista">${G.map(g => `<button type="button" class="so-lin so-sug" data-sug="${esc(`${g.cat}|${g.acao}|${g.obj}`)}"><span class="so-tx"><b>${esc(g.nome)}</b><small>Novo · você dá o preço</small></span>${IC.seta}</button>`).join('')}</div>` : ''}
+        ${!L.length && !G.length ? '<p class="kf-ajuda">Nada com esse nome nos seus preços nem no banco.</p>' : ''}
+        ${novoBt(`Novo serviço: "${busca.trim().slice(0, 40)}"`)}${KitFacil.ui.adicionar({ rotulo: 'Linha só neste documento', attrs: 'data-avulsa' })}`;
     }
-    const U = maisUsados(8).filter(p => p.cat !== CAT_MATERIAL).slice(0, 4), N = d.comodos.length ? [...new Set(d.linhas.filter(l => !l.tipo && l.pid).map(l => l.pid))].map(id => precos.find(p => p.id === id)).filter(Boolean) : [];
-    return `${topo()}${d.comodos.length ? '' : porTempo()}${N.length ? `<h3 class="sec">Neste documento</h3>${lista(N)}` : U.length ? `<h3 class="sec">Mais usados por você</h3>${lista(U)}` : ''}
-      <h3 class="sec">Categorias</h3>
-      <div class="blocos p">${cats.filter(c => c.id !== CAT_MATERIAL).map(c => { const n = soma(precos.filter(p => p.cat === c.id).map(qtd)); return `<button type="button" class="bloco" data-cat="${esc(c.id)}"><span class="bl-ic">${picDe(c.icone)}</span><b class="bl-nome">${esc(c.nome)}</b>${n ? `<span class="bl-selo num" aria-label="${n} no documento">${n}</span>` : ''}</button>`; }).join('')}</div>
-      ${d.comodos.length ? porTempo() : ''}
-      ${KitFacil.ui.adicionar({ rotulo: 'Linha avulsa', attrs: 'data-avulsa' })}`;
+    const A = ACOES.filter(a => S.some(p => p.acao === a[0])), L = acf ? S.filter(p => p.acao === acf) : S;
+    const N = d.comodos.length ? [...new Set(d.linhas.filter(l => !l.tipo && l.pid && l.pid !== 'diaria').map(l => l.pid))].map(id => precos.find(p => p.id === id)).filter(Boolean) : [];
+    return `${topo()}${N.length ? `<h3 class="sec">Neste documento</h3>${lista(N)}` : ''}
+      <h3 class="sec">Seus serviços${S.length ? ` <span class="sec-n">· ${S.length}</span>` : ''}</h3>
+      ${A.length > 1 ? `<div class="chips" role="group" aria-label="Filtrar pela ação"><button type="button" class="chip" data-acf="" aria-pressed="${!acf}">Todas</button>${A.map(a => `<button type="button" class="chip" data-acf="${a[0]}" aria-pressed="${acf === a[0]}">${a[1]}</button>`).join('')}</div>` : ''}
+      ${S.length ? agrupado(L) : '<p class="kf-ajuda">Você ainda não tem serviços salvos. Crie o primeiro: escolha o objeto, a ação e o preço. Ele fica nos seus Preços para os próximos orçamentos.</p>'}
+      ${novoBt('Novo serviço')}
+      ${porTempo()}
+      ${KitFacil.ui.adicionar({ rotulo: 'Linha só neste documento', attrs: 'data-avulsa' })}`;
   };
   const sai = () => { fecharJanela(true); salvarAjustes(); redesenhar(); };
+  // serviço novo, criado aqui: fica nos seus Preços e já entra no documento; a janela de somar volta
+  const criar = o => { const c0 = com; sai(); janelaItem(null, { ...o, doc: d, aoSalvar: p => { somarItem(d, p, d.comodos.length ? c0 : ''); janelaSomar(d, c0, 'serv'); aviso(`${p.nome}: salvo nos seus Preços e somado.`); }, aoFechar: () => janelaSomar(d, c0, 'serv') }); };
   janela({ titulo: com ? com : 'Somar serviço', contexto: com ? 'Levantamento · ' + nomeDoc(d) : '', alta: true, aoFechar: () => { salvarAjustes(); redesenhar(); },
-    corpo: `<div class="busca"><span class="busca-ic">${IC.busca}</span><input id="so-q" class="kf-entrada" type="search" placeholder="Buscar serviço ou material" aria-label="Buscar nos seus preços"></div>
+    corpo: `<div class="busca"><span class="busca-ic">${IC.busca}</span><input id="so-q" class="kf-entrada" type="search" placeholder="Buscar serviço ou material" aria-label="Buscar nos seus preços e no banco"></div>
       <p class="so-conta" id="so-conta" role="status">${conta2()}</p><div id="so-corpo" class="pilha">${corpo()}</div>`,
     aoMontar: j => {
       const refaz = foco => { $('#so-corpo', j).innerHTML = corpo(); $('#so-conta', j).innerHTML = conta2(); const tt = $('.kf-dlg-titulo, h2', j); if (tt && com) tt.textContent = com; if (foco) $(foco, j)?.focus({ preventScroll: true }); };
       $('#so-q', j).addEventListener('input', e => { busca = e.target.value; refaz(); });
       j.addEventListener('click', e => {
         const t = e.target; let b;
-        if ((b = t.closest('[data-aba]'))) { aba = b.dataset.aba; cat = null; return refaz(`[data-aba="${aba}"]`); }
-        if ((b = t.closest('[data-com]'))) { com = b.dataset.com; cat = null; return refaz(`[data-com="${CSS.escape(com)}"]`); }
+        if ((b = t.closest('[data-aba]'))) { aba = b.dataset.aba; return refaz(`[data-aba="${aba}"]`); }
+        if ((b = t.closest('[data-com]'))) { com = b.dataset.com; return refaz(`[data-com="${CSS.escape(com)}"]`); }
         if (t.closest('[data-com-novo]')) { const a = aba; sai(); return janelaComodo(d, nome => janelaSomar(d, nome, a)); }
         if (t.closest('[data-repetir]')) {
           const de = fonte(); if (!de) return;
@@ -510,10 +543,10 @@ function janelaSomar(d, com0, aba0) {
         if ((b = t.closest('[data-acf]'))) { acf = b.dataset.acf; return refaz(`[data-acf="${acf}"]`); }
         if ((b = t.closest('[data-qc]'))) { quemC = b.dataset.qc; return refaz(`[data-qc="${quemC}"]`); }
         if ((b = t.closest('[data-mts]'))) {
-          const p = precos.find(x => x.id === b.dataset.mts); if (!p) return;
-          const m = d.mats.find(x => x.pid === p.id && !x.comp && x.quem === quemC && (!d.comodos.length || x.com === com));
-          if (m) m.q = Math.min(9999, m.q + 1); else d.mats.push(acertaMat({ pid: p.id, nome: p.nome, un: p.un, q: 1, pu: precoDe(p), quem: quemC, com: d.comodos.length ? com : '' }));
-          usar(p.id); mudouDoc(d); vibrar(); return refaz(`[data-mts="${p.id}"]`);
+          const k = b.dataset.mts, M = materiaisTodos().find(x => x.k === k); if (!M) return;
+          const pid = M.p ? M.p.id : '', m = d.mats.find(x => (pid ? x.pid === pid : !x.pid && x.nome === M.nome) && !x.comp && x.quem === quemC && (!d.comodos.length || x.com === com));
+          if (m) m.q = Math.min(9999, m.q + 1); else d.mats.push(acertaMat({ pid, nome: M.nome, un: M.un, q: 1, pu: M.p ? M.p.preco : 0, quem: quemC, com: d.comodos.length ? com : '' }));
+          usar(pid); mudouDoc(d); vibrar(); return refaz(`[data-mts="${CSS.escape(k)}"]`);
         }
         if ((b = t.closest('[data-mtp], [data-mtm]'))) {
           const id = b.dataset.mtp || b.dataset.mtm, m = d.mats.find(x => x.id === id); if (!m) return;
@@ -521,9 +554,9 @@ function janelaSomar(d, com0, aba0) {
           mudouDoc(d); return refaz(d.mats.includes(m) ? `[data-mtp="${id}"]` : '#so-q');
         }
         if ((b = t.closest('[data-mt]'))) { const m = d.mats.find(x => x.id === b.dataset.mt); if (!m) return; const c0 = com; sai(); return janelaMat(d, m, () => janelaSomar(d, c0, 'mat')); }
-        if (t.closest('[data-mnovo]')) { const nome = busca.trim(), c0 = com, q0 = quemC; sai(); return janelaMatNovo(nome, p => { d.mats.push(acertaMat({ pid: p.id, nome: p.nome, un: p.un, q: 1, pu: p.preco, quem: q0, com: d.comodos.length ? c0 : '' })); usar(p.id); mudouDoc(d); janelaSomar(d, c0, 'mat'); }); }
-        if ((b = t.closest('[data-cat]'))) { cat = b.dataset.cat; acf = ''; refaz(); KitFacil.movimento.entrar($('#so-corpo', j), { de: 'lado' }); $('.kf-dlg-corpo', j)?.scrollTo(0, 0); return; }
-        if (t.closest('[data-cats]')) { const era = cat; cat = null; refaz(`[data-cat="${era}"]`); return; }
+        if (t.closest('[data-mnovo]')) { const nome = busca.trim(), c0 = com, q0 = quemC; sai(); return janelaMatNovo(nome, M => { d.mats.push(acertaMat({ pid: M.p ? M.p.id : '', nome: M.nome, un: M.un, q: 1, pu: M.p ? M.p.preco : 0, quem: q0, com: d.comodos.length ? c0 : '' })); if (M.p) usar(M.p.id); mudouDoc(d); janelaSomar(d, c0, 'mat'); }); }
+        if (t.closest('[data-novo-serv]')) return criar({ nome: busca.trim() });
+        if ((b = t.closest('[data-sug]'))) { const [cat, acao, obj] = b.dataset.sug.split('|'); return criar({ cat, acao, obj }); }
         if (t.closest('[data-avulsa]')) { const c0 = com; sai(); return janelaLinha(d, null, '', d.comodos.length ? c0 : ''); }
         if ((b = t.closest('[data-diag]'))) {
           const v = b.dataset.diag, g = diag();
@@ -533,15 +566,20 @@ function janelaSomar(d, com0, aba0) {
         }
         if ((b = t.closest('[data-ida]'))) {
           const i = desl(), n = +b.dataset.ida;
-          if (!i) { if (ajustes.deslModo === 'km') { sai(); return janelaLinha(d, null, 'desl'); } d.linhas.push(acertaLinha({ tipo: 'desl', nome: 'Deslocamento', q: 1, pu: ajustes.deslIda })); }
+          // sem valor de deslocamento (nenhum vem de fábrica) ou por km: a janela da linha pede o valor e guarda em Ajustes
+          if (!i) { if (ajustes.deslModo === 'km' || !ajustes.deslIda) { const c0 = com; sai(); return janelaLinha(d, null, 'desl', '', () => janelaSomar(d, c0)); } d.linhas.push(acertaLinha({ tipo: 'desl', nome: 'Deslocamento', q: 1, pu: ajustes.deslIda })); }
           else if (i.q + n < 1) d.linhas.splice(d.linhas.indexOf(i), 1); else i.q = Math.min(99, i.q + n);
           mudouDoc(d); vibrar(); return refaz('[data-ida="1"]');
         }
+        if ((b = t.closest('[data-dia]'))) {
+          const y = dia(), n = +b.dataset.dia;
+          if (!y) { if (!ajustes.diaria) { const c0 = com; sai(); return janelaDiaria(() => { d.linhas.push(acertaLinha({ pid: 'diaria', nome: 'Diária técnica', un: 'dia', q: 1, pu: ajustes.diaria })); mudouDoc(d); janelaSomar(d, c0); }); } d.linhas.push(acertaLinha({ pid: 'diaria', nome: 'Diária técnica', un: 'dia', q: 1, pu: ajustes.diaria })); }
+          else if (y.q + n < 1) d.linhas.splice(d.linhas.indexOf(y), 1); else y.q = Math.min(99, y.q + n);
+          mudouDoc(d); vibrar(); return refaz('[data-dia="1"]');
+        }
         if ((b = t.closest('[data-soma]'))) {
           const p = precos.find(x => x.id === b.dataset.soma); if (!p) return;
-          const v = precoDe(p), cm = d.comodos.length ? com : '', l = d.linhas.find(x => x.pid === p.id && x.pu === v && !x.cond && x.nome === p.nome && x.com === cm);
-          if (l) l.q = Math.min(9999, l.q + 1); else d.linhas.push(acertaLinha({ pid: p.id, tipo: p.cat === CAT_MATERIAL ? 'mat' : '', nome: p.nome, un: p.un, q: 1, pu: v, com: cm }));
-          usar(p.id); mudouDoc(d); vibrar(); return refaz(`[data-soma="${p.id}"]`);
+          somarItem(d, p, d.comodos.length ? com : ''); vibrar(); return refaz(`[data-soma="${p.id}"]`);
         }
         if ((b = t.closest('[data-tira]'))) {
           const L = d.linhas.filter(x => x.pid === b.dataset.tira && noCom(x)), l = L[L.length - 1]; if (!l) return;
@@ -550,6 +588,38 @@ function janelaSomar(d, com0, aba0) {
         }
       });
     } });
+}
+// soma um item dos seus Preços no documento (no cômodo, quando há)
+function somarItem(d, p, cm) {
+  const v = precoDe(p), l = d.linhas.find(x => x.pid === p.id && x.pu === v && !x.cond && x.nome === p.nome && x.com === cm);
+  if (l) l.q = Math.min(9999, l.q + 1); else d.linhas.push(acertaLinha({ pid: p.id, tipo: p.cat === CAT_MATERIAL ? 'mat' : '', nome: p.nome, un: p.un, q: 1, pu: v, com: cm }));
+  usar(p.id); mudouDoc(d);
+}
+// o valor da diária: nenhum vem de fábrica; o que você digitar fica em Ajustes, Cobrança
+function janelaDiaria(depois) {
+  janela({ titulo: 'Quanto é a sua diária?', sub: 'Para obra longa, um valor fechado por dia. Fica guardado em Ajustes, Cobrança.',
+    corpo: campo('dr-v', 'Valor da diária', campoDinheiro('dr-v', ajustes.diaria)), pe: '<button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
+    aoMontar: j => { $('[data-salvar]', j).onclick = () => { const v = lerDinheiro($('#dr-v', j)); if (!v) { KitFacil.apontar($('#dr-v', j)); return aviso('Escreva o valor da diária.'); } ajustes.diaria = v; salvarAjustes(); fecharJanela(true); depois(); }; } });
+}
+// Os seus dados que saem na proposta. Pedidos na abertura (com Pular) e, para quem pulou, antes do primeiro serviço.
+const CAMPOS_ELE = [['nome', 'Seu nome', 'Ex.: Carlos Pereira', 'autocapitalize="words" autocomplete="name"'], ['fone', 'WhatsApp', '(11) 90000-0000', 'inputmode="tel" autocomplete="tel"'],
+  ['empresa', 'Nome da empresa', 'Se tiver', 'autocapitalize="words"'], ['cidade', 'Cidade', 'Ex.: São Paulo', 'autocapitalize="words"'], ['doc', 'CPF ou CNPJ', 'Sai no recibo', 'inputmode="numeric"'],
+  ['registro', 'Registro profissional', 'CREA, CFT ou NR-10', ''], ['email', 'E-mail', 'Ex.: voce@email.com', 'autocapitalize="off" inputmode="email" autocomplete="email"']];
+const camposEletricista = (o, pre = 'el') => CAMPOS_ELE.map(([k, rot, dica, attrs], i) => `${i === 2 ? '<p class="kf-ajuda el-mais">Se quiser, já deixe pronto:</p>' : ''}${campo(`${pre}-${k}`, rot, `<input id="${pre}-${k}" class="kf-entrada" data-el="${k}" type="text" value="${esc(k === 'fone' ? fone(o[k]) : k === 'doc' ? cpfCnpj(o[k]) : o[k] || '')}" placeholder="${esc(dica)}" maxlength="80" ${attrs}>`)}`).join('');
+// lê os campos; devolve o que falta do obrigatório (nome e WhatsApp)
+function lerEletricista(raiz, o) {
+  $$('[data-el]', raiz).forEach(i => { o[i.dataset.el] = i.value.trim().slice(0, 80); });
+  return [[o.nome.length < 2, '[data-el="nome"]', 'o seu nome'], [soDigitos(o.fone).length < 10, '[data-el="fone"]', 'o WhatsApp com DDD']].filter(x => x[0]);
+}
+function janelaDados(depois, contexto = '') {
+  janela({ titulo: 'Seus dados na proposta', sub: 'O cliente vê o seu nome e o seu WhatsApp no documento. O logotipo e o Pix ficam em Ajustes.', contexto,
+    corpo: camposEletricista(ajustes), pe: '<button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>',
+    aoMontar: j => { $('[data-salvar]', j).onclick = () => {
+      const o = { ...ajustes }, falta = lerEletricista(j, o);
+      falta.forEach(x => KitFacil.apontar($(x[1], j)));
+      if (falta.length) return aviso(`Falta ${falta.map(x => x[2]).join(' e ')}.`);
+      CAMPOS_ELE.forEach(([k]) => { ajustes[k] = o[k]; }); salvarAjustes(); fecharJanela(true); depois();
+    }; } });
 }
 const selCom = (d, id, atual) => `<select id="${id}" class="kf-entrada">${[...d.comodos.map(c => [c, c]), ['', 'Geral, sem cômodo']].map(([v, n]) => `<option value="${esc(v)}"${v === (atual || '') ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>`;
 // O cômodo: renomear (vale para todas as linhas e materiais dele) ou apagar com o que tem dentro, com Desfazer.
@@ -588,17 +658,31 @@ function janelaMat(d, m, depois) {
       $('[data-tirar]', j).onclick = () => { d.mats.splice(d.mats.indexOf(m), 1); mudouDoc(d); fecharJanela(); aviso('Material removido.'); };
     } });
 }
-// material que não estava na lista: entra no catálogo de materiais; o preço só conta quando o eletricista leva
+// material que não estava na lista: com o preço, fica nos seus Preços para as próximas visitas; sem preço, só é contado aqui
 function janelaMatNovo(nome, depois) {
-  janela({ titulo: 'Material novo', sub: 'Não estava na lista. Fica guardado para as próximas visitas.',
+  janela({ titulo: 'Material novo', sub: 'Não estava na lista. Com o preço, ele fica nos seus Preços.',
     corpo: `${campo('mn-n', 'Nome', entrada('mn-n', nome, 'maxlength="80"'))}
       ${campo('mn-u', 'Contado por', `<select id="mn-u" class="kf-entrada">${UNIDADES.filter(u => !['h', 'ida', 'dia'].includes(u[0])).map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select>`)}
-      ${campo('mn-p', 'Preço', campoDinheiro('mn-p', 0), 'Preço de cada, para quando você levar o material.')}`,
-    pe: '<button type="button" class="kf-btn kf-pri" data-salvar>Salvar e contar 1</button>',
+      ${campo('mn-p', 'Preço de cada, se já souber', campoDinheiro('mn-p', 0), 'Sem o preço, o app pede quando o material for para o orçamento.')}`,
+    pe: '<button type="button" class="kf-btn kf-pri" data-salvar>Contar 1</button>',
     aoMontar: j => { $('[data-salvar]', j).onclick = () => {
-      const n = $('#mn-n', j).value.trim(); if (!n) { KitFacil.apontar($('#mn-n', j)); return aviso('Escreva o nome do material.'); }
-      const p = acertaPreco({ id: uid(), cat: CAT_MATERIAL, nome: n, un: $('#mn-u', j).value, min: 0, fixo: true, preco: lerDinheiro($('#mn-p', j)) });
-      precos.push(p); salvarPrecos(); fecharJanela(true); depois(p);
+      const n = $('#mn-n', j).value.trim().slice(0, 80); if (!n) { KitFacil.apontar($('#mn-n', j)); return aviso('Escreva o nome do material.'); }
+      const un = $('#mn-u', j).value, v = lerDinheiro($('#mn-p', j));
+      let p = precos.find(x => x.cat === CAT_MATERIAL && dobra(x.nome) === dobra(n));
+      if (!p && v) { if (!cats.some(c => c.id === CAT_MATERIAL)) cats.push(catsBanco().find(c => c.id === CAT_MATERIAL)); p = acertaPreco({ id: uid(), cat: CAT_MATERIAL, nome: n, un, min: 0, fixo: true, preco: v }); precos.push(p); salvarPrecos(); }
+      fecharJanela(true); depois({ nome: p ? p.nome : n, un: p ? p.un : un, p });
+    }; } });
+}
+function janelaPrecoMats(d, faltam, depois) {
+  janela({ titulo: 'Quanto custa cada um?', sub: 'O banco do app não traz preço de material. O que você digitar fica nos seus Preços.', contexto: nomeDoc(d),
+    corpo: faltam.map((m, i) => campo('pm-' + i, esc(`${m.nome} · ${m.q} ${unTxt(m.q, m.un)}`), campoDinheiro('pm-' + i, 0), `Preço por ${unNome(m.un)}.`)).join(''),
+    pe: '<button type="button" class="kf-btn kf-pri" data-salvar>Salvar e pôr no orçamento</button>',
+    aoMontar: j => { $('[data-salvar]', j).onclick = () => {
+      const V = faltam.map((m, i) => lerDinheiro($('#pm-' + i, j))), k = V.findIndex(v => !v);
+      if (k >= 0) { KitFacil.apontar($('#pm-' + k, j)); return aviso(`Falta o preço de ${faltam[k].nome}.`); }
+      if (!cats.some(c => c.id === CAT_MATERIAL)) cats.push(catsBanco().find(c => c.id === CAT_MATERIAL));
+      faltam.forEach((m, i) => { const p = acertaPreco({ id: uid(), cat: CAT_MATERIAL, nome: m.nome, un: m.un, min: 0, fixo: true, preco: V[i] }); precos.push(p); d.mats.forEach(x => { if (!x.pid && dobra(x.nome) === dobra(m.nome)) { x.pid = p.id; x.pu = p.preco; } }); });
+      salvarPrecos(); fecharJanela(true); depois();
     }; } });
 }
 /* ---------- Lista de materiais: a soma do que foi contado. Só para quem usa o app ---------- */
@@ -606,15 +690,15 @@ function janelaMats(d) {
   let porCom = false;
   const corpo = () => {
     const L = listaMats(d, porCom), parte = quem => L.filter(m => m.quem === quem), eu = parte('eu'), cli = parte('cli');
-    const valor = m => { const p = precos.find(x => x.id === m.pid); return Math.round(m.q * (p ? precoDe(p) : m.pu)); };
-    const linhaM = (m, comPreco) => `<button type="button" class="mt-ok" data-ok="${esc(m.ids.join(' '))}" aria-pressed="${m.ok}"><span class="mt-cx" aria-hidden="true">${m.ok ? IC.certo : ''}</span><span class="so-tx"><b>${esc(m.nome)}</b><small>${esc([`${m.q} ${unTxt(m.q, m.un)}`, m.comp, porCom ? '' : ''].filter(Boolean).join(' · '))}</small></span>${comPreco ? `<b class="num">${BRL(valor(m))}</b>` : ''}</button>`;
+    const valor = m => Math.round(m.q * precoMat(m));
+    const linhaM = (m, comPreco) => `<button type="button" class="mt-ok" data-ok="${esc(m.ids.join(' '))}" aria-pressed="${m.ok}"><span class="mt-cx" aria-hidden="true">${m.ok ? IC.certo : ''}</span><span class="so-tx"><b>${esc(m.nome)}</b><small>${esc([`${m.q} ${unTxt(m.q, m.un)}`, m.comp].filter(Boolean).join(' · '))}</small></span>${comPreco ? (precoMat(m) ? `<b class="num">${BRL(valor(m))}</b>` : '<small class="mt-sem">sem preço</small>') : ''}</button>`;
     const bloco = (M, comPreco) => porCom ? [...new Set(M.map(m => m.com))].map(c => `<h4 class="sec-g"><span>${esc(c || 'Sem cômodo')}</span></h4><div class="so-lista">${M.filter(m => m.com === c).map(m => linhaM(m, comPreco)).join('')}</div>`).join('') : `<div class="so-lista">${M.map(m => linhaM(m, comPreco)).join('')}</div>`;
-    const tot = soma(eu.map(valor)), ja = d.linhas.some(l => l.tipo === 'mat' && l.lista);
+    const tot = soma(eu.map(valor)), ja = d.linhas.some(l => l.tipo === 'mat' && l.lista), semP = eu.some(m => !precoMat(m));
     return `<div class="kf-campo"><span class="kf-rotulo">Neste orçamento, o material</span>${segmento('Quem compra o material', 'qm', [['eu', 'Eu levo'], ['cli', 'O cliente compra']], d.quem)}</div>
       ${d.comodos.length ? segmento('Ver a lista', 'pc', [[0, 'No total'], [1, 'Por cômodo']], porCom ? 1 : 0) : ''}
       ${eu.length ? `<h3 class="sec-g"><span>Eu levo</span><b class="num">${BRL(tot)}</b></h3>${bloco(eu, true)}` : ''}
       ${cli.length ? `<h3 class="sec-g"><span>O cliente compra</span></h3>${bloco(cli, false)}` : ''}
-      ${eu.length ? `<button type="button" class="kf-btn kf-pri" data-por>${ja ? 'Atualizar no orçamento' : `Pôr ${BRL(tot)} no orçamento`}</button>` : ''}
+      ${eu.length ? `<button type="button" class="kf-btn kf-pri" data-por>${semP ? 'Dar o preço e pôr no orçamento' : ja ? 'Atualizar no orçamento' : `Pôr ${BRL(tot)} no orçamento`}</button>` : ''}
       ${cli.length ? `<button type="button" class="kf-btn kf-sec" data-lcli>Mandar a lista ao cliente</button>` : ''}
       <p class="kf-ajuda">"Pôr no orçamento" soma só o que você leva. A lista do cliente sai só com a parte dele, sem preços.</p>`;
   };
@@ -628,7 +712,12 @@ function janelaMats(d) {
         if ((b = t.closest('[data-qm]'))) { const novo = b.dataset.qm; if (novo === d.quem) return; d.mats.forEach(m => { if (m.quem === d.quem) m.quem = novo; }); d.quem = novo; tocarDoc(d); return refaz(`[data-qm="${novo}"]`); }
         if ((b = t.closest('[data-pc]'))) { porCom = b.dataset.pc === '1'; return refaz(`[data-pc="${b.dataset.pc}"]`); }
         if ((b = t.closest('[data-ok]'))) { const ids = b.dataset.ok.split(' '), M = d.mats.filter(m => ids.includes(m.id)), v = !M.every(m => m.ok); M.forEach(m => { m.ok = v; }); tocarDoc(d); return refaz(`[data-ok="${CSS.escape(b.dataset.ok)}"]`); }
-        if (t.closest('[data-por]')) { porNoOrcamento(d); mudouDoc(d); fecharJanela(); redesenhar(); return aviso('Material no orçamento.'); }
+        if (t.closest('[data-por]')) {
+          const pronto = () => { porNoOrcamento(d); mudouDoc(d); redesenhar(); aviso('Material no orçamento.'); };
+          const faltam = listaMats(d).filter(m => m.quem === 'eu' && !precoMat(m)).filter((m, i, a) => a.findIndex(y => dobra(y.nome) === dobra(m.nome)) === i);
+          if (faltam.length) { fecharJanela(true); return janelaPrecoMats(d, faltam, pronto); }
+          fecharJanela(); return pronto();
+        }
         if (t.closest('[data-lcli]')) { window.open(linkWhats(d.cliente.fone, mensagemLista(d)), '_blank', 'noopener'); }
       });
     } });
@@ -745,49 +834,53 @@ function janelaMenu(d) {
 
 /* ================= Preços: a tabela (5.2.1). A hora, a busca, o filtro por categoria e as linhas por categoria ================= */
 let filtroPreco = 'todas', buscaPreco = '';
-const linhaPreco = p => `<button type="button" class="item prc-lin" data-preco="${esc(p.id)}" data-busca="${esc(dobra(`${p.nome} ${p.obj || ''} ${p.acao || ''}`))}"><span class="it-tx"><b>${esc(p.nome)}</b><small>${p.fixo ? '<span class="prc-fixo">fixo</span>' : tempoTxt(p.min)} · por ${unNome(p.un)}</small></span><b class="it-v num">${BRL(precoDe(p))}</b>${IC.seta}</button>`;
+const linhaPreco = p => `<button type="button" class="item prc-lin" data-preco="${esc(p.id)}" data-busca="${esc(dobra(`${p.nome} ${p.obj || ''} ${acaoNome(p.acao)}`))}"><span class="it-tx"><b>${esc(p.nome)}</b><small>${p.fixo ? '<span class="prc-fixo">fixo</span>' : tempoTxt(p.min)} · por ${unNome(p.un)}</small></span><b class="it-v num">${BRL(precoDe(p))}</b>${IC.seta}</button>`;
 const secaoPreco = c => { const L = precos.filter(p => p.cat === c.id);
   return `<section class="prc-sec" data-sec="${esc(c.id)}" aria-labelledby="ps-${esc(c.id)}"><h2 class="sec prc-tit"><span id="ps-${esc(c.id)}">${esc(c.nome)} <span class="sec-n">· ${L.length}</span></span><button type="button" class="bt-ic prc-ed" data-editar-cat="${esc(c.id)}" aria-label="Editar a categoria ${esc(c.nome)}">${IC.lapis}</button></h2>
-    <div class="cx itens">${L.map(linhaPreco).join('')}<button type="button" class="prc-add" data-novo-preco="${esc(c.id)}">${IC.soma}<span>Novo ${c.id === CAT_MATERIAL ? 'material' : 'preço'} em ${esc(c.nome)}</span></button></div></section>`; };
+    ${L.length ? `<div class="cx itens">${L.map(linhaPreco).join('')}</div>` : '<p class="kf-ajuda">Categoria sem itens.</p>'}</section>`; };
 // a ordem: serviços primeiro, o material na sua seção, no fim
 const catsOrdem = () => [...cats.filter(c => c.id !== CAT_MATERIAL), ...cats.filter(c => c.id === CAT_MATERIAL)];
+const ehBanco = id => BANCO.some(b => 'c-' + b[0] === id);
+// em Preços aparecem as categorias com itens e as que você criou (para poder editar ou excluir); as do banco, vazias, não
+const catsNaTabela = () => catsOrdem().filter(c => !ehBanco(c.id) || precos.some(p => p.cat === c.id));
 TELAS.precos = {
   html() {
-    const C = catsOrdem(); if (filtroPreco !== 'todas' && !cats.some(c => c.id === filtroPreco)) filtroPreco = 'todas';
+    const C = catsNaTabela(); if (filtroPreco !== 'todas' && !C.some(c => c.id === filtroPreco)) filtroPreco = 'todas';
     return `${barraTopo()}
     <main class="tela prc-tela" id="conteudo">
-      ${KitFacil.ui.cabecalho({ titulo: 'Preços', sub: 'A sua tabela: o tempo típico e o preço de cada serviço.' })}
+      ${KitFacil.ui.cabecalho({ titulo: 'Preços', sub: 'Os seus serviços e materiais, com o seu preço.' })}
       ${painelHora()}
-      <div class="busca"><span class="busca-ic">${IC.busca}</span><input id="pr-q" class="kf-entrada" type="search" value="${esc(buscaPreco)}" placeholder="Buscar serviço ou material" aria-label="Buscar na tabela de preços"></div>
+      ${precos.length ? `<div class="busca"><span class="busca-ic">${IC.busca}</span><input id="pr-q" class="kf-entrada" type="search" value="${esc(buscaPreco)}" placeholder="Buscar serviço ou material" aria-label="Buscar na tabela de preços"></div>
       <div class="chips" role="group" aria-label="Filtrar por categoria">${[['todas', 'Todas'], ...C.map(c => [c.id, c.nome])].map(([id, n]) => `<button type="button" class="chip" data-fcat="${esc(id)}" aria-pressed="${filtroPreco === id}">${esc(n)}</button>`).join('')}</div>
-      <p class="kf-so-leitor" role="status" id="pr-st"></p>
+      <p class="kf-so-leitor" role="status" id="pr-st"></p>` : KitFacil.ui.vazio({ titulo: 'Sua tabela começa vazia', icone: IC.raio, texto: 'O app não traz preço de fábrica. Cada serviço que você cria, aqui ou no orçamento, fica guardado com o seu preço.' })}
       <div id="pr-lista">${C.map(secaoPreco).join('')}</div>
       <p class="kf-ajuda prc-nada" id="pr-nada" hidden>Nenhum item com esse nome. Confira a escrita ou escolha Todas.</p>
+      ${KitFacil.ui.adicionar({ rotulo: 'Novo serviço ou material', attrs: 'data-novo-preco' })}
       ${KitFacil.ui.adicionar({ rotulo: 'Nova categoria', attrs: 'data-nova-cat' })}
-      <p class="kf-ajuda nota-pe">Os tempos e os preços que vêm com o app são só um ponto de partida. Ajuste para os seus.</p>
     </main>`;
   },
   ligar(el) {
     // filtrar sem redesenhar: a busca não perde o foco nem o teclado
     const filtrar = () => {
+      if (!$('#pr-q', el)) return;
       const q = dobra(buscaPreco); let n = 0;
       $$('.prc-sec', el).forEach(s => {
         const naCat = filtroPreco === 'todas' || s.dataset.sec === filtroPreco; let vis = 0;
         $$('.prc-lin', s).forEach(b => { const ok = naCat && (!q || b.dataset.busca.includes(q)); b.hidden = !ok; if (ok) vis++; });
-        $('.prc-add', s).hidden = !!q; s.hidden = !naCat || (!!q && !vis); n += vis;
+        s.hidden = !naCat || (!!q && !vis); n += vis;
       });
       $$('[data-fcat]', el).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.fcat === filtroPreco)));
       $('#pr-nada', el).hidden = !(q && !n);
       $('#pr-st', el).textContent = q || filtroPreco !== 'todas' ? plural(n, 'item na tabela', 'itens na tabela') : '';
     };
     filtrar();
-    $('#pr-q', el).addEventListener('input', e => { buscaPreco = e.target.value; filtrar(); });
+    $('#pr-q', el)?.addEventListener('input', e => { buscaPreco = e.target.value; filtrar(); });
     el.addEventListener('click', e => {
       const t = e.target; let b;
       if (t.closest('[data-hora]')) return janelaHora();
       if ((b = t.closest('[data-fcat]'))) { filtroPreco = b.dataset.fcat; return filtrar(); }
-      if ((b = t.closest('[data-preco]'))) { const p = precos.find(x => x.id === b.dataset.preco); return janelaPreco(cats.find(c => c.id === p.cat), p); }
-      if ((b = t.closest('[data-novo-preco]'))) return janelaPreco(cats.find(c => c.id === b.dataset.novoPreco), null);
+      if ((b = t.closest('[data-preco]'))) return janelaItem(precos.find(x => x.id === b.dataset.preco));
+      if (t.closest('[data-novo-preco]')) return janelaItem(null, { cat: filtroPreco !== 'todas' ? filtroPreco : '', nome: buscaPreco.trim() });
       if ((b = t.closest('[data-editar-cat]'))) return janelaCat(cats.find(c => c.id === b.dataset.editarCat));
       if (t.closest('[data-nova-cat]')) janelaCat(null);
     });
@@ -795,56 +888,95 @@ TELAS.precos = {
 };
 // o endereço antigo de uma categoria abre a tabela já filtrada nela
 TELAS.cat = { html(r) { filtroPreco = r.id; return TELAS.precos.html(); }, ligar(el) { TELAS.precos.ligar(el); } };
-// O item guarda o tempo típico; o preço é o tempo vezes a hora. Mudar o preço reescreve o tempo, e a ligação com a hora
-// continua. Com a chave desligada, o preço é fixo. Material é sempre preço fixo.
-function janelaPreco(c, p) {
-  const novo = !p, mat = c.id === CAT_MATERIAL;
-  const x = p ? { ...p } : { nome: '', un: 'un', min: mat ? 0 : 30, fixo: mat, preco: 0, reais: [], acao: '', obj: '' };
-  let outro = false;
-  const objs = () => [...new Set([...(OBJETOS[c.id] || []), ...precos.filter(y => y.cat === c.id && y.obj).map(y => y.obj), ...(x.obj ? [x.obj] : [])])];
+// as categorias para escolher: as suas (com o nome que você deu) e as do banco que você excluiu
+const catsEscolha = () => [...catsOrdem(), ...catsBanco().filter(b => !cats.some(c => c.id === b.id))];
+const TEMPOS = [15, 30, 45, 60, 90, 120, 180, 240];
+/* Novo serviço (ou material) e a edição de um item dos seus Preços, numa janela só. Ordem: categoria, objeto (do banco
+   ou outro), ação (a mais comum para o objeto já vem marcada; toque de novo para tirar), nome (montado, editável),
+   unidade e o preço: pelo tempo (vezes a sua hora; o item segue a hora) ou em reais (preço fixo). Material só em reais.
+   Criado dentro do orçamento, o item fica salvo nos seus Preços e já entra no documento (o.aoSalvar). */
+function janelaItem(p, o = {}) {
+  if (!ajustes.hora && !semSalvar) return janelaHora(() => janelaItem(p, o), 'Antes do primeiro preço');
+  const novo = !p, C0 = catsEscolha();
+  const x = p ? { ...p, modo: p.fixo ? 'reais' : 'tempo' } : { cat: C0.some(c => c.id === o.cat) ? o.cat : C0[0].id, acao: o.acao ?? '', obj: o.obj || '', nome: '', un: 'un', min: 0, fixo: false, preco: 0, reais: [], modo: 'tempo' };
+  const mat = () => x.cat === CAT_MATERIAL;
+  let outro = false, mexeuAcao = !novo || o.acao !== undefined, tempoOutro = !novo && !p.fixo && !TEMPOS.includes(p.min), mexeuNome = !novo && x.nome !== nomeMontado(x.acao, x.obj);
+  if (novo && o.obj) { const ob = objetosDe(x.cat).find(y => y.nome === o.obj); if (ob) x.un = x.acao === 'ponto' && ob.un !== 'm' ? 'ponto' : ob.un; x.nome = nomeMontado(x.acao, x.obj); }
+  if (novo && o.nome && !o.obj) { x.nome = o.nome; mexeuNome = true; }
+  const objs = () => mat() ? objetosDe(CAT_MATERIAL).filter(b => !precos.some(y => y.cat === CAT_MATERIAL && dobra(y.nome) === dobra(b.nome) && y !== p)) : [...objetosDe(x.cat), ...[...new Set(precos.filter(y => y.cat === x.cat && y.obj).map(y => y.obj))].filter(n => !objetosDe(x.cat).some(b => b.nome === n)).map(n => ({ nome: n, un: 'un', acao: 'instalacao' }))];
   const media = mediaReal(x), arred = v => Math.max(5, Math.min(6000, Math.round(v * 60 / HORA() / 5) * 5));
-  const corpo = () => `${mat ? '' : `${campo('pr-a', 'Ação', `<select id="pr-a" class="kf-entrada"><option value="">Sem ação</option>${ACOES.map(([k, n]) => `<option value="${k}"${k === x.acao ? ' selected' : ''}>${n}</option>`).join('')}</select>`, 'O que se faz: instalação, troca, manutenção…')}
-        ${campo('pr-o', 'Objeto', `<select id="pr-o" class="kf-entrada"><option value="">Sem objeto</option>${objs().map(o => `<option value="${esc(o)}"${o === x.obj && !outro ? ' selected' : ''}>${esc(o)}</option>`).join('')}<option value="\u0001"${outro ? ' selected' : ''}>Outro objeto…</option></select>`, 'Em que se mexe. Com ação e objeto, o nome se monta sozinho.')}
-        ${outro ? campo('pr-on', 'Nome do objeto', entrada('pr-on', x.obj, 'placeholder="Ex.: tomada USB" maxlength="60"')) : ''}`}
-      ${campo('pr-n', mat ? 'Nome do material' : 'Nome do serviço', entrada('pr-n', x.nome, 'placeholder="Ex.: Instalação de tomada"'), mat ? '' : 'Pode mudar o nome montado.')}
-      ${campo('pr-u', 'Cobrado por', `<select id="pr-u" class="kf-entrada">${UNIDADES.filter(u => u[0] !== 'ida').map(([k, n]) => `<option value="${k}"${k === x.un ? ' selected' : ''}>${n}</option>`).join('')}</select>`)}
-      ${mat ? '' : `<label class="aj-chave"><span class="aj-chave-tx"><b>Seguir a minha hora</b><small>Desligue para um preço fixo, que não muda com a hora.</small></span>${KitFacil.ui.chave({ attrs: 'id="pr-seg"', on: !x.fixo })}</label>`}
-      ${x.fixo ? campo('pr-p', 'Preço', campoDinheiro('pr-p', x.preco), 'Preço fixo. Os documentos já feitos não mudam.')
-      : `${campo('pr-t', 'Tempo típico', seletorTempo('pr-t', x.min, 720, 5))}
-        ${media ? `<div class="tp-real"><span class="lin-tx"><b>O seu tempo real: ${tempoTxt(media)}</b><small>Média de ${plural(x.reais.length, 'serviço anotado', 'serviços anotados')}</small></span>${media !== x.min ? '<button type="button" class="kf-btn kf-sec kf-p" data-usar>Usar</button>' : ''}</div>` : ''}
-        ${campo('pr-p', 'Preço', campoDinheiro('pr-p', precoDe(x)), `${tempoTxt(x.min)} × ${BRL(HORA())} a hora. Se você mudar o preço, o tempo acompanha.`)}`}`;
-  janela({ titulo: novo ? 'Novo preço' : 'Preço', contexto: c.nome, corpo: `<div id="pr-corpo" class="pilha">${corpo()}</div>`,
-    pe: `${novo ? '' : '<button type="button" class="kf-btn kf-perigo" data-tirar>Excluir</button>'}<button type="button" class="kf-btn kf-pri" data-salvar>Salvar</button>`,
+  const montar = () => { if (!mexeuNome) x.nome = mat() ? maiuscula(x.obj) : nomeMontado(x.acao, x.obj); };
+  const corpo = () => `<div class="kf-campo"><span class="kf-rotulo" id="it-cl">Categoria</span><div class="chips" role="group" aria-labelledby="it-cl">${C0.map(c => `<button type="button" class="chip" data-it-cat="${esc(c.id)}" aria-pressed="${c.id === x.cat}">${esc(c.nome)}</button>`).join('')}</div></div>
+      <div class="kf-campo"><span class="kf-rotulo" id="it-ol">${mat() ? 'Material' : 'Objeto'}</span><div class="escolhas" role="group" aria-labelledby="it-ol">${objs().map(b => KitFacil.ui.escolha({ rotulo: b.nome, on: !outro && b.nome === x.obj, attrs: `data-it-obj="${esc(b.nome)}"` })).join('')}${KitFacil.ui.escolha({ rotulo: mat() ? 'Outro material' : 'Outro objeto', on: outro, attrs: 'data-it-outro' })}</div></div>
+      ${outro ? campo('it-on', mat() ? 'Nome do material' : 'Nome do objeto', entrada('it-on', x.obj, `placeholder="${mat() ? 'Ex.: Cabo flexível 16 mm²' : 'Ex.: tomada de sobrepor dupla'}" maxlength="60"`)) : ''}
+      ${mat() ? '' : `<div class="kf-campo"><span class="kf-rotulo" id="it-al">Ação</span><div class="escolhas" role="group" aria-labelledby="it-al">${ACOES.map(([k, n]) => KitFacil.ui.escolha({ rotulo: n, on: k === x.acao, attrs: `data-it-acao="${k}"` })).join('')}</div></div>`}
+      ${campo('it-n', mat() ? 'Nome do material' : 'Nome do serviço', entrada('it-n', x.nome, 'placeholder="Escolha o objeto, ou escreva" maxlength="80"'), mat() ? '' : 'Se monta com o objeto e a ação. Pode mudar.')}
+      ${campo('it-u', mat() ? 'Vendido por' : 'Cobrado por', `<select id="it-u" class="kf-entrada">${UNIDADES.filter(u => !['ida', 'h'].includes(u[0])).map(([k, n]) => `<option value="${k}"${k === x.un ? ' selected' : ''}>${n}</option>`).join('')}</select>`)}
+      ${mat() ? campo('it-p', 'Preço de cada', campoDinheiro('it-p', x.preco))
+      : `<div class="kf-campo"><span class="kf-rotulo">Preço</span>${segmento('Como dar o preço', 'it-modo', [['tempo', 'Pelo tempo'], ['reais', 'Em reais']], x.modo)}</div>
+        ${x.modo === 'reais' ? campo('it-p', 'Preço', campoDinheiro('it-p', x.preco), 'Preço fixo: não muda quando a sua hora muda.')
+        : `<div class="kf-campo"><span class="kf-rotulo" id="it-tl">Quanto tempo leva</span><div class="escolhas" role="group" aria-labelledby="it-tl">${TEMPOS.map(m => KitFacil.ui.escolha({ rotulo: tempoTxt(m), on: !tempoOutro && m === x.min, attrs: `data-it-min="${m}"` })).join('')}${KitFacil.ui.escolha({ rotulo: 'Outro', on: tempoOutro, attrs: 'data-it-min="x"' })}</div></div>
+          ${tempoOutro ? campo('it-t', 'Outro tempo', seletorTempo('it-t', x.min || 5, 720, 5)) : ''}
+          ${media ? `<div class="tp-real"><span class="lin-tx"><b>O seu tempo real: ${tempoTxt(media)}</b><small>Média de ${plural(x.reais.length, 'serviço anotado', 'serviços anotados')}</small></span>${media !== x.min ? '<button type="button" class="kf-btn kf-sec kf-p" data-usar>Usar</button>' : ''}</div>` : ''}
+          <p class="kf-ajuda" role="status">${x.min ? `${tempoTxt(x.min)} × ${BRL(HORA())} a hora = <b class="num">${BRL(precoDe(x))}</b>. Mudou a hora, o preço acompanha.` : 'Escolha o tempo. O preço é o tempo vezes a sua hora.'}</p>`}`}`;
+  const salvarRot = o.aoSalvar ? 'Salvar e somar' : 'Salvar';
+  janela({ titulo: novo ? (mat() ? 'Novo material' : 'Novo serviço') : mat() ? 'Material' : 'Serviço', contexto: o.doc ? nomeDoc(o.doc) : 'Preços', alta: true, aoFechar: o.aoFechar,
+    corpo: `<div id="it-corpo" class="pilha">${corpo()}</div>`,
+    pe: `${novo ? '' : '<button type="button" class="kf-btn kf-perigo" data-tirar>Excluir</button>'}<button type="button" class="kf-btn kf-pri" data-salvar>${salvarRot}</button>`,
     aoMontar: j => {
-      const guarda = () => { if ($('#pr-on', j)) x.obj = $('#pr-on', j).value.trim().slice(0, 60); x.nome = $('#pr-n', j).value.trim(); x.un = $('#pr-u', j).value; const v = lerDinheiro($('#pr-p', j)); if (x.fixo) x.preco = v; else if (v !== precoDe(x) && v > 0) x.min = arred(v); };
-      const refaz = foco => { const cx = $('#pr-corpo', j); cx.innerHTML = corpo(); prepararCampos(cx); if (foco) $(foco, j)?.focus({ preventScroll: true }); };
-      j.addEventListener('change', e => {
-        if (e.target.id === 'pr-seg') { guarda(); const v = precoDe(x); x.fixo = !e.target.checked; if (x.fixo) x.preco = v; else if (!x.min) x.min = x.preco ? arred(x.preco) : 30; refaz('#pr-seg'); }
-        else if (e.target.id === 'pr-a' || e.target.id === 'pr-o') {
-          guarda(); const antes = nomeMontado(x.acao, x.obj);
-          if (e.target.id === 'pr-a') x.acao = e.target.value; else { outro = e.target.value === '\u0001'; x.obj = outro ? '' : e.target.value; }
-          const novo = nomeMontado(x.acao, x.obj); if (novo && (!x.nome || x.nome === antes)) x.nome = novo; refaz('#' + e.target.id);
-        }
-        else if (e.target.id === 'pr-on') { const antes = nomeMontado(x.acao, x.obj); x.obj = e.target.value.trim().slice(0, 60); const novo = nomeMontado(x.acao, x.obj); if (novo && (!$('#pr-n', j).value.trim() || $('#pr-n', j).value.trim() === antes)) $('#pr-n', j).value = novo; }
-        else if (e.target.id === 'pr-t') { x.nome = $('#pr-n', j).value.trim(); x.un = $('#pr-u', j).value; x.min = +e.target.value || x.min; refaz('#pr-t'); }
-      });
-      j.addEventListener('focusout', e => { if (e.target.id !== 'pr-p' || x.fixo) return; const v = lerDinheiro(e.target); if (v > 0 && v !== precoDe(x)) { guarda(); refaz(); } });
-      j.addEventListener('click', e => { if (e.target.closest('[data-usar]')) { guarda(); x.min = media; refaz('#pr-t'); } });
-      $('[data-salvar]', j).onclick = () => {
-        guarda();
-        if (!x.nome) { KitFacil.apontar($('#pr-n', j)); return aviso('Escreva o nome.'); }
-        const v = acertaPreco({ id: p ? p.id : uid(), cat: c.id, nome: x.nome, un: x.un, min: x.min, fixo: x.fixo, preco: x.fixo ? x.preco : 0, reais: x.reais, acao: mat ? '' : x.acao, obj: mat ? '' : x.obj });
-        if (novo) precos.push(v); else Object.assign(p, v);
-        salvarPrecos(); fecharJanela(); redesenhar(); aviso(novo ? 'Preço cadastrado.' : 'Preço salvo.');
+      const guarda = () => {
+        if ($('#it-on', j)) x.obj = $('#it-on', j).value.trim().slice(0, 60);
+        const n = $('#it-n', j).value.trim().slice(0, 80); if (n !== x.nome) { x.nome = n; mexeuNome = !!n && n !== (mat() ? maiuscula(x.obj) : nomeMontado(x.acao, x.obj)); }
+        x.un = $('#it-u', j).value;
+        if ($('#it-p', j)) x.preco = lerDinheiro($('#it-p', j));
+        if ($('#it-t', j)) x.min = +$('#it-t', j).value || x.min;
       };
-      $('[data-tirar]', j)?.addEventListener('click', () => confirmar('Excluir este preço?', `"${p.nome}" sai da sua lista. Os documentos já feitos não mudam.`, 'Excluir preço', () => {
+      // a categoria escolhida fica à vista na fila, sem mexer na rolagem da janela
+      const mostraCat = () => { const ch = $('[data-it-cat][aria-pressed="true"]', j), f = ch && ch.parentElement; if (f) f.scrollLeft = Math.max(0, ch.offsetLeft - f.offsetLeft - (f.clientWidth - ch.offsetWidth) / 2); };
+      const refaz = foco => { const cx = $('#it-corpo', j); const x0 = $('.chips', cx)?.scrollLeft || 0; cx.innerHTML = corpo(); prepararCampos(cx); const fila = $('.chips', cx); if (fila) fila.scrollLeft = x0; if (foco && foco.startsWith('[data-it-cat')) mostraCat(); const tt = $('.kf-dlg-titulo, h2', j); if (tt && novo) tt.textContent = mat() ? 'Novo material' : 'Novo serviço'; if (foco) $(foco, j)?.focus({ preventScroll: true }); };
+      requestAnimationFrame(mostraCat);
+      j.addEventListener('click', e => {
+        const t = e.target; let b;
+        if ((b = t.closest('[data-it-cat]'))) { guarda(); if (b.dataset.itCat === x.cat) return; x.cat = b.dataset.itCat; x.obj = ''; outro = false; if (!mexeuNome) x.nome = ''; if (mat()) x.modo = 'reais'; if (!mexeuAcao) x.acao = ''; return refaz(`[data-it-cat="${CSS.escape(x.cat)}"]`); }
+        if ((b = t.closest('[data-it-obj]'))) {
+          guarda(); outro = false; x.obj = b.dataset.itObj; const ob = objs().find(y => y.nome === x.obj);
+          if (ob) { if (!mexeuAcao && !mat()) x.acao = ob.acao; x.un = !mat() && x.acao === 'ponto' && ob.un !== 'm' ? 'ponto' : ob.un; }
+          montar(); return refaz(`[data-it-obj="${CSS.escape(x.obj)}"]`);
+        }
+        if (t.closest('[data-it-outro]')) { guarda(); outro = true; x.obj = ''; montar(); refaz(); return $('#it-on', j)?.focus(); }
+        if ((b = t.closest('[data-it-acao]'))) { guarda(); const a = b.dataset.itAcao; x.acao = x.acao === a ? '' : a; mexeuAcao = true; if (x.acao === 'ponto' && x.un === 'un') x.un = 'ponto'; else if (x.acao !== 'ponto' && x.un === 'ponto') x.un = 'un'; montar(); return refaz(`[data-it-acao="${a}"]`); }
+        if ((b = t.closest('[data-it-modo]'))) { guarda(); const v = precoDe(x); x.modo = b.dataset.itModo; if (x.modo === 'reais' && !x.preco && x.min) x.preco = v; if (x.modo === 'tempo' && !x.min && x.preco) x.min = arred(x.preco); return refaz(`[data-it-modo="${x.modo}"]`); }
+        if ((b = t.closest('[data-it-min]'))) { guarda(); if (b.dataset.itMin === 'x') { tempoOutro = true; if (!x.min) x.min = 5; } else { tempoOutro = false; x.min = +b.dataset.itMin; } return refaz(`[data-it-min="${b.dataset.itMin}"]`); }
+        if (t.closest('[data-usar]')) { guarda(); x.min = media; tempoOutro = !TEMPOS.includes(media); return refaz(); }
+      });
+      j.addEventListener('change', e => {
+        if (e.target.id === 'it-t') { guarda(); refaz('#it-t'); }
+        else if (e.target.id === 'it-on') { guarda(); montar(); const n = $('#it-n', j); if (n && !mexeuNome) n.value = x.nome; }
+      });
+      $('[data-salvar]', j).onclick = () => {
+        guarda(); montar();
+        if (!x.nome) { KitFacil.apontar($(outro ? '#it-on' : '#it-n', j)); return aviso(mat() ? 'Escolha o material ou escreva o nome.' : 'Escolha o objeto ou escreva o nome.'); }
+        const fixo = mat() || x.modo === 'reais';
+        if (fixo && !x.preco) { KitFacil.apontar($('#it-p', j)); return aviso('Escreva o preço.'); }
+        if (!fixo && !x.min) { KitFacil.apontar($('[data-it-min]', j)?.parentElement); return aviso('Escolha quanto tempo leva.'); }
+        const igual = precos.find(y => y !== p && y.cat === x.cat && dobra(y.nome) === dobra(x.nome));
+        if (igual) { KitFacil.apontar($('#it-n', j)); return aviso(`Você já tem "${igual.nome}" nos seus Preços.`); }
+        // a categoria do banco que você tinha excluído volta, para o item ter onde ficar
+        if (!cats.some(c => c.id === x.cat)) { const cb = catsBanco().find(c => c.id === x.cat); if (cb) cats.push(cb); }
+        const v = acertaPreco({ id: p ? p.id : uid(), cat: x.cat, nome: x.nome, un: x.un, min: fixo ? 0 : x.min, fixo, preco: fixo ? x.preco : 0, reais: x.reais, acao: mat() ? '' : x.acao, obj: x.obj });
+        if (novo) precos.push(v); else Object.assign(p, v);
+        salvarPrecos(); fecharJanela(true);
+        if (o.aoSalvar) return o.aoSalvar(v);
+        redesenhar(); aviso(novo ? `${v.nome}: salvo nos seus Preços.` : 'Preço salvo.');
+      };
+      $('[data-tirar]', j)?.addEventListener('click', () => confirmar('Excluir este item?', `"${p.nome}" sai dos seus Preços. Os documentos já feitos não mudam.`, 'Excluir item', () => {
         const i = precos.indexOf(p); precos.splice(i, 1); salvarPrecos(); redesenhar();
-        aviso('Preço excluído.', { label: 'Desfazer', run: () => { precos.splice(Math.min(i, precos.length), 0, p); salvarPrecos(); redesenhar(); } });
+        aviso('Item excluído.', { label: 'Desfazer', run: () => { precos.splice(Math.min(i, precos.length), 0, p); salvarPrecos(); redesenhar(); } });
       }, { desfaz: 'Dá para desfazer logo depois.' }));
     } });
 }
 /* ---------- A hora: a base de todos os preços. Dois caminhos: digitar o valor ou descobrir pela conta do mês ---------- */
-const painelHora = () => `<section class="painel hora-pn" aria-label="A sua hora"><span class="pn-rot">${ajustes.hora ? 'A sua hora' : 'Hora de exemplo'}</span><b class="pn-num num">${BRL(HORA())}</b><span class="pn-sub">${ajustes.hora ? 'Mudou a hora, mudam os preços ligados a ela.' : 'Diga a sua hora para os preços ficarem certos.'}</span><button type="button" class="pn-bt" data-hora>${ajustes.hora ? 'Mudar' : 'Informar a minha hora'}</button></section>`;
+const painelHora = () => `<section class="painel hora-pn" aria-label="A sua hora"><span class="pn-rot">A sua hora</span><b class="pn-num num">${ajustes.hora ? BRL(ajustes.hora) : 'Sem valor'}</b><span class="pn-sub">${ajustes.hora ? 'Mudou a hora, mudam os preços dados pelo tempo.' : 'Os preços dados pelo tempo são o tempo vezes a sua hora.'}</span><button type="button" class="pn-bt" data-hora>${ajustes.hora ? 'Mudar' : 'Informar a minha hora'}</button></section>`;
 function janelaHora(depois, contexto = '') {
   let modo = 'digitar', v = ajustes.hora, T = ajustes.hTirar, C = ajustes.hCustos, Hh = ajustes.hHoras;
   const daConta = () => Hh > 0 ? Math.round((T + C) / Hh) : 0, atual = () => modo === 'conta' ? daConta() : v;

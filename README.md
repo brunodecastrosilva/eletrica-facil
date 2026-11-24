@@ -2,7 +2,7 @@
 
 Orçamento de serviços de elétrica, do pedido ao recibo, direto no celular, no tablet ou no computador.
 
-Versão **5.2.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **5.3.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md). Na 4.0.0 o app recomeçou enxuto, por decisão do Bruno: faz uma coisa só,
@@ -16,8 +16,10 @@ os da família; o fluxo, o desenho das telas e os ícones são do eletricista.
 - **Um caminho só, com o próximo passo no pé da tela.** Orçamento: Rascunho → Enviado → Aprovado → Recebido (a trilha aparece no painel depois de enviar).
   Relatório: Rascunho → Enviado → Recebido. O botão do pé muda sozinho: Somar serviço, Enviar, Aprovou, Receber e
   Enviar recibo. Os três pontinhos guardam o resto: ver o PDF, duplicar, voltar uma etapa, o cliente recusou e excluir.
-- **Somar serviço.** A sua lista de preços abre em blocos por categoria, com ícone. Cada toque no + soma um; o − tira
-  um. A busca acha pelo nome. Os mais usados sobem para o alto. O que não está na lista entra como linha avulsa.
+- **Somar serviço.** Os seus serviços, agrupados por categoria, com o filtro pela ação e a busca. Cada toque no + soma
+  um; o − tira um. Os mais usados sobem para o alto. O que você ainda não tem nasce em **Novo serviço** (objeto, ação e
+  preço) e fica salvo nos seus Preços; a busca também sugere do banco do app. O que é só daquele documento entra como
+  linha avulsa.
 - **Linha do documento.** Toque na linha para mudar a descrição, a quantidade, a unidade e o preço só naquele documento.
 - **Condições.** Pagamento (à vista, entrada de 30% a 70% ou a combinar), validade do orçamento, dia do serviço (no
   relatório), garantia, desconto e observações.
@@ -29,14 +31,15 @@ os da família; o fluxo, o desenho das telas e os ícones são do eletricista.
 - **Início.** Quanto há para receber, o que espera resposta, o que está aprovado para fazer, o recebido no mês e os
   documentos em andamento.
 - **Documentos.** Todos os orçamentos e relatórios, com busca e filtro.
-- **Preços.** Uma tabela (5.2.1): a sua hora no alto, a busca, os chips das categorias (com Todas) e as linhas agrupadas
-  por categoria: nome, tempo típico (ou "fixo"), preço e seta para editar. Cada categoria termina com a linha de adicionar
-  e tem o lápis para editar o nome e o ícone (usado em Somar serviço). O material fica na sua seção, no fim. Dá para criar
-  e excluir categorias. O catálogo de fábrica tem 9 categorias, 53 serviços (com tempo
-  típico) e 22 materiais de eletricista predial de baixa tensão, com tempos e preços ilustrativos (Regras do app, Art. 9º).
+- **Preços.** Só o que você criou (5.3): a sua hora no alto, a busca, os chips das categorias (com Todas) e as linhas
+  agrupadas por categoria: nome, tempo (ou "fixo"), preço e seta para editar. A tabela começa vazia; mostra as
+  categorias com itens e as que você criou, cada uma com o lápis para editar o nome e o ícone. O material fica na sua
+  seção, no fim. Uma linha de adicionar: "Novo serviço ou material". O app não traz preço nem tempo de fábrica: traz um
+  **banco** de 8 categorias, 10 ações, 90 objetos de serviço e 30 materiais de eletricista predial de baixa tensão
+  (Regras do app, Art. 9º).
 - **O raio.** De tempos em tempos um raio rasga a tela, sozinho, com ou sem toque. É enfeite: não recebe toque, não
   cai com alguém digitando nem com janela aberta, respeita o movimento reduzido e pode ser desligado em Ajustes.
-- **Da família:** apresentação de quatro telas, guia único (o app faz cada passo na tela), sincronização entre
+- **Da família:** apresentação de quatro telas (seguida do cadastro: os seus dados e a sua hora), guia único (o app faz cada passo na tela), sincronização entre
   aparelhos, cópia de segurança, temas claro, escuro e automático, avaliação e apoio.
 
 Saíram na 4.0.0, com a aprovação do Bruno: conquistas e lâmpadas, Obra (levar, comprar, estoque e ferramentas),
@@ -47,8 +50,9 @@ deslocamento, adicionais, impostos, cartão com taxa, ambientes, composição de
 O app serve para **orçar** (saber quanto cobrar) e **passar** (entregar uma proposta com cara de profissional). Na versão 5
 os preços saem da hora de quem usa.
 
-- **A sua hora.** Pedida uma vez, antes do primeiro documento. Dois caminhos: digitar o valor ou "Descobrir minha hora"
-  (quanto quer tirar por mês, mais os custos, dividido pelas horas cobradas). Fica no alto de Preços e em Ajustes, Cobrança.
+- **A sua hora.** Pedida na abertura (com Pular) e, para quem pulou, antes do primeiro serviço (5.3). Dois caminhos:
+  digitar o valor ou "Descobrir minha hora" (quanto quer tirar por mês, mais os custos, dividido pelas horas cobradas).
+  Fica no alto de Preços e em Ajustes, Cobrança.
 - **Cada serviço guarda o tempo típico.** O preço é o tempo vezes a hora. Mudar o preço reescreve o tempo. Com a chave
   "Seguir a minha hora" desligada, o preço é fixo. Material e diária têm preço fixo.
 - **Diagnóstico por tempo e deslocamento por ida**, no alto de Somar serviço. O deslocamento é fixo por ida ou por
@@ -98,7 +102,7 @@ de nome só se o nome ainda for o de fábrica; entram 2 serviços e 10 materiais
 - **Orçamento prévio (CDC, art. 40):** mão de obra e material discriminados; condições de pagamento; início previsto e
   quantos dias leva (término calculado), obrigatórios para enviar; validade de fábrica de 10 dias (§ 1º); a linha "o
   orçamento aprovado obriga as duas partes e só muda por nova negociação" (§ 2º).
-- **Cliente:** nome, telefone e endereço do serviço pedidos antes de tudo (exceção ao Art. 64-D, abaixo).
+- **Cliente:** nome, telefone e endereço do serviço pedidos ao criar o documento, sem Pular (Código, Art. 64-D, § 2º).
 
 ## A cara nova (versão 5.2)
 
@@ -113,6 +117,30 @@ de nome só se o nome ainda for o de fábrica; entram 2 serviços e 10 materiais
 - **Uma ação só no pé**, amarela, e os três pontinhos. A trilha das etapas só aparece depois de enviar.
 - **Animações do ofício** (`telas.js`, `estilo.css`): ao enviar, o disjuntor arma ao lado do total (900 ms); ao somar, uma
   faísca corre pelo cartão em que o valor subiu, até o subtotal (480 ms). Com movimento reduzido, nada se mexe.
+
+## Os preços são do eletricista (versão 5.3)
+
+- **Sem preço nem tempo de fábrica.** O app traz um **banco**: categorias, ações (Instalação, Troca, Ponto novo, Remoção,
+  Manutenção, Reparo, Medição, Inspeção, Montagem e Passagem), objetos por categoria (com a unidade e a ação mais comum)
+  e unidades. Os materiais do banco também não têm preço.
+- **Novo serviço.** Categoria, objeto (do banco ou outro, escrito), ação (a mais comum já marcada; tocar de novo tira),
+  o nome que se monta ("Troca de disjuntor geral", editável), a unidade e o preço: **pelo tempo** (8 tempos de 15 min a
+  4 h, ou outro, de 5 em 5 min; o item segue a hora) ou **em reais** (fixo). Nasce em Preços ou dentro do orçamento; lá,
+  o botão é "Salvar e somar", e o item já entra no documento. O mesmo nome na mesma categoria não entra duas vezes.
+- **Somar serviço.** Os seus serviços primeiro, agrupados por categoria, os mais usados no alto, com o filtro pela ação
+  e a busca. A busca sugere do banco o que você ainda não tem ("Criar a partir do banco"). "Novo serviço" no fim.
+- **Por tempo, por ida e por dia.** Diagnóstico pelo tempo; deslocamento e diária com − e +. O primeiro deslocamento e
+  a primeira diária pedem o valor, que fica em Ajustes, Cobrança.
+- **Materiais.** Contados como antes. Em "Pôr no orçamento", o app pede o preço do que não tem e o guarda nos Preços.
+- **O que é pedido onde (Código, Art. 64-D):** na abertura, com Pular, os seus dados (nome e WhatsApp; empresa, cidade,
+  CPF ou CNPJ, registro e e-mail, se quiser) e a sua hora; no primeiro orçamento, antes do primeiro serviço, o que
+  faltou (e o nome e o WhatsApp de novo ao enviar, se faltarem); ao criar o documento, sem Pular, o cliente (nome,
+  telefone e endereço do serviço), porque a lei exige.
+
+**Da 5.2.1 para a 5.3.0.** Documentos, ajustes e a hora não mudam. Ficam nos Preços os itens que a pessoa criou e os de
+fábrica que ela mudou (nome, unidade, categoria, tempo ou preço) ou em que anotou o tempo real; os de fábrica que ela
+nunca mexeu saem e voltam ao banco. A "Diária técnica" vira o valor da diária em Ajustes, se o preço era dela; a
+categoria "Diária", vazia e com o nome de fábrica, sai. Quem começa do zero recebe só as categorias do banco.
 
 ## Como usar
 
@@ -195,12 +223,12 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 | `estilo.css` | cores e peças do app; botões, campos, janelas e avisos são os do Kit |
 | `icones.js` | os ícones (Lucide), gerado a partir de `icones/lucide` por `ferramentas/icones.mjs` |
 | `icones/lucide/` | os SVG da Lucide usados no app e a licença ISC |
-| `motor.js` | utilidades, catálogo de fábrica, dados, contas, sincronização, janelas e rotas |
+| `motor.js` | utilidades, banco de fábrica (categorias, ações, objetos e unidades), dados, contas, sincronização, janelas e rotas |
 | `documento.js` | PDF do orçamento e do relatório, recibo, mensagem de WhatsApp, código do Pix e cópia de segurança |
 | `telas.js` | Início, Documentos, o documento e as suas janelas, Preços e Mais |
 | `raio.js` | o raio (o desenho é o da versão 3) e a hora de cair |
 | `guia.js` | o roteiro do guia único |
-| `casca.js` | troca de tela, navegação, Ajustes, apresentação, troca de dados do guia e arranque |
+| `casca.js` | troca de tela, navegação, Ajustes, apresentação e cadastro, troca de dados do guia e arranque |
 | `sw.js`, `manifest.webmanifest`, `icons/` | uso sem internet e instalação |
 | `comum/` | Kit Fácil 0.9.0, igual nos quatro repositórios (não se altera aqui) |
 | `tests/` | testes do app e varredura de acessibilidade (axe, WCAG 2.2 AA, claro e escuro) |
@@ -250,6 +278,12 @@ digital (SRI), baixados só quando a função é usada (Código, Art. 21).
   o botão cheio e o de começar de amarelo (`estilo.css`). Não muda medida nem comportamento. Proposta para o Integrador:
   o Kit separar a cor do botão cheio da cor de estado.
 
+- **Cadastro na abertura:** a abertura do Kit tem até quatro telas e o "Pular" dela fecha tudo. O cadastro (os seus
+  dados e a sua hora, Código, Art. 75) vem como uma segunda abertura do Kit, logo depois da apresentação; na tela dos
+  dados, o app faz o "Pular" passar para a tela da hora, e na da hora o link "Pular por agora" fecha (`casca.js`,
+  `aberturaCadastro`). Proposta para o Integrador: a abertura do Kit aceitar telas de cadastro, com Pular tela a tela e
+  conferência do que é obrigatório para continuar.
+
 - **Ícones do Kit:** a nuvem, o presente, o balão, o Mais da navegação e as guias comuns dos Ajustes são desenhados no
   Kit (`comum/kit-facil.js`) e iguais nos quatro apps. O app não os troca, para não quebrar a família (Art. 3º).
   Proposta para o Integrador: o Kit adotar a Lucide nesses ícones, nos quatro apps.
@@ -258,12 +292,6 @@ O Anexo I do Código ainda lista as cores da versão 3 do Elétrica Fácil. Prop
 (fundo `#F4F3EF` e `#141518`; destaque e começar `#FFD21F` com letra `#16171A` nos dois temas).
 
 ## Exceções ao padrão
-
-- **Cliente antes de tudo (Código, Art. 64-D):** o Código manda pedir o dado só quando ele se torna indispensável (no
-  Elétrica, o nome do cliente ao gerar a proposta). Por decisão do Bruno (22/11/2026), nome, telefone e endereço do
-  serviço são pedidos ao criar o orçamento ou o relatório, e sem eles o documento não nasce. Motivo: o orçamento prévio
-  do CDC (art. 40) é um documento com valor de contrato entre o eletricista e um cliente identificado, e o endereço é
-  onde o serviço acontece. Registrado também no CHANGELOG (5.1.1); a levar ao Painel do Integrador (Código, Art. 5º).
 
 - **Lista de escolha e calendário do Kit perto do pé de uma janela:** o Kit só rola quando a lista passa do fim da
   janela do navegador; dentro de uma janela do app, a lista pode ficar atrás do rodapé. O app completa: depois de

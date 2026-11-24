@@ -34,30 +34,46 @@ for (const tema of ['light', 'dark']) {
     await p.emulateMedia({ colorScheme: tema, reducedMotion: 'reduce' });
     await p.locator('.kf-abertura').waitFor();
     for (let k = 0; k < 4; k++) { await varrer(p, `apresentação, tela ${k + 1} (${nome})`); await p.click('#kf-ab-prox'); }
+    // o cadastro da abertura: os seus dados e a sua hora; a hora fica para depois (Pular por agora)
+    await p.locator('.ab-cadastro #ab-nome').waitFor(); await varrer(p, `abertura, seus dados (${nome})`);
+    await p.click('.ab-cadastro #kf-ab-prox'); await varrer(p, `abertura, dados apontados (${nome})`);
+    await p.fill('#ab-nome', 'Carlos Pereira'); await p.fill('#ab-fone', '11988887777'); await p.click('.ab-cadastro #kf-ab-prox');
+    await p.locator('#ab-hv').waitFor(); await varrer(p, `abertura, a sua hora (${nome})`);
+    await p.click('[data-ab-hm="conta"]'); await p.locator('#ab-hh').waitFor(); await varrer(p, `abertura, a hora pela conta (${nome})`);
+    await p.click('.ab-cadastro #kf-ab-ex');
     await p.locator('main.inicio').waitFor();
     await varrer(p, `Início, vazio (${nome})`);
     await p.evaluate(() => ir('/docs', true)); await varrer(p, `Documentos, vazio (${nome})`);
-    // documento novo, em branco, e a janela de somar
+    await p.evaluate(() => ir('/precos', true)); await varrer(p, `Preços, vazio (${nome})`);
+    // documento novo, em branco, e a janela de somar; a hora é pedida antes do primeiro serviço
     await p.evaluate(() => { ir('/', true); irPara('novo'); }); await p.locator('.kf-dlg [data-novo-tipo]').first().waitFor(); await varrer(p, `Novo documento (${nome})`);
-    await p.click('.kf-dlg [data-novo-tipo="orc"]'); await p.locator('#hr-v').waitFor(); await varrer(p, `janela da hora (${nome})`);
-    await p.click('.kf-dlg [data-hm="conta"]'); await p.locator('#hr-h').waitFor(); await varrer(p, `janela da hora, pela conta (${nome})`); await p.click('.kf-dlg [data-hm="digitar"]');
-    await p.locator('#hr-v').click(); await p.locator('#hr-v').pressSequentially('12000'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#cl-nome').waitFor(); await varrer(p, `janela do cliente novo (${nome})`);
+    await p.click('.kf-dlg [data-novo-tipo="orc"]'); await p.locator('#cl-nome').waitFor(); await varrer(p, `janela do cliente novo (${nome})`);
     await p.fill('#cl-nome', 'Mariana Souza'); await p.fill('#cl-fone', '11988887777'); await p.fill('#cl-end', 'Rua das Acácias, 120'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#pe-doc').waitFor(); await varrer(p, `orçamento em branco (${nome})`);
-    await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.locator('.kf-dlg .blocos').waitFor(); await varrer(p, `Somar, categorias (${nome})`);
-    await p.click('.kf-dlg [data-diag="60"]'); await p.click('.kf-dlg [data-ida="1"]'); await varrer(p, `Somar, com diagnóstico e ida (${nome})`);
+    await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.locator('#hr-v').waitFor(); await varrer(p, `janela da hora, antes do primeiro serviço (${nome})`);
+    await p.click('.kf-dlg [data-hm="conta"]'); await p.locator('#hr-h').waitFor(); await varrer(p, `janela da hora, pela conta (${nome})`); await p.click('.kf-dlg [data-hm="digitar"]');
+    await p.locator('#hr-v').click(); await p.locator('#hr-v').pressSequentially('12000'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#so-q').waitFor(); await varrer(p, `Somar, sem serviços ainda (${nome})`);
+    await p.click('.kf-dlg [data-diag="60"]'); await p.click('.kf-dlg [data-ida="1"]'); await p.locator('#ln-p').waitFor(); await varrer(p, `primeira ida: o valor (${nome})`);
+    await p.locator('#ln-p').click(); await p.locator('#ln-p').pressSequentially('2000'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#so-q').waitFor(); await varrer(p, `Somar, com diagnóstico e ida (${nome})`);
+    await p.click('.kf-dlg [data-dia="1"]'); await p.locator('#dr-v').waitFor(); await varrer(p, `janela da diária (${nome})`);
+    await p.locator('#dr-v').click(); await p.locator('#dr-v').pressSequentially('45000'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#so-q').waitFor();
+    await p.click('.kf-dlg [data-novo-serv]'); await p.locator('#it-corpo').waitFor(); await varrer(p, `Novo serviço (${nome})`);
+    await p.click('.kf-dlg [data-it-obj="tomada 10 A"]'); await p.click('.kf-dlg [data-it-min="30"]'); await varrer(p, `Novo serviço, preenchido (${nome})`);
+    await p.click('.kf-dlg [data-it-modo="reais"]'); await varrer(p, `Novo serviço, em reais (${nome})`); await p.click('.kf-dlg [data-it-modo="tempo"]');
+    await p.click('.kf-dlg [data-salvar]'); await p.locator('#so-q').waitFor(); await varrer(p, `Somar, com o serviço novo (${nome})`);
     await p.click('.kf-dlg [data-diag="x"]'); await p.locator('.kf-dlg #ln-n').waitFor(); await varrer(p, `janela do diagnóstico (${nome})`); await fechar(p);
     await p.locator('#conteudo .itens .item', { hasText: 'Deslocamento' }).click(); await p.locator('#ln-q').waitFor(); await varrer(p, `janela do deslocamento (${nome})`); await fechar(p);
-    await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.locator('.kf-dlg .blocos').waitFor();
-    await p.click('.kf-dlg [data-cat="c-tomadas"]'); await p.click('.kf-dlg [data-soma="p-tomadas-1"]'); await varrer(p, `Somar, dentro da categoria (${nome})`);
-    await p.fill('#so-q', 'tomada'); await varrer(p, `Somar, busca (${nome})`); await fechar(p);
+    await p.evaluate(() => { precos.push(acertaPreco({ id: 'tr1', cat: 'c-tomadas', nome: 'Troca de tomada 10 A', un: 'un', min: 20, acao: 'troca', obj: 'tomada 10 A' })); salvarPrecos(); });
+    await p.click('#conteudo [data-somar], #pe-doc [data-prox="somar"]'); await p.locator('#so-q').waitFor();
+    await p.fill('#so-q', 'disjuntor'); await p.locator('.kf-dlg [data-sug]').first().waitFor(); await varrer(p, `Somar, busca com o banco (${nome})`); await fechar(p);
     // levantamento por cômodo, materiais contados e a lista de materiais
     await p.click('#conteudo [data-levantar]'); await p.locator('.kf-dlg [data-cm="Sala"]').waitFor(); await varrer(p, `Qual cômodo (${nome})`);
     await p.click('.kf-dlg [data-cm="Sala"]'); await p.locator('.kf-dlg [data-com="Sala"]').waitFor(); await varrer(p, `Somar, no cômodo (${nome})`);
-    await p.click('.kf-dlg [data-cat="c-tomadas"]'); await p.locator('.kf-dlg [data-acf]').first().waitFor(); await varrer(p, `Somar, filtro pela ação (${nome})`);
-    await p.click('.kf-dlg [data-aba="mat"]'); await p.click('.kf-dlg [data-mts="p-materiais-5"]'); await varrer(p, `Somar, materiais (${nome})`);
+    await p.click('.kf-dlg [data-acf="troca"]'); await varrer(p, `Somar, filtro pela ação (${nome})`);
+    await p.click('.kf-dlg [data-aba="mat"]'); await p.click('.kf-dlg [data-mts="b:Tomada 10 A"]'); await varrer(p, `Somar, materiais (${nome})`);
     await p.locator('.kf-dlg [data-mt]').first().click(); await p.locator('#mt-c').waitFor(); await varrer(p, `material contado (${nome})`); await fechar(p);
     await p.locator('#pe-doc').waitFor(); await fechar(p);
-    await p.click('#conteudo [data-j="mats"]'); await p.locator('.kf-dlg [data-por]').waitFor(); await varrer(p, `Lista de materiais (${nome})`); await fechar(p);
+    await p.click('#conteudo [data-j="mats"]'); await p.locator('.kf-dlg [data-por]').waitFor(); await varrer(p, `Lista de materiais (${nome})`);
+    await p.click('.kf-dlg [data-por]'); await p.locator('#pm-0').waitFor(); await varrer(p, `preço do material (${nome})`); await fechar(p);
     await varrer(p, `orçamento por cômodo (${nome})`);
     await p.click('#conteudo [data-cmd="Sala"]'); await p.locator('#cmd-n').waitFor(); await varrer(p, `janela do cômodo (${nome})`); await fechar(p);
     await p.click('#conteudo [data-vista]'); await p.locator('#conteudo .sec-g-bt').first().waitFor(); await varrer(p, `orçamento por cômodo, em lista (${nome})`); await p.click('#conteudo [data-vista]'); await p.locator('#dc-car').waitFor();
@@ -79,6 +95,7 @@ for (const tema of ['light', 'dark']) {
     await p.click('#pe-doc [data-prox="receber"]'); await p.locator('#rc-v').waitFor(); await varrer(p, `Receber (${nome})`);
     await p.click('.kf-dlg [data-recebi]'); await p.locator('#conteudo [data-recibo]').waitFor(); await semAviso(p); await varrer(p, `orçamento com a entrada paga (${nome})`);
     await p.click('#conteudo [data-recibo]'); await p.locator('.kf-dlg .envios').waitFor(); await varrer(p, `Recibo (${nome})`); await fechar(p);
+    await p.evaluate(() => { const d = getDoc('exemplo'); d.linhas.push(acertaLinha({ pid: 'tr1', nome: 'Troca de tomada 10 A', un: 'un', q: 1, pu: 4000 })); tocarDoc(d); redesenhar(); }); await semAviso(p);
     await p.click('#conteudo [data-j="tempo"]'); await p.locator('.kf-dlg [data-igual]').waitFor(); await varrer(p, `janela do tempo real (${nome})`); await fechar(p);
     await p.evaluate(() => { const d = getDoc('exemplo'); d.pagos.push({ id: 'z', v: conta(d).falta, em: Date.now(), meio: 'Dinheiro' }); mudouDoc(d); redesenhar(); }); await varrer(p, `orçamento recebido (${nome})`);
     // relatório, com o dia do serviço no calendário do Kit
@@ -89,8 +106,9 @@ for (const tema of ['light', 'dark']) {
     await p.evaluate(() => ir('/docs', true)); await varrer(p, `Documentos (${nome})`);
     await p.evaluate(() => ir('/precos', true)); await varrer(p, `Preços (${nome})`);
     await p.click('#conteudo [data-nova-cat]'); await p.locator('#ct-n').waitFor(); await varrer(p, `Nova categoria (${nome})`); await fechar(p);
-    await p.click('#conteudo [data-fcat="c-quadro"]'); await p.fill('#pr-q', 'disjuntor'); await p.locator('#conteudo [data-preco]:visible').first().waitFor(); await varrer(p, `Preços filtrado e com busca (${nome})`); await p.fill('#pr-q', '');
-    await p.click('#conteudo [data-preco="p-quadro-1"]'); await p.locator('#pr-p').waitFor(); await varrer(p, `janela Preço (${nome})`); await fechar(p);
+    await p.click('#conteudo [data-fcat="c-tomadas"]'); await p.fill('#pr-q', 'tomada'); await p.locator('#conteudo [data-preco]:visible').first().waitFor(); await varrer(p, `Preços filtrado e com busca (${nome})`); await p.fill('#pr-q', '');
+    await p.click('#conteudo [data-preco="tr1"]'); await p.locator('#it-corpo').waitFor(); await varrer(p, `janela do item (${nome})`); await fechar(p);
+    await p.click('#conteudo [data-novo-preco]'); await p.click('.kf-dlg [data-it-cat="c-materiais"]'); await p.click('.kf-dlg [data-it-outro]'); await varrer(p, `Novo material, outro (${nome})`); await fechar(p);
     await p.evaluate(() => ir('/mais', true)); await varrer(p, `Mais (${nome})`);
     await p.evaluate(() => ir('/ajustes', true)); await p.locator('[data-kf-aj]').waitFor(); await varrer(p, `Ajustes (${nome})`);
     for (const g of ['conta', 'cobranca', 'pix', 'padrao', 'raio']) { await p.evaluate(g => KitFacil.ajustes.abrir(g), g); await varrer(p, `Ajustes, guia ${g} (${nome})`); await p.evaluate(() => history.back()); await p.waitForTimeout(150); }

@@ -3,6 +3,51 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.3.0 · 2026-11-23
+
+Os preços passam a ser só do eletricista.
+
+- Os preços agora são só seus: o app não traz nenhum preço nem tempo de fábrica.
+- Novo serviço em poucos toques: escolha o objeto e a ação, e dê o preço em reais ou pelo tempo.
+- O serviço que você cria no orçamento fica salvo nos seus Preços, para a próxima vez.
+- Na primeira vez, o app pede os seus dados e a sua hora. Dá para pular e informar no primeiro orçamento.
+
+Também:
+
+- **Banco de fábrica.** O app traz só categorias (8), ações (10), objetos (90 de serviço e 30 materiais) e unidades.
+  O serviço nasce de objeto + ação ("Troca de disjuntor geral"), com o nome editável, a unidade e o preço. O objeto traz
+  a ação mais comum já marcada (disjuntor geral: Troca; fiação: Passagem); tocar de novo na ação a tira. Pelo tempo, o
+  item segue a hora (como na 5.0); em reais, o preço é fixo. Material só em reais.
+- **Somar serviço.** Primeiro os seus serviços, agrupados por categoria (os mais usados no alto), com o filtro pela
+  ação e a busca. A busca também sugere do banco o que você ainda não tem ("Criar a partir do banco"). "Novo serviço"
+  fica no fim da lista. Saíram os blocos de categoria: com a lista só sua, eles eram um toque a mais.
+  Contagem de toques (teste automático): criar e somar um serviço novo, de dentro de Somar serviço, são 4 toques
+  (Novo serviço, objeto, tempo, Salvar e somar) quando a categoria já é a marcada, e 5 quando não é; somar um já salvo é 1 toque
+  (3 contando abrir e fechar a janela).
+- **Materiais sem preço.** Os materiais do banco são contados como antes, sem preço. Em "Pôr no orçamento", o app
+  pede o preço do que ainda não tem, e o guarda nos seus Preços. Material novo pela busca: o preço é opcional.
+- **Deslocamento e diária.** Nenhum valor vem de fábrica: a primeira ida pede o valor por ida (ou por km) e a primeira
+  diária pede o valor da diária; os dois ficam em Ajustes, Cobrança, que ganhou o campo "Diária". A diária deixou de
+  ser um item de Preços e virou a linha "Diária", com − e +, ao lado do diagnóstico e do deslocamento.
+- **Primeiro uso (Código 0.13.0, Arts. 64-D e 75).** Depois das quatro telas de apresentação vêm duas de cadastro: os
+  seus dados na proposta (nome e WhatsApp, e, se quiser, empresa, cidade, CPF ou CNPJ, registro e e-mail) e a sua hora
+  (digitar ou "Descobrir minha hora"). "Pular" na tela dos dados passa para a da hora; na da hora, "Pular por agora"
+  fecha. O que foi escrito fica. Quem pulou recebe os dois pedidos no primeiro orçamento, antes de somar o primeiro
+  serviço, e de novo ao enviar, se o nome ou o WhatsApp faltarem. O cliente continua pedido ao criar o documento, sem
+  Pular, porque a lei exige o cliente identificado; deixou de ser exceção ao Código (Art. 64-D, § 2º).
+- **Preços.** A tabela começa vazia e mostra só as categorias com itens (e as que você criou, para poder editar ou
+  excluir). Uma linha só de adicionar: "Novo serviço ou material". A janela do item é a mesma de Novo serviço.
+- **Orçamento de exemplo** sai pela sua hora (ou a hora de exemplo), sem usar os seus Preços.
+- **Guia:** os passos "Crie o seu primeiro serviço", "Da próxima vez, é um toque" e "Ou busque pelo nome" mostram o
+  Novo serviço e as sugestões do banco.
+
+**Dados (da 5.2.1 para a 5.3.0).** Documentos, ajustes (nome, Pix, deslocamento, mínimo, condições, padrões) e a
+hora ficam como estão. Ficam nos Preços os itens que a pessoa criou e os de fábrica que ela mudou (nome, unidade,
+categoria, tempo ou preço) ou em que anotou o tempo real. Os itens de fábrica que ela nunca mexeu saem dos Preços e
+voltam ao banco (a busca os sugere de novo). A "Diária técnica" vira o valor da diária em Ajustes, se o preço era
+dela; a categoria "Diária", vazia e com o nome de fábrica, sai. Os documentos já feitos não mudam: cada linha guarda o
+preço do dia. Quem começa do zero recebe só as categorias do banco.
+
 ## 5.2.1 · 2026-11-22
 
 Refino da cara nova.
@@ -47,7 +92,7 @@ material ("não incluído" quando não há) e dizem que o orçamento aprovado ob
 exclusão de mau uso e de alteração por terceiros passa a citar a lei (art. 14, § 3º, II) em vez de reduzir a garantia;
 garantia antiga menor que 90 dias sobe para a da lei, e a maior vira o menor adicional que a cobre; o orçamento só é
 enviado com o início e o prazo; textos de campo vazio dizem o que vai nele, sem "opcional" nem "se quiser". O cliente
-obrigatório na criação é exceção ao Código do Projeto Fácil, Art. 64-D (ver o README).
+obrigatório na criação segue o Código do Projeto Fácil, Art. 64-D, § 2º (desde o Código 0.13.0).
 
 ## 5.1.0 · 2026-11-21
 

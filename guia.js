@@ -26,18 +26,25 @@ const GUIA = [
       await m.digitar('#cl-nome', 'Mariana Souza'); await m.digitar('#cl-fone', '11988887777'); await m.digitar('#cl-end', 'Rua das Acácias, 120');
       await m.tocar('.kf-dlg [data-salvar]', { depois: 700 }); await m.acha('#pe-doc');
     } },
-  { t: 'Some os serviços', d: 'Toque em Somar serviço. Os seus preços aparecem em blocos. Cada toque no + soma um.',
+  { t: 'Crie o seu primeiro serviço', d: 'O app não traz preço de fábrica. Em Novo serviço, escolha o objeto e a ação, e diga quanto tempo leva.',
     acao: async m => {
-      await gSomar(m); await m.apontar('.kf-dlg .blocos', 1400);
-      await m.tocar('.kf-dlg [data-cat="c-tomadas"]', { depois: 600 });
-      const mais = '.kf-dlg [data-soma="p-tomadas-1"]';
-      await m.tocar(mais, { depois: 320 }); await m.tocar(mais, { depois: 320 }); await m.tocar(mais, { depois: 500 });
+      await gSomar(m);
+      if (!$('#it-corpo')) await m.tocar('.kf-dlg [data-novo-serv]', { depois: 700 });
+      await m.tocar('.kf-dlg [data-it-obj="tomada 10 A"]', { depois: 600 }); await m.apontar('.kf-dlg [data-it-acao="instalacao"]', 1100);
+      await m.tocar('.kf-dlg [data-it-min="30"]', { depois: 600 }); await m.apontar('.kf-dlg [role="status"]', 1300);
+      await m.tocar('.kf-dlg [data-salvar]', { depois: 800 }); await m.acha('#so-q');
+    } },
+  { t: 'Da próxima vez, é um toque', d: 'O serviço ficou nos seus Preços. Cada toque no + soma um.',
+    acao: async m => {
+      await gSomar(m); const mais = '.kf-dlg [data-soma]';
+      await m.tocar(mais, { depois: 320 }); await m.tocar(mais, { depois: 500 });
       await m.apontar('#so-conta', 1400);
     } },
-  { t: 'Ou busque pelo nome', d: 'A busca acha qualquer serviço ou material dos seus preços.', continua: true,
+  { t: 'Ou busque pelo nome', d: 'A busca acha nos seus Preços e sugere do banco do app o que você ainda não tem.', continua: true,
     acao: async m => {
       await gSomar(m); await m.digitar('#so-q', 'chuveiro');
-      await m.tocar('.kf-dlg [data-soma="p-aparelhos-1"]', { depois: 500 });
+      await m.tocar('.kf-dlg [data-sug]', { depois: 700 }); await m.tocar('.kf-dlg [data-it-min="60"]', { depois: 500 });
+      await m.tocar('.kf-dlg [data-salvar]', { depois: 800 }); await m.acha('#so-q');
       await m.fechar(); await m.apontar('#conteudo .itens', 1500);
     } },
   { t: 'Defeito desconhecido? Cobre pelo tempo', d: 'O diagnóstico entra pelo tempo que levou. O deslocamento é uma linha própria, por ida.',
@@ -88,10 +95,10 @@ const GUIA = [
       if (rota().nome !== 'inicio') { ir('/', true); await m.espera(350); }
       await m.apontar('#conteudo .painel', 1700); await m.apontar('#conteudo .docs .doc', 1300);
     } },
-  { t: 'Ajuste os seus preços', d: 'Em Preços fica a sua tabela. Filtre pela categoria, toque na linha e mude o valor.',
+  { t: 'Ajuste os seus preços', d: 'Em Preços fica tudo o que você criou. Toque na linha para mudar o tempo ou o preço.',
     acao: async m => {
-      await gPelaBarra(m, 'precos', '#conteudo .prc-sec'); await m.tocar('#conteudo [data-fcat="c-iluminacao"]', { depois: 600 });
-      await m.tocar('#conteudo [data-preco="p-iluminacao-1"]', { depois: 600 }); await m.apontar('#pr-p', 1500); await m.fechar();
+      await gPelaBarra(m, 'precos', '#conteudo .prc-sec'); await m.tocar('#conteudo [data-fcat="c-tomadas"]', { depois: 600 });
+      await m.tocar('#conteudo [data-preco]', { depois: 700 }); await m.apontar('.kf-dlg [data-it-modo]', 1500); await m.fechar();
     } },
   { t: 'Seu nome e seu Pix', d: 'Em Mais, Ajustes: os seus dados saem nos documentos, e a chave Pix faz o QR code.',
     acao: async m => { if (rota().nome !== 'mais') { ir('/mais', true); await m.espera(350); } await m.apontar('#conteudo .kf-mais [data-kf="ajustes"]', 1900); } },

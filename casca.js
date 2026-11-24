@@ -105,7 +105,7 @@ function lerLogo(arquivo) {
 function resumosAjustes() {
   const s = ajustes;
   return {
-    cobranca: `${s.hora ? BRL(s.hora) + ' a hora' : 'Hora ainda não informada'} · ${s.deslModo === 'km' ? BRL(s.deslKm) + ' por km' : BRL(s.deslIda) + ' por ida'} · ${s.minIda ? 'mínimo de ' + BRL(s.minIda) : 'sem mínimo por ida'}`,
+    cobranca: `${s.hora ? BRL(s.hora) + ' a hora' : 'Hora ainda não informada'} · ${s.deslModo === 'km' ? (s.deslKm ? BRL(s.deslKm) + ' por km' : 'km sem valor') : s.deslIda ? BRL(s.deslIda) + ' por ida' : 'ida sem valor'} · ${s.minIda ? 'mínimo de ' + BRL(s.minIda) : 'sem mínimo por ida'}`,
     pix: s.pix || 'Nenhuma chave cadastrada',
     padrao: `Validade de ${plural(s.validade, 'dia', 'dias')} · garantia de ${garCurta(s)} · ${s.pag === 'entrada' ? `entrada de ${s.entradaPct}%` : s.pag === 'combinar' ? 'pagamento a combinar' : 'à vista'}`,
     raio: Raio.ligado() ? 'Raio ligado' : 'Raio desligado',
@@ -138,11 +138,12 @@ TELAS.ajustes = {
         },
         produto: [
           { id: 'cobranca', titulo: 'Cobrança', icone: ICONES_AJ.cobranca, resumo: S.cobranca, html: bloco('A sua hora', `<p class="kf-ajuda">É a base dos preços: cada serviço guarda um tempo, e o preço é o tempo vezes a hora.</p>
-              <dl class="resumo"><div class="forte"><dt>${s.hora ? 'A sua hora' : 'Hora de exemplo'}</dt><dd class="num">${BRL(HORA())}</dd></div></dl>
+              <dl class="resumo"><div class="forte"><dt>A sua hora</dt><dd class="num">${s.hora ? BRL(s.hora) : 'Sem valor'}</dd></div></dl>
               <button type="button" class="kf-btn kf-sec" id="aj-hora">${s.hora ? 'Mudar a minha hora' : 'Informar a minha hora'}</button>`)
             + bloco('Deslocamento', `<p class="kf-ajuda">Sai numa linha própria do documento, por ida.</p>
               <div class="kf-campo"><span class="kf-rotulo">Como você cobra</span>${segmento('Como você cobra o deslocamento', 'aj-dm', [['fixo', 'Fixo por ida'], ['km', 'Por quilômetro']], s.deslModo)}</div>
               ${s.deslModo === 'km' ? campo('aj-deslKm', 'Valor por km', campoDinheiro('aj-deslKm', s.deslKm, 'data-ajd="deslKm"'), 'Você informa a distância, ida e volta, em cada documento.') : campo('aj-deslIda', 'Valor por ida', campoDinheiro('aj-deslIda', s.deslIda, 'data-ajd="deslIda"'))}`)
+            + bloco('Diária', `${campo('aj-diaria', 'Valor da diária', campoDinheiro('aj-diaria', s.diaria, 'data-ajd="diaria"'), 'Para obra longa: um valor fechado por dia, em Somar serviço. Com R$ 0,00, o app pergunta na primeira vez.')}`)
             + bloco('Mínimo por ida', `${campo('aj-minIda', 'Mão de obra mínima por ida', campoDinheiro('aj-minIda', s.minIda, 'data-ajd="minIda"'), 'Se os serviços somarem menos, entra a linha "Atendimento mínimo" com a diferença. Com R$ 0,00, não há mínimo. Vale para os documentos novos.')}`)
             + bloco('Condição do serviço', `<p class="kf-ajuda">Quanto somar ao preço quando o serviço é mais difícil que o normal. Você escolhe em cada linha.</p>
               ${campo('aj-cond1', 'Difícil, em %', `<input id="aj-cond1" class="kf-entrada" data-ajn="cond1" type="text" inputmode="numeric" maxlength="3" value="${s.cond1}">`)}
@@ -222,7 +223,7 @@ function aberturaAbrir({ rever = false } = {}) {
   const marca = '<div class="ab-cena ab-marca"><span class="ab-halo" aria-hidden="true"></span><img src="icons/icon-192.png" alt="" width="132" height="132"></div>';
   const telas = [
     { arte: () => marca, titulo: 'Orçamento de elétrica, do pedido ao recibo', texto: 'Veja em quatro telas como funciona.' },
-    { arte: () => blocos(), falada: true, titulo: 'Some os serviços com um toque', texto: 'Os seus preços ficam em blocos. Toque num bloco e veja a conta andar.' },
+    { arte: () => blocos(), falada: true, titulo: 'Some os serviços com um toque', texto: 'Crie cada serviço uma vez, com o seu preço. Depois, cada toque soma um.' },
     { arte: () => passos, titulo: 'O botão do pé é o próximo passo', texto: 'Enviar, Aprovou, Receber e Enviar recibo. Para receber, Pix em QR code.' },
     { arte: () => dois, titulo: 'Orçamento antes, relatório depois', texto: 'O orçamento o cliente aprova. O relatório cobra o que você já fez.' },
   ];
@@ -235,7 +236,60 @@ function aberturaAbrir({ rever = false } = {}) {
         const i = +b.dataset.abSoma; n[i] = n[i] >= 9 ? 0 : n[i] + 1; redesenharArte(); $(`[data-ab-soma="${i}"]`, el)?.focus({ preventScroll: true }); vibrar();
       });
     },
-    aoFechar: ({ como }) => { redesenhar(); return como === 'extra' ? () => criarExemplo() : null; } });
+    // na primeira vez, depois da apresentação vem o cadastro (Código, Arts. 64-D, § 1º, e 75); ao rever, não
+    aoFechar: ({ como }) => { redesenhar(); const ex = como === 'extra' ? () => criarExemplo() : null; return rever ? ex : () => aberturaCadastro(ex); } });
+}
+/* ---------- cadastro na abertura: os seus dados na proposta e a sua hora, com Pular ----------
+   É uma segunda abertura do Kit, logo depois da apresentação (o Kit faz uma abertura de até quatro telas; o cadastro
+   vem como uma sequência à parte, com os seus pontinhos). "Pular" passa a tela; na última, "Pular por agora" fecha.
+   Quem pula recebe os pedidos de novo no primeiro orçamento, antes de somar o primeiro serviço (janelaSomar). */
+function aberturaCadastro(depois) {
+  const el0 = { ...ajustes }, h = { modo: 'digitar', v: ajustes.hora, T: ajustes.hTirar, C: ajustes.hCustos, H: ajustes.hHoras };
+  let passar = false;
+  const daConta = () => h.H > 0 ? Math.round((h.T + h.C) / h.H) : 0, hora = () => h.modo === 'conta' ? daConta() : h.v;
+  const formHora = () => `${segmento('Como informar a hora', 'ab-hm', [['digitar', 'Digitar o valor'], ['conta', 'Descobrir minha hora']], h.modo)}
+    ${h.modo === 'digitar' ? campo('ab-hv', 'Valor da sua hora', campoDinheiro('ab-hv', h.v))
+    : `${campo('ab-ht', 'Quanto quer tirar por mês', campoDinheiro('ab-ht', h.T))}${campo('ab-hc', 'Custos do mês', campoDinheiro('ab-hc', h.C), 'Carro, ferramenta, celular, imposto.')}
+      ${campo('ab-hh', 'Horas que você cobra por mês', `<input id="ab-hh" class="kf-entrada" type="text" inputmode="numeric" maxlength="3" value="${h.H || ''}" placeholder="Ex.: 60">`, 'Só as horas cobradas, sem trânsito nem orçamento.')}
+      <dl class="resumo"><div class="forte"><dt>A sua hora dá</dt><dd class="num" id="ab-hr">${BRL(daConta())}</dd></div></dl>`}`;
+  const lerHora = el => { if (h.modo === 'digitar') { if ($('#ab-hv', el)) h.v = lerDinheiro($('#ab-hv', el)); } else if ($('#ab-hh', el)) { h.T = lerDinheiro($('#ab-ht', el)); h.C = lerDinheiro($('#ab-hc', el)); h.H = Math.max(0, Math.min(744, parseInt($('#ab-hh', el).value, 10) || 0)); } };
+  const guardarDados = () => { CAMPOS_ELE.forEach(([k]) => { if (el0[k] !== ajustes[k]) ajustes[k] = el0[k]; }); salvarAjustes(); };
+  const telas = [
+    { arte: `<span class="ab-cad-ic">${IC.docs}</span>`, titulo: 'Seus dados na proposta', texto: 'O cliente vê o seu nome e o seu WhatsApp no orçamento.',
+      get extra() { return `<div class="ab-cad pilha" id="ab-dados">${camposEletricista(el0, 'ab')}<p class="kf-ajuda">O logotipo e a chave Pix ficam em Ajustes.</p></div>`; } },
+    { arte: `<span class="ab-cad-ic">${IC.relogio}</span>`, titulo: 'Quanto vale a sua hora?', texto: 'Ela é a base dos preços que você der pelo tempo.',
+      get extra() { return `<div class="ab-cad pilha" id="ab-hora">${formHora()}</div>`; } },
+  ];
+  KitFacil.abertura.abrir({ telas, rotulo: 'Seus dados e a sua hora', fim: 'Começar', extra: { rotulo: 'Pular por agora' },
+    aoMontar: el => {
+      el.classList.add('ab-cadastro');
+      el.addEventListener('input', e => {
+        if (e.target.matches('[data-el]')) lerEletricista(el, el0);
+        else { lerHora(el); const r = $('#ab-hr', el); if (r) r.textContent = BRL(daConta()); }
+      });
+      el.addEventListener('click', e => {
+        const b = e.target.closest('[data-ab-hm]'); if (!b) return;
+        lerHora(el); h.modo = b.dataset.abHm; $('#ab-hora', el).innerHTML = formHora(); prepararCampos(el); $(`[data-ab-hm="${h.modo}"]`, el)?.focus({ preventScroll: true });
+      });
+      // "Pular" na tela dos dados passa para a da hora (no Kit, ele fecharia tudo); "Continuar" e "Começar" conferem o que falta
+      el.addEventListener('click', e => {
+        const pular = e.target.closest('#kf-ab-pular'), prox = e.target.closest('#kf-ab-prox');
+        if (pular && $('#ab-dados', el)) { e.stopImmediatePropagation(); e.preventDefault(); passar = true; $('#kf-ab-prox', el).click(); return; }
+        if (!prox) return;
+        if (passar) { passar = false; return; }
+        if ($('#ab-dados', el)) { const falta = lerEletricista(el, el0); if (falta.length) { e.stopImmediatePropagation(); falta.forEach(x => KitFacil.apontar($(x[1], el))); aviso(`Falta ${falta.map(x => x[2]).join(' e ')}. Ou toque em Pular.`); } else guardarDados(); return; }
+        if ($('#ab-hora', el)) { lerHora(el); if (!hora()) { e.stopImmediatePropagation(); KitFacil.apontar($(h.modo === 'digitar' ? '#ab-hv' : '#ab-hh', el)); aviso(h.modo === 'digitar' ? 'Escreva o valor da sua hora. Ou toque em Pular por agora.' : 'Preencha os três números da conta. Ou toque em Pular por agora.'); } }
+      }, true);
+      // Enter num campo: o Kit passaria a tela sem conferir; aqui ele aperta o botão de continuar
+      window.addEventListener('keydown', function enter(e) { if (!document.body.contains(el)) return window.removeEventListener('keydown', enter, true); if (e.key === 'Enter' && e.target.matches && e.target.matches('.ab-cad input')) { e.preventDefault(); e.stopImmediatePropagation(); $('#kf-ab-prox', el).click(); } }, true);
+    },
+    aoFechar: ({ como, el }) => {
+      if ($('#ab-dados', el)) lerEletricista(el, el0);
+      // o que foi digitado nos dados fica, mesmo sem nome e WhatsApp completos (o pedido volta no primeiro orçamento)
+      guardarDados();
+      if (como === 'fim') { lerHora(el); const v = hora(); if (v) { ajustes.hora = v; if (h.modo === 'conta') { ajustes.hTirar = h.T; ajustes.hCustos = h.C; ajustes.hHoras = h.H; } salvarAjustes(); aviso(`Pronto. A sua hora é ${BRL(v)}.`); } }
+      redesenhar(); return depois;
+    } });
 }
 
 /* ---------- guia: o app faz cada passo na tela, numa demonstração que não grava nada (Código, Arts. 77 a 80) ----------
@@ -256,7 +310,7 @@ function guiaIniciar() {
       dadosReais = { docs, cats, precos, ajustes, filtroDocs, buscaDocs };
       semSalvar = true;
       const s = semente();
-      guiaPor({ docs: [], cats: s.cats, precos: s.precos, ajustes: acertaAjustes({ nome: 'Carlos Pereira', fone: '11987654321', cidade: 'São Paulo', pix: 'carlos@exemplo.com.br', raio: ajustes.raio, hora: HORA_EXEMPLO, tab: 5 }) });
+      guiaPor({ docs: [], cats: s.cats, precos: s.precos, ajustes: acertaAjustes({ nome: 'Carlos Pereira', fone: '11987654321', cidade: 'São Paulo', pix: 'carlos@exemplo.com.br', raio: ajustes.raio, hora: HORA_EXEMPLO, deslIda: 2000, tab: 7 }) });
       ir('/', true);
     },
     foto: guiaFoto,

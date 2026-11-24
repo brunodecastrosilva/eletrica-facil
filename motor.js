@@ -2,7 +2,7 @@
    O app faz uma coisa: orçar serviços de elétrica e fechar a cobrança (enviar, aprovar, receber, recibo).
    Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito. */
 'use strict';
-const VERSAO = '5.2.1';
+const VERSAO = '5.3.0';
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 
 /* ================= utilidades ================= */
@@ -38,13 +38,35 @@ const primeiroNome = s => String(s || '').trim().split(/\s+/)[0] || '';
 const semMovimento = () => KitFacil.movimento.reduzido();
 const vibrar = () => { try { navigator.vibrate && navigator.vibrate(8); } catch {} };
 
-/* ================= catálogo de fábrica (Regras do app, Art. 9º: predial de baixa tensão; preços ilustrativos) ================= */
+/* ================= banco de fábrica (Regras do app, Art. 9º: predial de baixa tensão) =================
+   Na 5.3 o app não traz nenhum preço nem tempo de fábrica. Vem só um BANCO: categorias, ações, objetos e unidades. O serviço
+   do eletricista nasce quando ele escolhe objeto e ação (o nome se monta), a unidade e o preço (em reais ou pelo tempo,
+   vezes a hora dele). O item fica salvo nos Preços dele. Os materiais do banco também não têm preço. */
 const UNIDADES = [['un', 'Unidade'], ['ponto', 'Ponto'], ['m', 'Metro'], ['m²', 'Metro quadrado'], ['h', 'Hora'], ['ida', 'Ida'], ['dia', 'Diária'], ['vb', 'Verba'], ['rolo', 'Rolo'], ['kit', 'Kit']];
 const unTxt = (q, u) => ({ un: 'un.', ponto: q === 1 ? 'ponto' : 'pontos', m: 'm', 'm²': 'm²', h: 'h', ida: q === 1 ? 'ida' : 'idas', dia: q === 1 ? 'diária' : 'diárias', vb: q === 1 ? 'verba' : 'verbas', rolo: q === 1 ? 'rolo' : 'rolos', kit: q === 1 ? 'kit' : 'kits' }[u] || 'un.');
 const unNome = u => (UNIDADES.find(x => x[0] === u) || UNIDADES[0])[1].toLowerCase();
-// Catálogo de fábrica. Serviço: [nome, unidade, minutos do tempo típico]. Preço fixo: [nome, unidade, 0, centavos].
-// O quinto valor, quando existe, é o número do id (os ids de fábrica não mudam de uma versão para a outra).
-const SEMENTE = [
+const ACOES = [['instalacao', 'Instalação'], ['troca', 'Troca'], ['ponto', 'Ponto novo'], ['remocao', 'Remoção'], ['manutencao', 'Manutenção'], ['reparo', 'Reparo'], ['medicao', 'Medição'], ['inspecao', 'Inspeção'], ['montagem', 'Montagem'], ['passagem', 'Passagem']];
+const acaoNome = a => (ACOES.find(x => x[0] === a) || [, ''])[1];
+const maiuscula = s => s ? s[0].toLocaleUpperCase('pt-BR') + s.slice(1) : '';
+// "Troca" + "disjuntor geral" = "Troca de disjuntor geral"; sem ação, o nome é o objeto
+const nomeMontado = (a, o) => o ? (a ? `${acaoNome(a)} de ${o}` : maiuscula(o)) : '';
+// Objeto: [nome, unidade, ação mais comum ('' = sem ação; sem o terceiro valor, Instalação)]
+const BANCO = [
+  ['tomadas', 'Tomadas e interruptores', 'tomada', [['tomada 10 A', 'un'], ['tomada 20 A', 'un'], ['tomada dupla', 'un'], ['tomada tripla', 'un'], ['tomada USB', 'un'], ['tomada de piso', 'un'], ['tomada de sobrepor', 'un'], ['tomada externa com tampa', 'un'], ['interruptor simples', 'un'], ['interruptor duplo', 'un'], ['interruptor triplo', 'un'], ['interruptor paralelo', 'un'], ['interruptor intermediário', 'un'], ['interruptor com tomada', 'un'], ['dimmer', 'un'], ['pulsador', 'un'], ['espelho ou placa', 'un', 'troca'], ['caixa 4x2', 'un'], ['caixa 4x4', 'un']]],
+  ['iluminacao', 'Iluminação', 'lampada', [['ponto de luz', 'ponto', 'ponto'], ['lâmpada', 'un', 'troca'], ['luminária ou plafon', 'un'], ['lustre ou pendente', 'un'], ['spot embutido', 'un'], ['spot de sobrepor', 'un'], ['trilho de spots', 'm'], ['fita de LED', 'm'], ['perfil de LED', 'm'], ['fonte de LED', 'un'], ['arandela', 'un'], ['refletor', 'un'], ['sensor de presença', 'un'], ['fotocélula', 'un'], ['luminária de emergência', 'un'], ['balizador', 'un'], ['poste de jardim', 'un'], ['luminária tubular', 'un']]],
+  ['quadro', 'Quadro e proteção', 'quadro', [['disjuntor monopolar', 'un', 'troca'], ['disjuntor bipolar', 'un', 'troca'], ['disjuntor tripolar', 'un', 'troca'], ['disjuntor geral', 'un', 'troca'], ['DR', 'un'], ['DPS', 'un'], ['quadro de distribuição', 'un', 'montagem'], ['barramento', 'un'], ['contator', 'un'], ['relé de tempo', 'un'], ['padrão de entrada', 'un'], ['caixa de medição', 'un'], ['haste de aterramento', 'un'], ['aterramento', 'un']]],
+  ['aparelhos', 'Chuveiro e aparelhos', 'chuveiro', [['chuveiro', 'un'], ['resistência de chuveiro', 'un', 'troca'], ['torneira elétrica', 'un'], ['aquecedor de passagem', 'un'], ['boiler', 'un'], ['ventilador de teto', 'un'], ['exaustor', 'un'], ['coifa', 'un'], ['ar-condicionado', 'un', 'ponto'], ['cooktop', 'un'], ['forno elétrico', 'un'], ['máquina de lavar', 'un', 'ponto'], ["bomba d'água", 'un'], ['bomba de piscina', 'un'], ['carregador de veículo elétrico', 'un']]],
+  ['fiacao', 'Fiação e infraestrutura', 'fiacao', [['fiação', 'm', 'passagem'], ['circuito', 'un'], ['eletroduto aparente', 'm'], ['eletroduto embutido', 'm'], ['eletrocalha', 'm'], ['canaleta', 'm'], ['caixa de passagem', 'un'], ['rasgo e fechamento na parede', 'm', ''], ['abertura de caixa na alvenaria', 'un', '']]],
+  ['portao', 'Portão e interfone', 'interfone', [['campainha', 'un'], ['interfone', 'un'], ['porteiro eletrônico', 'un'], ['vídeo porteiro', 'un'], ['fechadura elétrica', 'un'], ['motor de portão', 'un'], ['botoeira', 'un'], ['cerca elétrica', 'm']]],
+  ['laudos', 'Laudos e manutenção', 'laudo', [['instalação elétrica', 'un', 'inspecao'], ['quadro de distribuição', 'un', 'manutencao'], ['aterramento', 'un', 'medicao'], ['resistência de isolamento', 'un', 'medicao'], ['reaperto de conexões', 'un', ''], ['balanceamento de fases', 'un', ''], ['laudo técnico com ART', 'un', '']]],
+  ['materiais', 'Materiais', 'material', [['Cabo flexível 1,5 mm²', 'm'], ['Cabo flexível 2,5 mm²', 'm'], ['Cabo flexível 4 mm²', 'm'], ['Cabo flexível 6 mm²', 'm'], ['Cabo flexível 10 mm²', 'm'], ['Cabo PP 2x1,5 mm²', 'm'], ['Cabo PP 3x2,5 mm²', 'm'], ['Tomada 10 A', 'un'], ['Tomada 20 A', 'un'], ['Interruptor simples', 'un'], ['Interruptor paralelo', 'un'], ['Placa 4x2', 'un'], ['Placa cega 4x2', 'un'], ['Caixa 4x2', 'un'], ['Caixa 4x4', 'un'], ['Caixa octogonal', 'un'], ['Eletroduto corrugado 3/4"', 'm'], ['Eletroduto rígido 3/4"', 'm'], ['Conector de emenda', 'un'], ['Terminal', 'un'], ['Fita isolante', 'un'], ['Abraçadeira', 'un'], ['Bucha e parafuso', 'un'], ['Disjuntor monopolar', 'un'], ['Disjuntor bipolar', 'un'], ['DR bipolar 40 A 30 mA', 'un'], ['DPS classe II 275 V 20 kA', 'un'], ['Haste de aterramento', 'un'], ['Lâmpada LED', 'un'], ['Plafon LED', 'un']]],
+];
+// os objetos de uma categoria: { nome, un, acao }
+const objetosDe = catId => { const b = BANCO.find(x => 'c-' + x[0] === catId); return b ? b[3].map(([nome, un, acao]) => ({ nome, un, acao: acao === undefined ? 'instalacao' : acao })) : []; };
+const catsBanco = () => BANCO.map(([id, nome, icone]) => ({ id: 'c-' + id, nome, icone }));
+/* O catálogo com preço e tempo de fábrica que vinha até a 5.2.1. Não entra mais no app: serve só para reconhecer, na
+   passagem para a 5.3, os itens de fábrica que a pessoa nunca mexeu (eles saem dos Preços e voltam ao banco). */
+const SEMENTE_52 = [
   ['tomadas', 'Tomadas e interruptores', 'tomada', [['Instalação de tomada 10 A', 'un', 30], ['Instalação de interruptor simples', 'un', 30, 0, 9], ['Troca de tomada 10 A', 'un', 20, 0, 2], ['Troca de interruptor simples', 'un', 20, 0, 10], ['Ponto novo de tomada com fiação', 'ponto', 50, 0, 3], ['Tomada de uso específico 20 A', 'un', 40, 0, 4], ['Ponto de interruptor paralelo three-way', 'ponto', 60, 0, 5], ['Instalação de tomada dupla ou tripla', 'un', 35, 0, 6], ['Instalação de interruptor com dimmer', 'un', 40, 0, 7], ['Troca de espelho ou placa', 'un', 10, 0, 8]]],
   ['iluminacao', 'Iluminação', 'lampada', [['Instalação de luminária ou plafon', 'un', 45], ['Instalação de lustre ou pendente', 'un', 65], ['Instalação de spot embutido', 'un', 20], ['Instalação de fita de LED', 'm', 15], ['Instalação de sensor de presença', 'un', 55], ['Instalação de refletor externo', 'un', 60], ['Ponto de iluminação novo com fiação', 'ponto', 50], ['Instalação de arandela', 'un', 45]]],
   ['quadro', 'Quadro e proteção', 'quadro', [['Troca de disjuntor de circuito', 'un', 20, 0, 1], ['Troca de disjuntor geral', 'un', 30, 0, 9], ['Instalação de DR', 'un', 75, 0, 2], ['Instalação de DPS', 'un', 60, 0, 3], ['Montagem de quadro de distribuição', 'un', 450, 0, 4], ['Troca de quadro de distribuição', 'un', 480, 0, 5], ['Organização e identificação de quadro', 'un', 150, 0, 6], ['Aterramento com haste e conexões', 'un', 180, 0, 7], ['Instalação de padrão de entrada', 'un', 0, 150000, 8]]],
@@ -56,20 +78,7 @@ const SEMENTE = [
   ['materiais', 'Materiais', 'material', [['Cabo flexível 1,5 mm²', 'm', 0, 250], ['Cabo flexível 2,5 mm²', 'm', 0, 350], ['Cabo flexível 4 mm²', 'm', 0, 550], ['Cabo flexível 6 mm²', 'm', 0, 850], ['Tomada 10 A', 'un', 0, 1800], ['Tomada 20 A', 'un', 0, 2200], ['Interruptor simples', 'un', 0, 1600], ['Caixa 4x2', 'un', 0, 250], ['Eletroduto corrugado 3/4"', 'm', 0, 250], ['DR bipolar 40 A 30 mA', 'un', 0, 15000], ['DPS classe II 275 V 20 kA', 'un', 0, 5500], ['Fita isolante', 'un', 0, 800], ['Interruptor paralelo', 'un', 0, 2200], ['Placa cega 4x2', 'un', 0, 600], ['Caixa 4x4', 'un', 0, 400], ['Caixa octogonal', 'un', 0, 500], ['Cabo flexível 10 mm²', 'm', 0, 1400], ['Eletroduto rígido 3/4"', 'm', 0, 800], ['Conector de emenda', 'un', 0, 200], ['Disjuntor monopolar', 'un', 0, 1800], ['Disjuntor bipolar', 'un', 0, 6000], ['Haste de aterramento', 'un', 0, 4500]]],
 ];
 const CAT_MATERIAL = 'c-materiais';
-// Ação e objeto: opcionais em cada item; o nome se monta com os dois ("Troca de tomada 10 A") e pode ser mudado.
-const ACOES = [['instalacao', 'Instalação'], ['troca', 'Troca'], ['ponto', 'Ponto novo'], ['montagem', 'Montagem'], ['passagem', 'Passagem'], ['remocao', 'Remoção'], ['manutencao', 'Manutenção'], ['medicao', 'Medição'], ['inspecao', 'Inspeção']];
-const acaoNome = a => (ACOES.find(x => x[0] === a) || [, ''])[1];
-const nomeMontado = (a, o) => a && o ? `${acaoNome(a)} de ${o}` : '';
-const OBJETOS = {
-  'c-tomadas': ['tomada 10 A', 'tomada 20 A', 'tomada dupla', 'interruptor simples', 'interruptor paralelo', 'dimmer', 'espelho ou placa'],
-  'c-iluminacao': ['luminária ou plafon', 'lustre ou pendente', 'spot', 'fita de LED', 'sensor de presença', 'refletor', 'arandela', 'ponto de luz'],
-  'c-quadro': ['disjuntor de circuito', 'disjuntor geral', 'DR', 'DPS', 'quadro de distribuição', 'haste de aterramento', 'padrão de entrada'],
-  'c-aparelhos': ['chuveiro', 'resistência de chuveiro', 'torneira elétrica', 'ventilador de teto', 'ar-condicionado', 'cooktop ou forno', "bomba d'água", 'carregador de veículo'],
-  'c-fiacao': ['fiação', 'eletroduto aparente', 'eletroduto embutido', 'canaleta'],
-  'c-portao': ['campainha', 'interfone', 'motor de portão', 'fechadura elétrica'],
-  'c-laudos': ['aterramento', 'quadro de distribuição'],
-};
-// ação e objeto dos itens de fábrica, pelo id (os sem par não têm objeto: rasgo, abertura de caixa, laudo, diária)
+// ação e objeto dos itens de fábrica da 5.1 e 5.2, pelo id (só para a passagem dos dados antigos)
 const FAB_AO = {
   'tomadas-1': 'instalacao|tomada 10 A', 'tomadas-9': 'instalacao|interruptor simples', 'tomadas-2': 'troca|tomada 10 A', 'tomadas-10': 'troca|interruptor simples', 'tomadas-3': 'ponto|tomada 10 A', 'tomadas-4': 'instalacao|tomada 20 A', 'tomadas-5': 'ponto|interruptor paralelo', 'tomadas-6': 'instalacao|tomada dupla', 'tomadas-7': 'instalacao|dimmer', 'tomadas-8': 'troca|espelho ou placa',
   'iluminacao-1': 'instalacao|luminária ou plafon', 'iluminacao-2': 'instalacao|lustre ou pendente', 'iluminacao-3': 'instalacao|spot', 'iluminacao-4': 'instalacao|fita de LED', 'iluminacao-5': 'instalacao|sensor de presença', 'iluminacao-6': 'instalacao|refletor', 'iluminacao-7': 'ponto|ponto de luz', 'iluminacao-8': 'instalacao|arandela',
@@ -82,10 +91,12 @@ const FAB_AO = {
 const aoDe = id => (FAB_AO[String(id).replace(/^p-/, '')] || '|').split('|');
 // cômodos de fábrica para o levantamento; o nome é livre
 const COMODOS = ['Sala', 'Cozinha', 'Quarto', 'Banheiro', 'Área de serviço', 'Varanda', 'Corredor', 'Garagem', 'Área externa'];
-// os ids de fábrica são fixos: dois aparelhos que começam do zero têm o mesmo catálogo, e a sincronização não duplica
-function semente() {
+// o app começa com as categorias do banco e nenhum preço
+const semente = () => ({ cats: catsBanco(), precos: [] });
+// o catálogo de fábrica da 5.2.1, com os ids fixos de então (só para reconhecer os itens antigos)
+function semente52() {
   const cats = [], precos = [];
-  SEMENTE.forEach(([id, nome, icone, L]) => {
+  SEMENTE_52.forEach(([id, nome, icone, L]) => {
     cats.push({ id: 'c-' + id, nome, icone });
     L.forEach(([n, un, min, preco, k], i) => { const pid = `p-${id}-${k || i + 1}`, [acao, obj] = aoDe(pid); precos.push({ id: pid, cat: 'c-' + id, nome: n, un, min, fixo: !min, preco: preco || 0, reais: [], acao, obj }); });
   });
@@ -93,8 +104,8 @@ function semente() {
 }
 // o que a versão 5 tirou do catálogo: o diagnóstico por tempo ocupa o lugar da visita, da hora técnica e da localização de curto
 const CORTADOS = ['p-visita-1', 'p-visita-2', 'p-visita-3'];
-const FABRICA = Object.fromEntries(semente().precos.map(p => [p.id, p]));
-const HORA_EXEMPLO = 12000; // só para mostrar os preços antes de a pessoa dizer a hora dela
+const FABRICA = Object.fromEntries(semente52().precos.map(p => [p.id, p]));
+const HORA_EXEMPLO = 12000; // só para o orçamento de exemplo e o guia, antes de a pessoa dizer a hora dela
 const tempoTxt = m => { m = Math.max(0, Math.round(m || 0)); const h = Math.floor(m / 60), r = m % 60; return h ? (r ? `${h}h${String(r).padStart(2, '0')}` : `${h} h`) : `${r} min`; };
 
 /* ================= dados (tudo guardado neste aparelho) ================= */
@@ -128,8 +139,9 @@ const FORMATO = '4';
 
 const DEF = { nome: '', empresa: '', fone: '', email: '', doc: '', registro: '', cidade: '', pix: '', logo: '', logoProp: 1,
   validade: 10, garAd: 0, pag: 'vista', entradaPct: 50, obs: '', seq: 0, raio: true, usos: {},
-  // a hora é a base dos preços (0 = ainda não informada); os três números de "Descobrir minha hora"; deslocamento, mínimo por ida e condição
-  hora: 0, hTirar: 0, hCustos: 0, hHoras: 0, deslModo: 'fixo', deslIda: 2000, deslKm: 200, minIda: 0, cond1: 25, cond2: 50, tab: 0 };
+  // a hora é a base dos preços (0 = ainda não informada); os três números de "Descobrir minha hora"; deslocamento, diária,
+  // mínimo por ida e condição. Nenhum valor em dinheiro vem de fábrica: o que está em 0 é pedido na primeira vez que se usa
+  hora: 0, hTirar: 0, hCustos: 0, hHoras: 0, deslModo: 'fixo', deslIda: 0, deslKm: 0, diaria: 0, minIda: 0, cond1: 25, cond2: 50, tab: 0 };
 const ETAPAS = { orc: ['rascunho', 'enviado', 'aprovado', 'recebido'], rel: ['rascunho', 'enviado', 'recebido'] };
 const NOME_ETAPA = { rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado', recebido: 'Recebido', recusado: 'Recusado' };
 const TIPO = { orc: { nome: 'Orçamento', titulo: 'ORÇAMENTO', arquivo: 'Orcamento' }, rel: { nome: 'Relatório', titulo: 'RELATÓRIO DE SERVIÇO', arquivo: 'Relatorio' } };
@@ -205,7 +217,7 @@ function acertaAjustes(a) {
   o.validade = Math.max(1, Math.min(365, Math.round(num(o.validade, 10)))); o.garAd = garAdDe(a && typeof a === 'object' && a.garAd === undefined && a.garantia !== undefined ? { garantia: a.garantia } : o); delete o.garantia;
   o.pag = ['vista', 'entrada', 'combinar'].includes(o.pag) ? o.pag : 'vista'; o.entradaPct = [30, 40, 50, 60, 70].includes(o.entradaPct) ? o.entradaPct : 50;
   o.seq = Math.max(0, Math.round(num(o.seq))); o.raio = o.raio !== false;
-  ['hora', 'hTirar', 'hCustos', 'hHoras', 'deslIda', 'deslKm', 'minIda', 'tab'].forEach(k => { o[k] = Math.max(0, Math.min(99999999, Math.round(num(o[k])))); });
+  ['hora', 'hTirar', 'hCustos', 'hHoras', 'deslIda', 'deslKm', 'diaria', 'minIda', 'tab'].forEach(k => { o[k] = Math.max(0, Math.min(99999999, Math.round(num(o[k])))); });
   o.deslModo = o.deslModo === 'km' ? 'km' : 'fixo'; o.cond1 = Math.max(0, Math.min(300, Math.round(num(o.cond1, 25)))); o.cond2 = Math.max(0, Math.min(300, Math.round(num(o.cond2, 50)))); o.logoProp = num(o.logoProp, 1) || 1;
   if (!/^data:image\/(png|jpeg|webp);base64,/.test(o.logo)) o.logo = ''; // o logotipo é sempre uma imagem guardada no aparelho, nunca um endereço
   const U = {}; if (o.usos && typeof o.usos === 'object' && !Array.isArray(o.usos)) for (const k of Object.keys(o.usos)) if (idOk(k) && num(o.usos[k]) > 0) U[k] = Math.round(num(o.usos[k]));
@@ -223,7 +235,8 @@ function acertaCatalogo() {
 }
 let ajustes = acertaAjustes(LS.get('ajustes', {}));
 let cats = LS.get('cats', null), precos = LS.get('precos', null), docs = LS.get('docs', null);
-if (!Array.isArray(cats) || !Array.isArray(precos)) { const s = semente(); cats = s.cats; precos = s.precos; }
+// começo do zero: as categorias do banco, nenhum preço, e nenhuma passagem de versão a fazer
+if (!Array.isArray(cats) || !Array.isArray(precos)) { const s = semente(); cats = s.cats; precos = s.precos; ajustes.tab = Math.max(ajustes.tab, 7); }
 cats = cats.map(acertaCat); precos = precos.map(acertaPreco); acertaCatalogo();
 // primeira abertura da versão 5 com um catálogo antigo: entra o disjuntor geral, que não existia
 if (ajustes.tab < 5) {
@@ -244,10 +257,28 @@ if (ajustes.tab < 6) {
   for (let k = 13; k <= 22; k++) poe('p-materiais-' + k, 'p-materiais-' + (k - 1));
   ajustes.tab = 6; LS.set('precos', precos); LS.set('ajustes', ajustes);
 }
+/* Primeira abertura da 5.3: sem preço de fábrica. O item de fábrica que a pessoa nunca mexeu (nome, unidade, categoria,
+   tempo e preço iguais aos de fábrica, sem tempo real anotado) sai dos Preços e volta a ser só ação e objeto no banco.
+   Fica o que ela criou e o que ela mudou. A "Diária técnica" vira o valor da diária em Ajustes, se o preço era dela.
+   A categoria "Diária", vazia e com o nome de fábrica, sai. Documentos, ajustes e a hora não mudam. */
+const precoDe52 = p => p.fixo ? p.preco : Math.round(p.min * (ajustes.hora || HORA_EXEMPLO) / 60);
+const intocado = p => { const F = FABRICA[p.id]; return !!F && p.nome === F.nome && p.un === F.un && p.cat === F.cat && !!p.fixo === !!F.fixo && (F.fixo ? p.preco === F.preco : p.min === F.min) && !(p.reais || []).length; };
+if (ajustes.tab < 7) {
+  const dia = precos.find(p => p.id === 'p-visita-4');
+  if (dia && !ajustes.diaria && !intocado(dia)) ajustes.diaria = precoDe52(dia);
+  precos = precos.filter(p => !intocado(p) && p.id !== 'p-visita-4');
+  const vis = cats.find(c => c.id === 'c-visita'); if (vis && vis.nome === 'Diária' && !precos.some(p => p.cat === 'c-visita')) cats = cats.filter(c => c !== vis);
+  ajustes.tab = 7; LS.set('precos', precos); LS.set('cats', cats); LS.set('ajustes', ajustes);
+}
 docs = (Array.isArray(docs) ? docs : []).map(acertaDoc);
 
 /* ================= Kit Fácil: moldura, tema e sincronização ================= */
-const NOVIDADES = [{ versao: '5.2.1', itens: [
+const NOVIDADES = [{ versao: '5.3.0', itens: [
+  'Os preços agora são só seus: o app não traz nenhum preço nem tempo de fábrica.',
+  'Novo serviço em poucos toques: escolha o objeto e a ação, e dê o preço em reais ou pelo tempo.',
+  'O serviço que você cria no orçamento fica salvo nos seus Preços, para a próxima vez.',
+  'Na primeira vez, o app pede os seus dados e a sua hora. Dá para pular e informar no primeiro orçamento.',
+] }, { versao: '5.2.1', itens: [
   'Preços virou uma tabela: busque, filtre pela categoria e veja todos os preços de uma vez.',
   'Ícones novos e mais claros em todo o app.',
   'Uma ação só em cada lugar: o + da barra de baixo cria o documento.',
@@ -457,9 +488,11 @@ function listaMats(d, porComodo = false) {
   return [...M.values()];
 }
 // o que "Pôr no orçamento" leva: só a parte "Eu levo", somada, como linhas de material
+// o preço do material nos seus Preços (pelo item ou pelo nome): o banco não traz preço; sem ele, 0
+const precoMat = m => { const p = precos.find(x => x.cat === CAT_MATERIAL && (x.id === m.pid || (!m.pid || !precos.some(y => y.id === m.pid)) && dobra(x.nome) === dobra(m.nome))); return p ? p.preco : 0; };
 function porNoOrcamento(d) {
   d.linhas = d.linhas.filter(l => !(l.tipo === 'mat' && l.lista));
-  listaMats(d).filter(m => m.quem === 'eu').forEach(m => { const p = precos.find(x => x.id === m.pid); d.linhas.push(acertaLinha({ tipo: 'mat', lista: true, pid: m.pid, nome: m.nome, un: m.un, q: m.q, pu: p ? precoDe(p) : m.pu, comp: m.comp })); });
+  listaMats(d).filter(m => m.quem === 'eu').forEach(m => { d.linhas.push(acertaLinha({ tipo: 'mat', lista: true, pid: m.pid, nome: m.nome, un: m.un, q: m.q, pu: precoMat(m), comp: m.comp })); });
 }
 // a lista que vai para o cliente comprar: só a parte dele, sem preços
 function mensagemLista(d) {
@@ -507,9 +540,8 @@ function painel() {
     recebidoMes: soma(L.flatMap(d => d.pagos.filter(p => p.em >= ini.getTime()).map(p => p.v))) };
 }
 function novoDocumento(tipo, cliente) {
-  // a hora é pedida uma vez, antes do primeiro documento: sem ela não há preço certo (Código, Art. 64-D)
-  if (!ajustes.hora) return janelaHora(() => novoDocumento(tipo), 'Antes do primeiro documento');
-  // o cliente vem antes de tudo: sem nome, telefone e endereço do serviço o documento não nasce (exceção ao Art. 64-D)
+  // o cliente é pedido ao criar o documento, sem Pular: a lei exige o cliente identificado (Código, Art. 64-D, § 2º).
+  // Os seus dados e a sua hora vêm depois, antes de somar o primeiro serviço (Art. 64-D, § 1º; janelaSomar)
   if (!clienteOk(cliente)) return janelaNovoCliente(tipo, c => novoDocumento(tipo, c));
   const d = acertaDoc({ id: uid(), tipo, num: 0, cliente, minIda: ajustes.minIda, validade: ajustes.validade, garAd: ajustes.garAd, pag: tipo === 'orc' ? ajustes.pag : (ajustes.pag === 'combinar' ? 'combinar' : 'vista'), entradaPct: ajustes.entradaPct, obs: ajustes.obs, feito: tipo === 'rel' ? Date.now() : null, criado: Date.now(), mudou: Date.now() });
   d.num = ++ajustes.seq; salvarAjustes();
@@ -517,16 +549,18 @@ function novoDocumento(tipo, cliente) {
   ir('/d/' + d.id);
   return d;
 }
+// O exemplo não usa os seus Preços: cada linha sai de um tempo de exemplo vezes a sua hora (ou a hora de exemplo)
 function criarExemplo() {
   docs = docs.filter(d => !d.exemplo);
-  const P = n => precos.find(p => p.nome === n) || { id: '', nome: n, un: 'un', fixo: true, preco: 10000 };
-  const lin = (n, q) => { const p = P(n); return { id: uid(), pid: p.id, nome: p.nome, un: p.un, q, pu: precoDe(p) }; };
+  const lin = (nome, un, min, q) => ({ id: uid(), pid: '', nome, un, q, pu: Math.round(min * HORA() / 60) });
   const d = acertaDoc({ id: 'exemplo', tipo: 'orc', exemplo: true, cliente: { nome: 'Mariana Souza', fone: '(11) 98888-7777', end: 'Rua das Acácias, 120' }, titulo: 'Reforma elétrica da cozinha',
-    linhas: [lin('Ponto novo de tomada com fiação', 6), lin('Instalação de luminária ou plafon', 3), lin('Instalação de DR', 1), lin('Instalação de chuveiro elétrico', 1)],
+    linhas: [lin('Ponto novo de tomada 10 A', 'ponto', 50, 6), lin('Instalação de luminária ou plafon', 'un', 45, 3), lin('Instalação de DR', 'un', 75, 1), lin('Instalação de chuveiro', 'un', 60, 1)],
     pag: 'entrada', entradaPct: 50, validade: ajustes.validade, garAd: ajustes.garAd, inicio: Date.now() + 7 * 86400000, dias: 2, obs: 'Material por conta do cliente.', criado: Date.now(), mudou: Date.now() });
   docs.unshift(d); salvarDocs(); ir('/d/' + d.id);
   return d;
 }
+// os seus dados que saem na proposta: o nome e o WhatsApp bastam para o documento sair
+const dadosOk = () => ajustes.nome.trim().length >= 2 && soDigitos(ajustes.fone).length >= 10;
 const usar = pid => { if (!pid) return; ajustes.usos = { ...ajustes.usos, [pid]: (ajustes.usos[pid] || 0) + 1 }; };
 const maisUsados = (n = 6) => Object.entries(ajustes.usos).sort((a, b) => b[1] - a[1]).map(([id]) => precos.find(p => p.id === id)).filter(Boolean).slice(0, n);
 

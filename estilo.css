@@ -457,3 +457,17 @@ h3.sec-g[data-cod]::before{content:attr(data-cod);min-width:34px;height:28px;pad
 .prc-add{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:0 16px;border:0;border-top:1px solid var(--linha);background:transparent;color:var(--tinta);font-weight:700;font-size:15px;text-align:left}
 .prc-add .kf-i{width:18px;height:18px;color:var(--apoio)}
 @media (hover:hover){.prc-add:hover{background:var(--kf-accent-soft)}}
+
+/* ================= 5.3: os seus serviços, o banco, Novo serviço e o cadastro na abertura ================= */
+.so-gr{display:flex;align-items:center;gap:10px;font-size:17px}
+.so-gr .bl-ic.p{width:32px;height:32px;border-radius:10px;padding:5px}
+.so-lista .so-sug{width:100%;border:0;background:transparent;color:var(--tinta);font:inherit;text-align:left;cursor:pointer}
+.so-sug .kf-i{width:20px;height:20px;color:var(--apoio);flex:none}
+.so-sug small{color:var(--apoio)}
+.mt-sem{font-size:13.5px;color:var(--apoio);white-space:nowrap}
+.el-mais{margin-top:4px}
+.ab-cadastro .kf-ab-arte{min-height:0;margin-bottom:0;justify-items:start}
+.ab-cad-ic{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;background:var(--chip);color:var(--chip-tinta)}
+.ab-cad-ic .kf-i{width:28px;height:28px}
+.ab-cad{margin-top:6px;text-align:left}
+.ab-cadastro .kf-ab-palco{justify-content:flex-start}
