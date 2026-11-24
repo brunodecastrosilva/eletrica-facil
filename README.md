@@ -55,13 +55,14 @@ os preços saem da hora de quem usa.
   Fica no alto de Preços e em Ajustes, Cobrança.
 - **Cada serviço guarda o tempo típico.** O preço é o tempo vezes a hora. Mudar o preço reescreve o tempo. Com a chave
   "Seguir a minha hora" desligada, o preço é fixo. Material e diária têm preço fixo.
-- **Diagnóstico por tempo e deslocamento por ida**, no alto de Somar serviço. O deslocamento é fixo por ida ou por
+- **Diagnóstico por tempo e deslocamento por ida**, no fim de Somar serviço (o tempo nas rodas, 5.3.1). O deslocamento é fixo por ida ou por
   quilômetro (Ajustes, Cobrança).
 - **Mínimo por ida.** Se a mão de obra fica abaixo do mínimo vezes o número de idas, entra a linha "Atendimento mínimo".
   Começa desligado; o valor fica em Ajustes, Cobrança, e vale para os documentos novos.
 - **Condição do serviço.** Na linha: Normal, Difícil (+25%) ou Muito difícil (+50%), com as porcentagens em Ajustes.
 - **Desconto em porcentagem**, com nome, até 100% (cortesia: o documento é concluído sem cobrança). Não incide sobre material.
-- **Tempo real.** Depois do serviço, um toque; com três anotações, o app sugere acertar o tempo da tabela.
+- **Tempo real.** Depois do serviço, "Igual à tabela" num toque, ou o tempo nas rodas; com três anotações, o app sugere
+  acertar o tempo da tabela.
 - **O cliente não vê horas.** O PDF e a mensagem saem com preço fechado por serviço; o tempo só aparece no diagnóstico.
 - Saíram do catálogo "Visita técnica", "Hora técnica" e "Localização de curto-circuito" (aprovação do Bruno, 21/11/2026).
 
@@ -124,8 +125,8 @@ de nome só se o nome ainda for o de fábrica; entram 2 serviços e 10 materiais
   Manutenção, Reparo, Medição, Inspeção, Montagem e Passagem), objetos por categoria (com a unidade e a ação mais comum)
   e unidades. Os materiais do banco também não têm preço.
 - **Novo serviço.** Categoria, objeto (do banco ou outro, escrito), ação (a mais comum já marcada; tocar de novo tira),
-  o nome que se monta ("Troca de disjuntor geral", editável), a unidade e o preço: **pelo tempo** (8 tempos de 15 min a
-  4 h, ou outro, de 5 em 5 min; o item segue a hora) ou **em reais** (fixo). Nasce em Preços ou dentro do orçamento; lá,
+  o nome que se monta ("Troca de disjuntor geral", editável), a unidade e o preço: **pelo tempo** (nas rodas de horas e
+  minutos, 5.3.1; o item segue a hora) ou **em reais** (fixo). Nasce em Preços ou dentro do orçamento; lá,
   o botão é "Salvar e somar", e o item já entra no documento. O mesmo nome na mesma categoria não entra duas vezes.
 - **Somar serviço.** Os seus serviços primeiro, agrupados por categoria, os mais usados no alto, com o filtro pela ação
   e a busca. A busca sugere do banco o que você ainda não tem ("Criar a partir do banco"). "Novo serviço" no fim.
@@ -197,7 +198,11 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
   Display; o texto em Atkinson Hyperlegible.
 - **Botões cheios (Art. 66):** amarelo com letra `#16171A` e uma borda de baixo mais escura, que afunda no toque
   (contraste acima de 12:1). Vermelho só para excluir.
-- **Navegação (Art. 60):** Início, Documentos, o documento novo no centro, Preços e Mais (guia, exemplo e Ajustes).
+- **Navegação (Art. 60):** Início, Documentos, o documento novo no centro, Preços e Mais. No tablet (a partir de 768 px)
+  e no computador, o trilho lateral (5.3.1).
+- **Mais (5.4.0):** "Seu trabalho" (Hora e cobrança, Chave Pix, Padrões do orçamento, Seus dados e logotipo, com o valor
+  ou "Falta" à direita; cada uma abre a guia dos Ajustes, e a volta leva ao Mais), "Ajuda" (o guia e o exemplo) e, por
+  último, Ajustes.
 - **Telas internas (Art. 64, parágrafo único):** o documento e a categoria de preços têm, no pé, uma faixa da cor da tela
   com os três pontinhos e a ação da tela; no documento o total fica no painel do alto.
 - **Ícones (Art. 57):** todos da [Lucide](https://lucide.dev) (licença ISC, em `icones/lucide/LICENSE`), grade de 24,
@@ -316,7 +321,9 @@ O Anexo I do Código ainda lista as cores da versão 3 do Elétrica Fácil. Prop
 
 ## Publicação
 
-GitHub Pages a partir da branch `main`, pasta raiz. Antes de publicar: `npm run verificar` e os testes da parte que mudou
+GitHub Pages a partir da branch `main`, pasta raiz. Desde 24/11/2026, por decisão do Bruno, toda alteração vai direto
+para a `main`, sem esperar aprovação, para ele ver no celular; só se publica com `npm test` e `npm run verificar`
+passando, e o relato diz o commit publicado. Antes de publicar: `npm run verificar` e os testes da parte que mudou
 (Código, Art. 23, I); o guia inteiro só roda quando a mudança mexe no guia, e a bateria completa (`npm test`), quando
 mexe nas contas ou em `comum/`. Confira o app no celular e no computador, no claro e no escuro. Se o app abrir com erro
 no ar, desfaça o envio na hora (`git revert`) e só depois investigue.
