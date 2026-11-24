@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **0.12.0 (rascunho)** · 23/11/2026 · Kit Fácil **0.9.0** (com as peças do Conta Fácil)
+Versão **0.13.0 (rascunho)** · 23/11/2026 · Kit Fácil **0.9.0** (com as peças do Conta Fácil)
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
@@ -111,7 +111,7 @@ Saíram do Conta Fácil 1.7.0 sem nada próprio do Conta; o Conta Fácil 1.8.0 u
 | Barra de baixo com a ação principal no centro e "Mais"; trilho com Mais e Ajustes no pé; tela Mais com os Ajustes por último | `KitFacil.nav.barra`, `.trilho`, `.mais`; botões `data-kf-ir="<id>"`, ids `kf-nav-<id>` e `kf-trilho-<id>`; variáveis `--kf-nav-bg`, `--kf-nav-ink`, `--kf-nav-on`, `--kf-nav-atual`, `--kf-nav-atual-bg` | 59, 60, 64, II, a |
 | Barra de cima com nuvem, presente e balão em traço, na mesma cor | `KitFacil.topo.html({ principal: true })` | 13, § 1º; 58 |
 | Presente em 3D e janela do apoio | `KitFacil.apoio.abrir`, `comum/kit-jogo.js` | 13, §§ 2º e 3º |
-| Abertura de quatro telas | `KitFacil.abertura.abrir({ telas, fim, extra, aoMontar, aoFechar })`, `.ativa()`, `.vista()`; chave `<prefixo>abertura` | 75 |
+| Abertura (até quatro telas de apresentação e, se o aplicativo pedir, telas de cadastro) | `KitFacil.abertura.abrir({ telas, fim, extra, aoMontar, aoFechar })`, `.ativa()`, `.vista()`; chave `<prefixo>abertura` | 75 |
 | Guia único de janela fixa | `KitFacil.guia.demonstrar({ passos, comecar, terminar, foto, restaurar, limpar, maos, cabecalhoFixo })`, `.emDemonstracao()`, `.pararDemonstracao()`, `.estado()`; passo `{ t, d, se, continua, acao }` (Anexo VI) | 77 a 79 |
 | Trecho redesenhado com movimento | `KitFacil.movimento.redesenhar(raiz, fn, { marca })`; `[data-kf-exp]` e `[data-kf-morf]` | 72 |
 | Relógio único de 600 ms | `KitFacil.movimento.ms`, `--kf-ms`, `--kf-curva` (Anexo V); saiu o ajuste provisório de `Element.prototype.animate` do Conta | 72, § 1º |

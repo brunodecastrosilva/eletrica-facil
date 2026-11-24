@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.12.0 (rascunho)** · 23/11/2026 · Kit Fácil **0.9.0**
+Versão **0.13.0 (rascunho)** · 23/11/2026 · Kit Fácil **0.9.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -545,8 +545,17 @@ cada um.
 **Art. 64-C.** O aplicativo não decide pela pessoa. Quando há mais de um caminho (quem entra num sorteio, quem cobre
 uma diferença), a escolha é dela, com um padrão marcado quando houver.
 
-**Art. 64-D.** Cada aplicativo pede só o que precisa, quando precisa: um dado obrigatório é pedido quando se torna
-indispensável (no Elétrica Fácil, o nome do cliente ao gerar a proposta), nunca antes de começar o trabalho.
+**Art. 64-D.** Cada aplicativo pede só o que precisa, no primeiro momento em que o trabalho depende do dado, para
+funcionar ou para cumprir a lei. Dado que só serve a uma tela adiante é pedido nela.
+
+§ 1º Os dados de que o aplicativo precisa para funcionar desde o primeiro uso podem ser pedidos na abertura (Art. 75),
+sempre com "Pular"; quem pula recebe o pedido de novo quando o dado se torna indispensável (no Elétrica Fácil, os dados
+do eletricista e o valor da hora, que voltam a ser pedidos no primeiro orçamento).
+
+§ 2º O dado que a lei exige num documento é pedido ao criar o documento, sem "Pular" (no Elétrica Fácil, o nome, o
+telefone e o endereço do cliente, porque o orçamento aprovado obriga as duas partes, CDC, art. 40, § 2º).
+
+§ 3º As Regras de cada aplicativo dizem quais dados são pedidos na abertura e quais ao criar cada documento.
 
 ### CAPÍTULO V — Dos componentes
 
@@ -679,15 +688,16 @@ referência do Anexo VII, sem rolagem lateral.
 
 ### CAPÍTULO I — Da abertura
 
-**Art. 75.** Na primeira vez que o aplicativo abre, aparece a abertura: quatro telas, uma vez só, com "Pular" em
-todas, menos na última. Depois dela, a tela inicial explica, nas listas vazias, como começar (Art. 64, III).
+**Art. 75.** Na primeira vez que o aplicativo abre, aparece a abertura, uma vez só: até quatro telas que apresentam o
+aplicativo, seguidas, se as Regras do aplicativo pedirem, das telas de cadastro dos dados de que ele precisa para
+funcionar (Art. 64-D, § 1º), com "Pular" em todas, menos na última. Depois dela, a tela inicial explica, nas listas vazias, como começar (Art. 64, III).
 
 § 1º Quem diz o nome na abertura já recebe ali a primeira recompensa, se o aplicativo tiver recompensas.
 
 § 2º A abertura não volta sozinha; dá para revê-la nos Ajustes, na guia própria do aplicativo.
 
-**Art. 76.** Não há janela a cada abertura do aplicativo. Ajuste que antes era pedido no primeiro uso começa com um
-valor padrão e se muda nos Ajustes.
+**Art. 76.** Não há janela a cada abertura do aplicativo. Ajuste que não é dado indispensável começa com um valor
+padrão e se muda nos Ajustes.
 
 ### CAPÍTULO II — Do guia
 
@@ -836,5 +846,5 @@ sobe para 1.0.0 (Art. 22, § 2º).
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 23/11/2026 como rascunho (versão 0.12.0). Regras e textos anteriores (Leis Globais,
-Padrão, Código 3.x, Códigos 0.4 a 0.11.1) são histórico.
+**Art. 95.** Este Código vale desde 23/11/2026 como rascunho (versão 0.13.0). Regras e textos anteriores (Leis Globais,
+Padrão, Código 3.x, Códigos 0.4 a 0.12.0) são histórico.
