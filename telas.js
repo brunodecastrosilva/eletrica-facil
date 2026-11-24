@@ -605,7 +605,7 @@ function janelaDiaria(depois) {
 const CAMPOS_ELE = [['nome', 'Seu nome', 'Ex.: Carlos Pereira', 'autocapitalize="words" autocomplete="name"'], ['fone', 'WhatsApp', '(11) 90000-0000', 'inputmode="tel" autocomplete="tel"'],
   ['empresa', 'Nome da empresa', 'Se tiver', 'autocapitalize="words"'], ['cidade', 'Cidade', 'Ex.: São Paulo', 'autocapitalize="words"'], ['doc', 'CPF ou CNPJ', 'Sai no recibo', 'inputmode="numeric"'],
   ['registro', 'Registro profissional', 'CREA, CFT ou NR-10', ''], ['email', 'E-mail', 'Ex.: voce@email.com', 'autocapitalize="off" inputmode="email" autocomplete="email"']];
-const camposEletricista = (o, pre = 'el') => CAMPOS_ELE.map(([k, rot, dica, attrs], i) => `${i === 2 ? '<p class="kf-ajuda el-mais">Se quiser, já deixe pronto:</p>' : ''}${campo(`${pre}-${k}`, rot, `<input id="${pre}-${k}" class="kf-entrada" data-el="${k}" type="text" value="${esc(k === 'fone' ? fone(o[k]) : k === 'doc' ? cpfCnpj(o[k]) : o[k] || '')}" placeholder="${esc(dica)}" maxlength="80" ${attrs}>`)}`).join('');
+const camposEletricista = (o, pre = 'el') => CAMPOS_ELE.map(([k, rot, dica, attrs], i) => `${i === 2 ? '<p class="kf-ajuda el-mais">Também saem na proposta e no recibo:</p>' : ''}${campo(`${pre}-${k}`, rot, `<input id="${pre}-${k}" class="kf-entrada" data-el="${k}" type="text" value="${esc(k === 'fone' ? fone(o[k]) : k === 'doc' ? cpfCnpj(o[k]) : o[k] || '')}" placeholder="${esc(dica)}" maxlength="80" ${attrs}>`)}`).join('');
 // lê os campos; devolve o que falta do obrigatório (nome e WhatsApp)
 function lerEletricista(raiz, o) {
   $$('[data-el]', raiz).forEach(i => { o[i.dataset.el] = i.value.trim().slice(0, 80); });
@@ -900,17 +900,21 @@ function janelaItem(p, o = {}) {
   const novo = !p, C0 = catsEscolha();
   const x = p ? { ...p, modo: p.fixo ? 'reais' : 'tempo' } : { cat: C0.some(c => c.id === o.cat) ? o.cat : C0[0].id, acao: o.acao ?? '', obj: o.obj || '', nome: '', un: 'un', min: 0, fixo: false, preco: 0, reais: [], modo: 'tempo' };
   const mat = () => x.cat === CAT_MATERIAL;
+  // escolhido pela busca ou pelo banco: categoria, objeto e ação já vêm prontos e ficam numa linha, com Mudar;
+  // a janela abre no preço (Regras do app: o menor número de toques para criar e somar)
+  let resumo = novo && !!o.obj && !o.nome;
   let outro = false, mexeuAcao = !novo || o.acao !== undefined, tempoOutro = !novo && !p.fixo && !TEMPOS.includes(p.min), mexeuNome = !novo && x.nome !== nomeMontado(x.acao, x.obj);
   if (novo && o.obj) { const ob = objetosDe(x.cat).find(y => y.nome === o.obj); if (ob) x.un = x.acao === 'ponto' && ob.un !== 'm' ? 'ponto' : ob.un; x.nome = nomeMontado(x.acao, x.obj); }
   if (novo && o.nome && !o.obj) { x.nome = o.nome; mexeuNome = true; }
   const objs = () => mat() ? objetosDe(CAT_MATERIAL).filter(b => !precos.some(y => y.cat === CAT_MATERIAL && dobra(y.nome) === dobra(b.nome) && y !== p)) : [...objetosDe(x.cat), ...[...new Set(precos.filter(y => y.cat === x.cat && y.obj).map(y => y.obj))].filter(n => !objetosDe(x.cat).some(b => b.nome === n)).map(n => ({ nome: n, un: 'un', acao: 'instalacao' }))];
   const media = mediaReal(x), arred = v => Math.max(5, Math.min(6000, Math.round(v * 60 / HORA() / 5) * 5));
   const montar = () => { if (!mexeuNome) x.nome = mat() ? maiuscula(x.obj) : nomeMontado(x.acao, x.obj); };
-  const corpo = () => `<div class="kf-campo"><span class="kf-rotulo" id="it-cl">Categoria</span><div class="chips" role="group" aria-labelledby="it-cl">${C0.map(c => `<button type="button" class="chip" data-it-cat="${esc(c.id)}" aria-pressed="${c.id === x.cat}">${esc(c.nome)}</button>`).join('')}</div></div>
+  const corpo = () => `${resumo ? `<div class="it-resumo lin"><span class="lin-tx"><b>${esc(x.nome || maiuscula(x.obj))}</b><small>${esc((C0.find(c => c.id === x.cat) || {}).nome || '')}</small></span><button type="button" class="kf-btn kf-sec kf-p" data-it-mudar>Mudar</button></div>` : `<div class="kf-campo"><span class="kf-rotulo" id="it-cl">Categoria</span><div class="chips" role="group" aria-labelledby="it-cl">${C0.map(c => `<button type="button" class="chip" data-it-cat="${esc(c.id)}" aria-pressed="${c.id === x.cat}">${esc(c.nome)}</button>`).join('')}</div></div>
       <div class="kf-campo"><span class="kf-rotulo" id="it-ol">${mat() ? 'Material' : 'Objeto'}</span><div class="escolhas" role="group" aria-labelledby="it-ol">${objs().map(b => KitFacil.ui.escolha({ rotulo: b.nome, on: !outro && b.nome === x.obj, attrs: `data-it-obj="${esc(b.nome)}"` })).join('')}${KitFacil.ui.escolha({ rotulo: mat() ? 'Outro material' : 'Outro objeto', on: outro, attrs: 'data-it-outro' })}</div></div>
       ${outro ? campo('it-on', mat() ? 'Nome do material' : 'Nome do objeto', entrada('it-on', x.obj, `placeholder="${mat() ? 'Ex.: Cabo flexível 16 mm²' : 'Ex.: tomada de sobrepor dupla'}" maxlength="60"`)) : ''}
       ${mat() ? '' : `<div class="kf-campo"><span class="kf-rotulo" id="it-al">Ação</span><div class="escolhas" role="group" aria-labelledby="it-al">${ACOES.map(([k, n]) => KitFacil.ui.escolha({ rotulo: n, on: k === x.acao, attrs: `data-it-acao="${k}"` })).join('')}</div></div>`}
-      ${campo('it-n', mat() ? 'Nome do material' : 'Nome do serviço', entrada('it-n', x.nome, 'placeholder="Escolha o objeto, ou escreva" maxlength="80"'), mat() ? '' : 'Se monta com o objeto e a ação. Pode mudar.')}
+      ${campo('it-n', mat() ? 'Nome do material' : 'Nome do serviço', entrada('it-n', x.nome, 'placeholder="Escolha o objeto, ou escreva" maxlength="80"'), mat() ? '' : 'Se monta com o objeto e a ação. Pode mudar.')}`}
+      ${resumo ? `<input id="it-n" type="hidden" value="${esc(x.nome)}">` : ''}
       ${campo('it-u', mat() ? 'Vendido por' : 'Cobrado por', `<select id="it-u" class="kf-entrada">${UNIDADES.filter(u => !['ida', 'h'].includes(u[0])).map(([k, n]) => `<option value="${k}"${k === x.un ? ' selected' : ''}>${n}</option>`).join('')}</select>`)}
       ${mat() ? campo('it-p', 'Preço de cada', campoDinheiro('it-p', x.preco))
       : `<div class="kf-campo"><span class="kf-rotulo">Preço</span>${segmento('Como dar o preço', 'it-modo', [['tempo', 'Pelo tempo'], ['reais', 'Em reais']], x.modo)}</div>
@@ -943,6 +947,7 @@ function janelaItem(p, o = {}) {
           if (ob) { if (!mexeuAcao && !mat()) x.acao = ob.acao; x.un = !mat() && x.acao === 'ponto' && ob.un !== 'm' ? 'ponto' : ob.un; }
           montar(); return refaz(`[data-it-obj="${CSS.escape(x.obj)}"]`);
         }
+        if (t.closest('[data-it-mudar]')) { guarda(); resumo = false; return refaz('[data-it-cat][aria-pressed="true"]'); }
         if (t.closest('[data-it-outro]')) { guarda(); outro = true; x.obj = ''; montar(); refaz(); return $('#it-on', j)?.focus(); }
         if ((b = t.closest('[data-it-acao]'))) { guarda(); const a = b.dataset.itAcao; x.acao = x.acao === a ? '' : a; mexeuAcao = true; if (x.acao === 'ponto' && x.un === 'un') x.un = 'ponto'; else if (x.acao !== 'ponto' && x.un === 'ponto') x.un = 'un'; montar(); return refaz(`[data-it-acao="${a}"]`); }
         if ((b = t.closest('[data-it-modo]'))) { guarda(); const v = precoDe(x); x.modo = b.dataset.itModo; if (x.modo === 'reais' && !x.preco && x.min) x.preco = v; if (x.modo === 'tempo' && !x.min && x.preco) x.min = arred(x.preco); return refaz(`[data-it-modo="${x.modo}"]`); }

@@ -47,6 +47,8 @@ categoria, tempo ou preço) ou em que anotou o tempo real. Os itens de fábrica 
 voltam ao banco (a busca os sugere de novo). A "Diária técnica" vira o valor da diária em Ajustes, se o preço era
 dela; a categoria "Diária", vazia e com o nome de fábrica, sai. Os documentos já feitos não mudam: cada linha guarda o
 preço do dia. Quem começa do zero recebe só as categorias do banco.
+- Novo serviço escolhido pela busca ou pelo banco abre direto no preço: categoria, objeto e ação numa linha, com Mudar.
+- Seus dados na abertura: "Também saem na proposta e no recibo" no lugar de "Se quiser, já deixe pronto".
 
 ## 5.2.1 · 2026-11-22
 

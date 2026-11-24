@@ -471,3 +471,4 @@ h3.sec-g[data-cod]::before{content:attr(data-cod);min-width:34px;height:28px;pad
 .ab-cad-ic .kf-i{width:28px;height:28px}
 .ab-cad{margin-top:6px;text-align:left}
 .ab-cadastro .kf-ab-palco{justify-content:flex-start}
+.it-resumo{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 16px;border-radius:var(--kf-r-cartao);background:var(--sup-2)}
