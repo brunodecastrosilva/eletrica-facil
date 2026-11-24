@@ -542,3 +542,9 @@ h3.sec-g[data-cod]::before{content:attr(data-cod);min-width:34px;height:28px;pad
 /* documento sem cômodos: o cartão único ocupa a largura toda, também no tablet e no computador (a regra dos cartões do
    carrossel, 46% a partir de 600 px, deixava o documento numa coluna estreita) */
 .cr.cr-un{width:auto}
+
+/* ================= 5.4.0: o Mais com "Seu trabalho" e "Ajuda" ================= */
+.mais-sec{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.mais-v{flex:none;font-size:15px;font-weight:700;color:var(--tinta);white-space:nowrap}
+.mais-v.num{font-family:var(--kf-font-display);font-weight:800}
+.mais-v.falta{color:var(--apoio);font-weight:700}

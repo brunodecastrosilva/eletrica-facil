@@ -2,7 +2,7 @@
    O app faz uma coisa: orçar serviços de elétrica e fechar a cobrança (enviar, aprovar, receber, recibo).
    Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito. */
 'use strict';
-const VERSAO = '5.3.1';
+const VERSAO = '5.4.0';
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 
 /* ================= utilidades ================= */
@@ -273,7 +273,10 @@ if (ajustes.tab < 7) {
 docs = (Array.isArray(docs) ? docs : []).map(acertaDoc);
 
 /* ================= Kit Fácil: moldura, tema e sincronização ================= */
-const NOVIDADES = [{ versao: '5.3.1', itens: [
+const NOVIDADES = [{ versao: '5.4.0', itens: [
+  'O Mais ganhou atalhos para o seu trabalho: hora e cobrança, chave Pix, padrões do orçamento e seus dados.',
+  'Cada atalho mostra o que falta, e a volta leva de novo ao Mais.',
+] }, { versao: '5.3.1', itens: [
   'O tempo agora se escolhe em rodas, horas e minutos, igual em todas as telas.',
   'O aviso não cobre mais botões nem campos, e some quando você troca de tela.',
   'Novo serviço mostra 8 objetos e "Ver todos"; a fila de categorias mostra que rola.',

@@ -2,7 +2,7 @@
 
 Orçamento de serviços de elétrica, do pedido ao recibo, direto no celular, no tablet ou no computador.
 
-Versão **5.3.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **5.4.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md). Na 4.0.0 o app recomeçou enxuto, por decisão do Bruno: faz uma coisa só,
@@ -278,6 +278,9 @@ digital (SRI), baixados só quando a função é usada (Código, Art. 21).
   o botão cheio e o de começar de amarelo (`estilo.css`). Não muda medida nem comportamento. Proposta para o Integrador:
   o Kit separar a cor do botão cheio da cor de estado.
 
+- **Linhas do Mais com valor à direita (5.4.0):** o Mais do Kit (`KitFacil.nav.mais`) só tem ícone, título, apoio e
+  seta. As linhas de "Seu trabalho" e "Ajuda" usam as mesmas classes do Kit, com o valor à direita (`telas.js`,
+  `linhaMais`); a linha de Ajustes continua vindo do Kit. Proposta para o Integrador: o Kit aceitar `valor` na linha.
 - **Aviso que cobria botões e campos (5.3.1):** o Kit põe o aviso no pé e, com janela aberta, acima dos botões do pé
   dela; em janela alta e na abertura ele cobria campos e botões. Com janela ou abertura na tela, o app procura o primeiro
   lugar livre (o do Kit, logo acima da janela, o alto da tela) e, ao trocar de tela, tira o aviso da tela anterior

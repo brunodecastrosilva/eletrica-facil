@@ -887,6 +887,34 @@ test('5.3.1: o aviso nunca cobre botão nem campo e some ao trocar de tela; a se
   await t.fechar();
 });
 
+test('5.4.0: o Mais com Seu trabalho, Ajuda e Ajustes; cada atalho abre a guia certa e a volta leva ao Mais', async () => {
+  const a = await aparelho(amb); const p = a.page; await pronto(p);
+  await p.evaluate(() => { ajustes.hora = 0; ajustes.pix = ''; ajustes.nome = ''; salvarAjustes(); ir('/mais'); }); await p.locator('#ms-t').waitFor();
+  const txt = (await p.locator('#conteudo').innerText()).replace(/\s+/g, ' ');
+  assert.match(txt, /Seu trabalho Hora e cobrança .* Sem valor Chave Pix .* Falta Padrões do orçamento .* Seus dados e logotipo .* Falta Ajuda Ver o guia .* Abrir um exemplo .* Ajustes/);
+  // Hora e cobrança: abre a guia Cobrança; o voltar diz "Mais" e leva ao Mais
+  await p.click('[data-mais-aj="cobranca"]'); assert.ok(await esperar(() => p.evaluate(() => document.querySelector('[data-kf-aj]')?.dataset.ativa === 'cobranca')));
+  const volta = p.locator('[data-kf-aj-sec="cobranca"] [data-kf-aj-voltar]');
+  assert.equal((await volta.innerText()).trim(), 'Mais');
+  await volta.click(); assert.ok(await esperar(() => p.evaluate(() => rota().nome === 'mais')), 'a volta leva ao Mais');
+  // com a hora e o Pix, os valores mudam
+  await p.evaluate(() => { ajustes.hora = 12000; ajustes.pix = 'carlos@exemplo.com'; ajustes.nome = 'Carlos'; ajustes.fone = '11987654321'; salvarAjustes(); redesenhar(); });
+  assert.match((await p.locator('[data-mais-aj="cobranca"]').innerText()).replace(/\s+/g, ' '), /R\$ 120,00/);
+  assert.equal(await p.locator('[data-mais-aj="pix"] .mais-v, [data-mais-aj="conta"] .mais-v').count(), 0);
+  // Chave Pix: o voltar do aparelho também leva ao Mais
+  await p.click('[data-mais-aj="pix"]'); assert.ok(await esperar(() => p.evaluate(() => document.querySelector('[data-kf-aj]')?.dataset.ativa === 'pix')));
+  await p.goBack(); assert.ok(await esperar(() => p.evaluate(() => rota().nome === 'mais')), 'o voltar do aparelho leva ao Mais');
+  for (const [k, sec] of [['padrao', 'padrao'], ['conta', 'conta']]) {
+    await p.click(`[data-mais-aj="${k}"]`); assert.ok(await esperar(() => p.evaluate(s => document.querySelector('[data-kf-aj]')?.dataset.ativa === s, sec)), `abre ${sec}`);
+    await p.click(`[data-kf-aj-sec="${sec}"] [data-kf-aj-voltar]`); assert.ok(await esperar(() => p.evaluate(() => rota().nome === 'mais')));
+  }
+  // Ajustes pela linha do Kit: a volta da guia é a de sempre, para a lista dos Ajustes
+  await p.click('#conteudo [data-kf="ajustes"]'); await p.locator('[data-kf-aj]').waitFor();
+  await p.click('[data-kf-aj-ir="pix"]'); assert.equal((await p.locator('[data-kf-aj-sec="pix"] [data-kf-aj-voltar]').innerText()).trim(), 'Ajustes');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
 test('raio: cai sozinho, sem toque na tela; é enfeite (não recebe toque); não cai com janela aberta, desligado ou com movimento reduzido', async () => {
   const a = await aparelho(amb, { antes: () => { window.__raios = 0; document.addEventListener('DOMContentLoaded', () => new MutationObserver(M => M.forEach(m => m.addedNodes.forEach(n => { if (n.classList && n.classList.contains('rz')) window.__raios++; }))).observe(document.body, { childList: true, subtree: true })); } });
   const p = a.page; await pronto(p);

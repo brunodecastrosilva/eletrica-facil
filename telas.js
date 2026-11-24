@@ -1115,14 +1115,27 @@ function janelaCat(c) {
 }
 
 /* ================= Mais: o que não cabe na barra e, por último, os Ajustes (Código, Art. 60, II) ================= */
+/* Mais (5.4.0): "Seu trabalho" (atalhos para as guias dos Ajustes que o eletricista mais mexe, com o valor atual à
+   direita), "Ajuda" (o guia e o exemplo) e, por último, os Ajustes (Código, Art. 60, II). As linhas têm a forma das do
+   Kit (KitFacil.nav.mais), mais o valor à direita, que o Kit não tem. A volta dessas guias leva de novo ao Mais (casca.js). */
+const linhaMais = ({ titulo, texto, icone, valor = '', attrs }) => `<button type="button" class="kf-mais-lin" ${attrs}><span class="kf-mais-ic">${icone}</span><span class="kf-mais-tx"><b>${esc(titulo)}</b><small>${esc(texto)}</small></span>${valor ? `<span class="mais-v${valor === 'Falta' || valor === 'Sem valor' ? ' falta' : ' num'}">${esc(valor)}</span>` : ''}${KitFacil.IC.chev}</button>`;
 TELAS.mais = {
   html: () => `${barraTopo()}
     <main class="tela" id="conteudo">
-      ${KitFacil.ui.cabecalho({ titulo: 'Mais', sub: 'O guia, um exemplo para mexer e os ajustes.' })}
-      ${KitFacil.nav.mais({ linhas: [
-        { id: 'guia', titulo: 'Ver o guia', texto: 'O app mostra cada passo, do orçamento ao recibo', icone: IC.guia },
-        { id: 'exemplo', titulo: 'Abrir um exemplo', texto: 'Um orçamento pronto, para você mexer à vontade', icone: IC.exemplo },
-      ] })}
+      ${KitFacil.ui.cabecalho({ titulo: 'Mais', sub: 'Os atalhos do seu trabalho, a ajuda e os ajustes.' })}
+      <section class="mais-sec" aria-labelledby="ms-t"><h2 class="sec" id="ms-t">Seu trabalho</h2><div class="kf-mais">
+        ${linhaMais({ titulo: 'Hora e cobrança', texto: 'Deslocamento, diária, mínimo e condições', icone: ic(ICONES_AJ.cobranca), valor: ajustes.hora ? BRL(ajustes.hora) : 'Sem valor', attrs: 'data-mais-aj="cobranca"' })}
+        ${linhaMais({ titulo: 'Chave Pix', texto: 'O QR code do valor no documento e no recibo', icone: ic(ICONES_AJ.pix), valor: ajustes.pix.trim() ? '' : 'Falta', attrs: 'data-mais-aj="pix"' })}
+        ${linhaMais({ titulo: 'Padrões do orçamento', texto: 'Validade, garantia, pagamento e observações', icone: ic(ICONES_AJ.padrao), attrs: 'data-mais-aj="padrao"' })}
+        ${linhaMais({ titulo: 'Seus dados e logotipo', texto: 'Saem no alto da proposta e do recibo', icone: IC.pessoa, valor: dadosOk() ? '' : 'Falta', attrs: 'data-mais-aj="conta"' })}
+      </div></section>
+      <section class="mais-sec" aria-labelledby="mh-t"><h2 class="sec" id="mh-t">Ajuda</h2><div class="kf-mais">
+        ${linhaMais({ titulo: 'Ver o guia', texto: 'O app mostra cada passo, do orçamento ao recibo', icone: IC.guia, attrs: 'data-kf-ir="guia"' })}
+        ${linhaMais({ titulo: 'Abrir um exemplo', texto: 'Um orçamento pronto, para você mexer à vontade', icone: IC.exemplo, attrs: 'data-kf-ir="exemplo"' })}
+      </div></section>
+      ${KitFacil.nav.mais({ linhas: [] })}
     </main>`,
-  ligar() {},
+  ligar(el) {
+    el.addEventListener('click', e => { const b = e.target.closest('[data-mais-aj]'); if (b) abrirAjustesDoMais(b.dataset.maisAj); });
+  },
 };

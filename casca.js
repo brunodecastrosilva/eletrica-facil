@@ -25,6 +25,7 @@ function desenhar(o = {}) {
   const dAgora = (history.state && history.state.d) || 0;
   if (r.chave !== chaveAtual) { esconderAviso(); if (r.nome === 'doc' && nomeAtual !== 'doc') docVeio = { de: nomeAtual, empilhou: dAgora > dAntes, d: dAgora }; }
   nomeAtual = r.nome; dAntes = dAgora;
+  if (r.nome !== 'ajustes') ajDoMais = false;
   const T = TELAS[r.nome];
   // a área da tela é trocada por uma nova a cada desenho: assim os toques ligados pela tela anterior não se acumulam
   const velho = $('#app'), app = velho.cloneNode(false);
@@ -94,6 +95,26 @@ document.addEventListener('click', e => {
     const falta = el.getBoundingClientRect().bottom + 12 - fundo;
     if (falta > 0) (corpo || window).scrollBy({ top: falta, behavior: semMovimento() ? 'auto' : 'smooth' });
   }, KitFacil.movimento.curto + 60);
+});
+
+/* ---------- do Mais para uma guia dos Ajustes, e de volta (5.4.0) ----------
+   A linha do Mais abre os Ajustes já na guia. Enquanto a pessoa está nessa guia, o botão de voltar dela diz "Mais" e
+   leva ao Mais (pelo histórico, que tem o Mais, os Ajustes e a guia); o voltar do aparelho faz o mesmo. Sair dos Ajustes
+   por outro caminho encerra o atalho. */
+let ajDoMais = false;
+function abrirAjustesDoMais(secao) {
+  ajDoMais = true; ir('/ajustes');
+  requestAnimationFrame(() => { KitFacil.ajustes.abrir(secao); voltaParaMais(); });
+}
+const voltaParaMais = () => { if (!ajDoMais) return; $$('[data-kf-aj-voltar]').forEach(b => { const tx = [...b.childNodes].find(n => n.nodeType === 3); if (tx) tx.textContent = 'Mais'; b.setAttribute('aria-label', 'Voltar ao Mais'); }); };
+window.addEventListener('click', e => {
+  if (!ajDoMais || !(e.target.closest && e.target.closest('[data-kf-aj-voltar]'))) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  if (history.state && history.state.kfAjPush) history.go(-2); else voltar('/mais');
+}, true);
+window.addEventListener('popstate', () => {
+  // o voltar do aparelho na guia aberta pelo Mais: da lista dos Ajustes, segue até o Mais
+  if (ajDoMais && rota().nome === 'ajustes' && !(history.state && history.state.kfAj)) history.back();
 });
 
 /* ---------- aviso rápido: nunca cobre botão nem campo, e some ao trocar de tela (5.3.1; Art. 30-A) ----------

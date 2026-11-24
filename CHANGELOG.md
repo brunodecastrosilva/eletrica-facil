@@ -3,6 +3,22 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.4.0 · 2026-11-24
+
+O Mais com atalhos do trabalho (opção B do Bruno, item 14 das simulações).
+
+- O Mais ganhou atalhos para o seu trabalho: hora e cobrança, chave Pix, padrões do orçamento e seus dados.
+- Cada atalho mostra o que falta, e a volta leva de novo ao Mais.
+
+Também:
+
+- **Seu trabalho:** Hora e cobrança (à direita, o valor da hora ou "Sem valor"), Chave Pix ("Falta" se vazia),
+  Padrões do orçamento e Seus dados e logotipo ("Falta" sem o nome ou o WhatsApp, decisão do Claude). Cada linha abre a
+  guia certa dos Ajustes: Cobrança, Pix, Documento novo e Conta e perfil.
+- **Ajuda:** Ver o guia e Abrir um exemplo. Por último, Ajustes (Código, Art. 60, II).
+- **A volta:** numa guia aberta pelo Mais, o botão de voltar diz "Mais" e leva ao Mais; o voltar do aparelho também.
+- As linhas têm a forma das do Kit, com o valor à direita, que o Kit não tem (proposta para o Integrador).
+
 ## 5.3.1 · 2026-11-24
 
 Acertos depois das simulações de uso da 5.3.0, aprovados pelo Bruno.
