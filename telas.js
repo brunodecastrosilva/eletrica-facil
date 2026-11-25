@@ -42,7 +42,7 @@ TELAS.inicio = {
     const linha = (r, v) => `<div><dt>${r}</dt><dd class="num">${v}</dd></div>`;
     return `${barraTopo()}
     <main class="tela inicio" id="conteudo">
-      ${KitFacil.ui.cabecalho({ titulo: 'Início', sub: nome ? `Olá, ${esc(nome)}. Veja o que falta enviar e receber.` : 'O que falta enviar, aprovar e receber.' })}
+      ${KitFacil.ui.cabecalho({ titulo: 'Início', sub: nome ? `Olá, ${esc(nome)}. Aqui está o que falta enviar e receber.` : 'O que falta enviar, aprovar e receber.' })}
       <section class="painel" aria-label="Resumo">
         <span class="pn-rot">Para receber</span>
         <b class="pn-num num">${BRL(P.receber)}</b>
@@ -56,7 +56,7 @@ TELAS.inicio = {
       <section aria-labelledby="in-and">
         <h2 class="sec" id="in-and">Em andamento${abertos.length ? ` <span class="sec-n">· ${abertos.length}</span>` : ''}</h2>
         ${abertos.length ? listaDocs(abertos) : KitFacil.ui.vazio({ titulo: L.length ? 'Tudo em dia' : 'Nenhum documento ainda', icone: IC.raio,
-          texto: L.length ? 'Nenhum documento esperando por você. Os recebidos ficam em Documentos.' : 'Toque no + da barra de baixo para fazer o primeiro orçamento. Leva um minuto.',
+          texto: L.length ? 'Nenhum documento esperando por você. Os recebidos ficam em Documentos.' : 'O primeiro orçamento começa pelo + da barra de baixo.',
           acao: L.length ? '' : '<button type="button" class="kf-btn kf-sec" data-exemplo>Abrir um exemplo</button>' })}
       </section>
     </main>`;
@@ -75,7 +75,7 @@ function docsFiltrados() {
   const q = dobra(buscaDocs);
   return docs.filter(d => !docVazio(d) && (filtroDocs === 'todos' || d.tipo === filtroDocs) && (!q || dobra([d.cliente.nome, d.titulo, numTxt(d), ...d.linhas.map(l => l.nome)].join(' ')).includes(q))).sort((a, b) => b.mudou - a.mudou);
 }
-const docsCorpo = () => { const L = docsFiltrados(); return L.length ? listaDocs(L) : KitFacil.ui.vazio({ titulo: 'Nada por aqui', texto: buscaDocs ? 'Nenhum documento com esse nome. Confira a busca.' : 'Os documentos deste tipo aparecem aqui.', icone: IC.busca }); };
+const docsCorpo = () => { const L = docsFiltrados(); return L.length ? listaDocs(L) : KitFacil.ui.vazio({ titulo: 'Nada por aqui', texto: buscaDocs ? 'Nenhum documento com esse nome.' : 'Os documentos deste tipo aparecem aqui.', icone: IC.busca }); };
 TELAS.docs = {
   html() {
     const tem = docs.some(d => !docVazio(d));
@@ -85,7 +85,7 @@ TELAS.docs = {
       ${tem ? `<div class="busca"><span class="busca-ic">${IC.busca}</span><input id="dc-q" class="kf-entrada" type="search" value="${esc(buscaDocs)}" placeholder="Buscar por cliente ou serviço" aria-label="Buscar documento"></div>
         ${segmento('Filtrar documentos', 'filtro', [['todos', 'Todos'], ['orc', 'Orçamentos'], ['rel', 'Relatórios']], filtroDocs)}
         <div id="dc-lista" aria-live="polite">${docsCorpo()}</div>`
-      : KitFacil.ui.vazio({ titulo: 'Nenhum documento ainda', texto: 'Os orçamentos e os relatórios que você fizer ficam guardados aqui. Para começar, toque no + da barra de baixo.', icone: IC.docs })}
+      : KitFacil.ui.vazio({ titulo: 'Nenhum documento ainda', texto: 'Os orçamentos e os relatórios que você fizer ficam guardados aqui. O + da barra de baixo cria o primeiro.', icone: IC.docs })}
     </main>`;
   },
   ligar(el) {
@@ -220,7 +220,7 @@ function cartaoGrupo(d, c, g) {
 function servicosDoc(d, c) {
   const rel = d.tipo === 'rel', n = d.linhas.length, cab = `<span class="sec-n">· ${n}</span>`;
   if (!d.comodos.length) return `<section aria-labelledby="dc-it"><article class="cr cr-un"><h2 class="sec" id="dc-it">${rel ? 'O que foi feito' : 'Serviços'}${n ? ' ' + cab : ''}</h2>
-      ${itensDoc(d, c) || `<p class="kf-ajuda cr-vazio">Some os serviços da sua tabela. Cada toque no + soma um.</p>`}
+      ${itensDoc(d, c) || `<p class="kf-ajuda cr-vazio">Os serviços da sua tabela entram aqui. Cada toque no + soma um.</p>`}
       ${proximo(d).id === 'somar' ? '' : `<button type="button" class="cr-somar" data-somar>${IC.soma}<span>Somar serviço</span></button>`}</article>
       <button type="button" class="kf-btn kf-link cr-separar" data-levantar>Separar por cômodo</button></section>`;
   if (vistaLista) return `<section aria-labelledby="dc-it"><h2 class="sec" id="dc-it">Todos os cômodos${n ? ' ' + cab : ''}</h2>
@@ -319,7 +319,7 @@ function avancar(d, passo) {
   if (passo === 'enviar') {
     // a lei pede o cliente identificado e, no orçamento, as datas de início e término (CDC, art. 40)
     if (!clienteOk(d.cliente)) { aviso('Antes de enviar, complete o nome, o telefone e o endereço do cliente.'); return janelaCliente(d); }
-    if (d.tipo === 'orc' && !(d.inicio && d.dias)) { aviso('Antes de enviar, escolha o início e quantos dias o serviço leva.'); return janelaCond(d, 'prazo'); }
+    if (d.tipo === 'orc' && !(d.inicio && d.dias)) { aviso('Para enviar, falta o prazo: a lei pede o início e quantos dias o serviço leva.'); return janelaCond(d, 'prazo'); }
     // os seus dados saem no documento: quem pulou e chegou aqui sem eles recebe o pedido agora
     if (!d.exemplo && !dadosOk()) { aviso('Antes de enviar, complete o seu nome e o seu WhatsApp.'); return janelaDados(() => avancar(d, 'enviar')); }
     return janelaEnviar(d);
@@ -436,7 +436,7 @@ function janelaLinha(d, l, tipoNovo = '', com = '', depois = null) {
       ${d.comodos.length && tipo !== 'mat' ? campo('ln-cm', 'Cômodo', selCom(d, 'ln-cm', l ? l.com : com)) : ''}
       ${campo('ln-m', 'Motivo para o cliente', entrada('ln-m', x.motivo || '', 'placeholder="Ex.: forro baixo"'))}`}`;
   janela({ titulo: tipo === 'diag' ? 'Diagnóstico por tempo' : tipo === 'desl' ? 'Deslocamento' : nova ? 'Linha só neste documento' : 'Linha do documento',
-    sub: tipo === 'diag' ? 'Para o defeito que você ainda não conhece: cobre pelo tempo.' : tipo === 'desl' ? (nova && !(porKm ? ajustes.deslKm : ajustes.deslIda) ? 'Uma linha própria, por ida. O valor fica guardado em Ajustes, Cobrança.' : 'Uma linha própria do documento, por ida.') : nova ? 'Vale só neste documento. Para guardar nos seus Preços, use Novo serviço.' : 'Vale só neste documento. Para mudar sempre, vá em Preços.',
+    sub: tipo === 'diag' ? 'Para o defeito que você ainda não conhece: dá para cobrar pelo tempo.' : tipo === 'desl' ? (nova && !(porKm ? ajustes.deslKm : ajustes.deslIda) ? 'Uma linha própria, por ida. O valor fica guardado em Ajustes, Cobrança.' : 'Uma linha própria do documento, por ida.') : nova ? 'Vale só neste documento. Para guardar nos seus Preços, há o Novo serviço.' : 'Vale só neste documento. O preço de sempre fica em Preços.',
     corpo, pe: `${nova ? '' : '<button type="button" class="kf-btn kf-perigo" data-tirar>Remover</button>'}<button type="button" class="kf-btn kf-pri" data-salvar>${nova ? 'Somar' : 'Salvar'}</button>`,
     aoMontar: j => {
       const cs = $('#ln-cs', j); if (cs) { cs.textContent = fraseCond(); $('#ln-p', j).addEventListener('input', () => { cs.textContent = fraseCond(); }); }
@@ -525,7 +525,7 @@ function janelaSomar(d, com0, aba0) {
         ${g ? `<div class="tp-roda">${rodaTempo('so-dg', g.min, 'Tempo do diagnóstico')}<button type="button" class="so-bt" data-diag-tira aria-label="Tirar o diagnóstico">${IC.menos}</button></div>` : ''}</div>
       ${maisMenos('ida', i ? i.q : 0, 'Deslocamento', 0, i ? `${i.q} ${unTxt(i.q, 'ida')} · ${BRL(totalLinha(i))}` : ajustes.deslModo === 'km' ? (ajustes.deslKm ? `${BRL(ajustes.deslKm)} por km` : 'Por km, valor a definir') : ajustes.deslIda ? `${BRL(ajustes.deslIda)} por ida` : 'Por ida, valor a definir')}
       ${maisMenos('dia', y ? y.q : 0, 'Diária', 0, y ? `${plural(y.q, 'diária', 'diárias')} · ${BRL(totalLinha(y))}` : ajustes.diaria ? `${BRL(ajustes.diaria)} por dia` : 'Por dia, valor a definir')}`; };
-  const conta2 = () => { if (aba === 'mat') { const n = soma(d.mats.map(m => m.q)); return n ? `${plural(n, 'peça contada', 'peças contadas')}. A lista fica no documento.` : 'Conte o material como conta o serviço.'; }
+  const conta2 = () => { if (aba === 'mat') { const n = soma(d.mats.map(m => m.q)); return n ? `${plural(n, 'peça contada', 'peças contadas')}. A lista fica no documento.` : 'O material se conta como o serviço: um toque no + por peça.'; }
     const c = conta(d), n = soma(d.linhas.map(l => l.q)); return d.linhas.length ? `${plural(n, 'item', 'itens')} no documento · <b class="num">${BRL(c.sub)}</b>` : servicos().length ? 'Toque no + para somar.' : 'Crie o seu primeiro serviço.'; };
   const topo = () => `${d.comodos.length ? `<div class="chips" role="group" aria-label="Cômodo">${d.comodos.map(c => `<button type="button" class="chip" data-com="${esc(c)}" aria-pressed="${c === com}">${esc(c)}</button>`).join('')}<button type="button" class="chip" data-com-novo>+ Cômodo</button></div>` : ''}
     ${segmento('Somar', 'aba', [['serv', 'Serviços'], ['mat', 'Materiais']], aba)}
@@ -570,7 +570,7 @@ function janelaSomar(d, com0, aba0) {
     return `${topo()}${N.length ? `<h3 class="sec">Neste documento</h3>${lista(N)}` : ''}
       <h3 class="sec">Seus serviços${S.length ? ` <span class="sec-n">· ${S.length}</span>` : ''}</h3>
       ${A.length > 1 ? `<div class="chips" role="group" aria-label="Filtrar pela ação"><button type="button" class="chip" data-acf="" aria-pressed="${!acf}">Todas</button>${A.map(a => `<button type="button" class="chip" data-acf="${a[0]}" aria-pressed="${acf === a[0]}">${a[1]}</button>`).join('')}</div>` : ''}
-      ${S.length ? agrupado(L) : '<p class="kf-ajuda">Você ainda não tem serviços salvos. Crie o primeiro: escolha o objeto, a ação e o preço. Ele fica nos seus Preços para os próximos orçamentos.</p>'}
+      ${S.length ? agrupado(L) : '<p class="kf-ajuda">Você ainda não tem serviços salvos. O primeiro nasce em Novo serviço, com o objeto, a ação e o preço, e fica nos seus Preços para os próximos orçamentos.</p>'}
       ${novoBt('Novo serviço')}
       ${porTempo()}
       ${KitFacil.ui.adicionar({ rotulo: 'Linha só neste documento', attrs: 'data-avulsa' })}`;
@@ -658,7 +658,7 @@ function janelaDiaria(depois) {
 }
 // Os seus dados que saem na proposta. Pedidos na abertura (com Pular) e, para quem pulou, antes do primeiro serviço.
 const CAMPOS_ELE = [['nome', 'Seu nome', 'Ex.: Carlos Pereira', 'autocapitalize="words" autocomplete="name"'], ['fone', 'WhatsApp', '(11) 90000-0000', 'inputmode="tel" autocomplete="tel"'],
-  ['empresa', 'Nome da empresa', 'Se tiver', 'autocapitalize="words"'], ['cidade', 'Cidade', 'Ex.: São Paulo', 'autocapitalize="words"'], ['doc', 'CPF ou CNPJ', 'Sai no recibo', 'inputmode="numeric"'],
+  ['empresa', 'Nome da empresa', 'Ex.: Pereira Elétrica', 'autocapitalize="words"'], ['cidade', 'Cidade', 'Ex.: São Paulo', 'autocapitalize="words"'], ['doc', 'CPF ou CNPJ', 'Sai no recibo', 'inputmode="numeric"'],
   ['registro', 'Registro profissional', 'CREA, CFT ou NR-10', ''], ['email', 'E-mail', 'Ex.: voce@email.com', 'autocapitalize="off" inputmode="email" autocomplete="email"']];
 const camposEletricista = (o, pre = 'el') => CAMPOS_ELE.map(([k, rot, dica, attrs], i) => `${i === 2 ? '<p class="kf-ajuda el-mais">Também saem na proposta e no recibo:</p>' : ''}${campo(`${pre}-${k}`, rot, `<input id="${pre}-${k}" class="kf-entrada" data-el="${k}" type="text" value="${esc(k === 'fone' ? fone(o[k]) : k === 'doc' ? cpfCnpj(o[k]) : o[k] || '')}" placeholder="${esc(dica)}" maxlength="80" ${attrs}>`)}`).join('');
 // lê os campos; devolve o que falta do obrigatório (nome e WhatsApp)
@@ -909,7 +909,7 @@ TELAS.precos = {
       <div class="chips" role="group" aria-label="Filtrar por categoria">${[['todas', 'Todas'], ...C.map(c => [c.id, c.nome])].map(([id, n]) => `<button type="button" class="chip" data-fcat="${esc(id)}" aria-pressed="${filtroPreco === id}">${esc(n)}</button>`).join('')}</div>
       <p class="kf-so-leitor" role="status" id="pr-st"></p>` : KitFacil.ui.vazio({ titulo: 'Sua tabela começa vazia', icone: IC.raio, texto: 'O app não traz preço de fábrica. Cada serviço que você cria, aqui ou no orçamento, fica guardado com o seu preço.' })}
       <div id="pr-lista">${C.map(secaoPreco).join('')}</div>
-      <p class="kf-ajuda prc-nada" id="pr-nada" hidden>Nenhum item com esse nome. Confira a escrita ou escolha Todas.</p>
+      <p class="kf-ajuda prc-nada" id="pr-nada" hidden>Nenhum item com esse nome aqui. Em Todas, a busca olha a tabela inteira.</p>
       ${KitFacil.ui.adicionar({ rotulo: 'Novo serviço ou material', attrs: 'data-novo-preco' })}
       ${KitFacil.ui.adicionar({ rotulo: 'Nova categoria', attrs: 'data-nova-cat' })}
     </main>`;
@@ -973,7 +973,7 @@ function janelaItem(p, o = {}) {
       <div class="kf-campo"><span class="kf-rotulo" id="it-ol">${mat() ? 'Material' : 'Objeto'}</span><div class="escolhas" role="group" aria-labelledby="it-ol">${objsVistos().map(b => KitFacil.ui.escolha({ rotulo: b.nome, on: !outro && b.nome === x.obj, attrs: `data-it-obj="${esc(b.nome)}"` })).join('')}${objs().length > OBJ_VISTOS && !todos ? KitFacil.ui.escolha({ rotulo: `Ver todos (${objs().length})`, on: false, attrs: 'data-it-todos' }) : ''}${KitFacil.ui.escolha({ rotulo: mat() ? 'Outro material' : 'Outro objeto', on: outro, attrs: 'data-it-outro' })}</div></div>
       ${outro ? campo('it-on', mat() ? 'Nome do material' : 'Nome do objeto', entrada('it-on', x.obj, `placeholder="${mat() ? 'Ex.: Cabo flexível 16 mm²' : 'Ex.: tomada de sobrepor dupla'}" maxlength="60"`)) : ''}
       ${mat() ? '' : `<div class="kf-campo"><span class="kf-rotulo" id="it-al">Ação</span><div class="escolhas" role="group" aria-labelledby="it-al">${ACOES.map(([k, n]) => KitFacil.ui.escolha({ rotulo: n, on: k === x.acao, attrs: `data-it-acao="${k}"` })).join('')}</div></div>`}
-      ${campo('it-n', mat() ? 'Nome do material' : 'Nome do serviço', entrada('it-n', x.nome, 'placeholder="Escolha o objeto, ou escreva" maxlength="80"'), mat() ? '' : 'Se monta com o objeto e a ação. Pode mudar.')}`}
+      ${campo('it-n', mat() ? 'Nome do material' : 'Nome do serviço', entrada('it-n', x.nome, 'placeholder="Ex.: Troca de tomada 10 A" maxlength="80"'), mat() ? '' : 'Se monta com o objeto e a ação. Pode mudar.')}`}
       ${resumo ? `<input id="it-n" type="hidden" value="${esc(x.nome)}">` : ''}
       ${campo('it-u', mat() ? 'Vendido por' : 'Cobrado por', `<select id="it-u" class="kf-entrada">${UNIDADES.filter(u => !['ida', 'h'].includes(u[0])).map(([k, n]) => `<option value="${k}"${k === x.un ? ' selected' : ''}>${n}</option>`).join('')}</select>`)}
       ${mat() ? campo('it-p', 'Preço de cada', campoDinheiro('it-p', x.preco))

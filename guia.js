@@ -47,14 +47,14 @@ const GUIA = [
       await m.tocar('.kf-dlg [data-salvar]', { depois: 800 }); await m.acha('#so-q');
       await m.fechar(); await m.apontar('#conteudo .itens', 1500);
     } },
-  { t: 'Defeito desconhecido? Cobre pelo tempo', d: 'O diagnóstico entra pelo tempo que levou. O deslocamento é uma linha própria, por ida.',
+  { t: 'Defeito desconhecido? Dá para cobrar pelo tempo', d: 'O diagnóstico entra pelo tempo que levou. O deslocamento é uma linha própria, por ida.',
     acao: async m => {
       await gSomar(m); await m.tocar('.kf-dlg [data-diag-mais]', { depois: 500 });
       await m.tocar('.kf-dlg #so-dg', { depois: 600 }); await m.tocar('.kf-dlg [data-rh="1"]', { depois: 400 }); await m.tocar('.kf-dlg [data-rm="0"]', { depois: 500 });
       await m.tocar('.kf-dlg [data-ida="1"]', { depois: 500 });
       await m.apontar('#so-conta', 1300); await m.fechar(); await m.apontar('#conteudo .itens', 1500);
     } },
-  { t: 'Na visita, levante por cômodo', d: 'Escolha o cômodo e some o que há para fazer. Conte também o material: a lista de compras sai pronta.',
+  { t: 'Na visita, dá para levantar por cômodo', d: 'Em cada cômodo, o que há para fazer. O material também se conta, e a lista de compras sai pronta.',
     acao: async m => { await gNoDoc(m); await m.apontar('#conteudo [data-levantar], #conteudo .crs', 1900); } },
   { t: 'Mude a quantidade ou o preço', d: 'Toque numa linha para mudar. Ali também fica a condição: normal, difícil ou muito difícil.',
     acao: async m => {
@@ -62,12 +62,12 @@ const GUIA = [
       await m.apontar('.kf-dlg .kf-quantidade', 1200); await m.tocar('.kf-dlg [data-kf-passo="1"]', { depois: 400 });
       await m.tocar('.kf-dlg [data-salvar]', { depois: 600 });
     } },
-  { t: 'Combine o pagamento', d: 'À vista, com entrada ou a combinar. A linha das condições, no painel, guarda também validade, garantia e desconto.',
+  { t: 'O pagamento: como o cliente preferir', d: 'À vista, com entrada ou a combinar. A linha das condições, no painel, guarda também validade, garantia e desconto.',
     acao: async m => {
       await gNoDoc(m); await m.tocar('#conteudo [data-cond]', { depois: 600 }); await m.tocar('.kf-dlg [data-j="pag"]', { depois: 600 });
       await m.tocar('.kf-dlg [data-pag="entrada"]', { depois: 600 }); await m.apontar('.kf-dlg [role="status"]', 1500); await m.fechar();
     } },
-  { t: 'Combine o prazo', d: 'O orçamento diz quando o serviço começa e quantos dias leva. A lei pede as datas de início e término.',
+  { t: 'O prazo do serviço', d: 'O orçamento diz quando o serviço começa e quantos dias leva. A lei pede as datas de início e término.',
     acao: async m => {
       await gNoDoc(m); await m.tocar('#conteudo [data-cond]', { depois: 600 }); await m.tocar('.kf-dlg [data-j="prazo"]', { depois: 700 });
       const d = getDoc(rota().id); if (d && !d.inicio) { d.inicio = Date.now() + 3 * 864e5; tocarDoc(d); }

@@ -2,7 +2,7 @@
    O app faz uma coisa: orçar serviços de elétrica e fechar a cobrança (enviar, aprovar, receber, recibo).
    Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito. */
 'use strict';
-const VERSAO = '5.5.1';
+const VERSAO = '5.5.2';
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 
 /* ================= utilidades ================= */
@@ -283,7 +283,9 @@ if (ajustes.tab < 7) {
 docs = (Array.isArray(docs) ? docs : []).map(acertaDoc);
 
 /* ================= Kit Fácil: moldura, tema e sincronização ================= */
-const NOVIDADES = [{ versao: '5.5.1', itens: [
+const NOVIDADES = [{ versao: '5.5.2', itens: [
+  'Textos revistos: o app mostra o que dá para fazer, sem dar ordens.',
+] }, { versao: '5.5.1', itens: [
   'A primeira tela diz que o cliente pode pagar por Pix, e o QR code do desenho ficou nítido.',
 ] }, { versao: '5.5.0', itens: [
   'Primeiro uso novo: a proposta que o cliente recebe, os seus dados, a sua hora e o convite para fazer o guia.',
@@ -341,7 +343,7 @@ const NOVIDADES = [{ versao: '5.5.1', itens: [
 if (String(LS.get('abertura', '')) !== '1' && !(navigator.webdriver && !window.EF_TESTE_ABERTURA)) { try { localStorage.setItem('kitfacil.eletrica-facil.visto', JSON.stringify(VERSAO)); } catch {} }
 KitFacil.iniciar({
   app: 'eletrica-facil', nome: 'Elétrica Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
-  resumo: 'Orçamento de serviços de elétrica, do pedido ao recibo: some os serviços da sua lista de preços, envie em PDF ou pelo WhatsApp, receba por Pix e mande o recibo.',
+  resumo: 'Orçamento de serviços de elétrica, do pedido ao recibo: os serviços da sua lista de preços, a proposta em PDF ou pelo WhatsApp, o Pix e o recibo.',
   tela: () => rota().nome, exemploDados: 'os orçamentos e os dados dos seus clientes',
   abrirAjustes: secao => { if (rota().nome !== 'ajustes') ir('/ajustes'); else if (!secao) voltar('/'); },
   emAjustes: () => rota().nome === 'ajustes',
@@ -545,15 +547,15 @@ const pagCurto = d => d.pag === 'entrada' ? `Entrada de ${d.entradaPct}%` : d.pa
 const garantiaTxt = d => d.garAd ? `${GAR_LEI} Além dela, garantia contratual de ${garAdTxt(d.garAd)}, dada por este documento e somada à legal (art. 50).` : GAR_LEI;
 // o próximo passo de cada documento: é o botão do pé
 function proximo(d) {
-  if (d.etapa === 'recusado') return { id: 'reabrir', rotulo: 'Reabrir', frase: 'O cliente recusou. Reabra para mudar e enviar de novo.' };
+  if (d.etapa === 'recusado') return { id: 'reabrir', rotulo: 'Reabrir', frase: 'O cliente recusou. Reabrir permite mudar e enviar de novo.' };
   const cortesia = d.linhas.length && conta(d).total === 0;
   if (cortesia && d.etapa === 'recebido') return { id: 'pdf', rotulo: 'Ver o PDF', frase: 'Cortesia concluída. Nada a receber.' };
-  if (cortesia && ((d.tipo === 'orc' && d.etapa === 'aprovado') || (d.tipo === 'rel' && d.etapa === 'enviado'))) return { id: 'concluir', rotulo: 'Concluir', frase: 'Cortesia: nada a receber. Conclua quando o serviço estiver feito.' };
-  if (d.etapa === 'recebido') return { id: 'recibo', rotulo: 'Enviar recibo', frase: 'Pago. Mande o recibo ao cliente.' };
-  if (!d.linhas.length) return { id: 'somar', rotulo: 'Somar serviço', frase: d.tipo === 'rel' ? 'Some o que foi feito.' : 'Some os serviços do orçamento.' };
-  if (d.etapa === 'rascunho') return { id: 'enviar', rotulo: 'Enviar', frase: d.tipo === 'rel' ? 'Confira e envie a cobrança ao cliente.' : 'Confira e envie ao cliente.' };
+  if (cortesia && ((d.tipo === 'orc' && d.etapa === 'aprovado') || (d.tipo === 'rel' && d.etapa === 'enviado'))) return { id: 'concluir', rotulo: 'Concluir', frase: 'Cortesia: nada a receber. Concluir fecha o documento quando o serviço estiver feito.' };
+  if (d.etapa === 'recebido') return { id: 'recibo', rotulo: 'Enviar recibo', frase: 'Pago. O recibo está pronto para o cliente.' };
+  if (!d.linhas.length) return { id: 'somar', rotulo: 'Somar serviço', frase: d.tipo === 'rel' ? 'Ainda sem o que foi feito.' : 'Ainda sem serviços.' };
+  if (d.etapa === 'rascunho') return { id: 'enviar', rotulo: 'Enviar', frase: d.tipo === 'rel' ? 'A cobrança está pronta para o cliente.' : 'Pronto para o cliente.' };
   if (d.etapa === 'enviado' && d.tipo === 'orc') return { id: 'aprovou', rotulo: 'Aprovou', frase: 'Esperando a resposta do cliente.' };
-  return { id: 'receber', rotulo: 'Receber', frase: d.tipo === 'rel' ? 'Cobrança enviada. Registre quando o cliente pagar.' : 'Aprovado. Faça o serviço e registre o pagamento.' };
+  return { id: 'receber', rotulo: 'Receber', frase: d.tipo === 'rel' ? 'Cobrança enviada. O pagamento entra em Receber.' : 'Aprovado. Depois do serviço, o pagamento entra em Receber.' };
 }
 const paraReceber = d => (d.tipo === 'orc' && d.etapa === 'aprovado') || (d.tipo === 'rel' && d.etapa === 'enviado');
 function painel() {

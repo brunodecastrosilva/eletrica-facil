@@ -3,6 +3,15 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.5.2 · 2026-11-25
+
+- Textos revistos: o app mostra o que dá para fazer, sem dar ordens.
+
+Também: pedido do Bruno, as descrições mostram possibilidades e não criam obrigação. Mudaram 25 textos: as frases do
+painel do documento, as telas vazias, as dicas de Somar serviço e de Preços, quatro títulos do guia, o exemplo do nome
+do serviço e da empresa, e o resumo do app. Ficaram as mensagens do que falta para continuar (respondem ao que a pessoa
+tentou) e a do prazo, que diz o motivo: a lei pede as datas.
+
 ## 5.5.1 · 2026-11-25
 
 - A proposta da primeira tela tem um QR code de verdade, desenhado nítido.
