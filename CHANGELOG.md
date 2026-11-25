@@ -3,6 +3,11 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.5.1 · 2026-11-25
+
+- A proposta da primeira tela tem um QR code de verdade, desenhado nítido.
+- "O cliente recebe a proposta em PDF, aprova e pode pagar por Pix."
+
 ## 5.5.0 · 2026-11-25
 
 Primeiro uso refeito, a partir do teste do Bruno no celular.

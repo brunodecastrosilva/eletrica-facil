@@ -2,7 +2,7 @@
    O app faz uma coisa: orçar serviços de elétrica e fechar a cobrança (enviar, aprovar, receber, recibo).
    Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito. */
 'use strict';
-const VERSAO = '5.5.0';
+const VERSAO = '5.5.1';
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 
 /* ================= utilidades ================= */
@@ -283,7 +283,9 @@ if (ajustes.tab < 7) {
 docs = (Array.isArray(docs) ? docs : []).map(acertaDoc);
 
 /* ================= Kit Fácil: moldura, tema e sincronização ================= */
-const NOVIDADES = [{ versao: '5.5.0', itens: [
+const NOVIDADES = [{ versao: '5.5.1', itens: [
+  'A primeira tela diz que o cliente pode pagar por Pix, e o QR code do desenho ficou nítido.',
+] }, { versao: '5.5.0', itens: [
   'Primeiro uso novo: a proposta que o cliente recebe, os seus dados, a sua hora e o convite para fazer o guia.',
   'O telefone toma forma enquanto você digita.',
   'O botão de continuar fica sempre à vista, também nos seus dados.',

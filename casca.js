@@ -284,14 +284,15 @@ function aberturaAbrir({ rever = false } = {}) {
   if (aberturaAtiva()) return;
   if (!rever) { try { localStorage.setItem('kitfacil.eletrica-facil.visto', JSON.stringify(VERSAO)); } catch {} }
   const LINHAS = [['Ponto novo de tomada 10 A', '4 pontos', 40000], ['Instalação de chuveiro', '1 un.', 12000], ['Instalação de DR', '1 un.', 15000]];
-  const qr = Array.from({ length: 49 }, (_, k) => `<i${[0, 1, 2, 7, 9, 14, 15, 16, 4, 5, 6, 11, 13, 18, 19, 20, 28, 29, 30, 35, 37, 42, 43, 44, 24, 26, 32, 40, 46, 22, 38].includes(k) ? ' class="on"' : ''}></i>`).join('');
+  // um QR code de verdade, de exemplo (21 × 21, diz só "ELETRICA FACIL"; não é um Pix)
+  const qr = `<svg viewBox="-1 -1 23 23" shape-rendering="crispEdges"><path d="M0 0h7v1h-7zM8 0h5v1h-5zM14 0h7v1h-7zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h2v1h-2zM11 1h2v1h-2zM14 1h1v1h-1zM20 1h1v1h-1zM0 2h1v1h-1zM2 2h3v1h-3zM6 2h1v1h-1zM9 2h3v1h-3zM14 2h1v1h-1zM16 2h3v1h-3zM20 2h1v1h-1zM0 3h1v1h-1zM2 3h3v1h-3zM6 3h1v1h-1zM9 3h1v1h-1zM11 3h2v1h-2zM14 3h1v1h-1zM16 3h3v1h-3zM20 3h1v1h-1zM0 4h1v1h-1zM2 4h3v1h-3zM6 4h1v1h-1zM8 4h1v1h-1zM12 4h1v1h-1zM14 4h1v1h-1zM16 4h3v1h-3zM20 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM8 5h1v1h-1zM10 5h1v1h-1zM14 5h1v1h-1zM20 5h1v1h-1zM0 6h7v1h-7zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h7v1h-7zM8 7h4v1h-4zM0 8h3v1h-3zM5 8h2v1h-2zM8 8h9v1h-9zM19 8h2v1h-2zM2 9h1v1h-1zM4 9h1v1h-1zM8 9h1v1h-1zM10 9h1v1h-1zM14 9h4v1h-4zM19 9h2v1h-2zM0 10h3v1h-3zM6 10h2v1h-2zM9 10h1v1h-1zM14 10h3v1h-3zM18 10h2v1h-2zM1 11h1v1h-1zM3 11h3v1h-3zM8 11h1v1h-1zM10 11h1v1h-1zM12 11h5v1h-5zM0 12h1v1h-1zM2 12h1v1h-1zM5 12h3v1h-3zM13 12h5v1h-5zM19 12h1v1h-1zM8 13h4v1h-4zM13 13h2v1h-2zM16 13h2v1h-2zM20 13h1v1h-1zM0 14h7v1h-7zM9 14h1v1h-1zM11 14h4v1h-4zM16 14h1v1h-1zM19 14h2v1h-2zM0 15h1v1h-1zM6 15h1v1h-1zM8 15h2v1h-2zM11 15h1v1h-1zM13 15h2v1h-2zM16 15h1v1h-1zM19 15h2v1h-2zM0 16h1v1h-1zM2 16h3v1h-3zM6 16h1v1h-1zM9 16h4v1h-4zM16 16h1v1h-1zM20 16h1v1h-1zM0 17h1v1h-1zM2 17h3v1h-3zM6 17h1v1h-1zM9 17h1v1h-1zM13 17h5v1h-5zM0 18h1v1h-1zM2 18h3v1h-3zM6 18h1v1h-1zM8 18h3v1h-3zM13 18h8v1h-8zM0 19h1v1h-1zM6 19h1v1h-1zM8 19h1v1h-1zM12 19h1v1h-1zM15 19h1v1h-1zM17 19h1v1h-1zM20 19h1v1h-1zM0 20h7v1h-7zM8 20h2v1h-2zM13 20h4v1h-4zM18 20h3v1h-3z"/></svg>`;
   const proposta = `<div class="ab-cena ab-prop" role="img" aria-label="A proposta que o cliente recebe: os serviços, o total e o Pix.">
       <div class="ab-folha">
         <div class="ab-f-topo"><img src="icons/icon-192.png" alt="" width="30" height="30"><span><b>Carlos Pereira</b><small>Eletricista · (11) 98765-4321</small></span></div>
         <small class="ab-f-tit">Orçamento Nº 0001 · Mariana Souza</small>
         ${LINHAS.map(([n, q, v]) => `<div class="ab-f-lin"><span>${n}<small>${q}</small></span><b class="num">${BRL(v)}</b></div>`).join('')}
         <div class="ab-f-tot"><span>Total</span><b class="num">${BRL(soma(LINHAS.map(x => x[2])))}</b></div>
-        <div class="ab-f-pix"><span class="ab-qr" aria-hidden="true">${qr}</span><small>Pague com Pix<br>pelo QR code</small></div>
+        <div class="ab-f-pix"><span class="ab-qr" aria-hidden="true">${qr}</span><small>Pix pelo<br>QR code</small></div>
       </div>
       <span class="ab-bolha">${IC.certo}PDF enviado ao cliente</span>
     </div>`;
@@ -306,7 +307,7 @@ function aberturaAbrir({ rever = false } = {}) {
   const lerHora = el => { if (h.modo === 'digitar') { if ($('#ab-hv', el)) h.v = lerDinheiro($('#ab-hv', el)); } else if ($('#ab-hh', el)) { h.T = lerDinheiro($('#ab-ht', el)); h.C = lerDinheiro($('#ab-hc', el)); h.H = Math.max(0, Math.min(744, parseInt($('#ab-hh', el).value, 10) || 0)); } };
   const guardarDados = () => { CAMPOS_ELE.forEach(([k]) => { if (el0[k] !== ajustes[k]) ajustes[k] = el0[k]; }); salvarAjustes(); };
   const guardarHora = () => { const v = hora(); if (!v) return; ajustes.hora = v; if (h.modo === 'conta') { ajustes.hTirar = h.T; ajustes.hCustos = h.C; ajustes.hHoras = h.H; } salvarAjustes(); };
-  const BOAS = { arte: () => proposta, falada: true, titulo: 'Orçamento profissional, direto no WhatsApp', texto: 'Monte no celular em poucos minutos. O cliente recebe a proposta em PDF, aprova e paga por Pix.' };
+  const BOAS = { arte: () => proposta, falada: true, titulo: 'Orçamento profissional, direto no WhatsApp', texto: 'Monte no celular em poucos minutos. O cliente recebe a proposta em PDF, aprova e pode pagar por Pix.' };
   const guiaArte = `<div class="ab-cena ab-guia" aria-hidden="true">
       <span class="ab-g-mais">${IC.soma}<i class="ab-g-anel"></i></span>
       <div class="ab-g-doca"><b>Comece pelo +</b><small>O + cria o orçamento. Depois, cada passo acontece na tela.</small>
