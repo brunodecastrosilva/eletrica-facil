@@ -2,7 +2,7 @@
 
 Orçamento de serviços de elétrica, do pedido ao recibo, direto no celular, no tablet ou no computador.
 
-Versão **5.4.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **5.5.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md). Na 4.0.0 o app recomeçou enxuto, por decisão do Bruno: faz uma coisa só,
@@ -39,7 +39,7 @@ os da família; o fluxo, o desenho das telas e os ícones são do eletricista.
   (Regras do app, Art. 9º).
 - **O raio.** De tempos em tempos um raio rasga a tela, sozinho, com ou sem toque. É enfeite: não recebe toque, não
   cai com alguém digitando nem com janela aberta, respeita o movimento reduzido e pode ser desligado em Ajustes.
-- **Da família:** apresentação de quatro telas (seguida do cadastro: os seus dados e a sua hora), guia único (o app faz cada passo na tela), sincronização entre
+- **Da família:** primeiro uso de quatro telas (a proposta, os seus dados, a sua hora e o convite ao guia), guia único (o app faz cada passo na tela), sincronização entre
   aparelhos, cópia de segurança, temas claro, escuro e automático, avaliação e apoio.
 
 Saíram na 4.0.0, com a aprovação do Bruno: conquistas e lâmpadas, Obra (levar, comprar, estoque e ferramentas),
@@ -297,11 +297,11 @@ digital (SRI), baixados só quando a função é usada (Código, Art. 21).
   usa o mesmo desenho e o mesmo comportamento, com horas de 0 a 12, minutos de 5 em 5 e o texto "1h30" (`telas.js`,
   `rodaTempo`). Proposta para o Integrador: o Kit ter o seletor de duração.
 
-- **Cadastro na abertura:** a abertura do Kit tem até quatro telas e o "Pular" dela fecha tudo. O cadastro (os seus
-  dados e a sua hora, Código, Art. 75) vem como uma segunda abertura do Kit, logo depois da apresentação; na tela dos
-  dados, o app faz o "Pular" passar para a tela da hora, e na da hora o link "Pular por agora" fecha (`casca.js`,
-  `aberturaCadastro`). Proposta para o Integrador: a abertura do Kit aceitar telas de cadastro, com Pular tela a tela e
-  conferência do que é obrigatório para continuar.
+- **Primeiro uso numa abertura só (5.5.0):** a abertura do Kit tem até quatro telas e o "Pular" dela fecha tudo. O app
+  usa uma abertura só, de quatro telas (a proposta, os seus dados, a sua hora e o convite ao guia), e faz o "Pular"
+  passar só a tela em que se está; "Continuar" confere os dados e a hora (`casca.js`, `aberturaAbrir`). O pé da abertura
+  fica preso ao pé da tela, e o título não mostra a moldura de foco (`estilo.css`). Proposta para o Integrador: o Kit ter
+  Pular tela a tela, pé preso e título sem moldura.
 
 - **Ícones do Kit:** a nuvem, o presente, o balão, o Mais da navegação e as guias comuns dos Ajustes são desenhados no
   Kit (`comum/kit-facil.js`) e iguais nos quatro apps. O app não os troca, para não quebrar a família (Art. 3º).

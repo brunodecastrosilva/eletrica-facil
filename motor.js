@@ -2,7 +2,7 @@
    O app faz uma coisa: orçar serviços de elétrica e fechar a cobrança (enviar, aprovar, receber, recibo).
    Dois documentos: o orçamento, antes do serviço, e o relatório, para cobrar o que já foi feito. */
 'use strict';
-const VERSAO = '5.4.0';
+const VERSAO = '5.5.0';
 const MARCA = '<span class="kf-marca-ic marca-img" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36" decoding="async"></span><span class="kf-marca-nome">Elétrica Fácil</span>';
 
 /* ================= utilidades ================= */
@@ -27,6 +27,16 @@ function fone(s) {
   if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
   return String(s || '').trim();
+}
+// o telefone guardado: só os dígitos quando é um número com DDD (o campo mostra com parênteses e traço)
+const foneGuardar = s => { const d = soDigitos(s); return d.length === 10 || d.length === 11 ? d : String(s || '').trim(); };
+// o telefone toma forma enquanto se digita: (61) 9813, (61) 9813-6710, (61) 98136-7100 (5.5.0)
+function foneDigitando(s) {
+  const d = soDigitos(s); if (!d || d.length > 11) return String(s || '');
+  if (d.length <= 2) return `(${d}`;
+  const r = d.slice(2);
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${r.slice(0, 5)}-${r.slice(5)}`;
+  return `(${d.slice(0, 2)}) ${r.length > 4 ? `${r.slice(0, 4)}-${r.slice(4)}` : r}`;
 }
 function cpfCnpj(s) {
   const d = soDigitos(s);
@@ -273,7 +283,11 @@ if (ajustes.tab < 7) {
 docs = (Array.isArray(docs) ? docs : []).map(acertaDoc);
 
 /* ================= Kit Fácil: moldura, tema e sincronização ================= */
-const NOVIDADES = [{ versao: '5.4.0', itens: [
+const NOVIDADES = [{ versao: '5.5.0', itens: [
+  'Primeiro uso novo: a proposta que o cliente recebe, os seus dados, a sua hora e o convite para fazer o guia.',
+  'O telefone toma forma enquanto você digita.',
+  'O botão de continuar fica sempre à vista, também nos seus dados.',
+] }, { versao: '5.4.0', itens: [
   'O Mais ganhou atalhos para o seu trabalho: hora e cobrança, chave Pix, padrões do orçamento e seus dados.',
   'Cada atalho mostra o que falta, e a volta leva de novo ao Mais.',
 ] }, { versao: '5.3.1', itens: [

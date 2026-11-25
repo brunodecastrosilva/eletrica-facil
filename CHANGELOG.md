@@ -3,6 +3,25 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 5.5.0 · 2026-11-25
+
+Primeiro uso refeito, a partir do teste do Bruno no celular.
+
+- Primeiro uso novo: a proposta que o cliente recebe, os seus dados, a sua hora e o convite para fazer o guia.
+- O telefone toma forma enquanto você digita: (61) 98136-7100.
+- O botão de continuar fica sempre à vista, também nos seus dados.
+
+Também:
+
+- **Uma sequência só, de quatro telas, com os mesmos pontinhos.** Saíram as quatro telas de apresentação (o app em
+  quatro telas, somar com um toque, o botão do pé, orçamento e relatório), que não diziam o que o app entrega. Ficou uma
+  tela com a proposta em PDF que o cliente recebe, com o total e o Pix, e o aviso "PDF enviado ao cliente".
+- **Pular passa só a tela** em que se está; "Continuar" confere os dados e a hora, como antes.
+- **A última tela convida para o guia:** "Fazer o guia" começa o guia; "Agora não" fecha. O exemplo segue em Mais.
+- **Rever a apresentação** (Ajustes) mostra a primeira tela e o convite ao guia.
+- **O título da tela não ganha mais a moldura de foco** que o Safari desenhava ao abrir o app; o foco continua indo ao
+  título, para o leitor de tela.
+
 ## 5.4.0 · 2026-11-24
 
 O Mais com atalhos do trabalho (opção B do Bruno, item 14 das simulações).

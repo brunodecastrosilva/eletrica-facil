@@ -754,32 +754,38 @@ test('Ajustes: as oito guias comuns e as do app; os dados dos documentos, a chav
   await a.fechar();
 });
 
-test('primeiro uso completo: quatro telas de apresentação, depois os seus dados e a sua hora; o primeiro orçamento já soma sem pedir nada', async () => {
+test('primeiro uso (5.5.0): a proposta, os seus dados, a sua hora e o convite ao guia, numa sequência só; o primeiro orçamento já soma sem pedir nada', async () => {
   const a = await aparelho(amb, { antes: () => { window.EF_TESTE_ABERTURA = true; } }); const p = a.page;
-  await p.locator('.kf-abertura').waitFor();
-  const titulos = [];
-  for (let k = 0; k < 4; k++) {
-    titulos.push(await p.locator('.kf-abertura .kf-ab-t').innerText());
-    if (k === 1) { const antes = await p.locator('.ab-conta').innerText(); await p.click('[data-ab-soma="3"]'); assert.notEqual(await p.locator('.ab-conta').innerText(), antes, 'o toque no bloco muda a conta'); assert.match(await p.locator('.ab-conta').innerText(), /2 serviços[\s\S]*R\$\s175,00/); }
-    assert.equal(await p.locator('.kf-abertura button:visible', { hasText: 'Pular' }).count(), k < 3 ? 1 : 0, `Pular na tela ${k + 1}`);
-    await p.click('#kf-ab-prox');
-  }
-  assert.deepEqual(titulos.map(t => t.replace(/\s+/g, ' ')), ['Orçamento de elétrica, do pedido ao recibo', 'Some os serviços com um toque', 'O botão do pé é o próximo passo', 'Orçamento antes, relatório depois']);
-  // o cadastro: os seus dados (nome e WhatsApp obrigatórios para continuar; o resto, se quiser), com Pular
-  const cad = p.locator('.kf-abertura.ab-cadastro'); await cad.locator('#ab-nome').waitFor();
-  assert.equal(await cad.locator('.kf-ab-t').innerText(), 'Seus dados na proposta'); assert.equal(await semCampoEmFoco(p), true);
-  assert.equal(await cad.locator('#kf-ab-pular:visible').count(), 1, 'Pular nos dados');
-  await cad.locator('#kf-ab-prox').click(); assert.equal(await p.getAttribute('#ab-nome', 'aria-invalid'), 'true', 'sem o nome, não continua');
-  assert.equal(await cad.locator('.kf-ab-t').innerText(), 'Seus dados na proposta');
-  await p.fill('#ab-nome', 'Carlos Pereira'); await p.fill('#ab-fone', '11987654321'); await p.fill('#ab-cidade', 'São Paulo'); await cad.locator('#kf-ab-prox').click();
-  // a hora: digitar ou descobrir pela conta do mês; "Pular por agora" no lugar do Pular
-  await cad.locator('#ab-hv').waitFor(); assert.equal(await cad.locator('.kf-ab-t').innerText(), 'Quanto vale a sua hora?');
-  assert.equal(await cad.locator('#kf-ab-ex:visible').innerText(), 'Pular por agora'); assert.equal(await cad.locator('#kf-ab-prox').innerText(), 'Começar');
-  await cad.locator('#kf-ab-prox').click(); assert.equal(await p.getAttribute('#ab-hv', 'aria-invalid'), 'true', 'sem a hora, Começar não fecha');
+  const ab = p.locator('.kf-abertura'); await ab.waitFor();
+  assert.equal(await ab.locator('.kf-ab-pontos i').count(), 4, 'quatro telas, uma sequência só');
+  assert.equal(await ab.locator('.kf-ab-t').innerText(), 'Orçamento profissional, direto no WhatsApp');
+  assert.match(await ab.locator('.ab-prop').innerText(), /Total[\s\S]*R\$\s670,00[\s\S]*PDF enviado ao cliente/);
+  assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.kf-ab-t')).outlineStyle), 'none', 'o título não ganha moldura de foco');
+  assert.equal(await ab.locator('#kf-ab-pular:visible').count(), 1);
+  await ab.locator('#kf-ab-prox').click();
+  // os seus dados: nome e WhatsApp para continuar; o telefone toma forma enquanto se digita
+  await ab.locator('#ab-nome').waitFor(); assert.equal(await ab.locator('.kf-ab-t').innerText(), 'Seus dados na proposta'); assert.equal(await semCampoEmFoco(p), true);
+  assert.equal(await p.locator('.kf-abertura.ab-cadastro').count(), 1);
+  await ab.locator('#kf-ab-prox').click(); assert.equal(await p.getAttribute('#ab-nome', 'aria-invalid'), 'true', 'sem o nome, não continua');
+  await p.fill('#ab-nome', 'Carlos Pereira'); await p.click('#ab-fone'); await p.keyboard.type('11987654321');
+  assert.equal(await p.inputValue('#ab-fone'), '(11) 98765-4321');
+  // o botão de continuar fica à vista, mesmo com a tela dos dados rolando
+  const pe = await p.evaluate(() => { const r = document.querySelector('#kf-ab-prox').getBoundingClientRect(); return r.bottom <= innerHeight && r.top >= 0; });
+  assert.equal(pe, true, 'Continuar à vista');
+  await p.fill('#ab-cidade', 'São Paulo'); await ab.locator('#kf-ab-prox').click();
+  // a hora: digitar ou descobrir pela conta do mês; Pular no alto
+  await ab.locator('#ab-hv').waitFor(); assert.equal(await ab.locator('.kf-ab-t').innerText(), 'Quanto vale a sua hora?');
+  assert.equal(await ab.locator('#kf-ab-prox').innerText(), 'Continuar'); assert.equal(await ab.locator('#kf-ab-pular:visible').count(), 1);
+  await ab.locator('#kf-ab-prox').click(); assert.equal(await p.getAttribute('#ab-hv', 'aria-invalid'), 'true', 'sem a hora, não continua');
   await p.click('[data-ab-hm="conta"]'); await digitar(p, '#ab-ht', '600000'); await digitar(p, '#ab-hc', '120000'); await p.fill('#ab-hh', '60');
   assert.match(await p.locator('#ab-hr').innerText(), /R\$\s120,00/);
-  await cad.locator('#kf-ab-prox').click(); await p.locator('.kf-abertura:not(.kf-sai)').waitFor({ state: 'detached' }); await pronto(p);
-  assert.deepEqual(await p.evaluate(() => [ajustes.nome, ajustes.fone, ajustes.cidade, ajustes.hora, ajustes.hHoras, KitFacil.abertura.vista()]), ['Carlos Pereira', '11987654321', 'São Paulo', 12000, 60, true]);
+  await ab.locator('#kf-ab-prox').click();
+  // o convite ao guia: "Fazer o guia" e "Agora não", sem Pular
+  await ab.locator('.ab-guia').waitFor(); assert.equal(await ab.locator('.kf-ab-t').innerText(), 'Vamos fazer um orçamento juntos?');
+  assert.equal(await ab.locator('#kf-ab-prox').innerText(), 'Fazer o guia'); assert.equal(await ab.locator('#kf-ab-ex:visible').innerText(), 'Agora não');
+  assert.equal(await ab.locator('#kf-ab-pular:visible').count(), 0);
+  await ab.locator('#kf-ab-ex').click(); await p.locator('.kf-abertura:not(.kf-sai)').waitFor({ state: 'detached' }); await pronto(p);
+  assert.deepEqual(await p.evaluate(() => [ajustes.nome, ajustes.fone, ajustes.cidade, ajustes.hora, ajustes.hHoras, KitFacil.abertura.vista(), guiaAtivo()]), ['Carlos Pereira', '11987654321', 'São Paulo', 12000, 60, true, false]);
   assert.match(await p.locator('#conteudo').innerText(), /Olá, Carlos/);
   // o primeiro orçamento: só o cliente; Somar abre direto
   await p.click('#kf-nav-novo'); await p.locator('.kf-dlg [data-novo-tipo="orc"]').click(); await cliente(p);
@@ -787,28 +793,31 @@ test('primeiro uso completo: quatro telas de apresentação, depois os seus dado
   await p.evaluate(() => { fecharJanela(true); ir('/', true); });
   await p.reload(); await pronto(p); await p.waitForTimeout(400);
   assert.equal(await p.locator('.kf-abertura').count(), 0, 'a abertura aparece uma vez só');
-  // rever a apresentação, nos Ajustes: só as quatro telas, sem o cadastro
+  // rever, nos Ajustes: a proposta e o convite; "Fazer o guia" começa o guia
   await p.evaluate(() => aberturaAbrir({ rever: true })); await p.locator('.kf-abertura').waitFor();
-  for (let k = 0; k < 4; k++) await p.click('#kf-ab-prox');
-  await p.locator('.kf-abertura:not(.kf-sai)').waitFor({ state: 'detached' }); await p.waitForTimeout(700); assert.equal(await p.locator('.kf-abertura').count(), 0, 'rever não pede o cadastro');
+  assert.equal(await p.locator('.kf-ab-pontos i').count(), 2, 'rever não pede o cadastro');
+  await p.click('#kf-ab-prox'); await p.locator('.ab-guia').waitFor(); await p.click('#kf-ab-prox');
+  await p.locator('.kf-abertura:not(.kf-sai)').waitFor({ state: 'detached' });
+  await p.waitForFunction(() => guiaAtivo(), null, { timeout: 5000 });
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
 
-test('primeiro uso pulado: Pular na apresentação leva ao cadastro; Pular nos dados leva à hora; Pular por agora não grava nada; tudo volta no primeiro orçamento', async () => {
+test('primeiro uso pulado: Pular passa só a tela; o que foi escrito fica, a hora não; tudo volta no primeiro orçamento', async () => {
   const a = await aparelho(amb, { antes: () => { window.EF_TESTE_ABERTURA = true; } }); const p = a.page;
-  await p.locator('.kf-abertura').waitFor(); await p.click('#kf-ab-pular');
-  const cad = p.locator('.kf-abertura.ab-cadastro'); await cad.locator('#ab-nome').waitFor();
-  await p.fill('#ab-nome', 'Ca'); await cad.locator('#kf-ab-pular').click(); await cad.locator('#ab-hv').waitFor();
-  assert.equal(await cad.locator('.kf-ab-t').innerText(), 'Quanto vale a sua hora?', 'Pular nos dados passa para a hora, sem fechar');
-  await cad.locator('#kf-ab-ex').click(); await p.locator('.kf-abertura:not(.kf-sai)').waitFor({ state: 'detached' }); await pronto(p);
+  const ab = p.locator('.kf-abertura'); await ab.waitFor(); await p.click('#kf-ab-pular');
+  await ab.locator('#ab-nome').waitFor();
+  await p.fill('#ab-nome', 'Ca'); await ab.locator('#kf-ab-pular').click(); await ab.locator('#ab-hv').waitFor();
+  assert.equal(await ab.locator('.kf-ab-t').innerText(), 'Quanto vale a sua hora?', 'Pular nos dados passa para a hora, sem fechar');
+  await ab.locator('#kf-ab-pular').click(); await ab.locator('.ab-guia').waitFor();
+  await ab.locator('#kf-ab-ex').click(); await p.locator('.kf-abertura:not(.kf-sai)').waitFor({ state: 'detached' }); await pronto(p);
   assert.deepEqual(await p.evaluate(() => [ajustes.nome, ajustes.fone, ajustes.hora, dadosOk(), KitFacil.abertura.vista()]), ['Ca', '', 0, false, true], 'o que foi escrito fica; a hora, não');
   // o primeiro orçamento pede o que faltou, antes de somar; o nome escrito na abertura já vem no campo
   await p.click('#kf-nav-novo'); await p.locator('.kf-dlg [data-novo-tipo="orc"]').click(); await cliente(p);
   await p.click('#pe-doc [data-prox]'); await p.locator('#el-nome').waitFor(); assert.equal(await p.inputValue('#el-nome'), 'Ca');
   await p.fill('#el-nome', 'Carla Dias'); await p.fill('#el-fone', '21999998888'); await p.click('.kf-dlg [data-salvar]');
   await p.locator('#hr-v').waitFor(); await digitar(p, '#hr-v', '10000'); await p.click('.kf-dlg [data-salvar]'); await p.locator('#so-q').waitFor();
-  assert.deepEqual(await p.evaluate(() => [ajustes.nome, ajustes.hora]), ['Carla Dias', 10000]);
+  assert.deepEqual(await p.evaluate(() => [ajustes.nome, ajustes.fone, ajustes.hora]), ['Carla Dias', '21999998888', 10000]);
   // quem apaga o nome e chega a Enviar recebe o pedido ali
   await p.evaluate(() => { fecharJanela(true); ajustes.nome = ''; salvarAjustes(); const d = getDoc(rota().id); d.linhas.push(acertaLinha({ nome: 'X', q: 1, pu: 1000 })); d.inicio = Date.now(); d.dias = 1; tocarDoc(d); redesenhar(); });
   await p.click('#pe-doc [data-prox="enviar"]'); await p.locator('#el-nome').waitFor();
@@ -830,15 +839,17 @@ const esperarAviso = async p => { await p.locator('.kf-toast:not([hidden])').wai
 
 test('5.3.1: o aviso nunca cobre botão nem campo e some ao trocar de tela; a seta do documento; tablet com trilho; setas do carrossel; sem caixa alta', async () => {
   const a = await aparelho(amb, { antes: () => { window.EF_TESTE_ABERTURA = true; } }); const p = a.page;
-  await p.locator('.kf-abertura').waitFor(); for (let k = 0; k < 4; k++) await p.click('#kf-ab-prox');
+  await p.locator('.kf-abertura').waitFor(); await p.click('#kf-ab-prox');
   // abertura, Seus dados: Continuar sem o nome mostra o aviso, que não cobre Voltar, Continuar nem os campos
   const cad = p.locator('.kf-abertura.ab-cadastro'); await cad.locator('#ab-nome').waitFor(); await cad.locator('#kf-ab-prox').click();
-  await esperarAviso(p); assert.equal(await avisoCobre(p), 0, 'abertura, seus dados: o aviso não cobre nada');
-  // Pular passa para a hora: o aviso da tela anterior some
+  // na abertura (5.5.0), o que falta aparece na própria tela, abaixo do texto, e não num aviso flutuante
+  assert.match(await cad.locator('.ab-msg').innerText(), /Falta o seu nome e o WhatsApp com DDD/); assert.equal(await p.locator('.kf-toast:not([hidden])').count(), 0);
+  // Pular passa para a hora: a mensagem da tela anterior some
   await cad.locator('#kf-ab-pular').click(); await cad.locator('#ab-hv').waitFor(); await p.waitForTimeout(700);
-  assert.equal(await p.locator('.kf-toast:not([hidden])').count(), 0, 'o aviso some ao trocar de tela');
-  await cad.locator('#kf-ab-prox').click(); await esperarAviso(p); assert.equal(await avisoCobre(p), 0, 'abertura, a hora: o aviso não cobre nada');
-  await cad.locator('#kf-ab-ex').click(); await p.locator('.kf-abertura').waitFor({ state: 'detached' }); await pronto(p);
+  assert.equal(await cad.locator('.ab-msg').count(), 0, 'a mensagem some ao trocar de tela');
+  await cad.locator('#kf-ab-prox').click(); assert.match(await cad.locator('.ab-msg').innerText(), /valor da sua hora/);
+  await cad.locator('#kf-ab-pular').click(); await p.locator('.ab-guia').waitFor();
+  await p.click('#kf-ab-ex'); await p.locator('.kf-abertura').waitFor({ state: 'detached' }); await pronto(p);
   // o Início: sem o raio de enfeite no cartão "Para receber"; rótulos sem caixa alta
   assert.equal(await p.locator('#conteudo .pn-raio').count(), 0);
   assert.equal(await p.evaluate(() => getComputedStyle(document.querySelector('.pn-rot')).textTransform), 'none');

@@ -33,14 +33,15 @@ for (const tema of ['light', 'dark']) {
     const p = a.page, nome = tema === 'light' ? 'claro' : 'escuro';
     await p.emulateMedia({ colorScheme: tema, reducedMotion: 'reduce' });
     await p.locator('.kf-abertura').waitFor();
-    for (let k = 0; k < 4; k++) { await varrer(p, `apresentação, tela ${k + 1} (${nome})`); await p.click('#kf-ab-prox'); }
-    // o cadastro da abertura: os seus dados e a sua hora; a hora fica para depois (Pular por agora)
+    await varrer(p, `primeiro uso, a proposta (${nome})`); await p.click('#kf-ab-prox');
+    // os seus dados e a sua hora; a hora fica para depois (Pular); o convite ao guia, "Agora não"
     await p.locator('.ab-cadastro #ab-nome').waitFor(); await varrer(p, `abertura, seus dados (${nome})`);
     await p.click('.ab-cadastro #kf-ab-prox'); await varrer(p, `abertura, dados apontados (${nome})`);
     await p.fill('#ab-nome', 'Carlos Pereira'); await p.fill('#ab-fone', '11988887777'); await p.click('.ab-cadastro #kf-ab-prox');
     await p.locator('#ab-hv').waitFor(); await varrer(p, `abertura, a sua hora (${nome})`);
     await p.click('[data-ab-hm="conta"]'); await p.locator('#ab-hh').waitFor(); await varrer(p, `abertura, a hora pela conta (${nome})`);
-    await p.click('.ab-cadastro #kf-ab-ex');
+    await p.click('.ab-cadastro #kf-ab-pular'); await p.locator('.ab-guia').waitFor(); await varrer(p, `primeiro uso, convite ao guia (${nome})`);
+    await p.click('#kf-ab-ex');
     await p.locator('main.inicio').waitFor();
     await varrer(p, `Início, vazio (${nome})`);
     await p.evaluate(() => ir('/docs', true)); await varrer(p, `Documentos, vazio (${nome})`);

@@ -348,7 +348,7 @@ const camposCliente = c => `${campo('cl-nome', 'Nome do cliente', entrada('cl-no
       ${campo('cl-end', 'Endereço do serviço', entrada('cl-end', c.end, 'placeholder="Rua, número, bairro e cidade"'))}
       ${campo('cl-doc', 'CPF ou CNPJ', entrada('cl-doc', c.doc ? cpfCnpj(c.doc) : '', 'inputmode="numeric" placeholder="Sai no recibo"'))}`;
 function lerCliente(j) {
-  const c = { nome: $('#cl-nome', j).value.trim(), fone: $('#cl-fone', j).value.trim(), end: $('#cl-end', j).value.trim(), doc: $('#cl-doc', j).value.trim() };
+  const c = { nome: $('#cl-nome', j).value.trim(), fone: foneGuardar($('#cl-fone', j).value), end: $('#cl-end', j).value.trim(), doc: $('#cl-doc', j).value.trim() };
   const falta = [[c.nome.length < 2, '#cl-nome', 'o nome'], [c.fone.replace(/\D/g, '').length < 10, '#cl-fone', 'o telefone com DDD'], [c.end.length < 3, '#cl-end', 'o endereço do serviço']].filter(x => x[0]);
   falta.forEach(x => KitFacil.apontar($(x[1], j)));
   if (falta.length) { aviso(`Falta ${falta.map(x => x[2]).join(', ').replace(/, ([^,]*)$/, ' e $1')}.`); return null; }
@@ -663,7 +663,7 @@ const CAMPOS_ELE = [['nome', 'Seu nome', 'Ex.: Carlos Pereira', 'autocapitalize=
 const camposEletricista = (o, pre = 'el') => CAMPOS_ELE.map(([k, rot, dica, attrs], i) => `${i === 2 ? '<p class="kf-ajuda el-mais">Também saem na proposta e no recibo:</p>' : ''}${campo(`${pre}-${k}`, rot, `<input id="${pre}-${k}" class="kf-entrada" data-el="${k}" type="text" value="${esc(k === 'fone' ? fone(o[k]) : k === 'doc' ? cpfCnpj(o[k]) : o[k] || '')}" placeholder="${esc(dica)}" maxlength="80" ${attrs}>`)}`).join('');
 // lê os campos; devolve o que falta do obrigatório (nome e WhatsApp)
 function lerEletricista(raiz, o) {
-  $$('[data-el]', raiz).forEach(i => { o[i.dataset.el] = i.value.trim().slice(0, 80); });
+  $$('[data-el]', raiz).forEach(i => { o[i.dataset.el] = i.dataset.el === 'fone' ? foneGuardar(i.value).slice(0, 80) : i.value.trim().slice(0, 80); });
   return [[o.nome.length < 2, '[data-el="nome"]', 'o seu nome'], [soDigitos(o.fone).length < 10, '[data-el="fone"]', 'o WhatsApp com DDD']].filter(x => x[0]);
 }
 function janelaDados(depois, contexto = '') {
@@ -794,7 +794,7 @@ function janelaEnviar(d) {
       const guarda = () => {
         const nome = $('#ev-nome', j).value.trim();
         if (!nome) { KitFacil.apontar($('#ev-nome', j)); aviso('Escreva o nome do cliente para enviar.'); return false; }
-        if (nome !== d.cliente.nome || $('#ev-fone', j).value.trim() !== (d.cliente.fone ? fone(d.cliente.fone) : '')) { d.cliente.nome = nome; d.cliente.fone = $('#ev-fone', j).value.trim(); tocarDoc(d); }
+        if (nome !== d.cliente.nome || foneGuardar($('#ev-fone', j).value) !== foneGuardar(d.cliente.fone)) { d.cliente.nome = nome; d.cliente.fone = foneGuardar($('#ev-fone', j).value); tocarDoc(d); }
         return true;
       };
       j.addEventListener('click', async e => {

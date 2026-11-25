@@ -228,7 +228,7 @@ TELAS.ajustes = {
           { id: 'raio', titulo: 'Raio e apresentação', icone: ICONES_AJ.raio, resumo: S.raio, html: bloco('Um raio de vez em quando', `<label class="aj-chave"><span class="aj-chave-tx"><b>Soltar raios</b><small>Cai sozinho, de tempos em tempos. É enfeite: não recebe toque e some em um segundo.</small></span>${KitFacil.ui.chave({ attrs: 'id="aj-raio"', on: Raio.ligado() })}</label>
               <button type="button" class="kf-btn kf-sec" id="aj-raio-ver">Soltar um raio agora</button>
               ${semMovimento() ? '<p class="kf-ajuda">Seu aparelho pede menos movimento, então os raios ficam desligados.</p>' : ''}`)
-            + bloco('Apresentação', '<p class="kf-ajuda">As quatro telas que aparecem na primeira vez que o app abre. O guia e o exemplo ficam em Mais.</p><button type="button" class="kf-btn kf-sec" id="aj-abertura">Rever a apresentação</button>') },
+            + bloco('Apresentação', '<p class="kf-ajuda">A primeira tela do app e o convite para fazer o guia. O exemplo fica em Mais.</p><button type="button" class="kf-btn kf-sec" id="aj-abertura">Rever a apresentação</button>') },
         ],
       })}
     </main>`;
@@ -244,7 +244,7 @@ TELAS.ajustes = {
     let t;
     $$('[data-aj]', v).forEach(i => {
       const k = i.dataset.aj;
-      i.addEventListener('input', () => { ajustes[k] = i.tagName === 'INPUT' ? i.value.trim() : i.value; clearTimeout(t); t = setTimeout(() => { salvarAjustes(); pintarResumos(); }, 300); });
+      i.addEventListener('input', () => { ajustes[k] = k === 'fone' ? foneGuardar(i.value) : i.tagName === 'INPUT' ? i.value.trim() : i.value; clearTimeout(t); t = setTimeout(() => { salvarAjustes(); pintarResumos(); }, 300); });
       i.addEventListener('change', () => {
         clearTimeout(t);
         if (k === 'pix' && ajustes.pix) { ajustes.pix = KitFacil.pix.chave(ajustes.pix); i.value = ajustes.pix; }
@@ -274,47 +274,29 @@ TELAS.ajustes = {
   },
 };
 
-/* ---------- apresentação: quatro telas, uma vez só (Código, Art. 75) ---------- */
+/* ---------- primeiro uso (5.5.0): uma sequência só, com quatro telas e os mesmos pontinhos (Código, Arts. 64-D e 75) ----------
+   1. o que o app entrega ao cliente (a proposta em PDF, no WhatsApp, com Pix); 2. os seus dados na proposta; 3. a sua hora;
+   4. o convite para fazer o guia. "Pular" passa a tela, sem conferir nada; "Continuar" confere os dados e a hora. Na última,
+   "Fazer o guia" fecha e começa o guia; "Agora não" só fecha. Quem pula recebe os pedidos de novo no primeiro orçamento,
+   antes de somar o primeiro serviço (janelaSomar). Ao rever (Ajustes), só a primeira e a última. */
 const aberturaAtiva = () => KitFacil.abertura.ativa();
 function aberturaAbrir({ rever = false } = {}) {
   if (aberturaAtiva()) return;
   if (!rever) { try { localStorage.setItem('kitfacil.eletrica-facil.visto', JSON.stringify(VERSAO)); } catch {} }
-  // tela 2: quatro blocos de verdade; cada toque soma um serviço e a conta anda
-  const DEMO = [['tomada', 'Tomada', 6000], ['lampada', 'Luminária', 9000], ['quadro', 'Disjuntor', 7000], ['chuveiro', 'Chuveiro', 11500]];
-  const n = [1, 0, 0, 0];
-  const blocos = () => { const q = soma(n), v = soma(n.map((x, i) => x * DEMO[i][2])); return `<div class="ab-cena ab-somar"><div class="blocos p">${DEMO.map(([ic, nome], i) => `<button type="button" class="bloco" data-ab-soma="${i}"><span class="bl-ic">${PIC[ic]}</span><b class="bl-nome">${nome}</b>${n[i] ? `<span class="bl-selo num">${n[i]}</span>` : ''}</button>`).join('')}</div>
-    <p class="ab-conta" role="status"><span>${plural(q, 'serviço', 'serviços')}</span><b class="num">${BRL(v)}</b></p></div>`; };
-  const PASSOS = [['Rascunho', 'Enviar'], ['Enviado', 'Aprovou'], ['Aprovado', 'Receber'], ['Recebido', 'Enviar recibo']];
-  const passos = `<div class="ab-cena ab-passos"><div class="pnl ab-pnl" role="img" aria-label="${PASSOS.map(x => `${x[0]}: ${x[1]}`).join('; ')}."><ol class="tr-passos pnl-trilha" aria-hidden="true">${PASSOS.map((x, i) => `<li class="${i < 2 ? 'feito' : i === 2 ? 'atual' : ''}"><span>${x[0]}</span></li>`).join('')}</ol>
-      <div class="pnl-tot" aria-hidden="true">${DISJUNTOR}<div class="pnl-t"><small>Total</small><b class="num">${BRL(143500)}</b></div></div></div>
-      <div class="ab-pe" aria-hidden="true"><span class="bt-ic contorno">${IC.mais}</span><span class="kf-btn kf-pri">Receber</span></div></div>`;
-  const dois = `<div class="ab-cena ab-dois" role="img" aria-label="Orçamento, antes do serviço. Relatório, depois do serviço."><div class="ab-papel"><span class="op-ic">${IC.docs}</span><b>Orçamento</b><small>Antes do serviço</small></div><div class="ab-papel"><span class="op-ic">${IC.recibo}</span><b>Relatório</b><small>Depois do serviço</small></div></div>`;
-  const marca = '<div class="ab-cena ab-marca"><span class="ab-halo" aria-hidden="true"></span><img src="icons/icon-192.png" alt="" width="132" height="132"></div>';
-  const telas = [
-    { arte: () => marca, titulo: 'Orçamento de elétrica, do pedido ao recibo', texto: 'Veja em quatro telas como funciona.' },
-    { arte: () => blocos(), falada: true, titulo: 'Some os serviços com um toque', texto: 'Crie cada serviço uma vez, com o seu preço. Depois, cada toque soma um.' },
-    { arte: () => passos, titulo: 'O botão do pé é o próximo passo', texto: 'Enviar, Aprovou, Receber e Enviar recibo. Para receber, Pix em QR code.' },
-    { arte: () => dois, titulo: 'Orçamento antes, relatório depois', texto: 'O orçamento o cliente aprova. O relatório cobra o que você já fez.' },
-  ];
-  KitFacil.abertura.abrir({ telas, rever, rotulo: 'Apresentação do Elétrica Fácil',
-    fim: () => rever ? 'Concluir' : 'Começar',
-    extra: { rotulo: 'Abrir um orçamento de exemplo', mostrar: () => !rever },
-    aoMontar: (el, { redesenharArte }) => {
-      el.addEventListener('click', e => {
-        const b = e.target.closest('[data-ab-soma]'); if (!b) return;
-        const i = +b.dataset.abSoma; n[i] = n[i] >= 9 ? 0 : n[i] + 1; redesenharArte(); $(`[data-ab-soma="${i}"]`, el)?.focus({ preventScroll: true }); vibrar();
-      });
-    },
-    // na primeira vez, depois da apresentação vem o cadastro (Código, Arts. 64-D, § 1º, e 75); ao rever, não
-    aoFechar: ({ como }) => { redesenhar(); const ex = como === 'extra' ? () => criarExemplo() : null; return rever ? ex : () => aberturaCadastro(ex); } });
-}
-/* ---------- cadastro na abertura: os seus dados na proposta e a sua hora, com Pular ----------
-   É uma segunda abertura do Kit, logo depois da apresentação (o Kit faz uma abertura de até quatro telas; o cadastro
-   vem como uma sequência à parte, com os seus pontinhos). "Pular" passa a tela; na última, "Pular por agora" fecha.
-   Quem pula recebe os pedidos de novo no primeiro orçamento, antes de somar o primeiro serviço (janelaSomar). */
-function aberturaCadastro(depois) {
+  const LINHAS = [['Ponto novo de tomada 10 A', '4 pontos', 40000], ['Instalação de chuveiro', '1 un.', 12000], ['Instalação de DR', '1 un.', 15000]];
+  const qr = Array.from({ length: 49 }, (_, k) => `<i${[0, 1, 2, 7, 9, 14, 15, 16, 4, 5, 6, 11, 13, 18, 19, 20, 28, 29, 30, 35, 37, 42, 43, 44, 24, 26, 32, 40, 46, 22, 38].includes(k) ? ' class="on"' : ''}></i>`).join('');
+  const proposta = `<div class="ab-cena ab-prop" role="img" aria-label="A proposta que o cliente recebe: os serviços, o total e o Pix.">
+      <div class="ab-folha">
+        <div class="ab-f-topo"><img src="icons/icon-192.png" alt="" width="30" height="30"><span><b>Carlos Pereira</b><small>Eletricista · (11) 98765-4321</small></span></div>
+        <small class="ab-f-tit">Orçamento Nº 0001 · Mariana Souza</small>
+        ${LINHAS.map(([n, q, v]) => `<div class="ab-f-lin"><span>${n}<small>${q}</small></span><b class="num">${BRL(v)}</b></div>`).join('')}
+        <div class="ab-f-tot"><span>Total</span><b class="num">${BRL(soma(LINHAS.map(x => x[2])))}</b></div>
+        <div class="ab-f-pix"><span class="ab-qr" aria-hidden="true">${qr}</span><small>Pague com Pix<br>pelo QR code</small></div>
+      </div>
+      <span class="ab-bolha">${IC.certo}PDF enviado ao cliente</span>
+    </div>`;
+  const ic = x => `<span class="ab-cad-ic">${x}</span>`;
   const el0 = { ...ajustes }, h = { modo: 'digitar', v: ajustes.hora, T: ajustes.hTirar, C: ajustes.hCustos, H: ajustes.hHoras };
-  let passar = false;
   const daConta = () => h.H > 0 ? Math.round((h.T + h.C) / h.H) : 0, hora = () => h.modo === 'conta' ? daConta() : h.v;
   const formHora = () => `${segmento('Como informar a hora', 'ab-hm', [['digitar', 'Digitar o valor'], ['conta', 'Descobrir minha hora']], h.modo)}
     ${h.modo === 'digitar' ? campo('ab-hv', 'Valor da sua hora', campoDinheiro('ab-hv', h.v))
@@ -323,19 +305,32 @@ function aberturaCadastro(depois) {
       <dl class="resumo"><div class="forte"><dt>A sua hora dá</dt><dd class="num" id="ab-hr">${BRL(daConta())}</dd></div></dl>`}`;
   const lerHora = el => { if (h.modo === 'digitar') { if ($('#ab-hv', el)) h.v = lerDinheiro($('#ab-hv', el)); } else if ($('#ab-hh', el)) { h.T = lerDinheiro($('#ab-ht', el)); h.C = lerDinheiro($('#ab-hc', el)); h.H = Math.max(0, Math.min(744, parseInt($('#ab-hh', el).value, 10) || 0)); } };
   const guardarDados = () => { CAMPOS_ELE.forEach(([k]) => { if (el0[k] !== ajustes[k]) ajustes[k] = el0[k]; }); salvarAjustes(); };
-  const telas = [
-    { arte: `<span class="ab-cad-ic">${IC.docs}</span>`, titulo: 'Seus dados na proposta', texto: 'O cliente vê o seu nome e o seu WhatsApp no orçamento.',
+  const guardarHora = () => { const v = hora(); if (!v) return; ajustes.hora = v; if (h.modo === 'conta') { ajustes.hTirar = h.T; ajustes.hCustos = h.C; ajustes.hHoras = h.H; } salvarAjustes(); };
+  const BOAS = { arte: () => proposta, falada: true, titulo: 'Orçamento profissional, direto no WhatsApp', texto: 'Monte no celular em poucos minutos. O cliente recebe a proposta em PDF, aprova e paga por Pix.' };
+  const guiaArte = `<div class="ab-cena ab-guia" aria-hidden="true">
+      <span class="ab-g-mais">${IC.soma}<i class="ab-g-anel"></i></span>
+      <div class="ab-g-doca"><b>Comece pelo +</b><small>O + cria o orçamento. Depois, cada passo acontece na tela.</small>
+        <span class="ab-g-ctl"><small class="num">1 de 18</small><i class="ab-g-barra"><i></i></i><span class="ab-g-play"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span></span></div>
+    </div>`;
+  const GUIA_T = { arte: () => guiaArte, titulo: 'Vamos fazer um orçamento juntos?', texto: 'O guia monta um orçamento de exemplo na tela, passo a passo, até o recibo. Leva uns dois minutos e nada fica gravado.' };
+  const telas = rever ? [BOAS, GUIA_T] : [BOAS,
+    { arte: () => ic(IC.docs), titulo: 'Seus dados na proposta', texto: 'O cliente vê o seu nome e o seu WhatsApp no orçamento.',
       get extra() { return `<div class="ab-cad pilha" id="ab-dados">${camposEletricista(el0, 'ab')}<p class="kf-ajuda">O logotipo e a chave Pix ficam em Ajustes.</p></div>`; } },
-    { arte: `<span class="ab-cad-ic">${IC.relogio}</span>`, titulo: 'Quanto vale a sua hora?', texto: 'Ela é a base dos preços que você der pelo tempo.',
+    { arte: () => ic(IC.relogio), titulo: 'Quanto vale a sua hora?', texto: 'Ela é a base dos preços que você der pelo tempo.',
       get extra() { return `<div class="ab-cad pilha" id="ab-hora">${formHora()}</div>`; } },
-  ];
-  KitFacil.abertura.abrir({ telas, rotulo: 'Seus dados e a sua hora', fim: 'Começar', extra: { rotulo: 'Pular por agora' },
+    GUIA_T];
+  let passar = false;
+  // na abertura, o que falta aparece na própria tela, logo abaixo do texto: com o pé preso e a tela cheia de campos, o
+  // aviso flutuante não teria onde ficar sem cobrir um campo ou um botão
+  const falta = (el, msg) => { const t = $('.kf-ab-tela', el); if (!t) return; let m = $('.ab-msg', t); if (!m) { m = document.createElement('p'); m.className = 'ab-msg'; m.setAttribute('role', 'alert'); $('.kf-ab-p', t).after(m); } m.textContent = msg; };
+  KitFacil.abertura.abrir({ telas, rever, rotulo: 'Primeiro uso do Elétrica Fácil', fim: 'Fazer o guia', extra: { rotulo: 'Agora não' },
     aoMontar: el => {
-      el.classList.add('ab-cadastro');
-      // trocou de tela na abertura: o aviso da tela anterior some
+      // a cada troca de tela: o aviso da tela anterior some, e as telas de cadastro ficam no alto
       let titulo = '';
-      new MutationObserver(() => { const tt = $$('.kf-ab-t', el).map(x => x.textContent).join('|'); if (tt !== titulo) { if (titulo) esconderAviso(); titulo = tt; } }).observe(el, { childList: true, subtree: true });
+      const marcar = () => { const tt = $$('.kf-ab-t', el).map(x => x.textContent).join('|'); if (tt !== titulo) { if (titulo) esconderAviso(); titulo = tt; } el.classList.toggle('ab-cadastro', !!$('#ab-dados, #ab-hora', el)); el.classList.toggle('ab-boas', !!$('.ab-prop', el)); };
+      new MutationObserver(marcar).observe(el, { childList: true, subtree: true }); marcar();
       el.addEventListener('input', e => {
+        $('.ab-msg', el)?.remove(); // a pessoa está corrigindo: a mensagem do que faltava sai
         if (e.target.matches('[data-el]')) lerEletricista(el, el0);
         else { lerHora(el); const r = $('#ab-hr', el); if (r) r.textContent = BRL(daConta()); }
       });
@@ -343,24 +338,23 @@ function aberturaCadastro(depois) {
         const b = e.target.closest('[data-ab-hm]'); if (!b) return;
         lerHora(el); h.modo = b.dataset.abHm; $('#ab-hora', el).innerHTML = formHora(); prepararCampos(el); $(`[data-ab-hm="${h.modo}"]`, el)?.focus({ preventScroll: true });
       });
-      // "Pular" na tela dos dados passa para a da hora (no Kit, ele fecharia tudo); "Continuar" e "Começar" conferem o que falta
+      // "Pular" passa só esta tela (no Kit, ele fecharia tudo); "Continuar" confere os dados e a hora
       el.addEventListener('click', e => {
         const pular = e.target.closest('#kf-ab-pular'), prox = e.target.closest('#kf-ab-prox');
-        if (pular && $('#ab-dados', el)) { e.stopImmediatePropagation(); e.preventDefault(); passar = true; $('#kf-ab-prox', el).click(); return; }
+        if (pular) { e.stopImmediatePropagation(); e.preventDefault(); if ($('#ab-dados', el)) lerEletricista(el, el0); passar = true; $('#kf-ab-prox', el).click(); return; }
         if (!prox) return;
         if (passar) { passar = false; return; }
-        if ($('#ab-dados', el)) { const falta = lerEletricista(el, el0); if (falta.length) { e.stopImmediatePropagation(); falta.forEach(x => KitFacil.apontar($(x[1], el))); aviso(`Falta ${falta.map(x => x[2]).join(' e ')}. Ou toque em Pular.`); } else guardarDados(); return; }
-        if ($('#ab-hora', el)) { lerHora(el); if (!hora()) { e.stopImmediatePropagation(); KitFacil.apontar($(h.modo === 'digitar' ? '#ab-hv' : '#ab-hh', el)); aviso(h.modo === 'digitar' ? 'Escreva o valor da sua hora. Ou toque em Pular por agora.' : 'Preencha os três números da conta. Ou toque em Pular por agora.'); } }
+        if ($('#ab-dados', el)) { const f = lerEletricista(el, el0); if (f.length) { e.stopImmediatePropagation(); f.forEach(x => KitFacil.apontar($(x[1], el))); falta(el, `Falta ${f.map(x => x[2]).join(' e ')}. Ou toque em Pular.`); } else guardarDados(); return; }
+        if ($('#ab-hora', el)) { lerHora(el); if (!hora()) { e.stopImmediatePropagation(); KitFacil.apontar($(h.modo === 'digitar' ? '#ab-hv' : '#ab-hh', el)); falta(el, h.modo === 'digitar' ? 'Escreva o valor da sua hora. Ou toque em Pular.' : 'Preencha os três números da conta. Ou toque em Pular.'); } else guardarHora(); }
       }, true);
       // Enter num campo: o Kit passaria a tela sem conferir; aqui ele aperta o botão de continuar
       window.addEventListener('keydown', function enter(e) { if (!document.body.contains(el)) return window.removeEventListener('keydown', enter, true); if (e.key === 'Enter' && e.target.matches && e.target.matches('.ab-cad input')) { e.preventDefault(); e.stopImmediatePropagation(); $('#kf-ab-prox', el).click(); } }, true);
     },
     aoFechar: ({ como, el }) => {
-      if ($('#ab-dados', el)) lerEletricista(el, el0);
       // o que foi digitado nos dados fica, mesmo sem nome e WhatsApp completos (o pedido volta no primeiro orçamento)
-      guardarDados();
-      if (como === 'fim') { lerHora(el); const v = hora(); if (v) { ajustes.hora = v; if (h.modo === 'conta') { ajustes.hTirar = h.T; ajustes.hCustos = h.C; ajustes.hHoras = h.H; } salvarAjustes(); aviso(`Pronto. A sua hora é ${BRL(v)}.`); } }
-      redesenhar(); return depois;
+      if (!rever) { if ($('#ab-dados', el)) lerEletricista(el, el0); guardarDados(); }
+      redesenhar();
+      return como === 'fim' ? () => setTimeout(guiaIniciar, semMovimento() ? 0 : 450) : null;
     } });
 }
 
@@ -407,6 +401,13 @@ else if (!history.state) history.replaceState({ d: 0 }, '', location.hash);
 desenhar();
 SY.iniciar({ token: tokenDoLink, silencioso: false, textoConfirmar: 'Os documentos deste aparelho se juntam aos da nuvem. Os preços e os ajustes passam a ser os da nuvem.' });
 // a apresentação aparece uma vez (Código, Art. 75); quem chega por um link de sincronização vai direto para os Ajustes
+// todo campo de telefone ganha a forma (61) 98136-7100 enquanto se digita; apagar não é atrapalhado (5.5.0)
+document.addEventListener('input', e => {
+  const i = e.target; if (!i || !i.matches || !i.matches('input[inputmode="tel"]')) return;
+  if (e.inputType && e.inputType.startsWith('delete')) return;
+  if (i.selectionStart !== i.value.length) return;
+  const v = foneDigitando(i.value); if (v !== i.value) i.value = v;
+}, true);
 if (!KitFacil.abertura.vista() && !tokenDoLink && !(navigator.webdriver && !window.EF_TESTE_ABERTURA)) aberturaAbrir();
 // o raio cai sozinho, de tempos em tempos, com ou sem toque na tela (em navegador de teste, só quando o teste pede)
 if (!navigator.webdriver || window.EF_TESTE_RAIO) Raio.comecar();
