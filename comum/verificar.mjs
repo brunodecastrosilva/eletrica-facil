@@ -174,21 +174,21 @@ console.log('Segurança');
 console.log('Interface comum');
 const codigo = (await Promise.all(fontes.map(f => ler(f)))).join('\n');
 if (/fonts\.googleapis\.com\/css2\?[^"']*family=Atkinson\+Hyperlegible\+Next/.test(html)) ok('fonte da família (Atkinson Hyperlegible)');
-else falha('index.html não carrega a fonte comum (Atkinson Hyperlegible Next) — veja o CODIGO.md, Título VI e Anexo II');
+else falha('index.html não carrega a fonte comum (Atkinson Hyperlegible Next) — veja o ANEXOS.md, Anexos II e IX');
 if (/class="kf-casca"/.test(html) && /kf-barra/.test(codigo) && /kf-nav/.test(codigo) && /kf-trilho/.test(codigo)) ok('moldura comum: barra de cima, navegação embaixo e trilho lateral');
-else falha('moldura comum incompleta: use body.kf-casca, kf-barra, kf-nav e kf-trilho (CODIGO.md, Título VI)');
+else falha('moldura comum incompleta: use body.kf-casca, kf-barra, kf-nav e kf-trilho (ANEXOS.md, Anexo IX)');
 if (/KitFacil\.topo\.html\(\s*\{\s*principal:\s*true/.test(codigo)) ok('área superior direita: nuvem, presente e balão (KitFacil.topo)');
 else falha('a tela principal não usa KitFacil.topo.html({ principal: true }) (nuvem, presente e balão)');
-/* Kit 0.7.0 (Código, Arts. 59, 60 e 93): barra baixa com a ação principal no centro e "Mais" (tela com os Ajustes por
+/* Kit 0.7.0 (Anexo IX, Arts. 59, 60 e 93): barra baixa com a ação principal no centro e "Mais" (tela com os Ajustes por
    último); trilho com Mais e Ajustes no pé. Os apps ainda em 0.x seguem a navegação antiga até a vez de cada um
    (Art. 93, § 2º): para eles, a falta da moldura nova é aviso, e vale a conferência antiga (Ajustes na navegação). */
 const molduraNova = /KitFacil\.nav\.barra\(/.test(codigo) && /KitFacil\.nav\.trilho\(/.test(codigo);
 const segueConta = !/^0\./.test(versao);
 const navAj = (codigo.match(/KitFacil\.nav\.ajustes\(/g) || []).length;
 if (molduraNova) ok('navegação do Kit 0.7.0: ação principal no centro, Mais e trilho com Ajustes no pé (KitFacil.nav.barra e .trilho)');
-else if (segueConta) falha('a versão 1.x segue o Conta Fácil: use KitFacil.nav.barra e KitFacil.nav.trilho (Código, Arts. 59, 60 e 93)');
+else if (segueConta) falha('a versão 1.x segue o Conta Fácil: use KitFacil.nav.barra e KitFacil.nav.trilho (Anexo IX, Arts. 59, 60 e 93)');
 else {
-  aviso('navegação antiga: na vez deste app seguir o Conta Fácil, troque por KitFacil.nav.barra e KitFacil.nav.trilho (Código, Art. 93, § 2º)');
+  aviso('navegação antiga: na vez deste app seguir o Conta Fácil, troque por KitFacil.nav.barra e KitFacil.nav.trilho (Anexo IX, Art. 93, § 2º)');
   if (navAj >= 2 || (/KitFacil\.nav\.ajustes\(\s*['"]nav['"]/.test(codigo) && /KitFacil\.nav\.ajustes\(\s*['"]trilho['"]/.test(codigo))) ok('Ajustes na navegação: barra de baixo e trilho (KitFacil.nav.ajustes)');
   else falha('Ajustes precisa estar na barra de baixo e no trilho: use KitFacil.nav.ajustes("nav") e KitFacil.nav.ajustes("trilho")');
 }

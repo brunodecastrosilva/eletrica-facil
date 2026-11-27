@@ -1,0 +1,26 @@
+# Testes automáticos (Código do Projeto Fácil, Art. 12; Anexo VII): a cada envio para a main,
+# roda a verificação do padrão e a bateria completa, sem internet para o app (GitHub e Firebase simulados).
+name: Testes
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Dependências de desenvolvimento
+        run: npm install --no-audit --no-fund
+      - name: Navegador dos testes
+        run: npx playwright install --with-deps chromium
+      - name: Verificação do padrão
+        run: node comum/verificar.mjs
+      - name: Testes
+        run: npm test

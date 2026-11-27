@@ -17,13 +17,13 @@
    - componentes comuns de tela (Kit 2.10): guias, faixa de aviso, cartão e as medidas de botão, cartão e segmento */
 (function (global) {
   'use strict';
-  const VERSAO = '0.9.0';
+  const VERSAO = '0.9.1';
 
   /* ================= família de apps (mesmo endereço no GitHub Pages) ================= */
   const FAMILIA = [
     { app: 'conta-facil', nome: 'Conta Fácil', prefixo: 'contafacil.', resumo: 'Divide a comanda do bar sem calculadora.' },
     { app: 'eletrica-facil', nome: 'Elétrica Fácil', prefixo: 'eletricafacil.', resumo: 'Orçamentos de elétrica prontos em minutos.' },
-    { app: 'estudo-facil', nome: 'Estudo Fácil', prefixo: 'estudofacil.', resumo: 'Plano de estudos para concursos, dia a dia.' },
+    { app: 'estudo-facil', nome: 'Estudo Fácil', prefixo: 'estudofacil.', resumo: 'Plano de estudos para concursos, dia a dia.', fechado: true }, // app pessoal do Bruno: fica na lista pelos prefixos e pela chave da sincronização, mas não aparece para os outros apps (Código 0.14.0)
     { app: 'guitarra-facil', nome: 'Guitarra Fácil', prefixo: 'guitarrafacil.', resumo: 'Guitarra do primeiro acorde aos solos, no seu ritmo.' },
   ];
 
@@ -564,7 +564,7 @@
     const i = partes.indexOf(C.app);
     if (i < 0) return [];
     const base = partes.slice(0, i).join('/') + '/';
-    return FAMILIA.filter(f => f.app !== C.app).map(f => ({ ...f, url: base + f.app + '/' }));
+    return FAMILIA.filter(f => f.app !== C.app && !f.fechado).map(f => ({ ...f, url: base + f.app + '/' }));
   }
   function itensPrivacidade() {
     const l = [...(C.privacidade || [])];

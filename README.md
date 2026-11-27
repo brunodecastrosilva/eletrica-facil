@@ -2,7 +2,7 @@
 
 Orçamento de serviços de elétrica, do pedido ao recibo, direto no celular, no tablet ou no computador.
 
-Versão **5.5.2** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
+Versão **5.5.2** · Kit Fácil 0.9.1 · app web em <https://brunodecastrosilva.github.io/eletrica-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md). Na 4.0.0 o app recomeçou enxuto, por decisão do Bruno: faz uma coisa só,
@@ -235,7 +235,7 @@ O modo sem internet (service worker) só funciona em `https`, ou seja, no endere
 | `guia.js` | o roteiro do guia único |
 | `casca.js` | troca de tela, navegação, Ajustes, apresentação e cadastro, troca de dados do guia e arranque |
 | `sw.js`, `manifest.webmanifest`, `icons/` | uso sem internet e instalação |
-| `comum/` | Kit Fácil 0.9.0, igual nos quatro repositórios (não se altera aqui) |
+| `comum/` | Kit Fácil 0.9.1, igual nos quatro repositórios (não se altera aqui) |
 | `tests/` | testes do app e varredura de acessibilidade (axe, WCAG 2.2 AA, claro e escuro) |
 
 As contas ficam em `motor.js` (`conta`, `cobrarAgora`, `proximo`): mão de obra, deslocamento e material somam

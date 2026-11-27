@@ -329,7 +329,7 @@ test('Ajustes: conteúdo das guias comuns (conta, sincronização, armazenamento
   const sobre = await texto('sobre');
   assert.match(sobre, /Versão 0\.0\.0-teste/); assert.match(sobre, /Termos de uso/); assert.match(sobre, /Kit Fácil \d+\.\d+\.\d+/);
   const links = await p.$$eval('#kf-aj-sobre .kf-apps a', l => l.map(x => x.getAttribute('href')));
-  assert.equal(links.length, 3, 'os outros apps da família');
+  assert.equal(links.length, amb.app === 'estudo-facil' ? 3 : 2, 'os outros apps da família, sem o Estudo Fácil, que é pessoal (fechado: true)');
   for (const h of links) assert.match(h, /^\/(conta|eletrica|estudo|guitarra)-facil\/$/);
   // o resumo da guia acompanha a escolha do tema
   await p.click('[data-kf-aj-ir="aparencia"]');

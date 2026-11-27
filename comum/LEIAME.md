@@ -153,6 +153,10 @@ pelo app em `aplicar`.
 
 ## Mudanças do kit
 
+- **0.9.1 · 27/11/2026** (Código 0.14.0): o Estudo Fácil, app pessoal do Bruno, tem `fechado: true` em `FAMILIA` e não
+  aparece na lista da família dos outros apps (continua na lista pelos prefixos e pela chave da sincronização). O teste
+  comum de acessibilidade abre os Ajustes pela tela Mais da navegação do Kit 0.7.0. A regra do Firestore e o teste das
+  regras não têm mais a coleção `mesas`.
 - **0.9.0 · 15/11/2026** (Código 0.9, Proposta 4 do Conta Fácil; copiado aos quatro apps): a opção da janela de
   Avaliação e feedback tem nome próprio (`kf-fb-op`) e é uma linha com seta; antes dividia a classe `kf-escolha` com a
   pílula de escolher um valor, que a amassava. Nenhuma janela do Kit tem "Fechar" sozinho no pé. `kf-det` com a seta do

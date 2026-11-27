@@ -1,19 +1,19 @@
 {
-  "kit": "0.9.0",
+  "kit": "0.9.1",
   "arquivos": {
-    "kit-facil.js": "7cba87fa76662be1a18c7dbd721b3498cef86e3299ec722cd63286cc3df6b409",
+    "kit-facil.js": "674740eefb1387184b2b1b5790408093404be6320148f30e3bbb87ee715b3fd3",
     "kit-facil.css": "4f08dba7389f0e9f2ce23d00620aafa2c94dda36cf280978e9abb86fd5deee23",
     "kit-jogo.js": "734c45912999f01878410feed5f0593b80c32d4eddde977ade20457aa4657513",
     "regras-firestore-feedback.txt": "27a01d8fc680a5ce0ad2e2cb9150bd925ea00dad7c588ead63bca521957260a3",
     "servidor.mjs": "b6cc0deb2154acb2a59d00ad2223d2a69214d40c28680bc05b29777e2b273b57",
-    "verificar.mjs": "53fcacf6d99bf0fe7f05acbb362c8f25d87e3af4314ff7ff7269739a17e04555",
+    "verificar.mjs": "c76bb1339c36d4cee7c91b457380a3c3b4c913a1da953c662dad083b027914bc",
     "testar.mjs": "53f0ed2efb8b8baaecaabe416fc373b3bc95a574025acf8dd5aec97f68a3642b",
     "testar-regras.mjs": "560d6eeae8516e5aeb18c70206dcc31d492f3d3a42dde9d2f71442f9e72121e1",
-    "CODIGO.md": "da79861d5c88b3e85598c00f23db6a85097ba073c1c580c4281e8b79cb9fa9bd",
-    "ANEXOS.md": "4e65f2fb080cada09ecc4dc38f35c41283dbcb3b69637b9353e0cccef64e900f",
-    "LEIAME.md": "2a349997466537f85d95861373a3f32665f97315eeec2e8be74aed9e6f64f780",
+    "CODIGO.md": "cded8da05173ffb0a2a2eabede06d1ae51240e001646f730a5daac43364ac717",
+    "ANEXOS.md": "0c1fbc82c6d636cc8514c6de3514d4d4c14a04b94d75adf08463e294d37e541a",
+    "LEIAME.md": "b2c208bfaccf4ca83e5177695f4d4094b3eb6a437d4153d62bb43d67efa3f339",
     "testes/ambiente.mjs": "c4ff9617d04b1cb0d9bbc7daa6dae032098318044de1a81acd077a15bdf169f8",
-    "testes/kit.test.mjs": "ed18b60b28f27b97ea0a3d2a57a1cf05c9f542f9ebd4e74f273986d3f2f989d3",
+    "testes/kit.test.mjs": "f32d7722f5e813d188a5963ad1414c727c33b7de9cd332a9d6156171d5d8050d",
     "testes/pagina-kit.html": "4a231c1d11efba94db3d536e21c44d03cc6900019e3f81013858ea82389fd988"
   }
 }
