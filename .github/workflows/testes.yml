@@ -18,6 +18,12 @@ jobs:
           node-version: 22
       - name: Dependências de desenvolvimento
         run: npm install --no-audit --no-fund
+      - name: Fonte da família (Atkinson Hyperlegible), para os testes medirem com a fonte de verdade
+        run: |
+          mkdir -p ~/.fonts
+          curl -fsSL -o ~/.fonts/AtkinsonHyperlegibleNext.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/atkinsonhyperlegiblenext/AtkinsonHyperlegibleNext%5Bwght%5D.ttf"
+          curl -fsSL -o ~/.fonts/AtkinsonHyperlegibleMono.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/atkinsonhyperlegiblemono/AtkinsonHyperlegibleMono%5Bwght%5D.ttf"
+          fc-cache -f
       - name: Navegador dos testes
         run: npx playwright install --with-deps chromium
       - name: Verificação do padrão
