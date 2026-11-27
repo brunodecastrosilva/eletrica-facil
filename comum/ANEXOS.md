@@ -307,7 +307,7 @@ resultado depois de cada publicação (Código, Art. 12).
 |---|---|---|
 | Aparelho | 1 avaliação por minuto e 10 por dia, por app (`kitfacil.<app>.envios`) | `KitFacil.feedback` |
 | App Check | reCAPTCHA Enterprise (Fraud Defense); o crachá vai no cabeçalho `X-Firebase-AppCheck` das avaliações | chave do site em `DESTINO_PADRAO.appCheck.siteKey` (Kit) |
-| Exigência do App Check | ligada no Firestore só quando as métricas mostrarem quase todos os pedidos com crachá | console do Firebase → App Check → APIs → Cloud Firestore |
+| Exigência do App Check | ligada no Cloud Firestore desde 27/11/2026: pedido sem crachá é recusado | console do Firebase → App Check → APIs → Cloud Firestore |
 | Chave do navegador | restrita a `https://brunodecastrosilva.github.io/*` | Google Cloud → APIs e serviços → Credenciais |
 
 O selo do reCAPTCHA fica escondido (`.grecaptcha-badge`); o aviso do Google aparece no formulário de avaliação e em
@@ -331,7 +331,7 @@ biblioteca do cdnjs sem SRI.
 
 **Antes e depois de publicar uma regra:** testar no Playground de regras do console e, depois de publicar, rodar
 `npm run testar-regras` (recusas das avaliações erradas e das coleções sem regra, inclusive a antiga `mesas`; nada
-fica gravado). Com a exigência do App Check ligada, o banco recusa tudo o que vem do teste, que não leva crachá.
+fica gravado). Com a exigência do App Check ligada (desde 27/11/2026), o banco recusa tudo o que vem do teste, que não leva crachá: as recusas continuam valendo, e os aceites se conferem pelo app no ar.
 
 **Tarefas agendadas:** lembrete mensal da limpeza do Firebase (dia 1º) e auditoria trimestral (fevereiro, maio, agosto
 e novembro), criadas como tarefas agendadas no claude.ai.
