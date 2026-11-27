@@ -254,6 +254,12 @@ export async function conferirNavAjustes(page) {
 export async function abrirAjustesPelaNav(page) {
   const direto = page.locator('.kf-nav [data-kf="ajustes"], .kf-trilho [data-kf="ajustes"]').locator('visible=true');
   if (await direto.count()) return direto.first().click();
+  // navegação do Kit 0.7.0 (KitFacil.nav.barra e .mais): o "Mais" é uma tela, com os Ajustes por último
+  const telaMais = page.locator('#kf-nav-mais, #kf-trilho-mais').locator('visible=true');
+  if (await telaMais.count()) {
+    await telaMais.first().click();
+    return page.locator('[data-kf="ajustes"]').locator('visible=true').first().click();
+  }
   await page.locator('.kf-nav [data-kf-nav-mais]').locator('visible=true').first().click();
   await page.locator('[data-kf-dialogo="mais"] .kf-aj-item', { hasText: 'Ajustes' }).click();
 }

@@ -1,6 +1,6 @@
 # Anexos do Código do Projeto Fácil
 
-Versão **0.13.0 (rascunho)** · 23/11/2026 · Kit Fácil **0.9.0** (com as peças do Conta Fácil)
+Versão **0.13.1 (rascunho)** · 27/11/2026 · Kit Fácil **0.9.0** (com as peças do Conta Fácil)
 
 Detalhes técnicos do Código do Projeto Fácil (arquivo à parte). Os anexos mudam sem alterar os artigos, desde que não
 os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
@@ -21,23 +21,23 @@ os contrariem (Art. 4º, § 2º); se contrariarem, vale o artigo.
 | Aplicativo | Repositório | Endereço | Prefixo dos dados | Destaque (`--kf-accent`) | Ideia visual | Tema de fábrica | Fonte dos títulos |
 |---|---|---|---|---|---|---|---|
 | Conta Fácil | `brunodecastrosilva/conta-facil` | `…github.io/conta-facil/` | `contafacil.` | verde azulejo `#1D5A3B` | comanda de papel (IBM Plex Mono no papel; papel claro atenuado no escuro: Art. 56, V) | Automático | Bricolage Grotesque |
-| Elétrica Fácil | `brunodecastrosilva/eletrica-facil` | `…github.io/eletrica-facil/` | `eletricafacil.` | amarelo de segurança `#FFC400` | ferramenta de obra | Automático | Atkinson |
-| Estudo Fácil | `brunodecastrosilva/estudo-facil` | `…github.io/estudo-facil/` | `estudofacil.` | azul caneta `#2742D3` | caderno e marca-texto | Automático | Atkinson |
+| Elétrica Fácil | `brunodecastrosilva/eletrica-facil` | `…github.io/eletrica-facil/` | `eletricafacil.` | amarelo `#FFD21F` (letra `#16171A`); fundo `#F4F3EF` no claro e `#141518` no escuro | ferramenta de obra | Automático | Red Hat Display (700 a 900) |
+| Estudo Fácil | `brunodecastrosilva/estudo-facil` | `…github.io/estudo-facil/` | `estudofacil.` | azul caneta `#2742D3` | caderno e marca-texto | Automático | Fraunces (500 a 800) |
 | Guitarra Fácil | `brunodecastrosilva/guitarra-facil` | `…github.io/guitarra-facil/` | `guitarrafacil.` | grafite `#2B2B30`, com o vermelho do pedal | pedal de efeito sobre amplificador | Escuro | Big Shoulders Display (700 a 900) |
 
-**Cor de começar (Art. 66, II):** Conta Fácil, âmbar `#F2B33D` com texto `#2A1D02`. Os outros apps escolhem a sua na vez de cada um (Art. 93, § 2º).
+**Cor de começar (Art. 66, II):** Conta Fácil, âmbar `#F2B33D` com texto `#2A1D02`; Elétrica Fácil, o próprio amarelo `#FFD21F` com texto `#16171A` (5.2.0); Estudo Fácil, verde-limão `#DFF65C` com texto `#131A3A`. O Guitarra Fácil escolhe a sua na vez dele (Art. 93, § 2º).
 
 **Manifesto:** `"id": "/<app>/"`, com `start_url` e `scope` dentro da pasta do app. **Service worker:** cache
 `<app>-<versão>`. **Chave da sincronização:** `<prefixo>sync`, reaproveitável por outro app da família no mesmo aparelho.
-**Firebase:** projeto `conta-facil-2c1f9` (comanda ao vivo do Conta Fácil e avaliações de todos), plano gratuito.
+**Firebase:** projeto `conta-facil-2c1f9` (avaliações de todos os apps), plano gratuito. A comanda ao vivo saiu do Conta Fácil na 1.13.0.
 
 **Guias próprias nos Ajustes**
 
 | Aplicativo | Guias próprias | Extras nas guias comuns |
 |---|---|---|
 | Conta Fácil | Tampinhas e apresentação (guia, comanda de exemplo e Cadastros ficam em Mais) | Conta e perfil: "Você nas comandas", onde a pessoa escreve o próprio nome |
-| Elétrica Fácil | Pix · Veículo e deslocamento · Adicionais · Orçamento novo · Textos dos documentos | Conta e perfil: "Seus dados na proposta" |
-| Estudo Fácil | Rotina e metas · Revisões | Notificações: som e vibração no fim do tempo · Privacidade e segurança: apagar todos os dados, inclusive na nuvem |
+| Elétrica Fácil | Cobrança · Pix · Documento novo · Raio e apresentação (o Mais tem atalhos para elas: 5.4.0) | Conta e perfil: "Seus dados nos documentos" (nome, WhatsApp e logotipo) |
+| Estudo Fácil | Rotina · Medalhas e apresentação | Conta e perfil: "Você no app" · Privacidade e segurança: apagar todos os dados, inclusive na nuvem |
 | Guitarra Fácil | Prática | — |
 
 ## ANEXO II — Sistema de design e peças do Kit
@@ -152,7 +152,7 @@ Saíram do Conta Fácil 1.9.1 a 1.9.6; o Conta Fácil 1.10.0 usa as do Kit e nã
 | Guia: tela cheia do app | a tela cheia leva `data-kf-tela-cheia`; no guia, `body.kf-com-guia [data-kf-tela-cheia]{bottom:var(--kf-pe)}` deixa livre o pé, onde fica a janela do guia | 68, § 4º; 79 |
 | CSS do Kit sem regra repetida | saíram 184 regras escritas duas ou três vezes (o arquivo ficou com 19 kB a menos); `npm run verificar` falha se uma regra do Kit voltar a se repetir | Anexo VII |
 
-Ficam só no Conta Fácil, por serem do assunto dele: contas da comanda, cupons, comanda ao vivo, sorteio, a lista das
+Ficam só no Conta Fácil, por serem do assunto dele: contas da comanda, cupons, sorteio, a lista das
 tampinhas e a festa de fechamento. O carrossel dos cupons e o arrastar para juntar pessoas continuam os do Conta, presos
 às contas da comanda; o Kit já tinha os seus (`KitFacil.carrossel` e `KitFacil.arrastar`, Kit 0.4.0), e as seções de
 uma linha aberta por vez são as do Kit (`<details data-kf-secao="grupo">`).
@@ -290,7 +290,6 @@ Node 22 ou mais novo; testes com Playwright (Chromium; sem ele, o Google Chrome 
 | Coleção | Quem cria | Quem lê | Quem altera ou apaga | Conferências |
 |---|---|---|---|---|
 | `feedback` | qualquer aparelho | ninguém pelos apps (só o console) | ninguém | `hasOnly` dos campos; tipo e tamanho de cada campo, inclusive dentro de `tecnico`; data de envio não futura; id até 40 |
-| `mesas` | aparelho com login anônimo | quem tem o código (10+ caracteres), um documento por vez | altera: quem tem o código, sem trocar o dono; apaga: só o dono (`hostUid`) | `hasOnly` dos campos; até 60 pessoas, 400 itens, 60 turmas, 100 aparelhos; `expiraEm` até 31 dias; comanda encerrada não reabre |
 | qualquer outra | ninguém | ninguém | ninguém | regra final `/{caminho=**}` fechada |
 
 **Limite de quantidade**
@@ -298,9 +297,8 @@ Node 22 ou mais novo; testes com Playwright (Chromium; sem ele, o Google Chrome 
 | Camada | Como | Onde |
 |---|---|---|
 | Aparelho | 1 avaliação por minuto e 10 por dia, por app (`kitfacil.<app>.envios`) | `KitFacil.feedback` |
-| App Check | reCAPTCHA Enterprise (Fraud Defense); o crachá vai no cabeçalho `X-Firebase-AppCheck` (avaliações) e pelo SDK (comanda ao vivo) | chave do site em `DESTINO_PADRAO.appCheck.siteKey` (Kit) e `appCheckSiteKey` (`config.js` do Conta Fácil) |
+| App Check | reCAPTCHA Enterprise (Fraud Defense); o crachá vai no cabeçalho `X-Firebase-AppCheck` das avaliações | chave do site em `DESTINO_PADRAO.appCheck.siteKey` (Kit) |
 | Exigência do App Check | ligada no Firestore só quando as métricas mostrarem quase todos os pedidos com crachá | console do Firebase → App Check → APIs → Cloud Firestore |
-| Contas anônimas | cota de criação de contas por endereço de internet | Firebase Authentication → Configurações |
 | Chave do navegador | restrita a `https://brunodecastrosilva.github.io/*` | Google Cloud → APIs e serviços → Credenciais |
 
 O selo do reCAPTCHA fica escondido (`.grecaptcha-badge`); o aviso do Google aparece no formulário de avaliação e em
@@ -310,7 +308,7 @@ O selo do reCAPTCHA fica escondido (`.grecaptcha-badge`); o aviso do Google apar
 
 - CSP no `<meta http-equiv="Content-Security-Policy">` de cada `index.html`, igual nos quatro: `default-src 'self'`;
   scripts só de arquivos do próprio app, do cdnjs, do gstatic e do reCAPTCHA (nenhum `<script>` escrito dentro da
-  página, sem `'unsafe-inline'` nos scripts); conexões só com GitHub, Firestore, Authentication, App Check, reCAPTCHA,
+  página, sem `'unsafe-inline'` nos scripts); conexões só com GitHub, Firestore, App Check, reCAPTCHA,
   cdnjs e fontes; `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`. Proibido `unsafe-eval` e curinga `*`.
   Os estilos ainda aceitam `'unsafe-inline'` (há atributos `style` nas telas); estilo não roda código.
 - SRI (`integrity` com `crossOrigin = 'anonymous'`) nas bibliotecas do cdnjs: qrcode-generator 1.4.4, jsPDF 2.5.1 e
@@ -323,9 +321,8 @@ O selo do reCAPTCHA fica escondido (`.grecaptcha-badge`); o aviso do Google apar
 biblioteca do cdnjs sem SRI.
 
 **Antes e depois de publicar uma regra:** testar no Playground de regras do console e, depois de publicar, rodar
-`npm run testar-regras` (recusas das avaliações erradas, ciclo completo de uma comanda de teste e coleção sem regra
-fechada; nada fica gravado). Com a exigência do App Check ligada, os aceites precisam do token de depuração do App
-Check.
+`npm run testar-regras` (recusas das avaliações erradas e das coleções sem regra, inclusive a antiga `mesas`; nada
+fica gravado). Com a exigência do App Check ligada, o banco recusa tudo o que vem do teste, que não leva crachá.
 
 **Tarefas agendadas:** lembrete mensal da limpeza do Firebase (dia 1º) e auditoria trimestral (fevereiro, maio, agosto
 e novembro), criadas como tarefas agendadas no claude.ai.

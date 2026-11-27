@@ -1,6 +1,6 @@
 # Código do Projeto Fácil
 
-Versão **0.13.0 (rascunho)** · 23/11/2026 · Kit Fácil **0.9.0**
+Versão **0.13.1 (rascunho)** · 27/11/2026 · Kit Fácil **0.9.0**
 
 Regras comuns dos aplicativos do Projeto Fácil, em artigos. Os detalhes técnicos ficam no arquivo à parte **Anexos do
 Código**. O estado de cada aplicativo, as pendências, as decisões de produto e as exceções aprovadas ficam no **Painel
@@ -318,7 +318,7 @@ aplicativos.
 
 I – as preferências do aparelho, como o tema;
 
-II – a comanda aberta do Conta Fácil, que se divide entre celulares pela comanda ao vivo;
+II – a comanda aberta do Conta Fácil, que fica só no aparelho de quem a abriu;
 
 III – o orçamento de exemplo do Elétrica Fácil.
 
@@ -341,9 +341,7 @@ mantendo a mesma regra de junção por registro. Pedir conta GitHub é aceito na
 
 **Art. 39.** Prazos de guarda no Firebase:
 
-I – avaliações e relatos de problema: 2 anos;
-
-II – comanda ao vivo: apagada quando o anfitrião encerra; a nunca encerrada vence 30 dias depois de criada.
+I – avaliações e relatos de problema: 2 anos.
 
 **Parágrafo único.** No plano gratuito o Firebase não aceita exclusão automática; a limpeza dos vencidos é manual, uma
 vez por mês, com o passo a passo da pasta `comum/`.
@@ -388,7 +386,7 @@ repetição. Enquanto não houver servidor próprio, nenhum aplicativo recebe we
 
 **Art. 48.** No aparelho:
 
-I – texto de fora (de quem usa, da comanda ao vivo, da cópia de segurança ou da sincronização) é sempre protegido antes
+I – texto de fora (de quem usa, da cópia de segurança ou da sincronização) é sempre protegido antes
 de ir para a tela (Art. 42);
 
 II – toda página tem política de segurança de conteúdo (CSP);
@@ -846,5 +844,5 @@ sobe para 1.0.0 (Art. 22, § 2º).
 **Art. 94.** Os pontos em aberto, os erros encontrados e as propostas ficam no Painel do Projeto Fácil
 (`claude/painel.md`).
 
-**Art. 95.** Este Código vale desde 23/11/2026 como rascunho (versão 0.13.0). Regras e textos anteriores (Leis Globais,
-Padrão, Código 3.x, Códigos 0.4 a 0.12.0) são histórico.
+**Art. 95.** Este Código vale desde 23/11/2026 como rascunho (versão 0.13.1). Regras e textos anteriores (Leis Globais,
+Padrão, Código 3.x, Códigos 0.4 a 0.13.0) são histórico.

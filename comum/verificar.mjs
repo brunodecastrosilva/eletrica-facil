@@ -10,7 +10,7 @@
       balão, a navegação do Kit 0.7.0 (barra baixa com a ação principal no centro e Mais; trilho com Mais e Ajustes no
       pé), a tela de Ajustes em guias e um relógio só (nada de trocar a duração das animações do Kit);
    7. o manifesto do app web: id, start_url e scope do próprio caminho (os três apps dividem o mesmo endereço);
-   8. componentes (Kit 2.10): botão, segmento, cartão, faixa e guias com as medidas comuns do Kit.
+   8. componentes (Kit 0.9.0): botão, segmento, cartão, faixa e guias com as medidas comuns do Kit.
    Para atualizar o manifesto depois de mudar o kit: node comum/verificar.mjs --gerar */
 import { readFile, writeFile, readdir, stat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
@@ -200,7 +200,7 @@ if (/KitFacil\.ajustes\.html\(/.test(codigo) && /KitFacil\.ajustes\.ligar\(/.tes
 else falha('a tela de Ajustes não usa KitFacil.ajustes.html e KitFacil.ajustes.ligar');
 if (/abrirAjustes\s*:/.test(codigo) && /emAjustes\s*:/.test(codigo)) ok('item Ajustes da navegação ligado à tela de Ajustes do app');
 else falha('KitFacil.iniciar sem abrirAjustes e emAjustes (o item Ajustes da navegação não saberia abrir os Ajustes)');
-/* ---------- Kit 2.10: componentes com as medidas comuns (lei 6) ---------- */
+/* ---------- Kit 0.9.0: componentes com as medidas comuns (lei 6) ---------- */
 // botão, segmento, cartão, faixa e guias do app usam as medidas do Kit; guias de uma tela são as do Kit (kf-abas)
 {
   const estilos = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(m => m[1]);
@@ -226,7 +226,7 @@ else falha('KitFacil.iniciar sem abrirAjustes e emAjustes (o item Ajustes da nav
   const classesAbas = (codigo.match(/class="(?:tabs|abas|g-abas|guias)[\s"]/g) || []).length;
   if (classesAbas) erros.add(`${classesAbas} barra(s) de guias própria(s) (class="tabs"/"abas"): use KitFacil.ui.abas`);
   if (abasProprias > 0) erros.add(`${abasProprias} lista(s) de guias própria(s) (role="tablist"): use KitFacil.ui.abas`);
-  if (erros.size) [...erros].forEach(e => falha('componente fora do padrão (Kit 2.10): ' + e)); else ok('botões, segmentos, cartões, faixas e guias nas medidas do Kit (Kit 2.10)');
+  if (erros.size) [...erros].forEach(e => falha('componente fora do padrão (Kit 0.9.0): ' + e)); else ok('botões, segmentos, cartões, faixas e guias nas medidas do Kit');
 }
 if (/aoEstado\s*:/.test(codigo)) aviso('aoEstado no motor de sincronização: o estado da nuvem já é mostrado pelo kit; confira se não há um indicador duplicado');
 

@@ -307,8 +307,8 @@ digital (SRI), baixados só quando a função é usada (Código, Art. 21).
   Kit (`comum/kit-facil.js`) e iguais nos quatro apps. O app não os troca, para não quebrar a família (Art. 3º).
   Proposta para o Integrador: o Kit adotar a Lucide nesses ícones, nos quatro apps.
 
-O Anexo I do Código ainda lista as cores da versão 3 do Elétrica Fácil. Proposta para o Integrador: atualizar as cores
-(fundo `#F4F3EF` e `#141518`; destaque e começar `#FFD21F` com letra `#16171A` nos dois temas).
+As cores e a fonte dos títulos do Elétrica Fácil (fundo `#F4F3EF` e `#141518`; destaque e começar `#FFD21F` com letra
+`#16171A` nos dois temas; Red Hat Display) estão no Anexo I desde o Código 0.13.1 (27/11/2026).
 
 ## Exceções ao padrão
 

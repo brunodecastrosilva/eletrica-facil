@@ -10,7 +10,7 @@ Estudo Fácil e no Guitarra Fácil.** Não altere só num repositório: siga o A
 | `kit-jogo.js` | peça opcional (Kit 0.7.0): objetos em 3D que giram com o dedo (o presente do apoio e as tampinhas), confetes, vibração e níveis. O Kit busca sozinho para o presente; quem usa tampinhas carrega logo depois do `kit-facil.js` |
 | `CODIGO.md` | o Código do Projeto Fácil, em artigos |
 | `ANEXOS.md` | os anexos técnicos do Código (interface, dados, avaliação, movimento, abertura e guia, comandos e segurança) |
-| `regras-firestore-feedback.txt` | regras inteiras do Firestore: avaliações e comanda ao vivo (colar no console do Firebase) |
+| `regras-firestore-feedback.txt` | regras inteiras do Firestore: avaliações (colar no console do Firebase) |
 | `servidor.mjs` | servidor local (`npm start`) |
 | `verificar.mjs` | verificação do padrão (`npm run verificar`) |
 | `testar.mjs` | roda os testes do kit e do app (`npm test`) |
