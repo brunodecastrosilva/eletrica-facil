@@ -260,52 +260,53 @@ digital (SRI), baixados só quando a função é usada (Código, Art. 21).
   (`comum/testes/ambiente.mjs`) e a varredura `comum/testes/acessibilidade.test.mjs` procuram os Ajustes na barra de
   baixo ou numa janela "Mais". Com a navegação do Kit 0.7.0, Mais é uma tela. O app usa a sua varredura
   (`tests/acessibilidade.test.mjs`), como o Conta Fácil; por isso `npm test` lista os arquivos em vez de chamar
-  `comum/testar.mjs`. Proposta para o Integrador: os testes comuns passarem a conhecer a tela Mais.
+  `comum/testar.mjs`. Desde o Kit 0.9.1, `abrirAjustesPelaNav` e a varredura comum já conhecem a tela Mais; falta
+  `irPelaNav` (fila do Kit, no Painel do Integrador).
 - **Apresentação em tela baixa:** no Kit, o palco da abertura encolhe (`min-height:0`) e, em celular pequeno, o texto
-  passa por baixo dos botões. Aqui o palco não encolhe além do conteúdo e a abertura rola (`estilo.css`). Proposta para
-  o Integrador: o Kit fazer o mesmo.
+  passa por baixo dos botões. Aqui o palco não encolhe além do conteúdo e a abertura rola (`estilo.css`). Na fila do Kit (Painel do
+  Integrador): o Kit fazer o mesmo.
 - **Marca que leva ao começo:** no Conta Fácil a marca do alto é um botão; o teste comum `conferirTopo` acusa qualquer
-  botão a mais em `.kf-barra-in`. Aqui a marca ficou sem toque. Proposta para o Integrador: o Kit dizer qual dos dois vale.
+  botão a mais em `.kf-barra-in`. Aqui a marca ficou sem toque. Na fila do Kit (Painel do Integrador): o Kit dizer qual dos dois vale.
 - **Rótulo da navegação em celular de 320 px:** o Kit corta com reticências o rótulo que não cabe, e "Documentos"
   sairia "Docume…". Só nessa largura (até 359 px), o app diminui a letra do rótulo para 10 px, tira a margem lateral do
-  item e diminui o nome da marca na barra de cima (`estilo.css`, fim do arquivo). Proposta para o Integrador: a
+  item e diminui o nome da marca na barra de cima (`estilo.css`, fim do arquivo). Na fila do Kit (Painel do Integrador): a
   navegação do Kit ajustar a letra quando há cinco itens e a tela é estreita.
 - **Título da tela na fonte de caráter:** `.kf-titulo` usa a fonte do texto; aqui ele usa `--kf-font-display`
-  (`estilo.css`), como o Art. 56, IV, permite. Proposta para o Integrador: o título do Kit já usar a fonte de caráter.
+  (`estilo.css`), como o Art. 56, IV, permite. Na fila do Kit (Painel do Integrador): o título do Kit já usar a fonte de caráter.
 - **Aviso rápido nas telas internas:** o Kit põe o aviso logo acima do lugar da barra de baixo; nas telas internas ele
-  cobriria a doca do pé (e o botão do próximo passo). Só nelas o aviso sobe para cima da doca (`estilo.css`). Proposta
-  para o Integrador: o Kit medir a barra fixa do app, como já mede o pé das janelas.
+  cobriria a doca do pé (e o botão do próximo passo). Só nelas o aviso sobe para cima da doca (`estilo.css`). Na fila do Kit
+  (Painel do Integrador): o Kit medir a barra fixa do app, como já mede o pé das janelas.
 - **Guia nas telas internas:** a janela do guia fica acima do lugar da barra de baixo, mesmo quando a tela não tem a
-  barra; o conteúdo aparecia nessa fresta. Só nelas o app fecha a fresta com a cor da página (`estilo.css`). Proposta
-  para o Integrador: a janela do guia descer até o pé quando a tela não tem barra de baixo.
+  barra; o conteúdo aparecia nessa fresta. Só nelas o app fecha a fresta com a cor da página (`estilo.css`). Na fila do Kit
+  (Painel do Integrador): a janela do guia descer até o pé quando a tela não tem barra de baixo.
 - **Cores do destaque nas peças do Kit:** o Kit usa `--kf-accent` tanto para o botão cheio quanto para o que marca estado
   (chave ligada, dia escolhido). No claro, amarelo sobre branco não dá 3:1; então `--kf-accent` é a tinta, e o app pinta
-  o botão cheio e o de começar de amarelo (`estilo.css`). Não muda medida nem comportamento. Proposta para o Integrador:
+  o botão cheio e o de começar de amarelo (`estilo.css`). Não muda medida nem comportamento. Na fila do Kit (Painel do Integrador):
   o Kit separar a cor do botão cheio da cor de estado.
 
 - **Linhas do Mais com valor à direita (5.4.0):** o Mais do Kit (`KitFacil.nav.mais`) só tem ícone, título, apoio e
   seta. As linhas de "Seu trabalho" e "Ajuda" usam as mesmas classes do Kit, com o valor à direita (`telas.js`,
-  `linhaMais`); a linha de Ajustes continua vindo do Kit. Proposta para o Integrador: o Kit aceitar `valor` na linha.
+  `linhaMais`); a linha de Ajustes continua vindo do Kit. Na fila do Kit (Painel do Integrador): o Kit aceitar `valor` na linha.
 - **Aviso que cobria botões e campos (5.3.1):** o Kit põe o aviso no pé e, com janela aberta, acima dos botões do pé
   dela; em janela alta e na abertura ele cobria campos e botões. Com janela ou abertura na tela, o app procura o primeiro
   lugar livre (o do Kit, logo acima da janela, o alto da tela) e, ao trocar de tela, tira o aviso da tela anterior
-  (`casca.js`, `posicionarAviso`). Proposta para o Integrador: o Kit fazer isso.
+  (`casca.js`, `posicionarAviso`). Na fila do Kit (Painel do Integrador): o Kit fazer isso.
 - **Trilho no tablet (5.3.1):** o Kit liga o trilho lateral só a partir de 1024 px. De 768 a 1023 px o app aplica as
-  mesmas regras (cópia dos blocos `min-width:1024px` do Kit e do app, no fim do `estilo.css`). Proposta para o
-  Integrador: o Kit ligar o trilho a partir de 768 px.
+  mesmas regras (cópia dos blocos `min-width:1024px` do Kit e do app, no fim do `estilo.css`). Na fila do Kit (Painel do
+  Integrador): o Kit ligar o trilho a partir de 768 px.
 - **Duração em rodas (5.3.1):** o relógio do Kit marca a hora do dia (0 a 23, "Agora"). Para tempo de serviço o app
   usa o mesmo desenho e o mesmo comportamento, com horas de 0 a 12, minutos de 5 em 5 e o texto "1h30" (`telas.js`,
-  `rodaTempo`). Proposta para o Integrador: o Kit ter o seletor de duração.
+  `rodaTempo`). Na fila do Kit (Painel do Integrador): o Kit ter o seletor de duração.
 
 - **Primeiro uso numa abertura só (5.5.0):** a abertura do Kit tem até quatro telas e o "Pular" dela fecha tudo. O app
   usa uma abertura só, de quatro telas (a proposta, os seus dados, a sua hora e o convite ao guia), e faz o "Pular"
   passar só a tela em que se está; "Continuar" confere os dados e a hora (`casca.js`, `aberturaAbrir`). O pé da abertura
-  fica preso ao pé da tela, e o título não mostra a moldura de foco (`estilo.css`). Proposta para o Integrador: o Kit ter
+  fica preso ao pé da tela, e o título não mostra a moldura de foco (`estilo.css`). Na fila do Kit (Painel do Integrador): o Kit ter
   Pular tela a tela, pé preso e título sem moldura.
 
 - **Ícones do Kit:** a nuvem, o presente, o balão, o Mais da navegação e as guias comuns dos Ajustes são desenhados no
   Kit (`comum/kit-facil.js`) e iguais nos quatro apps. O app não os troca, para não quebrar a família (Art. 3º).
-  Proposta para o Integrador: o Kit adotar a Lucide nesses ícones, nos quatro apps.
+  Na fila do Kit (Painel do Integrador): o Kit adotar a Lucide nesses ícones, nos quatro apps.
 
 As cores e a fonte dos títulos do Elétrica Fácil (fundo `#F4F3EF` e `#141518`; destaque e começar `#FFD21F` com letra
 `#16171A` nos dois temas; Red Hat Display) estão no Anexo I desde o Código 0.13.1 (27/11/2026).

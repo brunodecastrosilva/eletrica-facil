@@ -120,7 +120,7 @@ window.addEventListener('popstate', () => {
 /* ---------- aviso rápido: nunca cobre botão nem campo, e some ao trocar de tela (5.3.1; Art. 30-A) ----------
    O Kit põe o aviso no pé da tela e, com uma janela aberta, acima dos botões do pé dela. Em janela alta e na abertura ele
    cobria campos e botões. Aqui, com janela ou abertura na tela, o app procura o primeiro lugar livre: o do Kit, logo
-   acima da janela, e o alto da tela. Sem lugar livre, fica onde cobre menos. Proposta para o Integrador: o Kit fazer isso. */
+   acima da janela, e o alto da tela. Sem lugar livre, fica onde cobre menos. Na fila do Kit (Painel do Integrador). */
 const ALVOS_AVISO = 'button,input:not([type="hidden"]),select,textarea,a[href],[role="button"],[tabindex]:not([tabindex="-1"])';
 function posicionarAviso() {
   const t = $('.kf-toast'); if (!t || t.hidden) return;

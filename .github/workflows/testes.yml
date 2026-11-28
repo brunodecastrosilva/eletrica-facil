@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
       - name: Dependências de desenvolvimento
@@ -25,7 +25,9 @@ jobs:
           curl -fsSL -o ~/.fonts/AtkinsonHyperlegibleMono.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/atkinsonhyperlegiblemono/AtkinsonHyperlegibleMono%5Bwght%5D.ttf"
           fc-cache -f
       - name: Navegador dos testes
-        run: npx playwright install --with-deps chromium
+        run: |
+          sudo apt-get update
+          npx playwright install --with-deps chromium
       - name: Verificação do padrão
         run: node comum/verificar.mjs
       - name: Testes
